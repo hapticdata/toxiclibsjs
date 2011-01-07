@@ -18,9 +18,9 @@ function TColor(tcolor){
 	{
 		var buffer = tcolor.toCMYKAArray();
 		this.cmyk = buffer.splice(0,4);
-		this.hsv = tcolor.toHSVAArray(buffer).splice(0,3);
-		this.rgb = tcolor.toRGBAArray(buffer).splice(0,3);
-		this.alpha = tcolor.alpha();
+		this.hsv = tcolor.toHSVAArray().splice(0,3);
+		this.rgb = tcolor.toRGBAArray().splice(0,3);
+		this.alpha = tcolor.alpha;
 	}
 }
 
@@ -111,12 +111,13 @@ TColor.prototype = {
 	 * @return itself
 	 */
 	blend: function(c, t) {
+		if(t == undefined)t = 0.5;
 	    var crgb = c.toRGBAArray(null);
 	    this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
 	    this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
 	    this.rgb[2] += (crgb[2] - this.rgb[2]) * t;
-	    this.alpha += (c.alpha() - this.alpha) * t;
-	    return this.setRGB(rgb);
+	    this.alpha += (c.alpha - this.alpha) * t;
+	    return this.setRGB(this.rgb);
 	},
 	
 	blue: function() {
@@ -515,7 +516,7 @@ TColor.prototype = {
 	 * @return rgba array
 	 */
 	toRGBAArray: function(rgba, offset) {
-	    if (rgba == null) {
+	    if (rgba == undefined || rgba == null) {
 	        rgba = [];
 	        offset = 0;
 	    }
