@@ -1,0 +1,125 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>TColorExample</title>
+	<meta name="author" content="Kyle Phillips">
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
+	<script type="text/javascript" src="../src/color/TColor.js"></script>
+	<script type="text/javascript" src="js/processing.js"></script>
+	<script>
+	/*
+	 * This code searches for all the <script type="application/processing" target="canvasid">
+	 * in your page and loads each script in the target canvas with the proper id.
+	 * It is useful to smooth the process of adding Processing code in your page and starting
+	 * the Processing.js engine.
+	 */
+
+	if (window.addEventListener) {
+	  window.addEventListener("load", function() {
+	    var scripts = document.getElementsByTagName("script");
+	    var canvasArray = Array.prototype.slice.call(document.getElementsByTagName("canvas"));
+	    var canvas;
+	    for (var i = 0, j = 0; i < scripts.length; i++) {
+	      if (scripts[i].type == "application/processing") {
+	        var src = scripts[i].getAttribute("target");
+	        if (src && src.indexOf("#") > -1) {
+	          canvas = document.getElementById(src.substr(src.indexOf("#") + 1));
+	          if (canvas) {
+	            new Processing(canvas, scripts[i].text);
+	            for (var k = 0; k< canvasArray.length; k++)
+	            {
+	              if (canvasArray[k] === canvas) {
+	                // remove the canvas from the array so we dont override it in the else
+	                canvasArray.splice(k,1);
+	              }
+	            }
+	          }
+	        } else {    
+	          if (canvasArray.length >= j) {
+	            new Processing(canvasArray[j], scripts[i].text);          
+	          }
+	          j++;
+	        }       
+	      }
+	    }
+	  }, false);
+	}
+
+	</script>
+</head>
+<body>
+<script type="application/processing">
+
+TColor c1;
+TColor c2;
+
+PFont font;
+
+void setup()
+{
+	
+	size(200,200);
+	
+	font = createFont("Arial",14);
+	textFont(font);
+	textSize(14);
+	
+	//setup colors
+	c1 = TColor.newRGB(1.0,0,0);
+	c2 = TColor.newHSV(0.5,1.0,1.0);
+	
+	//NOTICE IM CHANGING THE COLOR MODE TO BE BETWEEN 0.0 - 1.0
+	colorMode(RGB,1.0);
+	
+	background(0);
+	
+	fill(c1.red(),c1.green(),c1.blue());
+	rect(10,10,25,25);
+	fill(c2.red(),c2.green(),c2.blue());
+	rect(45,10,25,25);
+	fill(1,1,1);
+	text("blend between 2 colors",10,55);
+	text("darken colors",10,110);
+	text("desaturate colors", 10, 170);
+}
+
+void draw()
+{
+	stroke(1,1,1);
+	float step = ((frameCount%1000)/1000);
+	TColor c3 = c1.copy().blend(c2,step);
+	fill(c3.red(),c3.green(),c3.blue());
+	rect(80,10,110,25);
+	
+	TColor c1Dark = c1.copy().darken(step);
+	TColor c2Dark = c2.copy().darken(step);
+	fill(c1Dark.red(),c1Dark.green(),c1Dark.blue());
+	rect(10,70,85,25);
+	fill(c2Dark.red(),c2Dark.green(),c2Dark.blue());
+	rect(105,70,85,25);
+	
+	TColor c1de = c1.copy().desaturate(step);
+	TColor c2de = c2.copy().desaturate(step);
+	fill(c1de.red(),c1de.green(),c1de.blue());
+	rect(10,130,85,25);
+	fill(c2de.red(),c2de.green(),c2de.blue());
+	rect(105,130,85,25);
+	
+	noStroke();
+	fill(0,0,0);
+	rect(width-100,height-25,100,25);
+	noFill();
+	fill(1,1,1);
+	text("step: "+step,width-80,height-10);
+	
+	
+}
+</script>
+
+<canvas id="myCanvas" width="200" height="200">
+	your browser doesnt support canvas
+</canvas>
+</body>
+</html>
