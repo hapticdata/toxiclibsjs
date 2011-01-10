@@ -30,15 +30,14 @@ function AABB(a,b)
 		this.parent.set(new Vec3D());
 		extent = new Vec3D();
 	}
-	if(typeof(a) == "number")
+	if(a instanceof Number)
 	{
-		console.log("Numb");
 		this.x = 0.0;
 		this.y = 0.0;
 		this.z = 0.0;
 		extent = new Vec3D(b,b,b);
 	}
-	if(typeof(b) == "number")
+	if(b instanceof Number)
 	{
 		extent = new Vec3D(b,b,b);
 	}
@@ -394,7 +393,6 @@ AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
 
 
 AABB.prototype.setExtent = function(extent) {
-	console.log("extent typeof: "+typeof(extent));
         this.extent = extent.copy();
         return this.updateBounds();
     }

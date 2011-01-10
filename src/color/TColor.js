@@ -13,15 +13,16 @@ function TColor(tcolor){
 	this.rgb = new Array(3);
 	this.hsv = new Array(3);
 	this.cmyk = new Array(4);
-	this.alpha = 1.0;
+	this._alpha = 1.0;
 	if(tcolor !== undefined && tcolor != null)
 	{
 		var buffer = tcolor.toCMYKAArray();
 		this.cmyk = buffer.splice(0,4);
 		this.hsv = tcolor.toHSVAArray().splice(0,3);
 		this.rgb = tcolor.toRGBAArray().splice(0,3);
-		this.alpha = tcolor.alpha;
+		this._alpha = tcolor.alpha;
 	}
+	
 }
 
 
@@ -77,6 +78,9 @@ TColor.prototype = {
 	    return this.setRGB([this.rgb[0] + r, this.rgb[1] + g, this.rgb[2] + b]);
 	},
 	
+	alpha:function(){
+		return this._alpha;
+	},
 	
 	/**
 	 * Rotates this color by a random amount (not exceeding the one specified)
@@ -94,12 +98,12 @@ TColor.prototype = {
 		this.rotateRYB(angle * MathUtils.normalizedRandom());
 		this.hsv[1] += delta * MathUtils.normalizedRandom();
 		this.hsv[2] += delta * MathUtils.normalizedRandom();
-		return this.setHSV(hsv);
+		return this.setHSV(this.hsv);
 	},
 	
 	//shouldnt this be this.cmyk[3]?
 	black: function(){
-		return this.cmyk[0];
+		return this.cmyk[3];
 	},
 	/**
 	 * Blends the color with the given one by the stated amount
@@ -116,7 +120,7 @@ TColor.prototype = {
 	    this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
 	    this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
 	    this.rgb[2] += (crgb[2] - this.rgb[2]) * t;
-	    this.alpha += (c.alpha - this.alpha) * t;
+	    this._alpha += (c.alpha - this._alpha) * t;
 	    return this.setRGB(this.rgb);
 	},
 	
@@ -141,8 +145,8 @@ TColor.prototype = {
 	},
 	
 	darken: function(step){
-		this.hsv[2] = MathUtils.clip(this.hsv[2] - step, 0, 1);
-		return this.setHSV(hsv);
+		this.hsv[2] = MathUtils.clip((this.hsv[2] -step), 0, 1);
+		return this.setHSV(this.hsv);
 	},
 	/**
 	 * Reduced the color's saturation by the given amount.
@@ -151,7 +155,7 @@ TColor.prototype = {
 	 * @return itself
 	 */
 	desaturate: function(step) {
-	    this.hsv[1] = MathUtils.clip(this.hsv[1] - step, 0, 1);
+	    this.hsv[1] = MathUtils.clip((this.hsv[1] - step), 0, 1);
 	    return this.setHSV(this.hsv);
 	},
 
@@ -349,14 +353,14 @@ TColor.prototype = {
 	},
 	
 	setAlpha: function(alpha) {
-	    this.alpha = alpha;
+	    this._alpha = alpha;
 	    return this;
 	},
 	
 	setARGB: function(argb) {
 	    this.setRGB(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff) * TColor.INV8BIT,
 	            (argb & 0xff) * TColor.INV8BIT);
-	    this.alpha = (argb >>> 24) * TColor.INV8BIT;
+	    this._alpha = (argb >>> 24) * TColor.INV8BIT;
 	    return this;
 	},
 	
@@ -388,7 +392,9 @@ TColor.prototype = {
 	    this.cmyk[1] = m;
 	    this.cmyk[2] = y;
 	    this.cmyk[3] = k;
-	    return this.setCMYK(this.cmyk);
+		this.rgb = TColor.cmykToRGB(this.cmyk[0],this.cmyk[1],this.cmyk[2],this.cmyk[3]);
+		this.hsv = TColor.rgbToHSV(this.rgb[0],this.rgb[1],this.rgb[2]);
+	    return this;
 	},
 	
 	/*setComponent(AccessCriteria criteria, float val) {
@@ -413,10 +419,16 @@ TColor.prototype = {
 			v = h[2];
 			h = h[0];
 		}
-	    this.hsv[0] = h;
-	    this.hsv[1] = s;
-	    this.hsv[2] = v;
-	    return this.setHSV(this.hsv);
+		var newHSV = [h,s,v];
+	    this.hsv[0] = newHSV[0] % 1;
+       	if (this.hsv[0] < 0) {
+         	this.hsv[0]++;
+     	}
+     	this.hsv[1] = MathUtils.clip(newHSV[1], 0, 1);
+     	this.hsv[2] = MathUtils.clip(newHSV[2], 0, 1);
+     	this.rgb = TColor.hsvToRGB(this.hsv[0], this.hsv[1], this.hsv[2]);
+     	this.cmyk = TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
+	    return this;
 	},
 	
 	setHue: function(hue) {
@@ -445,11 +457,11 @@ TColor.prototype = {
 			b = r[2];
 			r = r[0];
 		}
-	    this.rgb[0] = r;
-	    this.rgb[1] = g;
-	    this.rgb[2] = b;
-		this.cmyk = TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2], this.cmyk);
-		this.hsv = TColor.rgbToHSV(this.rgb[0], this.rgb[1], this.rgb[2], this.hsv);
+	    this.rgb[0] = MathUtils.clip(r,0,1);
+	    this.rgb[1] = MathUtils.clip(g,0,1);
+	    this.rgb[2] = MathUtils.clip(b,0,1);
+		this.cmyk = TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
+		this.hsv = TColor.rgbToHSV(this.rgb[0], this.rgb[1], this.rgb[2]);
 	    return this;
 	},
 	
@@ -476,7 +488,7 @@ TColor.prototype = {
 	
 	toARGB: function() {
 	    return parseInt((this.rgb[0] * 255)) << 16 | parseInt(this.rgb[1] * 255) << 8
-	            | parseInt(this.rgb[2] * 255) | parseInt(this.alpha * 255) << 24;
+	            | parseInt(this.rgb[2] * 255) | parseInt(this._alpha * 255) << 24;
 	},
 	
 	toCMYKAArray: function(cmyka) {
@@ -486,7 +498,7 @@ TColor.prototype = {
 	    cmyka[0] = this.cmyk[0];
 	    cmyka[1] = this.cmyk[1];
 	    cmyka[2] = this.cmyk[2];
-	    cmyka[3] = this.alpha;
+	    cmyka[3] = this._alpha;
 	    return cmyka;
 	},
 	
@@ -505,7 +517,7 @@ TColor.prototype = {
 	    hsva[0] = this.hsv[0];
 	    hsva[1] = this.hsv[1];
 	    hsva[2] = this.hsv[2];
-	    hsva[3] = this.alpha;
+	    hsva[3] = this._alpha;
 	    return hsva;
 	},
 	
@@ -523,7 +535,7 @@ TColor.prototype = {
 	    rgba[offset++] = this.rgb[0];
 	    rgba[offset++] = this.rgb[1];
 	    rgba[offset++] = this.rgb[2];
-	    rgba[offset] = this.alpha;
+	    rgba[offset] = this._alpha;
 	    return rgba;
 	},
 	
@@ -531,7 +543,7 @@ TColor.prototype = {
 		return "TColor: rgb: "+this.rgb[0] + ", " +this.rgb[1] + ", "+this.rgb[2]+ 
 				" hsv: "+ this.hsv[0] + ","+this.hsv[1]+","+this.hsv[2]+
 				" cmyk: "+this.cmyk[0] + ", "+this.cmyk[1]+","+this.cmyk[2]+","+this.cmyk[3]+
-				" alpha: "+this.alpha;
+				" alpha: "+this._alpha;
 	},
 	
 	yellow: function() {
@@ -629,12 +641,12 @@ TColor.hexToRGB = function(hexRGB,rgb) {
  * @return rgb array
  */
 TColor.hsvToRGB = function(h, s, v,rgb) {
+	if(rgb == null)rgb = [];
 	if(s == 0.0)
 	{
 		rgb[0] = rgb[1] = rgb[2] = v;
 	}
 	else {
-		if(rgb == null)rgb = [];
 		h /= TColor.INV60DEGREES;
 		var i =  parseInt(h);
         var f = h - i;
