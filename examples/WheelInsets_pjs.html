@@ -1,0 +1,151 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>PolarUnravel</title>
+	<meta name="author" content="Kyle Phillips">
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
+	<script type="text/javascript" src="../src/core/math/InterpolateStrategy.js"></script>
+	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
+	<script type="text/javascript" src="../src/color/TColor.js"></script>
+	<script type="text/javascript" src="js/processing.js"></script>
+	<script>
+	/*
+	 * This code searches for all the <script type="application/processing" target="canvasid">
+	 * in your page and loads each script in the target canvas with the proper id.
+	 * It is useful to smooth the process of adding Processing code in your page and starting
+	 * the Processing.js engine.
+	 */
+
+	if (window.addEventListener) {
+	  window.addEventListener("load", function() {
+	    var scripts = document.getElementsByTagName("script");
+	    var canvasArray = Array.prototype.slice.call(document.getElementsByTagName("canvas"));
+	    var canvas;
+	    for (var i = 0, j = 0; i < scripts.length; i++) {
+	      if (scripts[i].type == "application/processing") {
+	        var src = scripts[i].getAttribute("target");
+	        if (src && src.indexOf("#") > -1) {
+	          canvas = document.getElementById(src.substr(src.indexOf("#") + 1));
+	          if (canvas) {
+	            new Processing(canvas, scripts[i].text);
+	            for (var k = 0; k< canvasArray.length; k++)
+	            {
+	              if (canvasArray[k] === canvas) {
+	                // remove the canvas from the array so we dont override it in the else
+	                canvasArray.splice(k,1);
+	              }
+	            }
+	          }
+	        } else {    
+	          if (canvasArray.length >= j) {
+	            new Processing(canvasArray[j], scripts[i].text);          
+	          }
+	          j++;
+	        }       
+	      }
+	    }
+	  }, false);
+	}
+
+	</script>
+</head>
+<body>
+<script type="application/processing">
+/**
+ * <p>This example was used for designing the outer rim of some
+ * generative wheels. The wheels are designed for laser cutting from
+ * acrylic and the outer rim has a number of cutouts for friction fitting
+ * wire track modules.</p>
+ * <p>The actual generative wheel design is available under GPL v3 and
+ * can be downloaded from:
+ * 
+ * http://toxiclibs.org/2010/01/re-inventing-the-wheel/
+ * </p>
+ */
+
+/* 
+ * Copyright (c) 2010 Karsten Schmidt
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * http://creativecommons.org/licenses/LGPL/2.1/
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+
+int NUM_CUTOUTS=18;
+int NUM_ARCSEG=8;
+int RADIUS=300;
+float INSET=RADIUS-15;
+float MATERIAL_THICKNESS=5;
+float TOLERANCE=0.05;
+float SIZE=MATERIAL_THICKNESS+TOLERANCE;
+int BLEED=20;
+
+void setup() {
+  size(2*RADIUS+BLEED,2*RADIUS+BLEED);
+  background(255);
+  translate(width/2,height/2);
+  noFill();
+  beginShape();
+  for(int i=0; i<NUM_CUTOUTS; i++) {
+    float alpha=i*TWO_PI/NUM_CUTOUTS;
+    float beta=(i+1)*TWO_PI/NUM_CUTOUTS;
+    // cutout
+    Vec2D[] insets=computePoints(alpha,INSET,SIZE);
+    _vertex(insets[1]);
+    _vertex(insets[0]);
+    float gamma=computeAngles(alpha,RADIUS,SIZE)[0];
+    float delta=computeAngles(beta,RADIUS,SIZE)[1];
+    // arc between cutouts
+    for(int j=0; j<=NUM_ARCSEG; j++) {
+      float theta=lerp(gamma,delta,j/(float)NUM_ARCSEG);
+      _vertex(Vec2D.fromTheta(theta).scaleSelf(RADIUS));
+    }
+  }
+  endShape(CLOSE);
+}
+
+//can't override methods the same way as in java, so I added the _
+void _vertex(Vec2D v) {
+  vertex(v.x,v.y);
+}
+
+float[] computeAngles(float theta, float radius, float dist) {
+  Vec2D[] points=computePoints(theta,radius,dist);
+  Vec2D a=points[0].toPolar();
+  Vec2D b=points[1].toPolar();
+  float alpha=a.y<0 ? TWO_PI+a.y : a.y;
+  float beta=b.y<0 ? TWO_PI+b.y : b.y;
+  return new float[]{
+    alpha,beta };
+}
+
+Vec2D[] computePoints(float theta, float radius, float dist) {
+  Vec2D p=Vec2D.fromTheta(theta).scaleSelf(radius);
+  Vec2D n=p.getPerpendicular().normalizeTo(dist/2);
+  Vec2D a=p.add(n);
+  Vec2D b=p.sub(n);
+  return new Vec2D[]{
+    a,b };
+}
+</script>
+
+<canvas id="myCanvas" width="200" height="200">
+	your browser doesnt support canvas
+</canvas>
+</body>
+</html>

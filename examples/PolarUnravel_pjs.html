@@ -1,0 +1,148 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>PolarUnravel</title>
+	<meta name="author" content="Kyle Phillips">
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
+	<script type="text/javascript" src="../src/core/math/InterpolateStrategy.js"></script>
+	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
+	<script type="text/javascript" src="../src/color/TColor.js"></script>
+	<script type="text/javascript" src="js/processing.js"></script>
+	<script>
+	/*
+	 * This code searches for all the <script type="application/processing" target="canvasid">
+	 * in your page and loads each script in the target canvas with the proper id.
+	 * It is useful to smooth the process of adding Processing code in your page and starting
+	 * the Processing.js engine.
+	 */
+
+	if (window.addEventListener) {
+	  window.addEventListener("load", function() {
+	    var scripts = document.getElementsByTagName("script");
+	    var canvasArray = Array.prototype.slice.call(document.getElementsByTagName("canvas"));
+	    var canvas;
+	    for (var i = 0, j = 0; i < scripts.length; i++) {
+	      if (scripts[i].type == "application/processing") {
+	        var src = scripts[i].getAttribute("target");
+	        if (src && src.indexOf("#") > -1) {
+	          canvas = document.getElementById(src.substr(src.indexOf("#") + 1));
+	          if (canvas) {
+	            new Processing(canvas, scripts[i].text);
+	            for (var k = 0; k< canvasArray.length; k++)
+	            {
+	              if (canvasArray[k] === canvas) {
+	                // remove the canvas from the array so we dont override it in the else
+	                canvasArray.splice(k,1);
+	              }
+	            }
+	          }
+	        } else {    
+	          if (canvasArray.length >= j) {
+	            new Processing(canvasArray[j], scripts[i].text);          
+	          }
+	          j++;
+	        }       
+	      }
+	    }
+	  }, false);
+	}
+
+	</script>
+</head>
+<body>
+<script type="application/processing">
+/**
+ * PolarUnravel demo combines the following 3 features of toxiclibs:
+ * <ul>
+ * <li>Polar-Cartesian coordinate transformation</li>
+ * <li>Vector interpolation to smoothly switch layouts</li>
+ * <li>Use of InterpolateStrategy for easing effects</li>
+ * <li>Use TColor for working with HSV color space</li>
+ * </ul>
+ *
+ * The demo depends on the separately distributed colorutils package, also
+ * part of toxiclibs. You can download the latest version from here:
+ * http://code.google.com/p/toxiclibs/downloads/list
+ *
+ * Usage:
+ * Click mouse to toggle between radial/horizontal layout
+ */
+
+/* 
+ * Copyright (c) 2006-2009 Karsten Schmidt
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * http://creativecommons.org/licenses/LGPL/2.1/
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+
+// keepers of transition state & target
+float transition, transTarget;
+
+// use a S-Curve to achieve an ease in/out effect
+InterpolateStrategy is=new SigmoidInterpolation(3);
+
+void setup() {
+  size(600,600);
+}
+
+void draw() {
+  background(255);
+  float w2=width * 0.5;
+  float h2=height * 0.5;
+  translate(w2, h2);
+  // update transition
+  transition += (transTarget - transition) * 0.01;
+  Vec2D normUp = new Vec2D(0, -1);
+  // define a color container using HSV
+  TColor col = TColor.newHSV(0, 1, 1);
+  for(int i = 270; i < 360 + 270; i += 2) {
+    float theta = radians(i);
+    // create a polar coordinate
+    Vec2D polar = new Vec2D(100,theta);
+    // use theta as color hue (ensure theta is properly wrapped)
+    col.setHue((polar.y / TWO_PI) % 1);
+    // also use theta to manipulate line length
+    float len = noise(polar.y * 4) * 100;
+    // convert polar coord into cartesian space (to obtain position on a circle)
+    Vec2D circ = polar.copy().toCartesian();
+    // create another coord splicing the circle at the top and using theta difference as position on a line
+    Vec2D linear = new Vec2D((MathUtils.THREE_HALVES_PI - polar.y) * w2 / PI + w2, 0);
+    // interprete circular position as normal/direction vector 
+    Vec2D dir = circ.getNormalized();
+    // interpolate both position & normal based on current transition state
+    circ.interpolateToSelf(linear, transition,is);
+    dir.interpolateToSelf(normUp, transition,is).normalizeTo(len);
+    // apply color & draw line
+    stroke(col.toARGB());
+    line(circ.x, circ.y, circ.x + dir.x, circ.y + dir.y);
+  }
+}
+
+void mousePressed() {
+  // toggle transition target state
+  transTarget=(++transTarget % 2);
+}
+
+</script>
+
+<canvas id="myCanvas" width="200" height="200">
+	your browser doesnt support canvas
+</canvas>
+</body>
+</html>
