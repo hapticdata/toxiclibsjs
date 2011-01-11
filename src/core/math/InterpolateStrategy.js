@@ -1,3 +1,11 @@
+/**
+ 		T O X I C L I B S . JS  - 0.01
+		a port of toxiclibs for Java / Processing written by Karsten Schmidt
+		
+		License				: GNU Lesser General Public version 2.1
+		Developer			: Kyle Phillips: http://haptic-data.com
+		Java Version		: http://toxiclibs.org
+*/
 
 /**
  * Initializes the s-curve with default sharpness = 2
