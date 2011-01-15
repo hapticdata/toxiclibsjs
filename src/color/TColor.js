@@ -9,24 +9,22 @@
 
 
 
-function TColor(tcolor){
-	this.rgb = new Array(3);
-	this.hsv = new Array(3);
-	this.cmyk = new Array(4);
-	this._alpha = 1.0;
-	if(tcolor !== undefined && tcolor != null)
-	{
-		var buffer = tcolor.toCMYKAArray();
-		this.cmyk = buffer.splice(0,4);
-		this.hsv = tcolor.toHSVAArray().splice(0,3);
-		this.rgb = tcolor.toRGBAArray().splice(0,3);
-		this._alpha = tcolor.alpha;
-	}
-	
-}
-
-
-TColor.prototype = {
+var TColor = Class.extend({
+	init: function(tcolor){
+		this.rgb = new Array(3);
+		this.hsv = new Array(3);
+		this.cmyk = new Array(4);
+		this._alpha = 1.0;
+		if(tcolor !== undefined && tcolor != null)
+		{
+			var buffer = tcolor.toCMYKAArray();
+			this.cmyk = buffer.splice(0,4);
+			this.hsv = tcolor.toHSVAArray().splice(0,3);
+			this.rgb = tcolor.toRGBAArray().splice(0,3);
+			this._alpha = tcolor.alpha;
+		}
+		
+	},
 	
 	add: function(c){
 		return this.copy().addSelf(c);
@@ -550,7 +548,7 @@ TColor.prototype = {
 	    return this.cmyk[0];
 	}
 	
-};
+});
 
 
 
@@ -933,6 +931,15 @@ TColor.rgbToHSV = function(r, g, b,hsv) {
 }
 
 TColor.RED = TColor.newRGB(1, 0, 0);
+TColor.RYB_WHEEL = [ new Vec2D(0, 0),
+            new Vec2D(15, 8), new Vec2D(30, 17), new Vec2D(45, 26),
+            new Vec2D(60, 34), new Vec2D(75, 41), new Vec2D(90, 48),
+            new Vec2D(105, 54), new Vec2D(120, 60), new Vec2D(135, 81),
+            new Vec2D(150, 103), new Vec2D(165, 123), new Vec2D(180, 138),
+            new Vec2D(195, 155), new Vec2D(210, 171), new Vec2D(225, 187),
+            new Vec2D(240, 204), new Vec2D(255, 219), new Vec2D(270, 234),
+            new Vec2D(285, 251), new Vec2D(300, 267), new Vec2D(315, 282),
+            new Vec2D(330, 298), new Vec2D(345, 329), new Vec2D(360, 0)];
 TColor.GREEN = TColor.newRGB(0, 1, 0);
 TColor.BLUE = TColor.newRGB(0, 0, 1);
 TColor.CYAN = TColor.newRGB(0, 1, 1);

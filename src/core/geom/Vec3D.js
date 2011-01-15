@@ -18,126 +18,29 @@
  * @param z
  *            the z
  */
-function Vec3D(x, y, z)
-{
-	//if only one var was passed, it shoudlve been a Vec3D
-	if(x && (!y && !z))
-	{
-		this.x = x.x;
-		this.y = x.y;
-		this.z = x.z;
-	}
-	else //if none or all were passed
-	{
-		if(!x)x = 0.0;
-		if(!y)y = 0.0;
-		if(!z)z = 0.0;
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-}
-/**
-  * Defines vector with all coords set to Float.MIN_VALUE. Useful for
-  * bounding box operations.
-  */
-Vec3D.MIN_VALUE = new Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
-/**
-  * Defines vector with all coords set to Float.MAX_VALUE. Useful for
-  * bounding box operations.
- */
-Vec3D.MAX_VALUE = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
-/**
- * Creates a new vector from the given angle in the XY plane. The Z
- * component of the vector will be zero.
- * 
- * The resulting vector for theta=0 is equal to the positive X axis.
- * 
- * @param theta
- *            the theta
- * 
- * @return new vector in the XY plane
- */
-Vec3D.fromXYTheta = function(theta) {
-	return new Vec3D(Math.cos(theta),Math.sin(theta),0);
-}
-/**
- * Creates a new vector from the given angle in the XZ plane. The Y
- * component of the vector will be zero.
- * 
- * The resulting vector for theta=0 is equal to the positive X axis.
- * 
- * @param theta
- *            the theta
- * 
- * @return new vector in the XZ plane
- */
- Vec3D.fromXZTheta = function(theta) {
-        return new Vec3D(Math.cos(theta), 0, Math.sin(theta));
- }
-
-/**
- * Creates a new vector from the given angle in the YZ plane. The X
- * component of the vector will be zero.
- * 
- * The resulting vector for theta=0 is equal to the positive Y axis.
- * 
- * @param theta
- *            the theta
- * 
- * @return new vector in the YZ plane
- */
-Vec3D.fromYZTheta = function(theta) {
-    return new Vec3D(0, Math.cos(theta), Math.sin(theta));
-}
-
-/**
- * Constructs a new vector consisting of the largest components of both
- * vectors.
- * 
- * @param b
- *            the b
- * @param a
- *            the a
- * 
- * @return result as new vector
- */
-Vec3D.max = function(a, b) {
-        return new Vec3D(Math.max(a.x(), b.x()), Math.max(a.y(),
-                b.y()), Math.max(a.z(), b.z()));
-}
-
-/**
- * Constructs a new vector consisting of the smallest components of both
- * vectors.
- * 
- * @param b
- *            comparing vector
- * @param a
- *            the a
- * 
- * @return result as new vector
- */
-Vec3D.min = function(a,b) {
-    return new Vec3D(Math.min(a.x(), b.x()), Math.min(a.y(),
-            b.y()), Math.min(a.z(), b.z()));
-}
-
-
-/**
- * Static factory method. Creates a new random unit vector using the Random
- * implementation set as default for the {@link MathUtils} class.
- * 
- * @return a new random normalized unit vector.
- */
-
-Vec3D.randomVector = function() {
-	var v = new Vec3D(Math.random()*2 - 1, Math.random() * 2 -1, Math.random()* 2 - 1);
-	return v.normalize();
-}
-
-
-Vec3D.prototype = {
+var Vec3D = Class.extend({
+	init: function(x, y, z){
+		//if only one var was passed, it shoudlve been a Vec3D
+		if(x instanceof Vec3D)
+		{
+			this.x = x.x;
+			this.y = x.y;
+			this.z = x.z;
+		}
+		else if(x == undefined) //if none or all were passed
+		{
+			this.x = 0.0;
+			this.y = 0.0;
+			this.z = 0.0;
+		}
+		else
+		{
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+	},
+	
 	abs: function(){
 		this.x = Math.abs(this.x);
 		this.y = Math.abs(this.y);
@@ -146,12 +49,12 @@ Vec3D.prototype = {
 	},
 	
 	add: function(a,b,c){
-		if(a && b && c)
+		if(a instanceof Vec3D)
 		{
-			return new Vec3D(this.x+a,this.y+b,this.z+c);
+			return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
 		}
-		//if only one element was provided, it should've been a Vec3D
-		return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
+		return new Vec3D(this.x+a,this.y+b,this.z+c);
+		
 	},
 	/**
      * Adds vector {a,b,c} and overrides coordinates with result.
@@ -165,7 +68,7 @@ Vec3D.prototype = {
      * @return itself
      */
 	addSelf: function(a,b,c){
-		if(a && b && c)
+		if(a != undefined && b!=undefined && c!=undefined)
 		{
 			this.x += a;
 			this.y += b;
@@ -262,7 +165,7 @@ Vec3D.prototype = {
 	},
 	
 	distanceTo: function(vec){
-		if(vec!=null){
+		if(vec!=undefined){
 			var dx = this.x - vec.x;
 			var dy = this.y - vec.y;
 			var dz = this.z - vec.z;
@@ -272,7 +175,7 @@ Vec3D.prototype = {
 	},
 	
 	distanceToSquared: function(vec){
-		if(vec!=null)
+		if(vec!=undefined)
 		{
 			var dx = this.x - vec.x;
 			var dy = this.y - vec.y;
@@ -287,7 +190,7 @@ Vec3D.prototype = {
 	},
 	
 	equals: function(vec){
-		if(typeof(vec) == Vec3D)
+		if(vec instanceof Vec3D)
 		{
 			return this.x == vec.x && this.y == vec.y && this.z == vec.z;
 		}
@@ -419,6 +322,33 @@ Vec3D.prototype = {
 		return this; //cant make read-only in javascript, implementing to avoid erro
 	},
 	
+	interpolateTo: function(v,f,s) {
+		if(s == undefined)
+		{
+			return new Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - z)*f);
+		}
+		return new Vec3D(s.interpolate(this.y,v.y,f),s.interpolate(this.y,v.y,f),s.interpolate(this.z,v.z,f));
+        
+    },
+    
+    interpolateToSelf: function(v,f,s){
+    	if(s == undefined)
+    	{
+    		this.x += (v.x-this.x)*f;
+    		this.y += (v.y-this.y)*f;
+    		this.z += (v.z-this.z)*f;
+    	}
+    	else
+    	{
+    		this.x = s.interpolate(this.x,v.x,f);
+    		this.y = s.interpolate(this.y,v.y,f);
+    		this.z = s.interpolate(this.z,v.z,f);
+    	}
+    	return this;
+    },
+	
+	
+	
 	invert: function(){
 		this.x *= -1;
 		this.y *= -1;
@@ -449,9 +379,9 @@ Vec3D.prototype = {
 	},
 	
 	isMajorAxis: function(tol){
-		var ax = MathUtils.abs(x);
-		var ay = MathUtils.abs(y);
-		var az = MathUtils.abs(z);
+		var ax = MathUtils.abs(this.x);
+		var ay = MathUtils.abs(this.y);
+		var az = MathUtils.abs(this.z);
 		var itol = 1 - tol;
         if (ax > itol) {
 			if (ay < tol) {
@@ -470,7 +400,7 @@ Vec3D.prototype = {
 	},
 	
 	isZeroVector: function(){
-		return Math.abs(x) < MathUtils.EPS && Math.abs(y) < MathUtils.EPS && MathUtils.abs(z) < MathUtils.EPS;
+		return Math.abs(this.x) < MathUtils.EPS && Math.abs(this.y) < MathUtils.EPS && MathUtils.abs(this.z) < MathUtils.EPS;
 	},
   
  	/**
@@ -483,7 +413,7 @@ Vec3D.prototype = {
      * @return the vec3 d
      */
 	jitter: function(a,b,c){
-		if(!b || !c)
+		if(b==undefined || c==undefined)
 		{
 			b = c = a;
 		}
@@ -523,7 +453,7 @@ Vec3D.prototype = {
 	},
 	
 	modSelf: function(basex,basey,basez){
-		if(!basey || !basez)
+		if(basey==undefined || basez==undefined)
 		{
 			basey = basez = basex;
 		}
@@ -677,7 +607,7 @@ Vec3D.prototype = {
             this.y = this.y < 0 ? -1 : 1;
             this.x = this.z = 0;
         }
-        if (Mathabs(this.z) < 0.5) {
+        if (Math.abs(this.z) < 0.5) {
             this.z = 0;
         } else {
             this.z = this.z < 0 ? -1 : 1;
@@ -687,11 +617,11 @@ Vec3D.prototype = {
     },
 
 	scale:function(a,b,c) {
-		if(a && a instanceof Vec3D) //if it was a vec3d that was passed
+		if(a instanceof Vec3D) //if it was a vec3d that was passed
 		{
 			return new Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
 	    }
-		else if(!b || !c) //if only one float was passed
+		else if(b==undefined || c==undefined) //if only one float was passed
 		{
 			b = c = a;
 		}
@@ -699,14 +629,14 @@ Vec3D.prototype = {
 	},
 	
 	scaleSelf: function(a,b,c) {
-		if(a && a instanceof Vec3D)
+		if(a instanceof Vec3D)
 		{
 			this.x *= a.x;
 			this.y *= a.y;
 			this.z *= a.z;
 			return true;
 		}
-		else if(!b || !c)
+		else if(b==undefined || c==undefined)
 		{
 			b = c = a;
 		}
@@ -717,20 +647,26 @@ Vec3D.prototype = {
 	},
 	
 	set: function(a,b,c){
-		if(a && a instanceof Vec3D)
+		if(a instanceof Vec3D)
 		{
 			this.x = a.x;
 			this.y = a.y;
 			this.z = a.z;
 			return this;
 		}
-		else if(!b || !c)
+		else if(b==undefined || c==undefined)
 		{
 			b = c = a;
 		}
 		this.x = a;
 		this.y = b;
 		this.z = c;
+		return this;
+	},
+	
+	setXY: function(v){
+		this.x = v.x;
+		this.y = v.y;
 		return this;
 	},
 	
@@ -775,11 +711,11 @@ Vec3D.prototype = {
 	},
 	
 	sub: function(a,b,c){
-		if(a && a instanceof Vec3D)
+		if(a instanceof Vec3D)
 		{
-			return new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
+			return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 		}
-		else if(!b || !c)
+		else if(b == undefined || c == undefined)
 		{
 			b = c = a;
 		}
@@ -787,14 +723,14 @@ Vec3D.prototype = {
 	},
 	
 	subSelf: function(a,b,c){
-		if(a && a instanceof Vec3D)
+		if(a instanceof Vec3D)
 		{
 			this.x -= a.x;
 			this.y -= a.y;
 			this.z -= a.z;
 			return this;
 		}
-		else if(!b || !c)
+		else if(b==undefined || c==undefined)
 		{
 			b = c= a;
 		}
@@ -802,6 +738,18 @@ Vec3D.prototype = {
 		this.y -= b;
 		this.z -= c;
 		return this;
+	},
+	
+	to2DXY: function(){
+		return new Vec2D(this.x,this.y);
+	},
+	
+	to2DXZ: function(){
+		return new Vec2D(this.x,this.z);
+	},
+	
+	to2DYZ: function(){
+		return new Vec2D(this.y,this.z);
 	},
 	
 	toArray: function(){
@@ -839,4 +787,103 @@ Vec3D.prototype = {
 	toString: function(){
 		return "[ x: "+this.x+ ", y: "+this.y+ ", z: "+this.z+"]";
 	}
-};
+});
+/**
+  * Defines vector with all coords set to Float.MIN_VALUE. Useful for
+  * bounding box operations.
+  */
+Vec3D.MIN_VALUE = new Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
+/**
+  * Defines vector with all coords set to Float.MAX_VALUE. Useful for
+  * bounding box operations.
+ */
+Vec3D.MAX_VALUE = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
+/**
+ * Creates a new vector from the given angle in the XY plane. The Z
+ * component of the vector will be zero.
+ * 
+ * The resulting vector for theta=0 is equal to the positive X axis.
+ * 
+ * @param theta
+ *            the theta
+ * 
+ * @return new vector in the XY plane
+ */
+Vec3D.fromXYTheta = function(theta) {
+	return new Vec3D(Math.cos(theta),Math.sin(theta),0);
+}
+/**
+ * Creates a new vector from the given angle in the XZ plane. The Y
+ * component of the vector will be zero.
+ * 
+ * The resulting vector for theta=0 is equal to the positive X axis.
+ * 
+ * @param theta
+ *            the theta
+ * 
+ * @return new vector in the XZ plane
+ */
+ Vec3D.fromXZTheta = function(theta) {
+        return new Vec3D(Math.cos(theta), 0, Math.sin(theta));
+ }
+
+/**
+ * Creates a new vector from the given angle in the YZ plane. The X
+ * component of the vector will be zero.
+ * 
+ * The resulting vector for theta=0 is equal to the positive Y axis.
+ * 
+ * @param theta
+ *            the theta
+ * 
+ * @return new vector in the YZ plane
+ */
+Vec3D.fromYZTheta = function(theta) {
+    return new Vec3D(0, Math.cos(theta), Math.sin(theta));
+}
+
+/**
+ * Constructs a new vector consisting of the largest components of both
+ * vectors.
+ * 
+ * @param b
+ *            the b
+ * @param a
+ *            the a
+ * 
+ * @return result as new vector
+ */
+Vec3D.max = function(a, b) {
+        return new Vec3D(Math.max(a.x(), b.x()), Math.max(a.y(),
+                b.y()), Math.max(a.z(), b.z()));
+}
+
+/**
+ * Constructs a new vector consisting of the smallest components of both
+ * vectors.
+ * 
+ * @param b
+ *            comparing vector
+ * @param a
+ *            the a
+ * 
+ * @return result as new vector
+ */
+Vec3D.min = function(a,b) {
+    return new Vec3D(Math.min(a.x(), b.x()), Math.min(a.y(),
+            b.y()), Math.min(a.z(), b.z()));
+}
+
+
+/**
+ * Static factory method. Creates a new random unit vector using the Random
+ * implementation set as default for the {@link MathUtils} class.
+ * 
+ * @return a new random normalized unit vector.
+ */
+
+Vec3D.randomVector = function() {
+	var v = new Vec3D(Math.random()*2 - 1, Math.random() * 2 -1, Math.random()* 2 - 1);
+	return v.normalize();
+}
+

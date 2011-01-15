@@ -18,65 +18,63 @@ AABB.fromMinMax = function(min,max){
 	var b = Vec3D.max(max);
 	return new AABB()
 }*/
-function AABB(a,b)
-{
+var AABB = Vec3D.extend({
+	init: function(a,b){
+		var vec;
+		var extent;
+		if(a == undefined)
+		{
+			this._super();
+			this.setExtent(new Vec3D());
+		}
+		else if(typeof(a) == "number")
+		{
+			this._super(new Vec3D());
+			this.setExtent(a);
+		}
+		else if(a instanceof Vec3D)
+		{
+			this._super(a);
+			if(b == undefined)
+			{
+				this.setExtent(a.getExtent());
+			}
+			else
+			{
+				this.setExtent(b);
+			}
+		}
+		
+		
+	},
+
+	containsPoint: function(p) {
+	        return p.isInAABB(this);
+	},
 	
-	if(a instanceof AABB)
-	{
-		this.parent.set(a);
-	}
-	var extent;
-	if(a==null && b==null){
-		this.parent.set(new Vec3D());
-		extent = new Vec3D();
-	}
-	if(a instanceof Number)
-	{
-		this.x = 0.0;
-		this.y = 0.0;
-		this.z = 0.0;
-		extent = new Vec3D(b,b,b);
-	}
-	if(b instanceof Number)
-	{
-		extent = new Vec3D(b,b,b);
-	}
-	else if(b instanceof Vec3D)
-	{
-		extent = b;
-	}
-	this.setExtent(extent);
-	this.min;
-	this.max;
-}
-
-AABB.prototype.containsPoint = function(p) {
-        return p.isInAABB(this);
-}
-
-AABB.prototype.copy = function() {
-        return new AABB(this);
-}
-
-/**
- * Returns the current box size as new Vec3D instance (updating this vector
- * will NOT update the box size! Use {@link #setExtent(ReadonlyVec3D)} for
- * those purposes)
- * 
- * @return box size
- */
-AABB.prototype.getExtent = function() {
-   return this.extent.copy();
-}
-
-AABB.prototype.getMax = function() {
-   // return this.add(extent);
-   return this.max.copy();
-}
-
-AABB.prototype.getMin = function() {
-   return this.min.copy();
-}
+	copy: function() {
+	        return new AABB(this);
+	},
+	
+	/**
+	 * Returns the current box size as new Vec3D instance (updating this vector
+	 * will NOT update the box size! Use {@link #setExtent(ReadonlyVec3D)} for
+	 * those purposes)
+	 * 
+	 * @return box size
+	 */
+	getExtent: function() {
+	   return this.extent.copy();
+	},
+	
+	getMax: function() {
+	   // return this.add(extent);
+	   return this.max.copy();
+	},
+	
+	getMin: function() {
+	   return this.min.copy();
+	},
 /*
 AABB.prototype.getNormalForPoint = function(p) {
         p = p.sub(this);
@@ -109,19 +107,19 @@ AABB.prototype.getNormalForPoint = function(p) {
         return this;
     }*/
 
-/**
-* Checks if the box intersects the passed in one.
-* 
-* @param box
-*            box to check
-* @return true, if boxes overlap
-*/
-AABB.prototype.intersectsBox = function(box) {
-        var t = box.sub(this);
-        return Math.abs(t.x) <= (this.extent.x + box.extent.x)
-                && Math.abs(t.y) <= (this.extent.y + box.extent.y)
-                && Math.abs(t.z) <= (this.extent.z + box.extent.z);
-    }
+	/**
+	* Checks if the box intersects the passed in one.
+	* 
+	* @param box
+	*            box to check
+	* @return true, if boxes overlap
+	*/
+	intersectsBox: function(box) {
+	        var t = box.sub(this);
+	        return Math.abs(t.x) <= (this.extent.x + box.extent.x)
+	                && Math.abs(t.y) <= (this.extent.y + box.extent.y)
+	                && Math.abs(t.z) <= (this.extent.z + box.extent.z);
+	 },
 
 /**
  * Calculates intersection with the given ray between a certain distance
@@ -329,89 +327,89 @@ AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
     }
 */
 
-AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
-        var vmin = new Vec3D();
-        var vmax = new Vec3D();
+	planeBoxOverlap: function(normal, d, maxbox) {
+	        var vmin = new Vec3D();
+	        var vmax = new Vec3D();
+	
+	        if (normal.x > 0.0) {
+	            vmin.x = -maxbox.x;
+	            vmax.x = maxbox.x;
+	        } else {
+	            vmin.x = maxbox.x;
+	            vmax.x = -maxbox.x;
+	        }
+	
+	        if (normal.y > 0.0) {
+	            vmin.y = -maxbox.y;
+	            vmax.y = maxbox.y;
+	        } else {
+	            vmin.y = maxbox.y;
+	            vmax.y = -maxbox.y;
+	        }
+	
+	        if (normal.z > 0.0) {
+	            vmin.z = -maxbox.z;
+	            vmax.z = maxbox.z;
+	        } else {
+	            vmin.z = maxbox.z;
+	            vmax.z = -maxbox.z;
+	        }
+	        if (normal.dot(vmin) + d > 0.0) {
+	            return false;
+	        }
+	        if (normal.dot(vmax) + d >= 0.0) {
+	            return true;
+	        }
+	        return false;
+	    },
+		
+		/**
+		 * Updates the position of the box in space and calls
+		 * {@link #updateBounds()} immediately
+		 * 
+		 * @see toxi.geom.Vec3D#set(float, float, float)
+		 */
+		
+		set: function(a,b,c) {
+				if(typeof(a)==AABB)
+				{
+		        	this.extent.set(box.extent);
+		        	return this._super(box);
+				}
+				if(typeof(a)==Vec3D)
+				{
+					b = a.y;
+					c = a.z;
+					a = a.a;
+				}
+				this.x = a;
+				this.y = b;
+				this.z = c;
+				this.updateBounds();
+				return this;
+		 },
 
-        if (normal.x > 0.0) {
-            vmin.x = -maxbox.x;
-            vmax.x = maxbox.x;
-        } else {
-            vmin.x = maxbox.x;
-            vmax.x = -maxbox.x;
-        }
 
-        if (normal.y > 0.0) {
-            vmin.y = -maxbox.y;
-            vmax.y = maxbox.y;
-        } else {
-            vmin.y = maxbox.y;
-            vmax.y = -maxbox.y;
-        }
+		setExtent: function(extent) {
+		        this.extent = extent.copy();
+		        return this.updateBounds();
+		 },
 
-        if (normal.z > 0.0) {
-            vmin.z = -maxbox.z;
-            vmax.z = maxbox.z;
-        } else {
-            vmin.z = maxbox.z;
-            vmax.z = -maxbox.z;
-        }
-        if (normal.dot(vmin) + d > 0.0) {
-            return false;
-        }
-        if (normal.dot(vmax) + d >= 0.0) {
-            return true;
-        }
-        return false;
-    }
-
-/**
- * Updates the position of the box in space and calls
- * {@link #updateBounds()} immediately
- * 
- * @see toxi.geom.Vec3D#set(float, float, float)
- */
-
- AABB.prototype.set = function(a,b,c) {
-		if(typeof(a)==AABB)
-		{
-        	this.extent.set(box.extent);
-        	return this.parent.set(box);
-		}
-		if(typeof(a)==Vec3D)
-		{
-			b = a.y;
-			c = a.z;
-			a = a.a;
-		}
-		this.x = a;
-		this.y = b;
-		this.z = c;
-		this.updateBounds();
-		return this;
- }
-
-
-AABB.prototype.setExtent = function(extent) {
-        this.extent = extent.copy();
-        return this.updateBounds();
-    }
-
-AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
-    var p0 = a * va + b * vb;
-    var p2 = a * wa + b * wb;
-    var min;
-	var max;
-    if (p0 < p2) {
-        min = p0;
-        max = p2;
-    } else {
-        min = p2;
-        max = p0;
-    }
-    var rad = fa * ea + fb * eb;
-    return (min > rad || max < -rad);
-}
+		testAxis: function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
+		    var p0 = a * va + b * vb;
+		    var p2 = a * wa + b * wb;
+		    var min;
+			var max;
+		    if (p0 < p2) {
+		        min = p0;
+		        max = p2;
+		    } else {
+		        min = p2;
+		        max = p0;
+		    }
+		    var rad = fa * ea + fb * eb;
+		    return (min > rad || max < -rad);
+		},
 
  /*   public Mesh3D toMesh() {
         return toMesh(null);
@@ -449,14 +447,14 @@ public Mesh3D toMesh(Mesh3D mesh) {
         return mesh;
     }
 */
-    /*
-     * (non-Javadoc)
-     * 
-     * @see toxi.geom.Vec3D#toString()
-     */
-AABB.prototype.toString = function() {
-   return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
-}
+		    /*
+		     * (non-Javadoc)
+		     * 
+		     * @see toxi.geom.Vec3D#toString()
+		     */
+		toString: function() {
+		   return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
+		},
 
     /**
      * Updates the min/max corner points of the box. MUST be called after moving
@@ -464,11 +462,12 @@ AABB.prototype.toString = function() {
      * 
      * @return itself
      */
-AABB.prototype.updateBounds =function() {
-  // this is check is necessary for the constructor
-  if (this.extent != null) {
-      this.min = this.sub(this.extent);
-      this.max = this.add(this.extent);
-  }
-  return this;
-}
+		updateBounds: function() {
+		  // this is check is necessary for the constructor
+		  if (this.extent != null) {
+		      this.min = this.sub(this.extent);
+		      this.max = this.add(this.extent);
+		  }
+		  return this;
+		}
+});

@@ -7,22 +7,21 @@
 		Java Version		: http://toxiclibs.org
 */
 
-function Vec2D(a,b)
-{
-	if(a instanceof Vec2D)
-	{
-		b = a.y;
-		a = a.x;
-	}
-	else{
-		if(a == undefined)a = 0;
-		if(b == undefined)b = 0;
-	}
-	this.x = a;
-	this.y = b;
-}
+var Vec2D = Class.extend({
+	init: function(a,b){
+		if(a instanceof Vec2D)
+		{
+			b = a.y;
+			a = a.x;
+		}
+		else{
+			if(a == undefined)a = 0;
+			if(b == undefined)b = 0;
+		}
+		this.x = a;
+		this.y = b;
+	},
 
-Vec2D.prototype = {
 	abs: function() {
         this.x = Math.abs(this.x);
         this.y = Math.abs(this.y);
@@ -585,7 +584,7 @@ Vec2D.prototype = {
         return s;
     }
 	
-};
+});
 
 Vec2D.X_AXIS = new Vec2D(1,0); 
 Vec2D.Y_AXIS = new Vec2D(0,1); 

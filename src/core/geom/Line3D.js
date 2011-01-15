@@ -8,117 +8,23 @@
 */
 
 
-function Line3D(vec_a, vec_b) {
-    this.a = vec_a;
-    this.b = vec_b;
-}
-
-/**
-    * Splits the line between A and B into segments of the given length,
-    * starting at point A. The tweened points are added to the given result
-    * list. The last point added is B itself and hence it is likely that the
-    * last segment has a shorter length than the step length requested. The
-    * first point (A) can be omitted and not be added to the list if so
-    * desired.
-    * 
-    * @param a
-    *            start point
-    * @param b
-    *            end point (always added to results)
-    * @param stepLength
-    *            desired distance between points
-    * @param segments
-    *            existing array list for results (or a new list, if null)
-    * @param addFirst
-    *            false, if A is NOT to be added to results
-    * @return list of result vectors
-    */
-Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst) {
-    if (segments == null) {
-        segments = [];
-    }
-    if (addFirst) {
-        segments.push(vec_a.copy());
-    }
-    var dist = vec_a.distanceTo(vec_b);
-    if (dist > stepLength) {
-        var pos = vec_a.copy();
-        var step = vec_b.sub(vec_a).limit(stepLength);
-        while (dist > stepLength) {
-            pos.addSelf(step);
-            segments.push(pos.copy());
-            dist -= stepLength;
-        }
-    }
-    segments.push(vec_b.copy());
-    return segments;
-}
-
-
-Line3D.LineIntersection = function(type,line,mua,mub)
-{
-	this.type = type;
-	if(mua == null)mua = 0;
-	if(mub == null)mub = 0;
-	this.line = line;
-	this.coeff = [mua,mub];
-}
-Line3D.LineIntersection.Type = {};
-Line3D.LineIntersection.Type.NON_INTERSECTING = 0;
-Line3D.LineIntersection.Type.INTERSECTING = 1;
-
-Line3D.LineIntersection.prototype = {
-	
-	getCoefficient: function(){
-		return this.coeff;
+var Line3D = Class.extend({
+	init: function(vec_a, vec_b) {
+	    this.a = vec_a;
+	    this.b = vec_b;
 	},
-	
-	getLength: function(){
-		if(this.line == null)return null;
-		return this.line.getLength();
-	},
-	
-	getLine: function(){
-		if(this.line==null)return null;
-		return this.line.copy();
-	},
-	
-	getType: function(){
-		return this.type;
-	},
-	
-	isIntersectionInside: function(){
-		return this.type == Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
-	},
-	
-	toString: function(){
-		return "type: "+this.type+ " line: "+this.line;
-	}
-	
-};
-   /**
-    * Calculates the line segment that is the shortest route between this line
-    * and the given one. Also calculates the coefficients where the end points
-    * of this new line lie on the existing ones. If these coefficients are
-    * within the 0.0 .. 1.0 interval the endpoints of the intersection line are
-    * within the given line segments, if not then the intersection line is
-    * outside.
-    * 
-    * <p>
-    * Code based on original by Paul Bourke:<br/>
-    * http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline3d/
-    * </p>
-    */
-Line3D.prototype = {
 	
 	closestLineTo: function(l) {
 
        var p43 = l.a.sub(l.b);
        if (p43.isZeroVector()) {
+       		console.log("ZERO");
            return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
        }
-       var p21 = this.b.sub(a);
+
+       var p21 = this.b.sub(this.a);
        if (p21.isZeroVector()) {
+       	console.log("NON-INTERSECTING");
            return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
        }
        var p13 = this.a.sub(l.a);
@@ -131,6 +37,7 @@ Line3D.prototype = {
 
        var denom = d2121 * d4343 - d4321 * d4321;
        if (Math.abs(denom) < MathUtils.EPS) {
+       console.log("NON-INTERSECTIN2");
            return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
        }
        var numer = d1343 * d4321 - d1321 * d4343;
@@ -226,11 +133,94 @@ Line3D.prototype = {
 
 
    splitIntoSegments: function(segments,stepLength, addFirst) {
-       return Line3D.splitIntoSegments(a, b, stepLength, segments, addFirst);
+       return Line3D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
    },
 
 
   toString: function() {
-       return a.toString() + " -> " + b.toString();
+       return this.a.toString() + " -> " + this.b.toString();
    }
-};
+});
+
+/**
+    * Splits the line between A and B into segments of the given length,
+    * starting at point A. The tweened points are added to the given result
+    * list. The last point added is B itself and hence it is likely that the
+    * last segment has a shorter length than the step length requested. The
+    * first point (A) can be omitted and not be added to the list if so
+    * desired.
+    * 
+    * @param a
+    *            start point
+    * @param b
+    *            end point (always added to results)
+    * @param stepLength
+    *            desired distance between points
+    * @param segments
+    *            existing array list for results (or a new list, if null)
+    * @param addFirst
+    *            false, if A is NOT to be added to results
+    * @return list of result vectors
+    */
+Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst) {
+    if (segments == null) {
+        segments = [];
+    }
+    if (addFirst) {
+        segments.push(vec_a.copy());
+    }
+    var dist = vec_a.distanceTo(vec_b);
+    if (dist > stepLength) {
+        var pos = vec_a.copy();
+        var step = vec_b.sub(vec_a).limit(stepLength);
+        while (dist > stepLength) {
+            pos.addSelf(step);
+            segments.push(pos.copy());
+            dist -= stepLength;
+        }
+    }
+    segments.push(vec_b.copy());
+    return segments;
+}
+
+
+Line3D.LineIntersection = Class.extend({
+	init:function(type,line,mua,mub){
+		this.type = type;
+		if(mua == null)mua = 0;
+		if(mub == null)mub = 0;
+		this.line = line;
+		this.coeff = [mua,mub];
+	},
+	
+	getCoefficient: function(){
+		return this.coeff;
+	},
+	
+	getLength: function(){
+		if(this.line == null)return null;
+		return this.line.getLength();
+	},
+	
+	getLine: function(){
+		if(this.line==null)return null;
+		return this.line.copy();
+	},
+	
+	getType: function(){
+		return this.type;
+	},
+	
+	isIntersectionInside: function(){
+		return this.type == Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
+	},
+	
+	toString: function(){
+		return "type: "+this.type+ " line: "+this.line;
+	}
+});
+	
+Line3D.LineIntersection.Type = {};
+Line3D.LineIntersection.Type.NON_INTERSECTING = 0;
+Line3D.LineIntersection.Type.INTERSECTING = 1;
+
