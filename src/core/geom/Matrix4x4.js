@@ -4,70 +4,71 @@
  * column-major formats...
  */
 
-var Matrix4x4 = Class.extend({
-	init: function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
-		this.temp = [];
-		if(v11 == undefined) //if no variables were supplied
-		{
-			this.matrix = [];
-			this.matrix[0] = [1,0,0,0];
-	        this.matrix[1] = [0,1,0,0];
-	        this.matrix[2] = [0,0,1,0];
-	        this.matrix[3] = [0,0,0,1];
-	     }
-	     else if(typeof(v11) == "number"){ //if the variables were numbers
-			var m1 = [v11,v12,v13,v14];
-			var m2 = [v21,v22,v23,v24];
-			var m3 = [v31,v32,v33,v34];
-			var m4 = [v41,v42,v43,v44];
-			this.matrix = [m1,m2,m3,m4];
-		}
-		else if(v11 instanceof Array) //if it was sent in as one array
-		{
-			var array = v11;
-			if (array.length != 9 && array.length != 16) {
-	            throw new Error("Matrix4x4: Array length must == 9 or 16");
-	        }
-	        if (array.length == 16) {
-	        	this.matrix = [];
-	        	this.matrix[0] = array.slice(0,4);
-	        	this.matrix[1] = array.slice(4,8);
-	        	this.matrix[2] = array.slice(8,12);
-	        	this.matrix[3] = array.slice(12);
-	         } else {
-	         	this.matrix[0] = array.slice(0,3);
-	         	this.matrix[0][3] =NaN;
-	         	this.matrix[1] = array.slice(3,6);
-	         	this.matrix[1][3] = NaN;
-	         	this.matrix[2] = array.slice(6,9);
-	         	this.matrix[2][3] = NaN;
-	         	this.matrix[3] = [NaN,NaN,NaN,NaN];
-	        }
+function Matrix4x4(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
+	this.temp = [];
+	if(v11 === undefined) //if no variables were supplied
+	{
+		this.matrix = [];
+		this.matrix[0] = [1,0,0,0];
+        this.matrix[1] = [0,1,0,0];
+        this.matrix[2] = [0,0,1,0];
+        this.matrix[3] = [0,0,0,1];
+     }
+     else if(typeof(v11) == "number"){ //if the variables were numbers
+		var m1 = [v11,v12,v13,v14];
+		var m2 = [v21,v22,v23,v24];
+		var m3 = [v31,v32,v33,v34];
+		var m4 = [v41,v42,v43,v44];
+		this.matrix = [m1,m2,m3,m4];
+	}
+	else if(v11 instanceof Array) //if it was sent in as one array
+	{
+		var array = v11;
+		if (array.length != 9 && array.length != 16) {
+            throw new Error("Matrix4x4: Array length must == 9 or 16");
+        }
+        if (array.length == 16) {
+        	this.matrix = [];
+        	this.matrix[0] = array.slice(0,4);
+        	this.matrix[1] = array.slice(4,8);
+        	this.matrix[2] = array.slice(8,12);
+        	this.matrix[3] = array.slice(12);
+         } else {
+         	this.matrix[0] = array.slice(0,3);
+         	this.matrix[0][3] =NaN;
+         	this.matrix[1] = array.slice(3,6);
+         	this.matrix[1][3] = NaN;
+         	this.matrix[2] = array.slice(6,9);
+         	this.matrix[2][3] = NaN;
+         	this.matrix[3] = [NaN,NaN,NaN,NaN];
+        }
+
+	}
+	else {
+	//else it should've been a Matrix4x4 that was passed in
 	
+		var m = v11;
+		if(m.length == 16)
+		{
+			for(var i=0;i<4;i++)
+			{
+				this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],m.matrix[i][3]];
+			}
 		}
 		else {
-		//else it should've been a Matrix4x4 that was passed in
-		
-			var m = v11;
-			if(m.length == 16)
+		//should be a length of 9
+			for(var i=0;i<3;i++)
 			{
-				for(var i=0;i<4;i++)
-				{
-					this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],m.matrix[i][3]];
-				}
+				this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],NaN];
 			}
-			else {
-			//should be a length of 9
-				for(var i=0;i<3;i++)
-				{
-					this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],NaN];
-				}
-				this.matrix[3] = [NaN,NaN,NaN,NaN];
-			}
-		
+			this.matrix[3] = [NaN,NaN,NaN,NaN];
 		}
 	
-	},
+	}
+
+}
+
+Matrix4x4.prototype = {
 	
 	add: function(rhs) {
         var result = new Matrix4x4(this);
@@ -378,7 +379,7 @@ var Matrix4x4 = Class.extend({
     		c = a.z;
     		a = a.x;
     	}
-		else if(b == undefined || c == undefined)
+		else if(b === undefined || c === undefined)
 		{
 			b = a;
 			c = a;

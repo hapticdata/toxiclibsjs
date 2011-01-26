@@ -7,12 +7,13 @@
 		Java Version		: http://toxiclibs.org
 */
 
-var Line2D = Class.extend({
-	init: function( a, b) {
-      this.a = a;
-      this.b = b;
-	},
+function Line2D( a, b) {
+  this.a = a;
+  this.b = b;
+}
 
+
+Line2D.prototype = {
     /**
      * Computes the closest point on this line to the point given.
      * 
@@ -156,7 +157,7 @@ var Line2D = Class.extend({
     toRay2D: function() {
         //return new Ray2D(this.a.copy(), this.b.sub(this.a).normalize());
     }
-});
+};
 
 
 
@@ -202,13 +203,13 @@ Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
 }
 
 
-Line2D.LineIntersection = Class.extend({
-	init: function(type, pos)
-	{
-		this.type = type;
-		this.pos = pos;
-	},
+Line2D.LineIntersection = function(type, pos)
+{
+	this.type = type;
+	this.pos = pos;
+}
 
+Line2D.LineIntersection.prototype = {
 	getPos: function(){
 		return this.pos.copy();
 	},
@@ -220,6 +221,6 @@ Line2D.LineIntersection = Class.extend({
 	toString: function(){
 		return "type: "+this.type+ " pos: "+this.pos;
 	}	
-});
+};
 
 Line2D.LineIntersection.Type = { COINCIDENT: 0, PARALLEL: 1, NON_INTERSECTING: 2, INTERSECTING: 3};

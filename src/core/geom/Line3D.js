@@ -8,11 +8,12 @@
 */
 
 
-var Line3D = Class.extend({
-	init: function(vec_a, vec_b) {
-	    this.a = vec_a;
-	    this.b = vec_b;
-	},
+function Line3D(vec_a, vec_b) {
+    this.a = vec_a;
+    this.b = vec_b;
+}
+
+Line3D.prototype = {
 	
 	closestLineTo: function(l) {
 
@@ -140,7 +141,7 @@ var Line3D = Class.extend({
   toString: function() {
        return this.a.toString() + " -> " + this.b.toString();
    }
-});
+};
 
 /**
     * Splits the line between A and B into segments of the given length,
@@ -184,14 +185,15 @@ Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst
 }
 
 
-Line3D.LineIntersection = Class.extend({
-	init:function(type,line,mua,mub){
-		this.type = type;
-		if(mua == null)mua = 0;
-		if(mub == null)mub = 0;
-		this.line = line;
-		this.coeff = [mua,mub];
-	},
+Line3D.LineIntersection = function(type,line,mua,mub){
+	this.type = type;
+	if(mua == null)mua = 0;
+	if(mub == null)mub = 0;
+	this.line = line;
+	this.coeff = [mua,mub];
+}
+
+Line3D.LineIntersection.prototype = {
 	
 	getCoefficient: function(){
 		return this.coeff;
@@ -218,7 +220,7 @@ Line3D.LineIntersection = Class.extend({
 	toString: function(){
 		return "type: "+this.type+ " line: "+this.line;
 	}
-});
+};
 	
 Line3D.LineIntersection.Type = {};
 Line3D.LineIntersection.Type.NON_INTERSECTING = 0;

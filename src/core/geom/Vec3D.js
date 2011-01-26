@@ -18,28 +18,11 @@
  * @param z
  *            the z
  */
-var Vec3D = Class.extend({
-	init: function(x, y, z){
-		//if only one var was passed, it shoudlve been a Vec3D
-		if(x instanceof Vec3D)
-		{
-			this.x = x.x;
-			this.y = x.y;
-			this.z = x.z;
-		}
-		else if(x == undefined) //if none or all were passed
-		{
-			this.x = 0.0;
-			this.y = 0.0;
-			this.z = 0.0;
-		}
-		else
-		{
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
-	},
+function Vec3D(x, y, z){
+	this.init(x,y,z);
+}
+	
+Vec3D.prototype = {
 	
 	abs: function(){
 		this.x = Math.abs(this.x);
@@ -322,8 +305,29 @@ var Vec3D = Class.extend({
 		return this; //cant make read-only in javascript, implementing to avoid erro
 	},
 	
+	init: function(x,y,z){
+		if(x instanceof Vec3D)
+		{
+			this.x = x.x;
+			this.y = x.y;
+			this.z = x.z;
+		}
+		else if(x === undefined) //if none or all were passed
+		{
+			this.x = 0.0;
+			this.y = 0.0;
+			this.z = 0.0;
+		}
+		else
+		{
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+	},
+	
 	interpolateTo: function(v,f,s) {
-		if(s == undefined)
+		if(s === undefined)
 		{
 			return new Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - z)*f);
 		}
@@ -332,7 +336,7 @@ var Vec3D = Class.extend({
     },
     
     interpolateToSelf: function(v,f,s){
-    	if(s == undefined)
+    	if(s === undefined)
     	{
     		this.x += (v.x-this.x)*f;
     		this.y += (v.y-this.y)*f;
@@ -715,7 +719,7 @@ var Vec3D = Class.extend({
 		{
 			return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 		}
-		else if(b == undefined || c == undefined)
+		else if(b === undefined || c === undefined)
 		{
 			b = c = a;
 		}
@@ -787,7 +791,7 @@ var Vec3D = Class.extend({
 	toString: function(){
 		return "[ x: "+this.x+ ", y: "+this.y+ ", z: "+this.z+"]";
 	}
-});
+};
 /**
   * Defines vector with all coords set to Float.MIN_VALUE. Useful for
   * bounding box operations.

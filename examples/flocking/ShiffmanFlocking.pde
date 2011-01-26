@@ -39,7 +39,7 @@ void setup() {
   size(600,200);
   flock = new Flock();
   // Add an initial set of boids into the system
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 70; i++) {
     flock.addBoid(new Boid(new Vec2D(width/2,height/2),3.0,0.05));
   }
   smooth();

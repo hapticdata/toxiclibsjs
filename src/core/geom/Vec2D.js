@@ -7,20 +7,12 @@
 		Java Version		: http://toxiclibs.org
 */
 
-var Vec2D = Class.extend({
-	init: function(a,b){
-		if(a instanceof Vec2D)
-		{
-			b = a.y;
-			a = a.x;
-		}
-		else{
-			if(a == undefined)a = 0;
-			if(b == undefined)b = 0;
-		}
-		this.x = a;
-		this.y = b;
-	},
+function Vec2D(a,b){
+	this.init(a,b);
+
+}
+	
+Vec2D.prototype = {
 
 	abs: function() {
         this.x = Math.abs(this.x);
@@ -253,12 +245,12 @@ var Vec2D = Class.extend({
 			a = a.x;
 		}
 		else {
-			if(a != undefined && b == undefined)
+			if(a != undefined && b === undefined)
 			{
 				b = a;
 			}
-			else if(a == undefined)a = 0;
-			else if(b == undefined)b = 0;
+			else if(a === undefined)a = 0;
+			else if(b === undefined)b = 0;
 		}
 		return new Vec2D(a,b);
 	},
@@ -266,9 +258,23 @@ var Vec2D = Class.extend({
 	heading: function() {
         return Math.atan2(this.y, this.x);
     },
+    
+    init: function(a,b){
+		if(a instanceof Vec2D)
+		{
+			b = a.y;
+			a = a.x;
+		}
+		else{
+			if(a === undefined)a = 0;
+			if(b === undefined)b = 0;
+		}
+		this.x = a;
+		this.y = b;
+	},
 
     interpolateTo: function(v, f, s) {
-		if(s == undefined){
+		if(s === undefined){
         	return new Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
 		}
 		else
@@ -288,7 +294,7 @@ var Vec2D = Class.extend({
      * @return itself, result overrides current vector
      */
     interpolateToSelf: function(v, f, s) {
-		if(s == undefined)
+		if(s === undefined)
 		{
         	this.x += (v.x - this.x) * f;
         	this.y += (v.y - this.y) * f;
@@ -584,7 +590,7 @@ var Vec2D = Class.extend({
         return s;
     }
 	
-});
+};
 
 Vec2D.X_AXIS = new Vec2D(1,0); 
 Vec2D.Y_AXIS = new Vec2D(0,1); 

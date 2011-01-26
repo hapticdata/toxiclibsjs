@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<title>Line3D Intersection - Three.js</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+		<style type="text/css">
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			a {
+				color:#0078ff;
+			}
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
+		<script type="text/javascript" src="../src/core/geom/Vec3D.js"></script>
+		<script type="text/javascript" src="../src/core/geom/Line3D.js"></script>
+		<script type="text/javascript" src="../src/core/geom/mesh/Vertex.js"></script>
+		<script type="text/javascript" src="../src/core/geom/Sphere.js"></script>
+		<script type="text/javascript" src="../src/core/geom/mesh/Mesh3D.js"></script>
+		<script type="text/javascript" src="../src/core/geom/mesh/Face.js"></script>
+		<script type="text/javascript" src="../src/core/geom/mesh/TriangleMesh.js"></script>		
+		<script type="text/javascript" src="../src/core/geom/mesh/SphereFunction.js"></script>	
+		<script type="text/javascript" src="../src/core/geom/mesh/SurfaceMeshBuilder.js"></script>
+		<script type="text/javascript" src="js/Three.js"></script> 
+
+		<script type="text/javascript">
+
+			var mouseX = 0, mouseY = 0,
+
+			windowHalfX = window.innerWidth / 2,
+			windowHalfY = window.innerHeight / 2,
+
+			SEPARATION = 200,
+			AMOUNTX = 10,
+			AMOUNTY = 10,
+
+			camera, scene, renderer,
+
+			stats;
+
+			var material;
+
+
+			init();
+			setInterval( loop, 1000 / 60 );
+
+			function init() {
+
+				var container, separation = 100, amountX = 50, amountY = 50,
+				particles;
+
+				container = document.createElement('div');
+				document.body.appendChild(container);
+
+				camera = new THREE.Camera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.z = 100;
+
+				scene = new THREE.Scene();
+
+				renderer = new THREE.CanvasRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+				
+
+				// particles
+
+				material = new THREE.ParticleCircleMaterial( { color: 0xffff00 } );
+				var geometry = new THREE.Geometry();
+				
+				
+				var mesh = new Sphere(100).toMesh(null,20);
+				var vertices = mesh.getVertices();
+				var numVertices = vertices.length;
+				
+				for(var i=0;i<numVertices;i++)
+				{
+					
+					var particle = new THREE.Particle(material);
+					particle.position.x = vertices[i].x;
+					particle.position.y = vertices[i].y;
+					particle.position.z = vertices[i].z;
+					
+					scene.addObject(particle);
+					
+				}
+				
+				
+				
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+				document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+			}
+
+			//
+			
+			
+			function onDocumentMouseMove(event) {
+
+				mouseX = event.clientX - windowHalfX;
+				mouseY = event.clientY - windowHalfY;
+			}
+
+			function onDocumentTouchStart( event ) {
+
+				if ( event.touches.length > 1 ) {
+
+					event.preventDefault();
+
+					mouseX = event.touches[ 0 ].pageX - windowHalfX;
+					mouseY = event.touches[ 0 ].pageY - windowHalfY;
+				}
+			}
+
+			function onDocumentTouchMove( event ) {
+
+				if ( event.touches.length == 1 ) {
+
+					event.preventDefault();
+
+					mouseX = event.touches[ 0 ].pageX - windowHalfX;
+					mouseY = event.touches[ 0 ].pageY - windowHalfY;
+				}
+			}
+
+			//
+
+			function loop() {
+				
+				camera.position.x += ( mouseX - camera.position.x ) * .05;
+				camera.position.y += ( - mouseY + 200 - camera.position.y ) * .05;
+				camera.updateMatrix();
+
+				renderer.render(scene, camera);
+
+				// stats.update();
+			}
+
+		</script>
+	</body>
+</html>

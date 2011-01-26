@@ -2,17 +2,20 @@
 
 <html lang="en">
 <head>
-	<title>Wheel Insets</title>
+	<title>Mesh Doodle - PJS + WebGL</title>
 	<meta name="author" content="Kyle Phillips">
 	<!-- Date: 2011-01-09 -->
+
 	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/math/InterpolateStrategy.js"></script>
+	<script type="text/javascript" src="../src/core/geom/Vec3D.js"></script>
+		<script type="text/javascript" src="../src/core/geom/mesh/Vertex.js"></script>
 	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
-	<script type="text/javascript" src="../src/color/TColor.js"></script>
+	<script type="text/javascript" src="../src/core/geom/mesh/TriangleMesh.js"></script>
+	<script type="text/javascript" src="../src/core/geom/mesh/Face.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 	<script>
 	/*
-	 * This code searches for all the <script type="application/processing" target="canvasid">
+	 * This code searches for all the
 	 * in your page and loads each script in the target canvas with the proper id.
 	 * It is useful to smooth the process of adding Processing code in your page and starting
 	 * the Processing.js engine.
@@ -52,22 +55,23 @@
 	</script>
 </head>
 <body>
-<h1>Wheel Insets</h1>
+<h1>Mesh Doodle</h1>
+<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a></p>
 <script type="application/processing">
+
 /**
- * <p>This example was used for designing the outer rim of some
- * generative wheels. The wheels are designed for laser cutting from
- * acrylic and the outer rim has a number of cutouts for friction fitting
- * wire track modules.</p>
- * <p>The actual generative wheel design is available under GPL v3 and
- * can be downloaded from:
- * 
- * http://toxiclibs.org/2010/01/re-inventing-the-wheel/
- * </p>
+ * <p>MeshDoodle shows how to use the new TriangleMesh class to dynamically
+ * build a 3D mesh, render it using Processing and export it as OBJ & STL format.</p>
+ *
+ * <ul>
+ * <li>Move mouse to draw a ribbon in 3D space.</li>
+ * <li>Press 's' to save current model as OBJ & STL file into the sketch folder</li>
+ * <li>Press any other key to restart</li>
+ * </ul>
  */
 
 /* 
- * Copyright (c) 2010 Karsten Schmidt
+ * Copyright (c) 2009 Karsten Schmidt
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -86,62 +90,75 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+import toxi.geom.*;
+import toxi.geom.mesh.*;
 
-int NUM_CUTOUTS=18;
-int NUM_ARCSEG=8;
-int RADIUS=300;
-float INSET=RADIUS-15;
-float MATERIAL_THICKNESS=5;
-float TOLERANCE=0.05;
-float SIZE=MATERIAL_THICKNESS+TOLERANCE;
-int BLEED=20;
+TriangleMesh mesh=new TriangleMesh("doodle");
+
+Vec3D prev=new Vec3D();
+Vec3D p=new Vec3D();
+Vec3D q=new Vec3D();
+
+Vec2D rotation=new Vec2D();
+
+float weight=0;
 
 void setup() {
-  size(2*RADIUS+BLEED,2*RADIUS+BLEED);
-  background(255);
-  translate(width/2,height/2);
-  noFill();
-  beginShape();
-  for(int i=0; i<NUM_CUTOUTS; i++) {
-    float alpha=i*TWO_PI/NUM_CUTOUTS;
-    float beta=(i+1)*TWO_PI/NUM_CUTOUTS;
-    // cutout
-    Vec2D[] insets=computePoints(alpha,INSET,SIZE);
-    _vertex(insets[1]);
-    _vertex(insets[0]);
-    float gamma=computeAngles(alpha,RADIUS,SIZE)[0];
-    float delta=computeAngles(beta,RADIUS,SIZE)[1];
-    // arc between cutouts
-    for(int j=0; j<=NUM_ARCSEG; j++) {
-      float theta=lerp(gamma,delta,j/(float)NUM_ARCSEG);
-      _vertex(Vec2D.fromTheta(theta).scaleSelf(RADIUS));
-    }
+  size(600,600,OPENGL);
+  fill(255,255,255);
+  stroke(255,0,0);
+}
+
+void draw() {
+  background(0);
+  lights();
+  translate(width/2,height/2,0);
+  rotateX(rotation.x);
+  rotateY(rotation.y);
+  noStroke();
+  beginShape(TRIANGLES);
+  // iterate over all faces/triangles of the mesh
+  Face[] faces = mesh.getFaces();
+  int numFaces = faces.length;
+  for(var i=0;i<numFaces;i++) {
+  	
+    var f=faces[i];
+    // create vertices for each corner point
+    _vertex(f.a);
+    _vertex(f.b);
+    _vertex(f.c);
   }
-  endShape(CLOSE);
+  endShape();
+  // udpate rotation
+  rotation.addSelf(0.014,0.0237);
 }
 
-//can't override methods the same way as in java, so I added the _
-void _vertex(Vec2D v) {
-  vertex(v.x,v.y);
+void _vertex(Vec3D v) {
+  //console.log(v.toString());
+  vertex(v.x,v.y,v.z);
 }
 
-float[] computeAngles(float theta, float radius, float dist) {
-  Vec2D[] points=computePoints(theta,radius,dist);
-  Vec2D a=points[0].toPolar();
-  Vec2D b=points[1].toPolar();
-  float alpha=a.y<0 ? TWO_PI+a.y : a.y;
-  float beta=b.y<0 ? TWO_PI+b.y : b.y;
-  return new float[]{
-    alpha,beta };
+void mouseMoved() {
+  // get 3D rotated mouse position
+  Vec3D pos=new Vec3D(mouseX-width/2,mouseY-height/2,0);
+  pos.rotateX(rotation.x);
+  pos.rotateY(rotation.y);
+  // use distance to previous point as target stroke weight
+  weight+=(sqrt(pos.distanceTo(prev))*2-weight)*0.1;
+  // define offset points for the triangle strip
+  Vec3D a=pos.add(0,0,weight);
+  Vec3D b=pos.add(0,0,-weight);
+  // add 2 faces to the mesh
+  mesh.addFace(p,b,q);
+  mesh.addFace(p,a,b);
+  // store current points for next iteration
+  prev=pos;
+  p=a;
+  q=b;
 }
 
-Vec2D[] computePoints(float theta, float radius, float dist) {
-  Vec2D p=Vec2D.fromTheta(theta).scaleSelf(radius);
-  Vec2D n=p.getPerpendicular().normalizeTo(dist/2);
-  Vec2D a=p.add(n);
-  Vec2D b=p.sub(n);
-  return new Vec2D[]{
-    a,b };
+void keyPressed() {
+  mesh.clear();
 }
 </script>
 
@@ -150,14 +167,15 @@ Vec2D[] computePoints(float theta, float radius, float dist) {
 </canvas>
 <p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
 	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
-<p>This example was used for designing the outer rim of some
-generative wheels. The wheels are designed for laser cutting from
-acrylic and the outer rim has a number of cutouts for friction fitting
-wire track modules.</p>
-<p>The actual generative wheel design is available under GPL v3 and
-can be downloaded from:
-
-<a href="http://toxiclibs.org/2010/01/re-inventing-the-wheel/">http://toxiclibs.org/2010/01/re-inventing-the-wheel/</a>
+<p><strong>Usage:</strong> Click mouse to toggle between radial/horizontal layout</p>
+<p>
+ PolarUnravel demo combines the following 3 features of toxiclibs:
+<ul>
+<li>Polar-Cartesian coordinate transformation</li>
+<li>Vector interpolation to smoothly switch layouts</li>
+<li>Use of InterpolateStrategy for easing effects</li>
+<li>Use TColor for working with HSV color space</li>
+</ul>
 </p>
 </body>
 </html>

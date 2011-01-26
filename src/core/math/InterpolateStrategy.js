@@ -26,12 +26,12 @@
  * <code>BezierInterpolation b=new BezierInterpolation(1f/3,-1f/3);</code>
  * </p>
  */
-var BezierInterpolation = Class.extend({
-	init: function(h1,h2) {
-		this.c1 = h1;
-		this.c2 = h2;
-	},
+function BezierInterpolation(h1,h2) {
+	this.c1 = h1;
+	this.c2 = h2;
+}
 
+BezierInterpolation.prototype = {
 	interpolate: function(a,b,t) {
 		var tSquared = t * t;
 	    var invT = 1.0 - t;
@@ -47,7 +47,7 @@ var BezierInterpolation = Class.extend({
         this.c2 = b;
     }
 
-});
+};
 
 /**
  * Implementation of the circular interpolation function.
@@ -63,15 +63,15 @@ var BezierInterpolation = Class.extend({
  * @param isFlipped
  *            true, if slope is inverted
  */
-var CircularInterpolation = Class.extend({
-	init: function(isFlipped) {
-       if(isFlipped = undefined)
-       {
-       		this.isFlipped = false;
-       	}
-	},
+function CircularInterpolation(isFlipped) {
+   if(isFlipped = undefined)
+   {
+   		this.isFlipped = false;
+   	}
+}
 
-    interpolate: function( a, b, f) {
+CircularInterpolation.prototype = {
+	interpolate: function( a, b, f) {
         if (this.isFlipped) {
             return a - (b - a) * (Math.sqrt(1 - f * f) - 1);
         } else {
@@ -83,7 +83,7 @@ var CircularInterpolation = Class.extend({
     setFlipped: function(isFlipped) {
         this.isFlipped = isFlipped;
     }
-});
+};
 
 
 
@@ -92,12 +92,13 @@ var CircularInterpolation = Class.extend({
  * 
  * i = b+(a-b)*(0.5+0.5*cos(f*PI))
  */
-var CosineInterpolation = Class.extend({
-	init: function(){},
+function CosineInterpolation(){}
+
+CosineInterpolation.prototype = {
 	interpolate: function(a, b, f) {
     	return b + (a - b) * (0.5 + 0.5 * Math.cos(f * Math.PI));
 	}
-});
+};
 
 
 
@@ -107,18 +108,18 @@ var CosineInterpolation = Class.extend({
  * 100%. By default {@link LinearInterpolation} is used, however any other
  * {@link InterpolateStrategy} can be specified via the constructor.
  */
-var DecimatedInterpolation = Class.extend({
-	init: function(steps,strategy) {
-     if(steps == undefined)throw new Error("steps was not passed to constructor");
-     this.numSteps = steps;
-     this.strategy = (strategy==undefined)? new LinearInterpolation() : strategy;
-	},
-	
+function DecimatedInterpolation(steps,strategy) {
+ if(steps === undefined)throw new Error("steps was not passed to constructor");
+ this.numSteps = steps;
+ this.strategy = (strategy==undefined)? new LinearInterpolation() : strategy;
+}
+
+DecimatedInterpolation.prototype = {	
 	interpolate: function(a,b,f) {
         var fd = Math.floor(f * this.numSteps) /  this.numSteps;
         return this.strategy.interpolate(a, b, fd);
 	}
-});
+};
 
 /**
  * Exponential curve interpolation with adjustable exponent. Use exp in the
@@ -129,15 +130,16 @@ var DecimatedInterpolation = Class.extend({
  * <li>&gt; 1.0 : ease-out (steep changes from a)</li>
  * </ul>
  */
-var ExponentialInterpolation = Class.extend({
-	init: function(exp) {
-       this.exponent = (exp == undefined)?2 : exp;
-	},
+function ExponentialInterpolation(exp) {
+   this.exponent = (exp === undefined)?2 : exp;
+}
+
+ExponentialInterpolation.prototype = {
 	
 	interpolate: function(a, b, f) {
     return a + (b - a) * Math.pow(f, this.exponent);
     }
-});
+};
 
 /**
  * Implementations of 2D interpolation functions (currently only bilinear).
@@ -212,23 +214,23 @@ Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _b
  * i = a + ( b - a ) * f
  */
 
-var LinearInterpolation = Class.extend({
-	init: function(){},
+function LinearInterpolation(){}
 
+LinearInterpolation.prototype = {
 	interpolate: function(a, b, f) {
         return a + (b - a) * f;
 	}
-});
+};
 
 /**
  * Initializes the s-curve with default sharpness = 2
  */
-var SigmoidInterpolation = Class.extend({
-	init: function(s) {
-		if(s == undefined)s = 2.0;
-   		this.setSharpness(s);
-	},
-	
+function SigmoidInterpolation(s) {
+	if(s === undefined)s = 2.0;
+		this.setSharpness(s);
+}
+
+SigmoidInterpolation.prototype = {	
 	getSharpness: function() {
 		return this.sharpness;
 	},
@@ -244,21 +246,21 @@ var SigmoidInterpolation = Class.extend({
 	    this.sharpPremult = 5 * s;
 	}
 	
-});
+};
 
 /**
  * Defines a single step/threshold function which returns the min value for all
  * factors &lt; threshold and the max value for all others.
  */
-var ThresholdInterpolation = Class.extend({
-	init: function(threshold) {
-    	this.threshold = threshold;
-	},
+function ThresholdInterpolation(threshold) {
+	this.threshold = threshold;
+}
 
+ThresholdInterpolation.prototype = {
 	interpolate: function(a, b, f) {
 		return f < this.threshold ? a : b;
 	}
-});
+};
     
     
 /**
@@ -268,16 +270,17 @@ var ThresholdInterpolation = Class.extend({
  */
 
 
-var ZoomLensInterpolation = Class.extend({
-	init: function(lensPos, lensStrength) {
-		this.leftImpl = new CircularInterpolation();
-		this.rightImpl = new CircularInterpolation();
-		this.lensPos = (lenPos == undefined) ? 0.5 :lensPos;
-		this.lensStrength = (lenStrength==undefined) ? 1 :lensStrength;
-		this.absStrength = Math.abs(this.lensStrength);
-		this.leftImpl.setFlipped(this.lensStrength > 0);
-		this.rightImpl.setFlipped(this.lensStrength < 0);
-	},
+function ZoomLensInterpolation(lensPos, lensStrength) {
+	this.leftImpl = new CircularInterpolation();
+	this.rightImpl = new CircularInterpolation();
+	this.lensPos = (lenPos === undefined) ? 0.5 :lensPos;
+	this.lensStrength = (lenStrength==undefined) ? 1 :lensStrength;
+	this.absStrength = Math.abs(this.lensStrength);
+	this.leftImpl.setFlipped(this.lensStrength > 0);
+	this.rightImpl.setFlipped(this.lensStrength < 0);
+}
+
+ZoomLensInterpolation.prototype = {
 
 	interpolate: function(min,max,t) {
 	    var val = min + (max - min) * t;
@@ -301,4 +304,4 @@ var ZoomLensInterpolation = Class.extend({
 	    this.leftImpl.setFlipped(this.lensStrength > 0);
 	    this.rightImpl.setFlipped(this.lensStrength < 0);
 	}
-});
+};

@@ -14,19 +14,25 @@
  * conversion methods to & from Hertz ({@link #hertzToRadians(float, float)})
  * are included in this base class.
  */
-var AbstractWave = Class.extend({
+function AbstractWave(phase,freq,amp,offset){
+
+}
+
+
+
+AbstractWave.prototype = {
 	init: function(phase,freq,amp,offset){
-		if(phase != undefined || freq != undefined || amp != undefined || offset != undefined)
+	
+		if(phase !== undefined || freq !== undefined || amp !== undefined || offset !== undefined)
 		{
 			this.setPhase(phase);
 			this.frequency = freq;
-			if(amp == undefined)amp = 1;
-			if(offset == undefined)offset = 1;
+			if(amp === undefined)amp = 1;
+			if(offset === undefined)offset = 1;
 			this.amp = amp;
 			this.offset = offset;
 		}
 	},
-
 	/**
      * Ensures phase remains in the 0...TWO_PI interval.
      * @param freq
@@ -34,7 +40,7 @@ var AbstractWave = Class.extend({
      * @return current phase
      */
 	cyclePhase: function(freq){
-		if(freq == undefined)freq = 0;
+		if(freq === undefined)freq = 0;
 		this.phase = (this.phase + freq) % AbstractWave.TWO_PI;
 		if(this.phase < 0){
 			this.phase += AbstractWave.TWO_PI;
@@ -86,7 +92,7 @@ var AbstractWave = Class.extend({
 		console.log(this.getClass()+ " this should be overridden");
 	}
 	
-});
+};
 
 AbstractWave.PI = 3.14159265358979323846;
 AbstractWave.TWO_PI = 2 * AbstractWave.PI;
@@ -122,80 +128,86 @@ AbstractWave.radiansToHertz = function(f,sampleRate) {
 
 
 
-var AMFMSineWave = AbstractWave.extend({
-	init: function(a,b,c,d,e){
-		if(typeof(c) == "number")
-		{
-			this._super(a,b,1,c);
-			this.amod = d;
-			this.fmod = e;
-		}
-		else
-		{
-			this._super(a,b);
-			this.amod = c;
-			this.fmod = d;
-		}
-	},
-
-	getClass: function(){
-	return "AMFMSineWave";
-	},
-
-	pop: function(){
-		this._super();
-		this.amod.pop();
-		this.fmod.pop();
-	},
-
-	push: function() {
-	    this._super();
-	    this.amod.push();
-	    this.fmod.push();
-	},
-
-	/**
-	 * Resets this wave and its modulating waves as well.
-	 * 
-	 * @see toxi.math.waves.AbstractWave#reset()
-	 */
-	reset: function(){
-    	this._super();
-    	this.fmod.reset();
-    	this.amod.reset();
-	},
-
-	/**
-	 * Progresses the wave and updates the result value. You must NEVER call the
-	 * update() method on the 2 modulating wave since this is handled
-	 * automatically by this method.
-	 * 
-	 * @see toxi.math.waves.AbstractWave#update()
-	 */
-	update: function() {
-	    this.amp = this.amod.update();
-	    this.value = this.amp * Math.sin(this.phase) + this.offset;
-	    this.cyclePhase(this.frequency + this.fmod.update());
-	    return this.value;
+function AMFMSineWave(a,b,c,d,e){
+	if(typeof c == "number")
+	{
+		this.parent.init.call(this,a,b,1,c);
+		this.amod = d;
+		this.fmod = e;
 	}
-});
-
-
-
-
-var ConstantWave = AbstractWave.extend({
-	init: function(value) {
-  	  this._super();
-   	 this.value = value;
-	},
-	getClass: function(){
-		return "ConstantWave";
-	},
-
-	update: function() {
-    	return this.value;
+	else
+	{
+		this.parent.init.call(this,a,b);
+		this.amod = c;
+		this.fmod = d;
 	}
-});
+}
+
+AMFMSineWave.prototype = new AbstractWave();
+AMFMSineWave.constructor = AMFMSineWave;
+AMFMSineWave.prototype.parent = AbstractWave.prototype;
+
+AMFMSineWave.prototype.getClass = function(){
+return "AMFMSineWave";
+}
+
+AMFMSineWave.prototype.pop = function(){
+	this.parent.pop.call(this);
+	this.amod.pop();
+	this.fmod.pop();
+}
+
+AMFMSineWave.prototype.push = function() {
+    this.parent.push.call(this);
+    this.amod.push();
+    this.fmod.push();
+}
+
+/**
+ * Resets this wave and its modulating waves as well.
+ * 
+ * @see toxi.math.waves.AbstractWave#reset()
+ */
+AMFMSineWave.prototype.reset = function(){
+	this.parent.reset.call(this);
+	this.fmod.reset();
+	this.amod.reset();
+}
+
+/**
+ * Progresses the wave and updates the result value. You must NEVER call the
+ * update() method on the 2 modulating wave since this is handled
+ * automatically by this method.
+ * 
+ * @see toxi.math.waves.AbstractWave#update()
+ */
+AMFMSineWave.prototype.update = function() {
+    this.amp = this.amod.update();
+    this.value = this.amp * Math.sin(this.phase) + this.offset;
+    this.cyclePhase(this.frequency + this.fmod.update());
+    return this.value;
+}
+
+
+
+function ConstantWave(value) {
+	  this.parent.init.call(this);
+	 this.value = value;
+}
+
+ConstantWave.prototype = new AbstractWave();
+ConstantWave.constructor = ConstantWave;
+ConstantWave.prototype.parent = AbstractWave.prototype;
+
+ConstantWave.prototype.getClass = function(){
+	return "ConstantWave";
+}
+
+ConstantWave.prototype.update = function() {
+	return this.value;
+}
+
+
 
 
 
@@ -213,265 +225,286 @@ var ConstantWave = AbstractWave.extend({
  * </p>
  */
 
-var FMHarmonicSquareWave = AbstractWave.extend({
-	init: function(a,b,c,d,e) {
-		this.maxHarmonics = 3;
-		if(typeof(c) == "number")
-		{
-			if(e == undefined)e = new ConstantWave(0);
-	    	this._super(a,b,c,d);
-	    	this.fmod = e;
-		}
-		else
-		{
-			this._super(a,b);
-			this.fmod = c;
-		}
-	},
-
-	getClass: function(){
-		return "FMHarmonicSquareWave";
-	},
-
-	pop: function() {
-		this._super();
-        this.fmod.pop();
-	},
-
-	push: function() {
-        this._super();
-        this.fmod.push();
-	},
-
-	reset: function() {
-        this._super();
-        this.fmod.reset();
-	},
-
-    /**
-     * Progresses the wave and updates the result value. You must NEVER call the
-     * update() method on the modulating wave since this is handled
-     * automatically by this method.
-     * 
-     * @see toxi.math.waves.AbstractWave#update()
-     */
-	update: function() {
-	    this.value = 0;
-	    for (var i = 1; i <= this.maxHarmonics; i += 2) {
-	        this.value += 1.0 / i *  Math.sin(i * this.phase);
-	    }
-	    this.value *= this.amp;
-	    this.value += this.offset;
-	    this.cyclePhase(this.frequency + this.fmod.update());
-	    return this.value;
-	}
-});
-
-
-var FMSawtoothWave = AbstractWave.extend({
-	init: function(a,b,c,d,e){
-		if(typeof(c) == "number")
-		{
-			this._super(a,b,c,d);
-			this.fmod = e;
-		}
-		else
-		{
-			this._super(a,b);
-			this.fmod = c;
-		}
-	},
-
-	getClass: function(){
-		return "FMSawtoothWave";
-	},
-	
-	pop: function(){
-		this._super();
-		this.fmod.pop();
-	},
-	
-	push: function(){
-		this._super();
-		this.fmod.push();
-	},
-	
-	reset: function(){
-		this._super();
-		this.fmod.reset();
-	},
-
-	update: function(){
-		this.value = ((this.phase / AbstractWave.TWO_PI)*2 - 1) * this.amp + this.offset;
-		this.cyclePhase(this.frequency + this.fmod.update());
-		return this.value;
-	}
-});
-
-
-var FMSineWave = AbstractWave.extend({
-	init: function(a,b,c,d,e){
-		if(typeof(c) == "number")
-		{
-			this._super(a,b,c,d);
-			this.fmod = e;
-		}
-		else
-		{
-			this._super(a,b);
-			this.fmod = c;
-		}
-	},
-
-	getClass: function(){
-		return "FMSineWave";
-	},
-
-	pop: function(){
-		this._super();
-		this.fmod.pop();
-	},
-
-	push: function(){
-		this._super();
-		this.fmod.push();
-	},
-
-	reset: function(){
-		this._super();
-		this.fmod.reset();
-	},
-
-	update: function(){
-		this.value = (Math.sin(this.phase)*this.amp) + this.offset;
-		this.cyclePhase(this.frequency + this.fmod.update());
-		return this.value;
-	}
-});
-
-
-var FMSquareWave = AbstractWave.extend({
-	init: function(a,b,c,d,e)
+function FMHarmonicSquareWave(a,b,c,d,e) {
+	this.maxHarmonics = 3;
+	if(typeof c == "number")
 	{
-		if(typeof(c) == "number")
+		if(e === undefined)e = new ConstantWave(0);
+    	this.parent.init.call(this,a,b,c,d);
+    	this.fmod = e;
+	}
+	else
+	{
+		this.parent.init.call(this,a,b);
+		this.fmod = c;
+	}
+}
+
+FMHarmonicSquareWave.prototype = new AbstractWave();
+FMHarmonicSquareWave.constructor = FMHarmonicSquareWave;
+FMHarmonicSquareWave.prototype.parent = AbstractWave.prototype;
+
+FMHarmonicSquareWave.prototype.getClass = function(){
+	return "FMHarmonicSquareWave";
+}
+
+FMHarmonicSquareWave.prototype.pop = function() {
+	this.parent.pop.call(this);
+    this.fmod.pop();
+}
+
+FMHarmonicSquareWave.prototype.push = function() {
+    this.parent.push.call(this);
+    this.fmod.push();
+}
+
+FMHarmonicSquareWave.prototype.reset = function() {
+    this.parent.reset.call(this);
+    this.fmod.reset();
+}
+
+/**
+ * Progresses the wave and updates the result value. You must NEVER call the
+ * update() method on the modulating wave since this is handled
+ * automatically by this method.
+ * 
+ * @see toxi.math.waves.AbstractWave#update()
+ */
+FMHarmonicSquareWave.prototype.update = function() {
+    this.value = 0;
+    for (var i = 1; i <= this.maxHarmonics; i += 2) {
+        this.value += 1.0 / i *  Math.sin(i * this.phase);
+    }
+    this.value *= this.amp;
+    this.value += this.offset;
+    this.cyclePhase(this.frequency + this.fmod.update());
+    return this.value;
+}
+
+
+function FMSawtoothWave(a,b,c,d,e){
+	if(typeof c == "number")
+	{
+		this.parent.init.call(this,a,b,c,d);
+		this.fmod = e;
+	}
+	else
+	{
+		this.parent.init.call(this,a,b);
+		this.fmod = c;
+	}
+}
+
+FMSawtoothWave.prototype = new AbstractWave();
+FMSawtoothWave.constructor = FMSawtoothWave;
+FMSawtoothWave.prototype.parent = AbstractWave.prototype;
+
+FMSawtoothWave.prototype.getClass = function(){
+	return "FMSawtoothWave";
+}
+
+
+FMSawtoothWave.prototype.pop = function(){
+	this.parent.pop.call(this);
+	this.fmod.pop();
+}
+
+
+FMSawtoothWave.prototype.push = function(){
+	this.parent.push.call(this);
+	this.fmod.push();
+}
+
+
+FMSawtoothWave.prototype.reset = function(){
+	this.parent.reset.call(this);
+	this.fmod.reset();
+}
+
+
+FMSawtoothWave.prototype.update = function(){
+	this.value = ((this.phase / AbstractWave.TWO_PI)*2 - 1) * this.amp + this.offset;
+	this.cyclePhase(this.frequency + this.fmod.update());
+	return this.value;
+}
+
+
+
+function FMSineWave(a,b,c,d,e){
+	if(typeof(c) == "number")
+	{
+		this.parent.init.call(this,a,b,c,d);
+		this.fmod = e;
+	}
+	else
+	{
+		this.parent.init.call(this,a,b);
+		this.fmod = c;
+	}
+}
+
+FMSineWave.prototype = new AbstractWave();
+FMSineWave.constructor = FMSineWave;
+FMSineWave.prototype.parent = AbstractWave.prototype;
+
+FMSineWave.prototype.getClass = function(){
+	return "FMSineWave";
+}
+
+FMSineWave.prototype.pop = function(){
+	this.parent.pop.call(this);
+	this.fmod.pop();
+}
+
+FMSineWave.prototype.push = function(){
+	this.parent.push.call(this);
+	this.fmod.push();
+}
+
+FMSineWave.prototype.reset = function(){
+	this.parent.reset.call(this);
+	this.fmod.reset();
+}
+
+FMSineWave.prototype.update = function(){
+	this.value = (Math.sin(this.phase)*this.amp) + this.offset;
+	this.cyclePhase(this.frequency + this.fmod.update());
+	return this.value;
+}
+
+
+
+function FMSquareWave(a,b,c,d,e)
+{
+	if(typeof c == "number")
+	{
+		if(e === undefined)
 		{
-			if(e == undefined)
-			{
-				this._super(a,b,c,d, new ConstantWave(0));
-			}
-			else
-			{
-				this._super(a,b,c,d);
-				this.fmod = e;
-			}
+			this.parent.init.call(this,a,b,c,d, new ConstantWave(0));
 		}
 		else
 		{
-			this._super(a,b);
-			this.fmod = c;
+			this.parent.init.call(this,a,b,c,d);
+			this.fmod = e;
 		}
-	},
-
-	getClass: function(){
-		return "FMSquareWave";
-	},
-	
-	pop: function(){
-			
-		this._super();
-		this.fmod.pop();
-	},
-	
-	push: function(){
-		this._super();
-		this.fmod.push();
-	},
-	
-	reset: function(){
-		this._super();
-		this.fmod.reset();
-	},
-	
-	update: function(){
-		this.value = (this.phase / AbstractWave.TWO_PI < 0.5 ? 1 : -1)*this.amp + this.offset;
-		this.cyclePhase(this.frequency + this.fmod.update());
-		return this.value;
 	}
-});
+	else
+	{
+		this.parent.init.call(this,a,b);
+		this.fmod = c;
+	}
+}
+
+FMSquareWave.prototype = new AbstractWave();
+FMSquareWave.constructor = FMSquareWave;
+FMSquareWave.prototype.parent = AbstractWave.prototype;
+
+FMSquareWave.prototype.getClass = function(){
+	return "FMSquareWave";
+}
+
+FMSquareWave.prototype.pop = function(){
+		
+	this.parent.pop.call(this);
+	this.fmod.pop();
+}
+
+FMSquareWave.prototype.push = function(){
+	this.parent.push.call(this);
+	this.fmod.push();
+}
+
+FMSquareWave.prototype.reset = function(){
+	this.parent.reset.call(this);
+	this.fmod.reset();
+}
+
+FMSquareWave.prototype.update = function(){
+	this.value = (this.phase / AbstractWave.TWO_PI < 0.5 ? 1 : -1)*this.amp + this.offset;
+	this.cyclePhase(this.frequency + this.fmod.update());
+	return this.value;
+}
 
 
-var FMTriangleWave = AbstractWave.extend({
-	init: function(a,b,c,d,e){
-		if(typeof(c) == "number"){
-			if(e != undefined)
-			{
-				this._super(a,b,c,d);
-				this.fmod = e;
-			}
-			else
-			{
-				this._super(a,b,c,d, new ConstantWave(0));
-			}
+
+function FMTriangleWave(a,b,c,d,e){
+	if(typeof c == "number"){
+		if(e != undefined)
+		{
+			this.parent.init.call(this,a,b,c,d);
+			this.fmod = e;
 		}
 		else
 		{
-			this._super(a,b,1,0);
+			this.parent.init.call(this,a,b,c,d, new ConstantWave(0));
 		}
-	},
-
-	getClass: function(){
-		return "FMTriangleWave";
-	},
-	
-	pop: function(){
-			
-		this._super();
-		this.fmod.pop();
-	},
-	
-	push: function(){
-		this._super();
-		this.fmod.push();
-	},
-	
-	reset: function(){
-		this._super();
-		this.fmod.reset();
-	},
-	
-	update: function(){
-		this.value = 2 * this.amp * (Math.abs(AbstractWave.PI - this.phase) * MathUtils.INV_PI - 0.5) + this.offset;
-		this.cyclePhase(this.frequency + this.fmod.update());
-		return this.value;
 	}
-});
+	else
+	{
+		this.parent.init.call(this,a,b,1,0);
+	}
+}
+
+
+FMTriangleWave.prototype = new AbstractWave();
+FMTriangleWave.constructor = FMTriangleWave;
+FMTriangleWave.prototype.parent = AbstractWave.prototype;
+
+FMTriangleWave.prototype.getClass = function(){
+	return "FMTriangleWave";
+}
+
+FMTriangleWave.prototype.pop = function(){
+	this.parent.pop.call(this);
+	this.fmod.pop();
+}
+
+FMTriangleWave.prototype.push = function(){
+	this.parent.push.call(this);
+	this.fmod.push();
+}
+
+FMTriangleWave.prototype.reset = function(){
+	this.parent.reset.call(this);
+	this.fmod.reset();
+}
+
+FMTriangleWave.prototype.update = function(){
+	this.value = 2 * this.amp * (Math.abs(AbstractWave.PI - this.phase) * MathUtils.INV_PI - 0.5) + this.offset;
+	this.cyclePhase(this.frequency + this.fmod.update());
+	return this.value;
+}
 
 
 
 //all parameters optional
-var SineWave = AbstractWave.extend({
-	init: function(phase,freq,amp,offset) {
-	   this._super(phase,freq,amp,offset);
-	},
+function SineWave(phase,freq,amp,offset) {
+   this.parent.init.call(this,phase,freq,amp,offset);
+}
 
-	getClass: function(){
-		return "SineWave";
-	},
+SineWave.prototype = new AbstractWave();
+SineWave.constructor = SineWave;
+SineWave.prototype.parent = AbstractWave.prototype;
 
-	pop: function(){
-			
-		this._super();
-	},
-	push: function(){
-		this._super();
-	},
+SineWave.prototype.getClass = function(){
+	return "SineWave";
+}
+
+SineWave.prototype.pop = function(){		
+	this.parent.pop.call(this);
+}
+
+SineWave.prototype.push = function(){
+	this.parent.push.call(this);
+}
+
+SineWave.prototype.update = function() {
+   this.value = (Math.sin(this.phase) * this.amp) + this.offset;
+   this.cyclePhase(this.frequency);
+   return this.value;
+}
 	
-	update: function() {
-	   this.value = (Math.sin(this.phase) * this.amp) + this.offset;
-	   this.cyclePhase(this.frequency);
-	   return this.value;
-	}
-});
+
 
 function WaveState(phase,frequency,amp,offset){
 	this.phase = phase;

@@ -8,53 +8,57 @@
 */
 
 
-AABB.prototype = new Vec3D();
-AABB.prototype.constructor = AABB;
-AABB.prototype.parent = Vec3D.prototype;
-
 /** requires Vec3D.interpolateTo
 AABB.fromMinMax = function(min,max){
 	var a = Vec3D.min(min);
 	var b = Vec3D.max(max);
 	return new AABB()
 }*/
-var AABB = Vec3D.extend({
-	init: function(a,b){
-		var vec;
-		var extent;
-		if(a == undefined)
-		{
-			this._super();
-			this.setExtent(new Vec3D());
-		}
-		else if(typeof(a) == "number")
-		{
-			this._super(new Vec3D());
-			this.setExtent(a);
-		}
-		else if(a instanceof Vec3D)
-		{
-			this._super(a);
-			if(b == undefined)
-			{
-				this.setExtent(a.getExtent());
-			}
-			else
-			{
-				this.setExtent(b);
-			}
-		}
-		
-		
-	},
 
-	containsPoint: function(p) {
-	        return p.isInAABB(this);
-	},
+function AABB(a,b){
+	var vec;
+	var extent;
+	if(a === undefined)
+	{
+		this.parent.init.call(this);
+		this.setExtent(new Vec3D());
+	}
+	else if(typeof(a) == "number")
+	{
+		this.parent.init.call(new Vec3D());
+		this.setExtent(a);
+	}
+	else if(a instanceof Vec3D)
+	{
+		this.parent.init.call(this,a);
+		if(b === undefined)
+		{
+			this.setExtent(a.getExtent());
+		}
+		else
+		{
+			this.setExtent(b);
+		}
+	}
 	
-	copy: function() {
-	        return new AABB(this);
-	},
+	
+}
+
+
+
+
+AABB.prototype = new Vec3D();
+AABB.prototype.constructor = AABB;
+AABB.prototype.parent = Vec3D.prototype;
+
+
+AABB.prototype.containsPoint = function(p) {
+    return p.isInAABB(this);
+}
+	
+AABB.prototype.copy = function() {
+    return new AABB(this);
+}
 	
 	/**
 	 * Returns the current box size as new Vec3D instance (updating this vector
@@ -63,18 +67,18 @@ var AABB = Vec3D.extend({
 	 * 
 	 * @return box size
 	 */
-	getExtent: function() {
-	   return this.extent.copy();
-	},
+AABB.prototype.getExtent = function() {
+   return this.extent.copy();
+}
 	
-	getMax: function() {
-	   // return this.add(extent);
-	   return this.max.copy();
-	},
-	
-	getMin: function() {
-	   return this.min.copy();
-	},
+AABB.prototype.getMax = function() {
+   // return this.add(extent);
+   return this.max.copy();
+}
+
+AABB.prototype.getMin = function() {
+   return this.min.copy();
+}
 /*
 AABB.prototype.getNormalForPoint = function(p) {
         p = p.sub(this);
@@ -107,19 +111,19 @@ AABB.prototype.getNormalForPoint = function(p) {
         return this;
     }*/
 
-	/**
-	* Checks if the box intersects the passed in one.
-	* 
-	* @param box
-	*            box to check
-	* @return true, if boxes overlap
-	*/
-	intersectsBox: function(box) {
-	        var t = box.sub(this);
-	        return Math.abs(t.x) <= (this.extent.x + box.extent.x)
-	                && Math.abs(t.y) <= (this.extent.y + box.extent.y)
-	                && Math.abs(t.z) <= (this.extent.z + box.extent.z);
-	 },
+/**
+* Checks if the box intersects the passed in one.
+* 
+* @param box
+*            box to check
+* @return true, if boxes overlap
+*/
+AABB.prototype.intersectsBox = function(box) {
+    var t = box.sub(this);
+    return Math.abs(t.x) <= (this.extent.x + box.extent.x)
+            && Math.abs(t.y) <= (this.extent.y + box.extent.y)
+            && Math.abs(t.z) <= (this.extent.z + box.extent.z);
+ }
 
 /**
  * Calculates intersection with the given ray between a certain distance
@@ -327,147 +331,147 @@ AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
     }
 */
 
-	planeBoxOverlap: function(normal, d, maxbox) {
-	        var vmin = new Vec3D();
-	        var vmax = new Vec3D();
-	
-	        if (normal.x > 0.0) {
-	            vmin.x = -maxbox.x;
-	            vmax.x = maxbox.x;
-	        } else {
-	            vmin.x = maxbox.x;
-	            vmax.x = -maxbox.x;
-	        }
-	
-	        if (normal.y > 0.0) {
-	            vmin.y = -maxbox.y;
-	            vmax.y = maxbox.y;
-	        } else {
-	            vmin.y = maxbox.y;
-	            vmax.y = -maxbox.y;
-	        }
-	
-	        if (normal.z > 0.0) {
-	            vmin.z = -maxbox.z;
-	            vmax.z = maxbox.z;
-	        } else {
-	            vmin.z = maxbox.z;
-	            vmax.z = -maxbox.z;
-	        }
-	        if (normal.dot(vmin) + d > 0.0) {
-	            return false;
-	        }
-	        if (normal.dot(vmax) + d >= 0.0) {
-	            return true;
-	        }
-	        return false;
-	    },
-		
-		/**
-		 * Updates the position of the box in space and calls
-		 * {@link #updateBounds()} immediately
-		 * 
-		 * @see toxi.geom.Vec3D#set(float, float, float)
-		 */
-		
-		set: function(a,b,c) {
-				if(typeof(a)==AABB)
-				{
-		        	this.extent.set(box.extent);
-		        	return this._super(box);
-				}
-				if(typeof(a)==Vec3D)
-				{
-					b = a.y;
-					c = a.z;
-					a = a.a;
-				}
-				this.x = a;
-				this.y = b;
-				this.z = c;
-				this.updateBounds();
-				return this;
-		 },
+AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
+    var vmin = new Vec3D();
+    var vmax = new Vec3D();
 
-
-		setExtent: function(extent) {
-		        this.extent = extent.copy();
-		        return this.updateBounds();
-		 },
-
-		testAxis: function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
-		    var p0 = a * va + b * vb;
-		    var p2 = a * wa + b * wb;
-		    var min;
-			var max;
-		    if (p0 < p2) {
-		        min = p0;
-		        max = p2;
-		    } else {
-		        min = p2;
-		        max = p0;
-		    }
-		    var rad = fa * ea + fb * eb;
-		    return (min > rad || max < -rad);
-		},
-
- /*   public Mesh3D toMesh() {
-        return toMesh(null);
+    if (normal.x > 0.0) {
+        vmin.x = -maxbox.x;
+        vmax.x = maxbox.x;
+    } else {
+        vmin.x = maxbox.x;
+        vmax.x = -maxbox.x;
     }
-public Mesh3D toMesh(Mesh3D mesh) {
-        if (mesh == null) {
-            mesh = new TriangleMesh("aabb", 8, 12);
-        }
-        Vec3D a = new Vec3D(min.x, max.y, max.z);
-        Vec3D b = new Vec3D(max.x, max.y, max.z);
-        Vec3D c = new Vec3D(max.x, min.y, max.z);
-        Vec3D d = new Vec3D(min.x, min.y, max.z);
-        Vec3D e = new Vec3D(min.x, max.y, min.z);
-        Vec3D f = new Vec3D(max.x, max.y, min.z);
-        Vec3D g = new Vec3D(max.x, min.y, min.z);
-        Vec3D h = new Vec3D(min.x, min.y, min.z);
-        // front
-        mesh.addFace(a, b, d, null, null, null, null);
-        mesh.addFace(b, c, d, null, null, null, null);
-        // back
-        mesh.addFace(f, e, g, null, null, null, null);
-        mesh.addFace(e, h, g, null, null, null, null);
-        // top
-        mesh.addFace(e, f, a, null, null, null, null);
-        mesh.addFace(f, b, a, null, null, null, null);
-        // bottom
-        mesh.addFace(g, h, d, null, null, null, null);
-        mesh.addFace(g, d, c, null, null, null, null);
-        // left
-        mesh.addFace(e, a, h, null, null, null, null);
-        mesh.addFace(a, d, h, null, null, null, null);
-        // right
-        mesh.addFace(b, f, g, null, null, null, null);
-        mesh.addFace(b, g, c, null, null, null, null);
-        return mesh;
-    }
-*/
-		    /*
-		     * (non-Javadoc)
-		     * 
-		     * @see toxi.geom.Vec3D#toString()
-		     */
-		toString: function() {
-		   return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
-		},
 
-    /**
-     * Updates the min/max corner points of the box. MUST be called after moving
-     * the box in space by manipulating the public x,y,z coordinates directly.
-     * 
-     * @return itself
-     */
-		updateBounds: function() {
-		  // this is check is necessary for the constructor
-		  if (this.extent != null) {
-		      this.min = this.sub(this.extent);
-		      this.max = this.add(this.extent);
-		  }
-		  return this;
+    if (normal.y > 0.0) {
+        vmin.y = -maxbox.y;
+        vmax.y = maxbox.y;
+    } else {
+        vmin.y = maxbox.y;
+        vmax.y = -maxbox.y;
+    }
+
+    if (normal.z > 0.0) {
+        vmin.z = -maxbox.z;
+        vmax.z = maxbox.z;
+    } else {
+        vmin.z = maxbox.z;
+        vmax.z = -maxbox.z;
+    }
+    if (normal.dot(vmin) + d > 0.0) {
+        return false;
+    }
+    if (normal.dot(vmax) + d >= 0.0) {
+        return true;
+    }
+    return false;
+}
+		
+/**
+ * Updates the position of the box in space and calls
+ * {@link #updateBounds()} immediately
+ * 
+ * @see toxi.geom.Vec3D#set(float, float, float)
+ */
+
+AABB.prototype.set = function(a,b,c) {
+		if(typeof(a)==AABB)
+		{
+        	this.extent.set(box.extent);
+        	return this.parent.set.call(this,box);
 		}
-});
+		if(typeof(a)==Vec3D)
+		{
+			b = a.y;
+			c = a.z;
+			a = a.a;
+		}
+		this.x = a;
+		this.y = b;
+		this.z = c;
+		this.updateBounds();
+		return this;
+ }
+
+
+AABB.prototype.setExtent = function(extent) {
+        this.extent = extent.copy();
+        return this.updateBounds();
+ }
+
+AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
+    var p0 = a * va + b * vb;
+    var p2 = a * wa + b * wb;
+    var min;
+	var max;
+    if (p0 < p2) {
+        min = p0;
+        max = p2;
+    } else {
+        min = p2;
+        max = p0;
+    }
+    var rad = fa * ea + fb * eb;
+    return (min > rad || max < -rad);
+}
+
+/*   public Mesh3D toMesh() {
+return toMesh(null);
+}
+public Mesh3D toMesh(Mesh3D mesh) {
+if (mesh == null) {
+    mesh = new TriangleMesh("aabb", 8, 12);
+}
+Vec3D a = new Vec3D(min.x, max.y, max.z);
+Vec3D b = new Vec3D(max.x, max.y, max.z);
+Vec3D c = new Vec3D(max.x, min.y, max.z);
+Vec3D d = new Vec3D(min.x, min.y, max.z);
+Vec3D e = new Vec3D(min.x, max.y, min.z);
+Vec3D f = new Vec3D(max.x, max.y, min.z);
+Vec3D g = new Vec3D(max.x, min.y, min.z);
+Vec3D h = new Vec3D(min.x, min.y, min.z);
+// front
+mesh.addFace(a, b, d, null, null, null, null);
+mesh.addFace(b, c, d, null, null, null, null);
+// back
+mesh.addFace(f, e, g, null, null, null, null);
+mesh.addFace(e, h, g, null, null, null, null);
+// top
+mesh.addFace(e, f, a, null, null, null, null);
+mesh.addFace(f, b, a, null, null, null, null);
+// bottom
+mesh.addFace(g, h, d, null, null, null, null);
+mesh.addFace(g, d, c, null, null, null, null);
+// left
+mesh.addFace(e, a, h, null, null, null, null);
+mesh.addFace(a, d, h, null, null, null, null);
+// right
+mesh.addFace(b, f, g, null, null, null, null);
+mesh.addFace(b, g, c, null, null, null, null);
+return mesh;
+}
+*/
+    /*
+     * (non-Javadoc)
+     * 
+     * @see toxi.geom.Vec3D#toString()
+     */
+AABB.prototype.toString = function() {
+   return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
+}
+
+/**
+* Updates the min/max corner points of the box. MUST be called after moving
+* the box in space by manipulating the public x,y,z coordinates directly.
+* 
+* @return itself
+*/
+AABB.prototype.updateBounds = function() {
+  // this is check is necessary for the constructor
+  if (this.extent != null) {
+      this.min = this.sub(this.extent);
+      this.max = this.add(this.extent);
+  }
+  return this;
+}
+

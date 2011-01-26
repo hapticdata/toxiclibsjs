@@ -9,22 +9,23 @@
 
 
 
-var TColor = Class.extend({
-	init: function(tcolor){
-		this.rgb = new Array(3);
-		this.hsv = new Array(3);
-		this.cmyk = new Array(4);
-		this._alpha = 1.0;
-		if(tcolor !== undefined && tcolor != null)
-		{
-			var buffer = tcolor.toCMYKAArray();
-			this.cmyk = buffer.splice(0,4);
-			this.hsv = tcolor.toHSVAArray().splice(0,3);
-			this.rgb = tcolor.toRGBAArray().splice(0,3);
-			this._alpha = tcolor.alpha;
-		}
-		
-	},
+function TColor(tcolor){
+	this.rgb = new Array(3);
+	this.hsv = new Array(3);
+	this.cmyk = new Array(4);
+	this._alpha = 1.0;
+	if(tcolor !== undefined && tcolor != null)
+	{
+		var buffer = tcolor.toCMYKAArray();
+		this.cmyk = buffer.splice(0,4);
+		this.hsv = tcolor.toHSVAArray().splice(0,3);
+		this.rgb = tcolor.toRGBAArray().splice(0,3);
+		this._alpha = tcolor.alpha;
+	}
+	
+}
+
+TColor.prototype = {
 	
 	add: function(c){
 		return this.copy().addSelf(c);
@@ -113,7 +114,7 @@ var TColor = Class.extend({
 	 * @return itself
 	 */
 	blend: function(c, t) {
-		if(t == undefined)t = 0.5;
+		if(t === undefined)t = 0.5;
 	    var crgb = c.toRGBAArray(null);
 	    this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
 	    this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
@@ -526,7 +527,7 @@ var TColor = Class.extend({
 	 * @return rgba array
 	 */
 	toRGBAArray: function(rgba, offset) {
-	    if (rgba == undefined || rgba == null) {
+	    if (rgba === undefined || rgba == null) {
 	        rgba = [];
 	        offset = 0;
 	    }
@@ -548,7 +549,7 @@ var TColor = Class.extend({
 	    return this.cmyk[0];
 	}
 	
-});
+};
 
 
 
