@@ -1,0 +1,120 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Line2D - Intersection</title>
+	<meta name="author" content="Kyle Phillips">
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+	<style>
+	body { margin: 0; padding: 0; overflow: hidden;}
+	</style>
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
+	<script type="text/javascript" src="../src/core/geom/BernsteinPolynomial.js"></script>
+	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
+	<script type="text/javascript" src="../src/core/geom/Spline2D.js"></script>
+	<script type="text/javascript" src="js/processing.js"></script>
+	
+	<script type="text/javascript">
+	
+	window.onload = init;
+	var canvas, ctx,spline;
+	var points, lastSplineVertices;
+	var sampleDistance = 50;
+	
+	function init(){
+		canvas = document.getElementById('myCanvas');
+		ctx = canvas.getContext('2d');
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+		spline = new Spline2D();
+		points = [];
+		
+	}
+	
+	
+	function update(mouseX,mouseY){
+		 var numP=points.length;
+  		 var currP=new Vec2D(mouseX,mouseY);
+  		 
+  		 if (numP>0) {
+  		 
+	  		 var prevP=points[numP-1];
+	  		 if (currP.distanceTo(prevP)>sampleDistance) {
+	  		 	points.push(currP);
+	  		 	ctx.strokeStyle = "rgba(0,0,0,0.5)";
+	  		 	ctx.beginPath();
+	  		 	ctx.arc(currP.x,currP.y,3,0,Math.PI*2);
+	  		 	ctx.stroke();
+	  		 	ctx.closePath();
+	  		 	spline.add(currP);
+	  		 	if (numP > 1) {
+	  		 		var lastP = points[numP-2];
+	    			var p = points[numP-1];
+	    			line(lastP.x,lastP.y,p.x,p.y);
+	    			ctx.strokeStyle = "rgba(0,0,0,0.5)";
+	    			ctx.arc(p.x,p.y,7,0,Math.PI*2);
+	    		}
+	    		
+	    		// need at least 4 vertices for a spline
+	    		if (numP>3) {
+	     			ctx.strokeStyle = "rgba(0,0,0,.125)";
+	    			// sample the curve at a higher resolution
+	    			// so that we get extra 8 points between each original pair of points
+	    			var vertices=spline.computeVertices(8);
+				    // draw the smoothened curve
+				    ctx.beginPath();
+				    var numRecent = Math.max(vertices.length-64,0);
+				    for(var i=numRecent;i<vertices.length;i++) {
+				      var v = vertices[i];
+				      if(i == numRecent){
+				      	ctx.moveTo(v.x,v.y);
+				      }
+				      else {
+				      	ctx.lineTo(v.x,v.y); 
+				      }
+				   
+				    }
+				    ctx.stroke();
+				    ctx.closePath();
+				    lastVertices = vertices;
+				}
+			}
+		}
+		else {
+			points.push(currP);
+		}
+	}
+	
+	
+	function line(x1,y1,x2,y2){
+		ctx.beginPath();
+		ctx.strokeStyle = "rgba(255,0,0,0.25)";
+		ctx.moveTo(x1,y1);
+		ctx.lineTo(x2,y2);
+		ctx.stroke();
+		ctx.closePath();
+	}
+	
+	
+	window.onmousemove = function(e){
+		update(e.pageX,e.pageY);
+	}
+	
+	document.ontouchmove = function(e){
+		e.preventDefault(); //prevents scrolling
+		for(var i=0;i<e.touches.length;i++){
+			update(e.touches[i].pageX,e.touches[i].pageY);
+		}
+	}
+	
+	</script>
+</head>
+<body>
+<canvas id="myCanvas" width="200" height="200">
+	your browser doesnt support canvas
+</canvas>
+
+
+</body>
+</html>

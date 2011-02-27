@@ -29,5 +29,4 @@ function BernsteinPolynomial(res) {
         this.b1 = b1;
         this.b2 = b2;
         this.b3 = b3;
-    }
 }

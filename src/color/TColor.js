@@ -502,8 +502,8 @@ TColor.prototype = {
 	},
 	
 	toHex: function() {
-	    var hex = toARGB().toString(16);
-	    if (hex.length() > 6) {
+	    var hex = this.toARGB().toString(16);
+	    if (hex.length > 6) {
 	        hex = hex.substring(2);
 	    }
 	    return hex;

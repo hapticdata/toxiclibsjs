@@ -1,11 +1,14 @@
 function AxisAlignedCylinder(pos,radius,length) {
-	this.pos = pos.copy();
-	this.setRadius(radius);
-	this.setLength(length);
+	this.init(pos,radius,length);
 }
 
 AxisAlignedCylinder.prototype = {
-
+	
+	init: function(pos,radius,length){
+		this.pos = pos.copy();
+		this.setRadius(radius);
+		this.setLength(length);
+	},
     /**
      * Checks if the given point is inside the cylinder.
      * 

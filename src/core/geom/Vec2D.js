@@ -107,7 +107,7 @@ Vec2D.prototype = {
     },
 
     distanceTo: function(v) {
-        if (v != null) {
+        if (v !== undefined) {
             var dx = this.x - v.x;
             var dy = this.y - v.y;
             return Math.sqrt(dx * dx + dy * dy);
@@ -117,7 +117,7 @@ Vec2D.prototype = {
     },
 
     distanceToSquared: function(v) {
-        if (v != null) {
+        if (v !== undefined) {
             var dx = this.x - v.x;
             var dy = this.y - v.y;
             return dx * dx + dy * dy;
