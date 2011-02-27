@@ -3,11 +3,11 @@ Toxiclibs.js is a javascript port of Karsten Schmidt's Toxiclibs for Java and Pr
 
 
 * Examples of the original library can be found at http://toxiclibs.org
-* Examples of toxiclibs.js can be found at http://haptic-data.com/toxiclibsjs
+* Examples of toxiclibs.js can be found at [http://haptic-data.com/toxiclibsjs](http://haptic-data.com/toxiclibsjs)
 
 
 
-Toxiclibs.js was initiated on 1/5/2011 by Kyle Phillips http://haptic-data.com
+Toxiclibs.js was initiated on 1/5/2011 by Kyle Phillips [http://haptic-data.com](http://haptic-data.com)
 
 
 
