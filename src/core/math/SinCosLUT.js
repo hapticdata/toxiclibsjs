@@ -11,7 +11,7 @@ function SinCosLUT(precision) {
 	this.period = 360/this.precision;
 	this.quadrant = this.period >> 2;
 	this.deg2rad = (Math.PI / 180.0) * this.precision;
-	this.rad2deg = (180./ / Math.PI) / this.precision;
+	this.rad2deg = (180.0 / Math.PI) / this.precision;
 	this.sinLUT = [];
 	for(var i=0;i< this.period;i++)
 	{

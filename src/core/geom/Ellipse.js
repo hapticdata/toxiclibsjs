@@ -2,51 +2,14 @@
  * This class defines a 2D ellipse and provides several utility methods for it.
  */
 
-function Ellipse(a,b,c,d) {
-	this.radius = new Vec2D();
-	if(a === undefined){
-		this.parent.init.call(this,0,0);
-		this.setRadii(1,1);
-	}
-	else if(a instanceof Vec2D)
-	{
-		this.parent.init.call(this,a.x,a.y);
-		if(b instanceof Vec2D)
-		{
-			this.setRadii(b.x,b.y);
-		}
-		else
-		{
-			this.setRadii(b,b);
-		}
-	}
-	else
-	{
-		if(d === undefined)
-		{
-			if(c === undefined)
-			{
-				this.parent.init.call(this,0,0);
-				this.setRadii(a,b);
-			}
-			else
-			{
-				this.parent.init.call(this,a,b);
-				this.setRadii(c,c);
-			}
-		}
-		else
-		{
-			this.parent.init.call(this,a,b);
-			this.setRadii(c,d);
-		}
-	}
+var Ellipse = function(a,b,c,d) {
+	this.init(a,b,c,d);
 }
 
  
 Ellipse.prototype = new Vec2D();
 Ellipse.constructor = Ellipse;
-Ellipse.parent = Vec2D.prototype;
+Ellipse.prototype.parent = Vec2D.prototype;
 
 Ellipse.prototype.containsPoint = function(p) {
     var foci = this.getFoci();
@@ -101,6 +64,51 @@ Ellipse.prototype.getFoci = function() {
 Ellipse.prototype.getRadii = function() {
     return this.radius.copy();
 }
+
+
+Ellipse.prototype.init = function(a,b,c,d){
+	this.radius = new Vec2D();
+	if(a === undefined){
+		this.parent.init.call(this,0,0);
+		this.setRadii(1,1);
+	}
+	else if(a instanceof Vec2D)
+	{
+		this.parent.init.call(this,a.x,a.y);
+		if(b instanceof Vec2D)
+		{
+			this.setRadii(b.x,b.y);
+		}
+		else
+		{
+			this.setRadii(b,b);
+		}
+	}
+	else
+	{
+		if(d === undefined)
+		{
+			if(c === undefined)
+			{
+				this.parent.init.call(this,0,0);
+				this.setRadii(a,b);
+			}
+			else
+			{
+				this.parent.init.call(this,a,b);
+				this.setRadii(c,c);
+			}
+		}
+		else
+		{
+			this.parent.init.call(this,a,b);
+			this.setRadii(c,d);
+		}
+	}
+
+}
+
+
 
 /**
  * Sets the radii of the ellipse to the new values.

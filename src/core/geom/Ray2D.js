@@ -30,9 +30,6 @@ Ray2D.prototype.getDirection = function() {
 /**
  * Calculates the distance between the given point and the infinite line
  * coinciding with this ray.
- * 
- * @param p
- * @return
  */
 Ray2D.prototype.getDistanceToPoint = function(p) {
     var sp = p.sub(this);
@@ -53,9 +50,6 @@ Ray2D.prototype.getPointAtDistance = function(dist) {
 Ray2D.prototype.setDirection = function(d) {
     this.dir.set(d).normalize();
     return this;
-}
-
-
 }
 
 /**

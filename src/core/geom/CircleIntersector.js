@@ -1,6 +1,6 @@
 function CircleIntersector(circle) {
     this.circle = circle;
-    this.isec;
+    this.isec = undefined;
 }
 
 CircleIntersector.prototype = {

@@ -21,7 +21,7 @@ function Range(min,max)
  * @param minOut
  * @param maxOut
  */
-funciton ScaleMap(minIn, maxIn, minOut, maxOut) {
+function ScaleMap(minIn, maxIn, minOut, maxOut) {
 	this.mapFunction = new LinearInterpolation();
 	this.setInputRange(minIn, maxIn);
 	this.setOutputRange(minOut, maxOut);
@@ -38,22 +38,22 @@ ScaleMap.prototype = {
      * @return mapped value
      */
    getClippedValueFor: function(val) {
-        var t = MathUtils.clipNormalized( ((val - this.in.min) / this.interval));
-        return this.mapFunction.interpolate(0, this.mapRange, t) + this.out.min;
+        var t = MathUtils.clipNormalized( ((val - this._in.min) / this._interval));
+        return this.mapFunction.interpolate(0, this.mapRange, t) + this._out.min;
     },
 
     /**
      * @return the middle value of the input range.
      */
     getInputMedian: function() {
-        return (this.in.min + this.in.max) * 0.5;
+        return (this._in.min + this._in.max) * 0.5;
     },
 
     /**
      * @return the in
      */
     getInputRange: function() {
-        return this.in;
+        return this._in;
     },
 
     /**
@@ -73,23 +73,23 @@ ScaleMap.prototype = {
      * @return mapped value
      */
     getMappedValueFor: function(val) {
-        var t = ((val - this.in.min) / this.interval);
-        return this.mapFunction.interpolate(0,  this.mapRange, t) + this.out.min;
+        var t = ((val - this._in.min) / this._interval);
+        return this.mapFunction.interpolate(0,  this.mapRange, t) + this._out.min;
     },
 
     /**
      * @return the middle value of the output range
      */
     getOutputMedian:function() {
-        return (this.out.min + this.out.max) * 0.5;
+        return (this._out.min + this._out.max) * 0.5;
     },
 
     /**
      * @return the output range
      */
-    getOutputRange:function() {
-        return this.out;
-    }
+    getOutputRange: function() {
+        return this._out;
+    },
 
     /**
      * Sets new minimum & maximum values for the input range
@@ -97,9 +97,9 @@ ScaleMap.prototype = {
      * @param min
      * @param max
      */
-    setInputRange:function(min,max) {
-        this.in =new Range(min,max);
-        this.interval = max - min;
+    setInputRange: function(min,max) {
+        this._in = new Range(min,max);
+        this._interval = max - min;
     },
 
     /**
@@ -121,7 +121,7 @@ ScaleMap.prototype = {
      *            new max output value
      */
     setOutputRange: function(min, max) {
-        this.out = new Range(min, max);
+        this._out = new Range(min, max);
         this.mapRange = max - min;
     }
 };

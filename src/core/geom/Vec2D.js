@@ -43,7 +43,7 @@ Vec2D.prototype = {
 
 	angleBetween: function(v, forceNormalize) {
         var theta;
-        if (forceNormalize) {
+        if (forceNormalize !== undefined && faceNormalize == true) {
             theta = this.getNormalized().dot(v.getNormalized());
         } else {
             theta = this.dot(v);

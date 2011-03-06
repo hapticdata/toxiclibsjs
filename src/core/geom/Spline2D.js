@@ -117,9 +117,9 @@ Spline2D.prototype = {
 	
 	findCPoints: function(){
         this.bi[1] = -.25;
-        this.coeffA[1].set((this.points[2].x - this.points[0].x - this.delta[0].x) * 0.25, (this.points[2].y - this.points[0].y - this.delta[0].y) * 0.25);
+        this.coeffA[1].set((this.points[2].x - this.points[0].x - this.delta[0].x) * this.tightness, (this.points[2].y - this.points[0].y - this.delta[0].y) * this.tightness);
         for (var i = 2; i < this.numP - 1; i++) {
-            this.bi[i] = -1 / (4 + this.bi[i - 1]);
+            this.bi[i] = -1 / (this.invTightness + this.bi[i - 1]);
             this.coeffA[i].set(-(this.points[i + 1].x - this.points[i - 1].x - this.coeffA[i - 1].x) *
             this.bi[i], -(this.points[i + 1].y - this.points[i - 1].y - this.coeffA[i - 1].y) *
             this.bi[i]);

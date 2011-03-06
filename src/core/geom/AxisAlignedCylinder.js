@@ -29,7 +29,7 @@ AxisAlignedCylinder.prototype = {
     /**
      * @return the cylinder's orientation axis
      */
-    getMajorAxis: fucntion(){
+    getMajorAxis: function(){
     	throw Error("AxisAlignedCylinder.getMajorAxis(): not implemented");
     },
 

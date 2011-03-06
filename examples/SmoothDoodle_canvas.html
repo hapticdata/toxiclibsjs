@@ -13,14 +13,15 @@
 	<script type="text/javascript" src="../src/core/geom/BernsteinPolynomial.js"></script>
 	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
 	<script type="text/javascript" src="../src/core/geom/Spline2D.js"></script>
-	<script type="text/javascript" src="js/processing.js"></script>
+	<script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
+
 	
 	<script type="text/javascript">
 	
 	window.onload = init;
 	var canvas, ctx,spline;
 	var points, lastSplineVertices;
-	var sampleDistance = 50;
+	var sampleDistance = 75;
 	
 	function init(){
 		canvas = document.getElementById('myCanvas');
@@ -30,8 +31,35 @@
 		spline = new Spline2D();
 		points = [];
 		
+		
+		$("#distance").change(function(){
+			console.log($(this));
+			sampleDistance = $(this).val();
+			updateLabels();
+		});
+		
+		$("#tightness").change(function(){
+			spline.setTightness($(this).val());
+			updateLabels();
+		});
+		
+		$("#clear").click(function(){
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+		});
+		
+		window.onmousemove = function(e){
+			update(e.pageX,e.pageY);
+		}
+		updateLabels();
+		
+		
 	}
 	
+	
+	function updateLabels(){
+		$("label[for='distance']").html("sample distance: "+sampleDistance);
+		$("label[for='tightness']").html("spline tightness: "+spline.tightness.toString().slice(0,5));
+	}
 	
 	function update(mouseX,mouseY){
 		 var numP=points.length;
@@ -97,9 +125,7 @@
 	}
 	
 	
-	window.onmousemove = function(e){
-		update(e.pageX,e.pageY);
-	}
+
 	
 	document.ontouchmove = function(e){
 		e.preventDefault(); //prevents scrolling
@@ -111,6 +137,9 @@
 	</script>
 </head>
 <body>
+<label for="distance">distance</label><input id="distance" type="range" min="5" max="200" value="50"/>
+<label for="tightness">spline tightness</label><input id="tightness" type="range" min="0.001", max="0.5" step="0.025" value="0.25" />
+<input id="clear" type="button" value="clear"/>
 <canvas id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>

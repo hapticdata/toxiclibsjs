@@ -20,7 +20,7 @@ function TColor(tcolor){
 		this.cmyk = buffer.splice(0,4);
 		this.hsv = tcolor.toHSVAArray().splice(0,3);
 		this.rgb = tcolor.toRGBAArray().splice(0,3);
-		this._alpha = tcolor.alpha;
+		this._alpha = tcolor._alpha;
 	}
 	
 }
@@ -140,7 +140,7 @@ TColor.prototype = {
 	},
 	
 	cyan : function(){
-		return this.cmyk[0];d
+		return this.cmyk[0];
 	},
 	
 	darken: function(step){

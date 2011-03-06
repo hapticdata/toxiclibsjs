@@ -4,31 +4,8 @@
  * circles from points.
  */
  
-function Circle(a,b,c) {
-	if(b === undefined)
-	{
-		if(a instanceof Circle)
-		{
-			this.parent.init.call(this,a,a.radius.x);
-		}
-		else
-		{
-			this.parent.init.call(this,0,0,a);
-		}
-	}
-	else
-	{
-		if(c === undefined)
-		{
-			this.parent.init.call(this,a,b);
-		}
-		else
-		{
-			this.parent.init.call(this,a,b,c,c);
-		}
-	
-	}
-
+var Circle = function(a,b,c) {
+	this.init(a,b,c);
 }
 
 
@@ -53,7 +30,33 @@ Circle.prototype.getTangentPoints = function(p) {
     return this.intersectsCircle(new Circle(m, m.distanceTo(p)));
 }
 
-Circle.prototype.intersectsCircle = fucntion(c) {
+Circle.prototype.init = function(a,b,c){
+	if(b === undefined)
+	{
+		if(a instanceof Circle)
+		{
+			this.parent.init.call(this,a,a.radius.x);
+		}
+		else
+		{
+			this.parent.init.call(this,0,0,a);
+		}
+	}
+	else
+	{
+		if(c === undefined)
+		{
+			this.parent.init.call(this,a,b);
+		}
+		else
+		{
+			this.parent.init.call(this,a,b,c,c);
+		}
+	
+	}
+}
+
+Circle.prototype.intersectsCircle = function(c) {
     var res = null;
     var delta = c.sub(this);
     var d = delta.magnitude();
