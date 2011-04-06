@@ -1,0 +1,15 @@
+body{
+	font-family: Georgia,serif;
+}
+
+.full_page {
+	margin: 0; padding: 0; overflow: hidden;
+}
+
+.controls {
+	font-size: 12px;
+	position: absolute;
+	left: 75px;
+	background-color: #eeeeee;
+	padding: 15px;
+}
