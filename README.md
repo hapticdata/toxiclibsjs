@@ -9,6 +9,7 @@ Toxiclibs.js is a javascript port of Karsten Schmidt's Toxiclibs for Java and Pr
 classes currently in the toxiclibs.js compiled build:
 
 Geometry (toxi. namespace)
+
 * AABB
 * AxisAlignedCylinder
 * BernsetinPolynomial
@@ -36,6 +37,7 @@ Geometry (toxi. namespace)
 * ZAxisCylinder
 
 Math (toxi. namespace)
+
 * MathUtils
 * InterpolationStrategy (abstract)
 * BezierInterpolation
@@ -60,6 +62,7 @@ Math (toxi. namespace)
 * SineWave
 
 Color (toxi.color. namespace)
+
 * TColor
 
 
