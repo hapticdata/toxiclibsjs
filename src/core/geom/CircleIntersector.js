@@ -1,9 +1,9 @@
-function CircleIntersector(circle) {
+toxi.CircleIntersector = function(circle) {
     this.circle = circle;
     this.isec = undefined;
 }
 
-CircleIntersector.prototype = {
+toxi.CircleIntersector.prototype = {
 
     getIntersectionData: function() {
         return this.isec;

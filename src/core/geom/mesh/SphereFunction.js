@@ -3,32 +3,32 @@
  * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
  */
 
-function SphereFunction(sphere_or_radius) {
+toxi.SphereFunction = function(sphere_or_radius) {
 	if(sphere_or_radius === undefined){
-		this.sphere = new Sphere(new Vec3D(),1);
+		this.sphere = new toxi.Sphere(new toxi.Vec3D(),1);
 	}
-	if(sphere_or_radius instanceof Sphere){
+	if(sphere_or_radius instanceof toxi.Sphere){
 		this.sphere = sphere_or_radius;
 	}
 	else{
-		this.sphere = new Sphere(new Vec3D(),sphere_or_radius);
+		this.sphere = new toxi.Sphere(new toxi.Vec3D(),sphere_or_radius);
 	}
-	this.phiRange = MathUtils.PI;
-	this.thetaRange = MathUtils.TWO_PI;
+	this.phiRange = toxi.MathUtils.PI;
+	this.thetaRange = toxi.MathUtils.TWO_PI;
 }
 
-SphereFunction.prototype = {
+toxi.SphereFunction.prototype = {
 	
 	computeVertexFor: function(p,phi,theta) {
-	    phi -= MathUtils.HALF_PI;
-	    var cosPhi = MathUtils.cos(phi);
-	    var cosTheta = MathUtils.cos(theta);
-	    var sinPhi = MathUtils.sin(phi);
-	    var sinTheta = MathUtils.sin(theta);
-	    var t = MathUtils.sign(cosPhi) * MathUtils.abs(cosPhi);
-	    p.x = t * MathUtils.sign(cosTheta) * MathUtils.abs(cosTheta);
-	    p.y = MathUtils.sign(sinPhi) * MathUtils.abs(sinPhi);
-	    p.z = t * MathUtils.sign(sinTheta) * MathUtils.abs(sinTheta);
+	    phi -= toxi.MathUtils.HALF_PI;
+	    var cosPhi = toxi.MathUtils.cos(phi);
+	    var cosTheta = toxi.MathUtils.cos(theta);
+	    var sinPhi = toxi.MathUtils.sin(phi);
+	    var sinTheta = toxi.MathUtils.sin(theta);
+	    var t = toxi.MathUtils.sign(cosPhi) * toxi.MathUtils.abs(cosPhi);
+	    p.x = t * toxi.MathUtils.sign(cosTheta) * toxi.MathUtils.abs(cosTheta);
+	    p.y = toxi.MathUtils.sign(sinPhi) * toxi.MathUtils.abs(sinPhi);
+	    p.z = t * toxi.MathUtils.sign(sinTheta) * toxi.MathUtils.abs(sinTheta);
 	    return p.scaleSelf(this.sphere.radius).addSelf(this.sphere);
 	},
 	
@@ -49,10 +49,10 @@ SphereFunction.prototype = {
 	},
 	
 	setMaxPhi: function(max) {
-	    this.phiRange = MathUtils.min(max / 2, MathUtils.PI);
+	    this.phiRange = toxi.MathUtils.min(max / 2, toxi.MathUtils.PI);
 	},
 	
 	setMaxTheta: function(max) {
-	    this.thetaRange = MathUtils.min(max, MathUtils.TWO_PI);
+	    this.thetaRange = toxi.MathUtils.min(max, toxi.MathUtils.TWO_PI);
 	}
 };

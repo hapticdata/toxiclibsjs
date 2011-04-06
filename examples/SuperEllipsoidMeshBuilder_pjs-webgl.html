@@ -2,19 +2,11 @@
 
 <html lang="en">
 <head>
-	<title>Super-Ellipsoid Mesh Builder - PJS + WebGL</title>
+	<title>Super-Ellipsoid Mesh Builder - PJS + WebGL - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
+	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec3D.js"></script>
-		<script type="text/javascript" src="../src/core/geom/mesh/Vertex.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
-	<script type="text/javascript" src="../src/core/math/Waves.js"></script>
-	<script thype="text/javascript" src="../src/core/geom/mesh/Mesh3D.js"></script>
-	<script type="text/javascript" src="../src/core/geom/mesh/TriangleMesh.js"></script>
-	<script type="text/javascript" src="../src/core/geom/mesh/Face.js"></script>
-	<script type="text/javascript" src="../src/core/geom/mesh/SurfaceMeshBuilder.js"></script>
-	<script type="text/javascript" src="../src/core/geom/mesh/SuperEllipsoid.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 	<script>
 	/*
@@ -57,8 +49,12 @@
 
 	</script>
 </head>
-<body>
-<h1>Super-Ellipsoid Mesh Builder</h1>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Super-Ellipsoid Mesh Builder</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
+		</hgroup>
+	</header>
 <script type="application/processing">
 
 
@@ -82,17 +78,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-import processing.opengl.*;
 
-import toxi.geom.*;
-import toxi.geom.mesh.*;
-import toxi.math.*;
-import toxi.math.waves.*;
-import toxi.processing.*;
+toxi.TriangleMesh mesh = new toxi.TriangleMesh();
 
-TriangleMesh mesh = new TriangleMesh();
-
-AbstractWave modX, modY;
+toxi.AbstractWave modX, modY;
 
 boolean isWireFrame;
 boolean showNormals;
@@ -101,14 +90,14 @@ boolean showNormals;
 void setup() {
   size(800,480, OPENGL);
   isWireFrame = true;
-  modX = new SineWave(0, 0.01f, 2.5f, 2.5f);
-  modY = new SineWave(PI, 0.017f, 2.5f, 2.5f);
+  modX = new toxi.SineWave(0, 0.01f, 2.5f, 2.5f);
+  modY = new toxi.SineWave(PI, 0.017f, 2.5f, 2.5f);
 }
 
 void draw() {
-  SurfaceFunction functor=new SuperEllipsoid(modX.update(), modY.update());
-  SurfaceMeshBuilder b = new SurfaceMeshBuilder(functor);
-  mesh = (TriangleMesh)b.createMesh(null,20, 80);
+  toxi.SurfaceFunction functor=new toxi.SuperEllipsoid(modX.update(), modY.update());
+  toxi.SurfaceMeshBuilder b = new toxi.SurfaceMeshBuilder(functor);
+  mesh = (toxi.TriangleMesh)b.createMesh(undefined,20, 80);
   mesh.computeVertexNormals();
   background(0);
   lights();
@@ -119,7 +108,7 @@ void draw() {
   
   //origin implementation
   
-  Vec3D o = new Vec3D();
+  toxi.Vec3D o = new toxi.Vec3D();
   float len = 300;
   float x = o.x;
   float y = o.y;
@@ -149,9 +138,9 @@ void draw() {
 	  for(i=0;i<numFaces;i++)
 	  {
 	  	Face f = faces[i];
-	  	Vec3D a = f.a;
-	  	Vec3D b = f.b;
-	  	Vec3D c = f.c;
+	  	toxi.Vec3D a = f.a;
+	  	toxi.Vec3D b = f.b;
+	  	toxi.Vec3D c = f.c;
 	  	normal(a.normal.x,a.normal.y,a.normal.z);
 	  	vertex(a.x,a.y,a.z);
 	  	normal(b.normal.x,b.normal.y,b.normal.z);
@@ -164,11 +153,11 @@ void draw() {
 	{
 		for(i=0;i<numFaces;i++)
 		{
-			Face f = faces[i];
-			Vec3D n = f.normal;
-			Vec3D a = f.a;
-			Vec3D b = f.b;
-			Vec3D c = f.c;
+			toxi.Face f = faces[i];
+			toxi.Vec3D n = f.normal;
+			toxi.Vec3D a = f.a;
+			toxi.Vec3D b = f.b;
+			toxi.Vec3D c = f.c;
 			normal(n.x,n.y,n.z);
 			vertex(a.x,a.y,a.z);
 			vertex(b.x,b.y,b.z);
@@ -182,12 +171,12 @@ void draw() {
 
 		int j;
 		if (!isWireFrame) {
-				Vertex[] vertices = mesh.getVertices();
+				toxi.Vertex[] vertices = mesh.getVertices();
 				int numVertices = vertices.length;
 			for (j=0;j<numVertices;j++) {
-                	Vertex v = vertices[j];
-                    Vec3D w = v.add(v.normal.scale(normalLength));
-                    Vec3D n = v.normal.scale(127);
+                	toxi.Vertex v = vertices[j];
+                    toxi.Vec3D w = v.add(v.normal.scale(normalLength));
+                    toxi.Vec3D n = v.normal.scale(127);
                     stroke(n.x + 128, n.y + 128, n.z + 128);
                     line(v.x, v.y, v.z, w.x, w.y, w.z);
                 }
@@ -195,10 +184,10 @@ void draw() {
                 float third = 1.0 / 3;
                 
                 for (j=0;j<numFaces;j++) {
-                	Face f = faces[j];
-                    Vec3D c = f.a.add(f.b).addSelf(f.c).scaleSelf(third);
-                    Vec3D d = c.add(f.normal.scale(normalLength));
-                    Vec3D n = f.normal.scale(127);
+                	toxi.Face f = faces[j];
+                    toxi.Vec3D c = f.a.add(f.b).addSelf(f.c).scaleSelf(third);
+                    toxi.Vec3D d = c.add(f.normal.scale(normalLength));
+                    toxi.Vec3D n = f.normal.scale(127);
                     stroke(n.x + 128, n.y + 128, n.z + 128);
                     line(c.x, c.y, c.z, d.x, d.y, d.z);
                 }
@@ -223,8 +212,19 @@ void keyPressed() {
 <canvas id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6">
 <p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
 	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<aside id="usage" class="grid_6">
+<p><strong>Usage:</strong>
+ <ul>
+ <li>w: toggle wireframe on/off <strong>Currently very slow</strong></li>
+ <li>n: toggle normal vector display on/off</li>
+  </ul></p>
+</aside>
+<article id="description" class="grid_9">
  <p>SuperEllipsoidMeshBuilder demonstrates how to use the SurfaceMeshBuilder class
  in conjunction with a SuperEllipsoid function to dynamically create a variety
  of useful geometric forms. The super ellipsoid is described in detail on Paul
@@ -232,10 +232,7 @@ void keyPressed() {
  the ellipsoid parameters. Included is also a re-usable function for displaying
  a generic TriangleMesh instance, incl. the display of surface normals useful for
  debug purposes.</p>
- 
- <p><strong>Usage:</strong>
- <ul>
- <li>w: toggle wireframe on/off <strong>Currently very slow</strong></li>
- <li>n: toggle normal vector display on/off</li>
-  </ul></p></body>
+ </article>
+ </section>
+</body>
 </html>

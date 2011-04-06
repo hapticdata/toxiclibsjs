@@ -7,12 +7,13 @@
 		Java Version		: http://toxiclibs.org
 */
 
-function Vec2D(a,b){
+toxi.Vec2D = function(a,b){
+	//this.init = toxi.Vec2D.prototype.init;	
 	this.init(a,b);
 
 }
 	
-Vec2D.prototype = {
+toxi.Vec2D.prototype = {
 
 	abs: function() {
         this.x = Math.abs(this.x);
@@ -22,7 +23,7 @@ Vec2D.prototype = {
 
     add: function(a, b) {
 		var v  = this.getVector(a,b);
-        return new Vec2D(this.x + v.x, this.y + v.y);
+        return new toxi.Vec2D(this.x + v.x, this.y + v.y);
     },
     
     /**
@@ -51,12 +52,7 @@ Vec2D.prototype = {
         return Math.acos(theta);
     },
 
-	bisect: function(b) {
-        var diff = this.sub(b);
-        var sum = this.add(b);
-        var dot = diff.dot(sum);
-        return new Vec3D(diff.x, diff.y, -dot / 2);
-    },
+	//bisect() is in Vec2D_post.js
 
     /**
      * Sets all vector components to 0.
@@ -85,21 +81,21 @@ Vec2D.prototype = {
      * @return itself
      */
     constrain: function(a,b) {
-		if(a instanceof Vec2D && b instanceof Vec2D)
+		if(a instanceof toxi.Vec2D && b instanceof toxi.Vec2D)
 		{
-			this.x = MathUtils.clip(this.x, min.x, max.x);
-	        this.y = MathUtils.clip(this.y, min.y, max.y);
+			this.x = toxi.MathUtils.clip(this.x, min.x, max.x);
+	        this.y = toxi.MathUtils.clip(this.y, min.y, max.y);
 		}
         else if(a.x != undefined && a.y != undefined && a.width != undefined && a.height != undefined)
 		{
-			this.x = MathUtils.clip(this.x, a.x, a.x + a.width);
-        	this.y = MathUtils.clip(this.y, a.y, a.y + a.height);
+			this.x = toxi.MathUtils.clip(this.x, a.x, a.x + a.width);
+        	this.y = toxi.MathUtils.clip(this.y, a.y, a.y + a.height);
 		}
         return this;
     },
 	
 	copy: function() {
-        return new Vec2D(this);
+        return new toxi.Vec2D(this);
     },
 
     cross: function(v) {
@@ -131,15 +127,15 @@ Vec2D.prototype = {
     },
 
 	equals: function(obj) {
-        if (obj instanceof Vec2D) {
+        if (obj instanceof toxi.Vec2D) {
             return this.x == obj.x && this.y == obj.y;
         }
         return false;
     },
 
 	equalsWithTolerance: function(v, tolerance) {
-        if (MathUtils.abs(this.x - v.x) < tolerance) {
-            if (MathUtils.abs(this.y - v.y) < tolerance) {
+        if (toxi.MathUtils.abs(this.x - v.x) < tolerance) {
+            if (toxi.MathUtils.abs(this.y - v.y) < tolerance) {
                 return true;
             }
         }
@@ -147,8 +143,8 @@ Vec2D.prototype = {
     },
 
 	floor: function() {
-        this.x = MathUtils.floor(this.x);
-        this.y = MathUtils.floor(this.y);
+        this.x = toxi.MathUtils.floor(this.x);
+        this.y = toxi.MathUtils.floor(this.y);
         return this;
     },
 
@@ -159,13 +155,13 @@ Vec2D.prototype = {
      * @return itself
      */
     frac: function() {
-        this.x -= MathUtils.floor(this.x);
-        this.y -= MathUtils.floor(this.y);
+        this.x -= toxi.MathUtils.floor(this.x);
+        this.y -= toxi.MathUtils.floor(this.y);
         return this;
     },
 
 	getAbs: function() {
-        return new Vec2D(this).abs();
+        return new toxi.Vec2D(this).abs();
     },
 
 	getComponent: function(id) {
@@ -188,37 +184,37 @@ Vec2D.prototype = {
     },
 
 	getConstrained: function(r) {
-        return new Vec2D(this).constrain(r);
+        return new toxi.Vec2D(this).constrain(r);
     },
 
     getFloored: function() {
-        return new Vec2D(this).floor();
+        return new toxi.Vec2D(this).floor();
     },
 
     getFrac: function() {
-        return new Vec2D(this).frac();
+        return new toxi.Vec2D(this).frac();
     },
 
     getInverted: function() {
-        return new Vec2D(-this.x, -this.y);
+        return new toxi.Vec2D(-this.x, -this.y);
     },
 
     getLimited: function(lim) {
         if (this.magSquared() > lim * lim) {
             return this.getNormalizedTo(lim);
         }
-        return new Vec2D(this);
+        return new toxi.Vec2D(this);
     },
 
     getNormalized: function() {
-        return new Vec2D(this).normalize();
+        return new toxi.Vec2D(this).normalize();
     },
 
     getNormalizedTo: function(len) {
-        return new Vec2D(this).normalizeTo(len);
+        return new toxi.Vec2D(this).normalizeTo(len);
     },
 	 getPerpendicular: function() {
-        return new Vec2D(this).perpendicular();
+        return new toxi.Vec2D(this).perpendicular();
     },
 
     getReciprocal: function() {
@@ -230,16 +226,16 @@ Vec2D.prototype = {
     },
 
     getRotated: function(theta) {
-        return new Vec2D(this).rotate(theta);
+        return new toxi.Vec2D(this).rotate(theta);
     },
 
     getSignum: function() {
-        return new Vec2D(this).signum();
+        return new toxi.Vec2D(this).signum();
     },
 
 	//this is just to get a Vec2D from variables that may be passed as  Vec2D or as an x & y
 	getVector: function(a,b) {
-		if(a instanceof Vec2D)
+		if(a instanceof toxi.Vec2D)
 		{
 			b = a.y;
 			a = a.x;
@@ -252,7 +248,7 @@ Vec2D.prototype = {
 			else if(a === undefined)a = 0;
 			else if(b === undefined)b = 0;
 		}
-		return new Vec2D(a,b);
+		return new toxi.Vec2D(a,b);
 	},
 	
 	heading: function() {
@@ -260,7 +256,7 @@ Vec2D.prototype = {
     },
     
     init: function(a,b){
-		if(a instanceof Vec2D)
+		if(a instanceof toxi.Vec2D)
 		{
 			b = a.y;
 			a = a.x;
@@ -273,9 +269,10 @@ Vec2D.prototype = {
 		this.y = b;
 	},
 
+
     interpolateTo: function(v, f, s) {
 		if(s === undefined){
-        	return new Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
+        	return new toxi.Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
 		}
 		else
 		{
@@ -337,7 +334,7 @@ Vec2D.prototype = {
         total_angles += Math.acos(v2.dot(v3));
         total_angles += Math.acos(v3.dot(v1));
 
-        return (Math.abs(total_angles - MathUtils.TWO_PI) <= 0.005);
+        return (Math.abs(total_angles - toxi.MathUtils.TWO_PI) <= 0.005);
     },
 
 	isMajorAxis: function(tol) {
@@ -353,8 +350,8 @@ Vec2D.prototype = {
     },
 
     isZeroVector: function() {
-        return Math.abs(this.x) < MathUtils.EPS
-                && Math.abs(this.y) < MathUtils.EPS;
+        return Math.abs(this.x) < toxi.MathUtils.EPS
+                && Math.abs(this.y) < toxi.MathUtils.EPS;
     },
 
     /**
@@ -369,8 +366,8 @@ Vec2D.prototype = {
      */
     jitter: function(a,b) {
 		var v = this.getVector(a,b);
-		this.x += MathUtils.normalizedRandom() * v.x;
-        this.y += MathUtils.normalizedRandom() * v.y;
+		this.x += toxi.MathUtils.normalizedRandom() * v.x;
+        this.y += toxi.MathUtils.normalizedRandom() * v.y;
         return this;
     },
 
@@ -390,17 +387,17 @@ Vec2D.prototype = {
     },
 
 	max: function(v) {
-        return new Vec2D(MathUtils.max(this.x, v.x), MathUtils.max(this.y, v.y));
+        return new toxi.Vec2D(toxi.MathUtils.max(this.x, v.x), toxi.MathUtils.max(this.y, v.y));
     },
 
 	maxSelf: function(v) {
-        this.x = MathUtils.max(this.x, v.x);
-        this.y = MathUtils.max(this.y, v.y);
+        this.x = toxi.MathUtils.max(this.x, v.x);
+        this.y = toxi.MathUtils.max(this.y, v.y);
         return this;
     },
 
     min: function(v) {
-        return new Vec2D(MathUtils.min(this.x, v.x), MathUtils.min(this.y, v.y));
+        return new toxi.Vec2D(toxi.MathUtils.min(this.x, v.x), MathUtils.min(this.y, v.y));
     },
 
 	minSelf: function(v) {
@@ -490,12 +487,12 @@ Vec2D.prototype = {
     },
 
 	scale: function(s) {
-        return new Vec2D(this.x * s, this.y * s);
+        return new toxi.Vec2D(this.x * s, this.y * s);
     },
 
     scale: function(a, b) {
 		var v = this.getVector(a,b);
-        return new Vec2D(this.x * v.x, this.y * v.y);
+        return new toxi.Vec2D(this.x * v.x, this.y * v.y);
     },
 
     scaleSelf: function(a,b) {
@@ -527,7 +524,7 @@ Vec2D.prototype = {
 
 	sub: function(a,b){
 		var v = this.getVector(a,b);
-		return new Vec2D(this.x -v.x,this.y - v.y);
+		return new toxi.Vec2D(this.x -v.x,this.y - v.y);
 	},
 	
 	/**
@@ -552,21 +549,11 @@ Vec2D.prototype = {
         var xr2 = eR.x * eR.x;
         var yr2 = eR.y * eR.y;
 
-        return new Vec2D(p.x / xr2, p.y / yr2).normalize();
+        return new toxi.Vec2D(p.x / xr2, p.y / yr2).normalize();
     },
 
-	to3DXY: function() {
-        return new Vec3D(this.x, this.y, 0);
-    },
-
-    to3DXZ: function() {
-        return new Vec3D(this.x, 0, this.y);
-    },
-
-    to3DYZ: function() {
-        return new Vec3D(0, this.x, this.y);
-    },
-
+	//to3D** methods are in Vec2D_post.js
+	
     toArray: function() {
         return [this.x,this.y];
     },
@@ -592,30 +579,30 @@ Vec2D.prototype = {
 	
 };
 
-Vec2D.X_AXIS = new Vec2D(1,0); 
-Vec2D.Y_AXIS = new Vec2D(0,1); 
-Vec2D.ZERO = new Vec2D();
-Vec2D.MIN_VALUE = new Vec2D(Number.MIN_VALUE,Number.MIN_VALUE);
-Vec2D.MAX_VALUE = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
-Vec2D.fromTheta = function(theta){
-	return new Vec2D(Math.cos(theta),Math.sin(theta));
+toxi.Vec2D.X_AXIS = new toxi.Vec2D(1,0); 
+toxi.Vec2D.Y_AXIS = new toxi.Vec2D(0,1); 
+toxi.Vec2D.ZERO = new toxi.Vec2D();
+toxi.Vec2D.MIN_VALUE = new toxi.Vec2D(Number.MIN_VALUE,Number.MIN_VALUE);
+toxi.Vec2D.MAX_VALUE = new toxi.Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
+toxi.Vec2D.fromTheta = function(theta){
+	return new toxi.Vec2D(Math.cos(theta),Math.sin(theta));
 }
-Vec2D.max = function(a,b){
-	return new Vec2D(MathUtils.max(a.x,b.x), MathUtils.max(a.y,b.y));
-}
-
-Vec2D.min = function(a, b) {
-    return new Vec2D(MathUtils.min(a.x, b.x), MathUtils.min(a.y, b.y));
+toxi.Vec2D.max = function(a,b){
+	return new toxi.Vec2D(toxi.MathUtils.max(a.x,b.x), toxi.MathUtils.max(a.y,b.y));
 }
 
-Vec2D.randomVector = function(rnd){
-	var v = new Vec2D(Math.random()*2 - 1, Math.random() * 2 - 1);
+toxi.Vec2D.min = function(a, b) {
+    return new toxi.Vec2D(toxi.MathUtils.min(a.x, b.x), toxi.MathUtils.min(a.y, b.y));
+}
+
+toxi.Vec2D.randomVector = function(rnd){
+	var v = new toxi.Vec2D(Math.random()*2 - 1, Math.random() * 2 - 1);
 	return v.normalize();
 }
 
 
 
-function Axis(vec)
+toxi.Axis = function(vec)
 {
 	this.vector = vec;
 	
@@ -623,5 +610,5 @@ function Axis(vec)
 		return this.vector;
 	}
 }
-Axis.X = Vec2D.X_AXIS; 
-Axis.Y = Vec2D.Y_AXIS;
+toxi.Axis.X = toxi.Vec2D.X_AXIS; 
+toxi.Axis.Y = toxi.Vec2D.Y_AXIS;

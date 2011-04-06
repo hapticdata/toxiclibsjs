@@ -1,4 +1,4 @@
-function Face(a,b,c,uvA,uvB,uvC) {
+toxi.Face = function(a,b,c,uvA,uvB,uvC) {
     this.a = a;
     this.b = b;
     this.c = c;
@@ -7,7 +7,7 @@ function Face(a,b,c,uvA,uvB,uvC) {
     this.b.addFaceNormal(this.normal);
     this.c.addFaceNormal(this.normal);
     
-    if(uvA != undefined)
+    if(uvA !== undefined)
     {
     	this.uvA = uvA;
     	this.uvB = uvB;
@@ -15,7 +15,7 @@ function Face(a,b,c,uvA,uvB,uvC) {
     }
 }
 
-Face.prototype = {
+toxi.Face.prototype = {
 	computeNormal: function() {
         this.normal = this.a.sub(this.c).crossSelf(this.a.sub(this.b)).normalize();
     },
@@ -32,7 +32,7 @@ Face.prototype = {
     },
     
     getClass: function(){
-		return "Face";
+		return "toxi.Face";
     },
 
     getVertices: function(verts) {
@@ -58,6 +58,6 @@ Face.prototype = {
      * @return triangle copy of this mesh face
      */
     toTriangle: function() {
-        return new Triangle3D(this.a.copy(), this.b.copy(), this.c.copy());
+        return new toxi.Triangle3D(this.a.copy(), this.b.copy(), this.c.copy());
     }
 };

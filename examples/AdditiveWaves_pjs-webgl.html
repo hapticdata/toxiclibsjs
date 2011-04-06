@@ -2,17 +2,12 @@
 
 <html lang="en">
 <head>
-	<title>Additive Waves - PJS + WebGL</title>
+	<title>Additive Waves - PJS + WebGL - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
+	<link rel="stylesheet" href="css/style.css" type="text/css">
 	<!-- Date: 2011-01-09 -->
-	<style>
-	p, ul, li {
-		width: 700px;
-	}
-	</style>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/math/Waves.js"></script>
 	<script>
 	/*
 	 * This code searches for all the <script type="application/processing" target="canvasid">
@@ -64,9 +59,13 @@
 	}
 	</script>
 </head>
-<body>
-	<h1>Additive Waves</h1>
-	<p>This visualization requires a WebGL-enabled browser, such as <a href="http://www.google.com/landing/chrome/beta/">Chrome 9 Beta</a> or <a href="http://www.mozilla.com/en-US/firefox/beta/">Firefox 4 Beta</a></p>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Additive Waves</h1>
+			<h2>w/ <a href="http://processingjs.org">Processing.js</a> and <a href="http://khronos.org/webgl">WebGL</a></h2>
+		</hgroup>
+	</header>
 <script type="application/processing">
 
 /* 
@@ -92,7 +91,7 @@
 import processing.opengl.*;
 import toxi.math.waves.*;
 
-AbstractWave waveX,waveY;
+toxi.AbstractWave waveX,waveY;
 
 int STEP = 25;
 int DIM = 800;
@@ -100,7 +99,7 @@ int D2 = DIM/2;
 int AMP = 50;
 
 void setup() {
-  size(800, 576, OPENGL);
+  size(940, 600, OPENGL);
   noStroke();
   waveX=createRandomWave();
   waveY=createRandomWave();
@@ -150,32 +149,32 @@ void mousePressed() {
   waveY=createRandomWave();
 }
 
-AbstractWave createRandomWave() {
-  AbstractWave w=null;
-  AbstractWave fmod=new SineWave(0, random(0.005, 0.02), random(0.1, 0.5), 0);
+toxi.AbstractWave createRandomWave() {
+  toxi.AbstractWave w=null;
+  toxi.AbstractWave fmod=new toxi.SineWave(0, random(0.005, 0.02), random(0.1, 0.5), 0);
   float freq=random(0.005, 0.05);
   switch((int)random(7)) {
   case 0:
-    w = new FMTriangleWave(0, freq, 1, 0, fmod);
+    w = new toxi.FMTriangleWave(0, freq, 1, 0, fmod);
     break;
   case 1:
-    w = new FMSawtoothWave(0, freq, 1, 0, fmod);
+    w = new toxi.FMSawtoothWave(0, freq, 1, 0, fmod);
     break;
   case 2:
-    w = new FMSquareWave(0, freq, 1, 0, fmod);
+    w = new toxi.FMSquareWave(0, freq, 1, 0, fmod);
     break;
   case 3:
-    w = new FMHarmonicSquareWave(0, freq, 1, 0, fmod);
-    ((FMHarmonicSquareWave)w).maxHarmonics=(int)random(3,30);
+    w = new toxi.FMHarmonicSquareWave(0, freq, 1, 0, fmod);
+    ((toxi.FMHarmonicSquareWave)w).maxHarmonics=(int)random(3,30);
     break;
   case 4:
-    w = new FMSineWave(0, freq, 1, 0, fmod);
+    w = new toxi.FMSineWave(0, freq, 1, 0, fmod);
     break;
   case 5:
-    w = new AMFMSineWave(0, freq, 0, fmod, new SineWave(0, random(0.01,0.2), random(2, 3), 0));
+    w = new toxi.AMFMSineWave(0, freq, 0, fmod, new toxi.SineWave(0, random(0.01,0.2), random(2, 3), 0));
     break;
   case 6:
-    w = new ConstantWave(random(-1,1));
+    w = new toxi.ConstantWave(random(-1,1));
     break;
   }
   return w;
@@ -183,13 +182,17 @@ AbstractWave createRandomWave() {
 
 </script>
 
-<canvas id="myCanvas" width="200" height="200">
+<canvas class="grid_12" id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>
-<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
-	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a>
-	</p>
-<p><strong>Usage:</strong> move mouse to rotate view, click to regenerate 2 random waves.</p>
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6"><p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
+	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<aside class="grid_6">
+	<p><strong>Usage:</strong><br>move mouse to rotate view, click to regenerate 2 random waves.</p>
+</aside>
+<article id="description" class="grid_12">
 	<p>AdditiveWaves demo is showing how to add 2 randomly chosen waveforms
 	 to create a 3D terrain. One wave is moving along the X axis and is mapped
 	 to the red color channel, the other is propagating along Y and is mapped to
@@ -210,13 +213,14 @@ AbstractWave createRandomWave() {
 	 <li>FMSquareWave, FMHarmonicSquareWave</li>
 	 <li>ConstantWave</li></ul>
 	 
-	 <p>For a demonstration how to use these wave generators as oscillators to
+	 <del><p class="strike">For a demonstration how to use these wave generators as oscillators to
 	 synthesize audio samples, please have a look at the toxiclibs audioutils sub-package
-	 which is being distributed separately.</p>
+	 which is being distributed separately.</p></del>
 	 
 	 <p>You can also create entirely new waveforms by subclassing the parent AbstractWave
 	 type and overwriting the update() method.</p>
-	 
-
+</article>
+</section>
+<footer class="grid_12"><a href="http://haptic-data.com/toxiclibsjs/">toxiclibs.js</a></footer>
 </body>
 </html>

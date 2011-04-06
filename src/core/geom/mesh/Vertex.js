@@ -1,25 +1,25 @@
-function Vertex(v,id) {
+toxi.Vertex = function(v,id) {
         this.parent.init.call(this,v);
         this.id = id;
-        this.normal = new Vec3D();
+        this.normal = new toxi.Vec3D();
 }
-Vertex.prototype = new Vec3D();
-Vertex.constructor = Vertex;
-Vertex.prototype.parent = Vec3D.prototype;
+toxi.Vertex.prototype = new toxi.Vec3D();
+toxi.Vertex.constructor = toxi.Vertex;
+toxi.Vertex.prototype.parent = toxi.Vec3D.prototype;
 
-Vertex.prototype.addFaceNormal = function(n) {
+toxi.Vertex.prototype.addFaceNormal = function(n) {
     this.normal.addSelf(n);
 }
 
-Vertex.prototype.clearNormal = function() {
+toxi.Vertex.prototype.clearNormal = function() {
     this.normal.clear();
 }
 
-Vertex.prototype.computeNormal = function() {
+toxi.Vertex.prototype.computeNormal = function() {
     this.normal.normalize();
 }
 
-Vertex.prototype.toString = function() {
+toxi.Vertex.prototype.toString = function() {
     return this.id + ": p: " + this.parent.toString.call(this) + " n:" + this.normal.toString();
 }
 

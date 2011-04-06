@@ -1,7 +1,7 @@
 //rawPoints should be Vec2D array
-function Spline2D(rawPoints,bernsteinPoly){
+toxi.Spline2D = function(rawPoints,bernsteinPoly){
 	if(arguments.length == 0){
-		this.setTightness(Spline2D.DEFAULT_TIGHTNESS);
+		this.setTightness(toxi.Spline2D.DEFAULT_TIGHTNESS);
 		this.pointList = [];
 	}
 	else if(arguments.length >= 3){
@@ -17,8 +17,8 @@ function Spline2D(rawPoints,bernsteinPoly){
         this.delta = [];
         this.bi = [];
         for (var i = 0; i < this.numP; i++) {
-            this.coeffA[i] = new Vec2D();
-            this.delta[i] = new Vec2D();
+            this.coeffA[i] = new toxi.Vec2D();
+            this.delta[i] = new toxi.Vec2D();
             this.bi[i] = 0;
         }
 		//this.pointList = rawPoints.slice(0);
@@ -29,7 +29,7 @@ function Spline2D(rawPoints,bernsteinPoly){
 }
 
 
-Spline2D.prototype = {
+toxi.Spline2D.prototype = {
 	add: function(p){
 		this.pointList.push(p.copy());
 		return this;
@@ -42,13 +42,13 @@ Spline2D.prototype = {
 		}
 		res++;
 		if(this.bernstein === undefined || bernstein.resolution != res){
-			this.bernstein = new BernsteinPolynomial(res);
+			this.bernstein = new toxi.BernsteinPolynomial(res);
 		}
 		this.vertices = [];
 
 		this.findCPoints();
-		var deltaP = new Vec2D();
-		var deltaQ = new Vec2D();
+		var deltaP = new toxi.Vec2D();
+		var deltaQ = new toxi.Vec2D();
 		res--;
 		for(var i=0;i<this.numP - 1;i++){
 			var p = this.points[i];
@@ -60,7 +60,7 @@ Spline2D.prototype = {
 				
 				var y = p.y * this.bernstein.b0[k] + deltaP.y * this.bernstein.b1[k] + deltaQ.y * this.bernstein.b2[k] + q.y * this.bernstein.b3[k];
 				
-				this.vertices.push(new Vec2D(x,y));
+				this.vertices.push(new toxi.Vec2D(x,y));
 			}	
 		}
 		this.vertices.push(this.points[this.points.length-1]);
@@ -70,13 +70,13 @@ Spline2D.prototype = {
 	computeVertices: function(res){
 		this.updateCoefficients();
         if (this.bernstein == undefined || this.bernstein.resolution != res) {
-            this.bernstein = new BernsteinPolynomial(res);
+            this.bernstein = new toxi.BernsteinPolynomial(res);
         }
         var bst = this.bernstein;
         this.vertices = [];
         this.findCPoints();
-        var deltaP = new Vec2D();
-        var deltaQ = new Vec2D();
+        var deltaP = new toxi.Vec2D();
+        var deltaQ = new toxi.Vec2D();
         for (var i = 0; i < this.numP - 1; i++) {
             var p = this.points[i];
             var q = this.points[i + 1];
@@ -89,7 +89,7 @@ Spline2D.prototype = {
                 var y = p.y * bst.b0[k] + deltaP.y * bst.b1[k] +
                 deltaQ.y * bst.b2[k] +
                 q.y * bst.b3[k];
-                this.vertices.push(new Vec2D(x, y));
+                this.vertices.push(new toxi.Vec2D(x, y));
             }
         }
         return this.vertices;
@@ -203,8 +203,8 @@ Spline2D.prototype = {
 			this.delta = [];
 			this.bi = [];
 			for(var i=0;i<this.numP; i++){
-				this.coeffA[i] = new Vec2D();
-				this.delta[i] = new Vec2D();
+				this.coeffA[i] = new toxi.Vec2D();
+				this.delta[i] = new toxi.Vec2D();
 			}
 			this.setTightness(this.tightness);
 		}
@@ -213,5 +213,5 @@ Spline2D.prototype = {
 
 };
 
-Spline2D.DEFAULT_TIGHTNESS = 0.25;
-Spline2D.DEFAULT_RES = 16;
+toxi.Spline2D.DEFAULT_TIGHTNESS = 0.25;
+toxi.Spline2D.DEFAULT_RES = 16;

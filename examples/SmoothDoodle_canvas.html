@@ -2,17 +2,13 @@
 
 <html lang="en">
 <head>
-	<title>Line2D - Intersection</title>
+	<title>Smooth Doodle - Spline2D - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
 	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
-	<style>
-	body { margin: 0; padding: 0; overflow: hidden;}
-	</style>
+	<link href="layout.css" type="text/css" rel="stylesheet"/>
+	
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/geom/BernsteinPolynomial.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Spline2D.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
 
 	
@@ -21,14 +17,14 @@
 	window.onload = init;
 	var canvas, ctx,spline;
 	var points, lastSplineVertices;
-	var sampleDistance = 75;
+	var sampleDistance = 50;
 	
 	function init(){
 		canvas = document.getElementById('myCanvas');
 		ctx = canvas.getContext('2d');
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight;
-		spline = new Spline2D();
+		spline = new toxi.Spline2D();
 		points = [];
 		
 		
@@ -58,12 +54,12 @@
 	
 	function updateLabels(){
 		$("label[for='distance']").html("sample distance: "+sampleDistance);
-		$("label[for='tightness']").html("spline tightness: "+spline.tightness.toString().slice(0,5));
+		$("label[for='tightness']").html("spline tightness: "+spline.tightness.toString().slice(0,4));
 	}
 	
 	function update(mouseX,mouseY){
 		 var numP=points.length;
-  		 var currP=new Vec2D(mouseX,mouseY);
+  		 var currP=new toxi.Vec2D(mouseX,mouseY);
   		 
   		 if (numP>0) {
   		 
@@ -136,10 +132,12 @@
 	
 	</script>
 </head>
-<body>
-<label for="distance">distance</label><input id="distance" type="range" min="5" max="200" value="50"/>
-<label for="tightness">spline tightness</label><input id="tightness" type="range" min="0.001", max="0.5" step="0.025" value="0.25" />
+<body class="full_page">
+<div class="controls">
+<div style="float:left;width: 150px;"><input id="distance" type="range" min="5" max="200" value="50"/><br/><label for="distance">distance</label></div>
+<div style="float:left;width: 150px;"><input id="tightness" type="range" min="0.001", max="0.5" step="0.025" value="0.25" /><br/><label for="tightness">spline tightness</label></div>
 <input id="clear" type="button" value="clear"/>
+</div>
 <canvas id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>

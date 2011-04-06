@@ -5,8 +5,7 @@
  * with the normal Math.sin()/Math.cos() versions.
  */
  
-
-function SinCosLUT(precision) {
+toxi.SinCosLUT = function(precision) {
 	this.precision = precision;
 	this.period = 360/this.precision;
 	this.quadrant = this.period >> 2;
@@ -20,7 +19,7 @@ function SinCosLUT(precision) {
 }
 
 
-SinCosLUT.prototype = {
+toxi.SinCosLUT.prototype = {
 	
 	/**
      * Calculate cosine for the passed in angle in radians.
@@ -30,7 +29,7 @@ SinCosLUT.prototype = {
      */
     cos: function(theta) {
         while (theta < 0) {
-            theta += MathUtils.TWO_PI;
+            theta += toxi.MathUtils.TWO_PI;
         }
         return this.sinLUT[((theta * this.rad2deg) + this.quadrant) % this.period];
     },
@@ -55,18 +54,18 @@ SinCosLUT.prototype = {
      */
     sin: function(theta) {
         while (theta < 0) {
-            theta += MathUtils.TWO_PI;
+            theta += toxi.MathUtils.TWO_PI;
         }
         return this.sinLUT[(theta * this.rad2deg) % this.period];
     }
 };
 
 
-SinCosLUT.DEFAULT_PRECISION = 0.25;
-SinCosLUT.DEFAULT_INSTANCE = null;
-SinCosLUT.getDefaultInstance = function(){
-	if(SinCosLUT.DEFAULT_INSTANCE == null){
-		SinCosLUT.DEFAULT_INSTANCE = new SinCosLUT();
+toxi.SinCosLUT.DEFAULT_PRECISION = 0.25;
+toxi.SinCosLUT.DEFAULT_INSTANCE = null;
+toxi.SinCosLUT.getDefaultInstance = function(){
+	if(toxi.SinCosLUT.DEFAULT_INSTANCE == null){
+		toxi.SinCosLUT.DEFAULT_INSTANCE = new toxi.SinCosLUT();
 	}
-	return SinCosLUT.DEFAULT_INSTANCE;
+	return toxi.SinCosLUT.DEFAULT_INSTANCE;
 }

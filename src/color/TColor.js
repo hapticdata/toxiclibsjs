@@ -9,12 +9,12 @@
 
 
 
-function TColor(tcolor){
+toxi.color.TColor = function(tcolor){
 	this.rgb = new Array(3);
 	this.hsv = new Array(3);
 	this.cmyk = new Array(4);
 	this._alpha = 1.0;
-	if(tcolor !== undefined && tcolor != null)
+	if(tcolor !== undefined)
 	{
 		var buffer = tcolor.toCMYKAArray();
 		this.cmyk = buffer.splice(0,4);
@@ -25,16 +25,16 @@ function TColor(tcolor){
 	
 }
 
-TColor.prototype = {
+toxi.color.TColor.prototype = {
 	
 	add: function(c){
 		return this.copy().addSelf(c);
 	},
 	
 	addSelf: function(c) {
-		this.rgb[0] = MathUtils.min(this.rgb[0] + c.rgb[0], 1);
-	    this.rgb[1] = MathUtils.min(this.rgb[1] + c.rgb[1], 1);
-	    this.rgb[2] = MathUtils.min(this.rgb[2] + c.rgb[2], 1);
+		this.rgb[0] = toxi.MathUtils.min(this.rgb[0] + c.rgb[0], 1);
+	    this.rgb[1] = toxi.MathUtils.min(this.rgb[1] + c.rgb[1], 1);
+	    this.rgb[2] = toxi.MathUtils.min(this.rgb[2] + c.rgb[2], 1);
 	    return this.setRGB(rgb);
 	},
 	
@@ -93,10 +93,10 @@ TColor.prototype = {
 	 * @return itself
 	 */
 	analog: function(theta, delta) {
-	    var angle = MathUtils.degrees(theta);
-		this.rotateRYB(angle * MathUtils.normalizedRandom());
-		this.hsv[1] += delta * MathUtils.normalizedRandom();
-		this.hsv[2] += delta * MathUtils.normalizedRandom();
+	    var angle = toxi.MathUtils.degrees(theta);
+		this.rotateRYB(angle * toxi.MathUtils.normalizedRandom());
+		this.hsv[1] += delta * toxi.MathUtils.normalizedRandom();
+		this.hsv[2] += delta * toxi.MathUtils.normalizedRandom();
 		return this.setHSV(this.hsv);
 	},
 	
@@ -115,7 +115,7 @@ TColor.prototype = {
 	 */
 	blend: function(c, t) {
 		if(t === undefined)t = 0.5;
-	    var crgb = c.toRGBAArray(null);
+	    var crgb = c.toRGBAArray();
 	    this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
 	    this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
 	    this.rgb[2] += (crgb[2] - this.rgb[2]) * t;
@@ -136,7 +136,7 @@ TColor.prototype = {
 	},
 	
 	copy: function(){
-		return new TColor(this);
+		return new toxi.color.TColor(this);
 	},
 	
 	cyan : function(){
@@ -144,7 +144,7 @@ TColor.prototype = {
 	},
 	
 	darken: function(step){
-		this.hsv[2] = MathUtils.clip((this.hsv[2] -step), 0, 1);
+		this.hsv[2] = toxi.MathUtils.clip((this.hsv[2] -step), 0, 1);
 		return this.setHSV(this.hsv);
 	},
 	/**
@@ -154,12 +154,12 @@ TColor.prototype = {
 	 * @return itself
 	 */
 	desaturate: function(step) {
-	    this.hsv[1] = MathUtils.clip((this.hsv[1] - step), 0, 1);
+	    this.hsv[1] = toxi.MathUtils.clip((this.hsv[1] - step), 0, 1);
 	    return this.setHSV(this.hsv);
 	},
 
 	differenceTo: function(c) {
-	    return TColor.newRGB(Math.abs(this.rgb[0] - c.rgb[0]),
+	    return  toxi.color.TColor.newRGB(Math.abs(this.rgb[0] - c.rgb[0]),
 	            Math.abs(this.rgb[1] - c.rgb[1]),
 	            Math.abs(this.rgb[2] - c.rgb[2]));
 	},
@@ -174,19 +174,19 @@ TColor.prototype = {
 	},
 	
 	distanceToHSV: function(c) {
-	    var hue = this.hsv[0] * MathUtils.TWO_PI;
-	    var hue2 = c.hue() * MathUtils.TWO_PI;
+	    var hue = this.hsv[0] * toxi.MathUtils.TWO_PI;
+	    var hue2 = c.hue() * toxi.MathUtils.TWO_PI;
 	    var v1 =
-	            new Vec3D((Math.cos(hue) * this.hsv[1]),
+	            new toxi.Vec3D((Math.cos(hue) * this.hsv[1]),
 	                    (Math.sin(hue) * this.hsv[1]), this.hsv[2]);
 	    var v2 =
-	            new Vec3D((Math.cos(hue2) * c.saturation()),
+	            new toxi.Vec3D((Math.cos(hue2) * c.saturation()),
 	                    (Math.sin(hue2) * c.saturation()), c.brightness());
 	    return v1.distanceTo(v2);
 	},
 	
 	distanceToRGB: function(c) {
-	    var crgb = c.toRGBAArray(null);
+	    var crgb = c.toRGBAArray();
 	    var dr = this.rgb[0] - crgb[0];
 	    var dg = this.rgb[1] - crgb[1];
 	    var db = this.rgb[2] - crgb[2];
@@ -194,24 +194,24 @@ TColor.prototype = {
 	},
 	
 	equals: function(o) {
-	    if (o != null && o instanceof TColor) {
+	    if (o !== undefined && o instanceof toxi.color.TColor) {
 	        var c =  o;
 	        var dr = c.rgb[0] - rgb[0];
 	        var dg = c.rgb[1] - rgb[1];
 	        var db = c.rgb[2] - rgb[2];
 	        var da = c.alpha - alpha;
 	        var d = Math.sqrt(dr * dr + dg * dg + db * db + da * da);
-	        return d < TColor.EPS;
+	        return d < toxi.color.TColor.EPS;
 	    }
 	    return false;
 	},
 	
 	getAnalog: function(theta,delta) {
-	    return new TColor(this).analog(theta, delta);
+	    return new toxi.color.TColor(this).analog(theta, delta);
 	},
 	
 	getBlended: function(c,t) {
-	    return new TColor(this).blend(c, t);
+	    return new toxi.color.TColor(this).blend(c, t);
 	},
 	
 	/*getClosestHue: function(primaryOnly) {
@@ -219,7 +219,7 @@ TColor.prototype = {
 	},*/
 	
 	getComplement: function() {
-	    return new TColor(this).complement();
+	    return new toxi.color.TColor(this).complement();
 	},
 	
 	getComponentValue: function(criteria) {
@@ -227,11 +227,11 @@ TColor.prototype = {
 	},
 	
 	getDarkened: function(step) {
-	    return new TColor(this).darken(step);
+	    return new toxi.color.TColor(this).darken(step);
 	},
 	
 	getDesaturated: function(step) {
-	    return new TColor(this).desaturate(step);
+	    return new toxi.color.TColor(this).desaturate(step);
 	},
 	
 	getDifferenceTo: function(c) {
@@ -239,19 +239,19 @@ TColor.prototype = {
 	},
 	
 	getInverted: function() {
-	    return new TColor(this).invert();
+	    return new toxi.color.TColor(this).invert();
 	},
 	
 	getLightened: function(step) {
-	    return new TColor(this).lighten(step);
+	    return new toxi.color.TColor(this).lighten(step);
 	},
 	
 	getRotatedRYB: function(theta) {
-	    return new TColor(this).rotateRYB(theta);
+	    return new toxi.color.TColor(this).rotateRYB(theta);
 	},
 	
 	getSaturated: function(step) {
-	    return new TColor(this).saturate(step);
+	    return new toxi.color.TColor(this).saturate(step);
 	},
 	
 	green: function() {
@@ -270,11 +270,11 @@ TColor.prototype = {
 	},
 	
 	isBlack: function() {
-	    return (this.rgb[0] <= TColor.BLACK_POINT && ((this.rgb[0]==this.rgb[1]) && this.rgb[0] == this.rgb[2]));
+	    return (this.rgb[0] <= toxi.color.TColor.BLACK_POINT && ((this.rgb[0]==this.rgb[1]) && this.rgb[0] == this.rgb[2]));
 	},
 	
 	isGrey:function() {
-	    return this.hsv[1] < TColor.GREY_THRESHOLD;
+	    return this.hsv[1] < toxi.color.TColor.GREY_THRESHOLD;
 	},
 	/*
 	isPrimary:function() {
@@ -282,11 +282,11 @@ TColor.prototype = {
 	},*/
 	
 	isWhite: function() {
-	    return (this.rgb[0] >= TColor.WHITE_POINT && (this.rgb[0] == this.rgb[1]) && (this.rgb[0] == this.rgb[2]));
+	    return (this.rgb[0] >= toxi.color.TColor.WHITE_POINT && (this.rgb[0] == this.rgb[1]) && (this.rgb[0] == this.rgb[2]));
 	},
 	
 	lighten: function(step) {
-	    this.hsv[2] = MathUtils.clip(this.hsv[2] + step, 0, 1);
+	    this.hsv[2] = toxi.MathUtils.clip(this.hsv[2] + step, 0, 1);
 	    return this.setHSV(this.hsv);
 	},
 	
@@ -295,7 +295,7 @@ TColor.prototype = {
 	},
 	
 	magenta: function() {
-	    return this.cmyk[0];
+	    return this.cmyk[1];
 	},
 	
 	red: function() {
@@ -303,14 +303,14 @@ TColor.prototype = {
 	},
 	
 	rotateRYB: function(theta) {
-	    var deg = parseInt(MathUtils.degrees(theta));
+	    var deg = parseInt(toxi.MathUtils.degrees(theta));
 	    var h = this.hsv[0] * 360;
 	    theta %= 360;
 
 	    var resultHue = 0;
-	    for (var i = 0; i < TColor.RYB_WHEEL.length - 1; i++) {
-	        var p = TColor.RYB_WHEEL[i];
-	        var q = TColor.RYB_WHEEL[i + 1];
+	    for (var i = 0; i < toxi.color.TColor.RYB_WHEEL.length - 1; i++) {
+	        var p = toxi.color.TColor.RYB_WHEEL[i];
+	        var q = toxi.color.TColor.RYB_WHEEL[i + 1];
 	        if (q.y < p.y) {
 	            q.y += 360;
 	        }
@@ -325,9 +325,9 @@ TColor.prototype = {
 
 	    // For the given angle, find out what hue is
 	    // located there on the artistic color wheel.
-	    for (var i = 0; i < TColor.RYB_WHEEL.length - 1; i++) {
-	        var p = TColor.RYB_WHEEL[i];
-	        var q = TColor.RYB_WHEEL[i + 1];
+	    for (var i = 0; i < toxi.color.TColor.RYB_WHEEL.length - 1; i++) {
+	        var p = toxi.color.TColor.RYB_WHEEL[i];
+	        var q = toxi.color.TColor.RYB_WHEEL[i + 1];
 	        if (q.y < p.y) {
 	            q.y += 360;
 	        }
@@ -343,7 +343,7 @@ TColor.prototype = {
 	},
 	
 	saturate: function(step) {
-	    this.hsv[1] = MathUtils.clip(this.hsv[1] + step, 0, 1);
+	    this.hsv[1] = toxi.MathUtils.clip(this.hsv[1] + step, 0, 1);
 	    return this.setHSV(this.hsv);
 	},
 	
@@ -357,9 +357,9 @@ TColor.prototype = {
 	},
 	
 	setARGB: function(argb) {
-	    this.setRGB(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff) * TColor.INV8BIT,
-	            (argb & 0xff) * TColor.INV8BIT);
-	    this._alpha = (argb >>> 24) * TColor.INV8BIT;
+	    this.setRGB(((argb >> 16) & 0xff) * toxi.TColor.INV8BIT, ((argb >> 8) & 0xff) * toxi.TColor.INV8BIT,
+	            (argb & 0xff) * toxi.TColor.INV8BIT);
+	    this._alpha = (argb >>> 24) * toxi.TColor.INV8BIT;
 	    return this;
 	},
 	
@@ -374,7 +374,7 @@ TColor.prototype = {
 	},
 	
 	setBrightness: function(brightness) {
-	    this.hsv[2] = MathUtils.clip(brightness, 0, 1);
+	    this.hsv[2] = toxi.MathUtils.clip(brightness, 0, 1);
 	    return this.setHSV(this.hsv);
 	},
 	
@@ -391,8 +391,8 @@ TColor.prototype = {
 	    this.cmyk[1] = m;
 	    this.cmyk[2] = y;
 	    this.cmyk[3] = k;
-		this.rgb = TColor.cmykToRGB(this.cmyk[0],this.cmyk[1],this.cmyk[2],this.cmyk[3]);
-		this.hsv = TColor.rgbToHSV(this.rgb[0],this.rgb[1],this.rgb[2]);
+		this.rgb = toxi.color.TColor.cmykToRGB(this.cmyk[0],this.cmyk[1],this.cmyk[2],this.cmyk[3]);
+		this.hsv = toxi.color.TColor.rgbToHSV(this.rgb[0],this.rgb[1],this.rgb[2]);
 	    return this;
 	},
 	
@@ -423,10 +423,10 @@ TColor.prototype = {
        	if (this.hsv[0] < 0) {
          	this.hsv[0]++;
      	}
-     	this.hsv[1] = MathUtils.clip(newHSV[1], 0, 1);
-     	this.hsv[2] = MathUtils.clip(newHSV[2], 0, 1);
-     	this.rgb = TColor.hsvToRGB(this.hsv[0], this.hsv[1], this.hsv[2]);
-     	this.cmyk = TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
+     	this.hsv[1] = toxi.MathUtils.clip(newHSV[1], 0, 1);
+     	this.hsv[2] = toxi.MathUtils.clip(newHSV[2], 0, 1);
+     	this.rgb = toxi.color.TColor.hsvToRGB(this.hsv[0], this.hsv[1], this.hsv[2]);
+     	this.cmyk = toxi.color.TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
 	    return this;
 	},
 	
@@ -456,16 +456,16 @@ TColor.prototype = {
 			b = r[2];
 			r = r[0];
 		}
-	    this.rgb[0] = MathUtils.clip(r,0,1);
-	    this.rgb[1] = MathUtils.clip(g,0,1);
-	    this.rgb[2] = MathUtils.clip(b,0,1);
-		this.cmyk = TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
-		this.hsv = TColor.rgbToHSV(this.rgb[0], this.rgb[1], this.rgb[2]);
+	    this.rgb[0] = toxi.MathUtils.clip(r,0,1);
+	    this.rgb[1] = toxi.MathUtils.clip(g,0,1);
+	    this.rgb[2] = toxi.MathUtils.clip(b,0,1);
+		this.cmyk = toxi.color.TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
+		this.hsv = toxi.color.TColor.rgbToHSV(this.rgb[0], this.rgb[1], this.rgb[2]);
 	    return this;
 	},
 	
 	setSaturation: function(saturation) {
-	    this.hsv[1] = MathUtils.clip(saturation, 0, 1);
+	    this.hsv[1] = toxi.MathUtils.clip(saturation, 0, 1);
 	    return this.setHSV(this.hsv);
 	},
 
@@ -479,9 +479,9 @@ TColor.prototype = {
 	},
 	
 	subSelf: function(c) {
-	    this.rgb[0] = MathUtils.max(this.rgb[0] - c.rgb[0], 0);
-	    this.rgb[1] = MathUtils.max(this.rgb[1] - c.rgb[1], 0);
-	    this.rgb[2] = MathUtils.max(this.rgb[2] - c.rgb[2], 0);
+	    this.rgb[0] = toxi.MathUtils.max(this.rgb[0] - c.rgb[0], 0);
+	    this.rgb[1] = toxi.MathUtils.max(this.rgb[1] - c.rgb[1], 0);
+	    this.rgb[2] = toxi.MathUtils.max(this.rgb[2] - c.rgb[2], 0);
 	    return this.setRGB(this.rgb);
 	},
 	
@@ -491,7 +491,7 @@ TColor.prototype = {
 	},
 	
 	toCMYKAArray: function(cmyka) {
-	    if (cmyka == null) {
+	    if (cmyka === undefined) {
 	        cmyka = [];
 	    }
 	    cmyka[0] = this.cmyk[0];
@@ -510,7 +510,7 @@ TColor.prototype = {
 	},
 	
 	toHSVAArray: function(hsva) {
-	    if (hsva == null) {
+	    if (hsva === undefined) {
 	        hsva = [];
 	    }
 	    hsva[0] = this.hsv[0];
@@ -527,7 +527,7 @@ TColor.prototype = {
 	 * @return rgba array
 	 */
 	toRGBAArray: function(rgba, offset) {
-	    if (rgba === undefined || rgba == null) {
+	    if (rgba === undefined) {
 	        rgba = [];
 	        offset = 0;
 	    }
@@ -539,23 +539,23 @@ TColor.prototype = {
 	},
 	
 	toString: function(){
-		return "TColor: rgb: "+this.rgb[0] + ", " +this.rgb[1] + ", "+this.rgb[2]+ 
+		return "toxi.color.TColor: rgb: "+this.rgb[0] + ", " +this.rgb[1] + ", "+this.rgb[2]+ 
 				" hsv: "+ this.hsv[0] + ","+this.hsv[1]+","+this.hsv[2]+
 				" cmyk: "+this.cmyk[0] + ", "+this.cmyk[1]+","+this.cmyk[2]+","+this.cmyk[3]+
 				" alpha: "+this._alpha;
 	},
 	
 	yellow: function() {
-	    return this.cmyk[0];
+	    return this.cmyk[2];
 	}
 	
 };
 
 
 
-TColor.INV60DEGREES = 60.0 / 360;
-TColor.INV8BIT = 1.0 / 255;
-TColor.EPS = .001;
+toxi.color.TColor.INV60DEGREES = 60.0 / 360;
+toxi.color.TColor.INV8BIT = 1.0 / 255;
+toxi.color.TColor.EPS = .001;
 /*
     protected static final Vec2D[] RYB_WHEEL = new Vec2D[] { new Vec2D(0, 0),
             new Vec2D(15, 8), new Vec2D(30, 17), new Vec2D(45, 26),
@@ -573,21 +573,21 @@ TColor.EPS = .001;
  * 
  * @see #isBlack()
  */
-TColor.BLACK_POINT = 0.08;
+toxi.color.TColor.BLACK_POINT = 0.08;
 
 /**
  * Minimum rgb component value for a color to be classified as white.
  * 
  * @see #isWhite()
  */
-TColor.WHITE_POINT = 1.0;
+toxi.color.TColor.WHITE_POINT = 1.0;
 
 /**
  * Maximum saturations value for a color to be classified as grey
  * 
  * @see #isGrey()
  */
-TColor.GREY_THRESHOLD = 0.01;
+toxi.color.TColor.GREY_THRESHOLD = 0.01;
 
 
 
@@ -601,8 +601,8 @@ TColor.GREY_THRESHOLD = 0.01;
  * @param rgb optional rgb array to populate
  * @return rgb array
  */
-TColor.cmykToRGB = function(c,m,y,k,rgb) {
-	if(rgb ==null)
+toxi.color.TColor.cmykToRGB = function(c,m,y,k,rgb) {
+	if(rgb ===undefined)
 	{
 		rgb = [0,0,0];
 	}
@@ -620,12 +620,13 @@ TColor.cmykToRGB = function(c,m,y,k,rgb) {
  * @param rgb array optional
  * @return rgb array
  */
-TColor.hexToRGB = function(hexRGB,rgb) {
-	if(rgb == null)rgb = [];
-	var rgbInt = parseInt(hexRGB,16);
-	rgb[0] = ((rgbInt >> 16) & 0xff) * TColor.INV8BIT;
-	rgb[1] = ((rgbInt >> 8) & 0xff) * TColor.INV8BIT;
-	rgb[2] = ((rgbInt & 0xff) * TColor.INV8BIT);
+toxi.color.TColor.hexToRGB = function(hexRGB,rgb) {
+	if(rgb === undefined)rgb = [];
+	//var rgbInt = parseInt(hexRGB,16);
+	hexRGB = (hexRGB.charAt(0)=="#") ? hexRGB.substring(1,7):hexRGB;
+	rgb[0] = parseInt(hexRGB.substring(0,2),16) * toxi.color.TColor.INV8BIT;//((rgbInt >> 16) & 0xff) * toxi.color.TColor.INV8BIT;
+	rgb[1] = parseInt(hexRGB.substring(2,4),16) * toxi.color.TColor.INV8BIT;//((rgbInt >> 8) & 0xff) * toxi.color.TColor.INV8BIT;
+	rgb[2] = parseInt(hexRGB.substring(4,6),16) * toxi.color.TColor.INV8BIT;//((rgbInt & 0xff) * toxi.color.TColor.INV8BIT);
     return rgb;
 }
 
@@ -639,14 +640,14 @@ TColor.hexToRGB = function(hexRGB,rgb) {
  * @param rgb array optional
  * @return rgb array
  */
-TColor.hsvToRGB = function(h, s, v,rgb) {
-	if(rgb == null)rgb = [];
+toxi.color.TColor.hsvToRGB = function(h, s, v,rgb) {
+	if(rgb === undefined)rgb = [];
 	if(s == 0.0)
 	{
 		rgb[0] = rgb[1] = rgb[2] = v;
 	}
 	else {
-		h /= TColor.INV60DEGREES;
+		h /= toxi.color.TColor.INV60DEGREES;
 		var i =  parseInt(h);
         var f = h - i;
         var p = v * (1 - s);
@@ -696,8 +697,8 @@ TColor.hsvToRGB = function(h, s, v,rgb) {
  * @param rgb
  * @return rgb array
  */
-TColor.labToRGB = function(l, a, b,rgb) {
-	if(rgb == null)rgb = [];
+toxi.color.TColor.labToRGB = function(l, a, b,rgb) {
+	if(rgb === undefined)rgb = [];
     var y = (l + 16) / 116.0;
     var x = a / 500.0 + y;
     var z = y - b / 200.0;
@@ -738,9 +739,9 @@ TColor.labToRGB = function(l, a, b,rgb) {
  * @param argb
  * @return new color
  */
-TColor.newARGB = function(argb) {
-    return TColor.newRGBA(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff)
-            * TColor.INV8BIT, (argb & 0xff) * TColor.INV8BIT, (argb >>> 24) * TColor.INV8BIT);
+toxi.color.TColor.newARGB = function(argb) {
+    return toxi.color.TColor.newRGBA(((argb >> 16) & 0xff) * toxi.color.TColor.INV8BIT, ((argb >> 8) & 0xff)
+            * toxi.color.TColor.INV8BIT, (argb & 0xff) * toxi.color.TColor.INV8BIT, (argb >>> 24) * toxi.color.TColor.INV8BIT);
 }
 
 /**
@@ -752,8 +753,8 @@ TColor.newARGB = function(argb) {
  * @param k
  * @return new color
  */
-TColor.newCMYK = function(c, m, y, k) {
-    return TColor.newCMYKA(c, m, y, k, 1);
+toxi.color.TColor.newCMYK = function(c, m, y, k) {
+    return toxi.color.TColor.newCMYKA(c, m, y, k, 1);
 }
 
 /**
@@ -766,10 +767,10 @@ TColor.newCMYK = function(c, m, y, k) {
  * @param a
  * @return new color
  */
-TColor.newCMYKA = function(c, m, y, k, a) {
+toxi.color.TColor.newCMYKA = function(c, m, y, k, a) {
     var col = new TColor();
     col.setCMYK([c, m, y, k ]);
-    col.alpha = MathUtils.clip(a, 0, 1);
+    col.alpha = toxi.MathUtils.clip(a, 0, 1);
     return col;
 }
 
@@ -779,12 +780,12 @@ TColor.newCMYKA = function(c, m, y, k, a) {
  * @param gray
  * @return new color.
  */
-TColor.newGray = function(gray) {
-    return TColor.newGrayAlpha(gray, 1);
+toxi.color.TColor.newGray = function(gray) {
+    return toxi.color.TColor.newGrayAlpha(gray, 1);
 }
 
-TColor.newGrayAlpha = function(gray, alpha) {
-    var c = new TColor();
+toxi.color.TColor.newGrayAlpha = function(gray, alpha) {
+    var c = new toxi.color.TColor();
     c.setRGB([gray, gray, gray ]);
     c.alpha = alpha;
     return c;
@@ -796,9 +797,9 @@ TColor.newGrayAlpha = function(gray, alpha) {
  * @param hexRGB
  * @return new color
  */
-TColor.newHex = function(hexRGB) {
-    var c = new TColor();
-    c.setRGB(TColor.hexToRGB(hexRGB));
+toxi.color.TColor.newHex = function(hexRGB) {
+    var c = new toxi.color.TColor();
+    c.setRGB(toxi.color.TColor.hexToRGB(hexRGB));
     c.alpha = 1;
     return c;
 }
@@ -811,15 +812,15 @@ TColor.newHex = function(hexRGB) {
  * @param v
  * @return new color
  */
-TColor.newHSV = function(h, s, v) {
-    return TColor.newHSVA(h, s, v, 1);
+toxi.color.TColor.newHSV = function(h, s, v) {
+    return toxi.color.TColor.newHSVA(h, s, v, 1);
 }
 
 
-TColor.newHSVA = function(h, s,v,a) {
-    var c = new TColor();
+toxi.color.TColor.newHSVA = function(h, s,v,a) {
+    var c = new toxi.color.TColor();
     c.setHSV(h, s, v);
-    c.alpha = MathUtils.clip(a, 0, 1);
+    c.alpha = toxi.MathUtils.clip(a, 0, 1);
     return c;
 }
 
@@ -828,8 +829,8 @@ TColor.newHSVA = function(h, s,v,a) {
  * 
  * @return random color
  */
-TColor.newRandom = function() {
-    return TColor.newRGBA(Math.random(), Math.random(),
+toxi.color.TColor.newRandom = function() {
+    return toxi.color.TColor.newRGBA(Math.random(), Math.random(),
             Math.random(), 1);
 }
 
@@ -841,14 +842,14 @@ TColor.newRandom = function() {
  * @param b
  * @return new color
  */
-TColor.newRGB = function(r, g, b) {
-    return TColor.newRGBA(r, g, b, 1);
+toxi.color.TColor.newRGB = function(r, g, b) {
+    return toxi.color.TColor.newRGBA(r, g, b, 1);
 }
 
-TColor.newRGBA = function( r, g, b, a) {
-    var c = new TColor();
+toxi.color.TColor.newRGBA = function( r, g, b, a) {
+    var c = new toxi.color.TColor();
     c.setRGB([ r, g, b ]);
-    c.alpha = MathUtils.clip(a, 0, 1);
+    c.alpha = toxi.MathUtils.clip(a, 0, 1);
     return c;
 }
 
@@ -861,16 +862,16 @@ TColor.newRGBA = function( r, g, b, a) {
  * @param cmyk array optional
  * @return cmyk array
  */
-TColor.rgbToCMYK = function(r, g, b,cmyk) {
-	if(cmyk == null)cmyk = [];
+toxi.color.TColor.rgbToCMYK = function(r, g, b,cmyk) {
+	if(cmyk === undefined)cmyk = [];
 	cmyk[0] = 1 - r;
 	cmyk[1] = 1 - g;
     cmyk[2] = 1 - b;
-    cmyk[3] = MathUtils.min(cmyk[0], cmyk[1], cmyk[2]);
-    cmyk[0] = MathUtils.clip(cmyk[0] - cmyk[3], 0, 1);
-    cmyk[1] = MathUtils.clip(cmyk[1] - cmyk[3], 0, 1);
-    cmyk[2] = MathUtils.clip(cmyk[2] - cmyk[3], 0, 1);
-    cmyk[3] = MathUtils.clip(cmyk[3], 0, 1);
+    cmyk[3] = toxi.MathUtils.min(cmyk[0], cmyk[1], cmyk[2]);
+    cmyk[0] = toxi.MathUtils.clip(cmyk[0] - cmyk[3], 0, 1);
+    cmyk[1] = toxi.MathUtils.clip(cmyk[1] - cmyk[3], 0, 1);
+    cmyk[2] = toxi.MathUtils.clip(cmyk[2] - cmyk[3], 0, 1);
+    cmyk[3] = toxi.MathUtils.clip(cmyk[3], 0, 1);
     return cmyk;
 }
 
@@ -883,10 +884,10 @@ TColor.rgbToCMYK = function(r, g, b,cmyk) {
  * @param b
  * @return hex string
  */
-TColor.rgbToHex = function(r, g, b) {
-    var hex = (MathUtils.clip(r, 0, 1) * 0xff).toString(16) + 
-				(MathUtils.clip(g, 0, 1) * 0xff).toString(16) + 
-				(MathUtils.clip(b, 0, 1) * 0xff).toString(16);
+toxi.color.TColor.rgbToHex = function(r, g, b) {
+    var hex = (toxi.MathUtils.clip(r, 0, 1) * 0xff).toString(16) + 
+				(toxi.MathUtils.clip(g, 0, 1) * 0xff).toString(16) + 
+				(toxi.MathUtils.clip(b, 0, 1) * 0xff).toString(16);
 
     return hex;
 }
@@ -900,11 +901,11 @@ TColor.rgbToHex = function(r, g, b) {
  * @param hsv optional
  * @return hsv array
  */
-TColor.rgbToHSV = function(r, g, b,hsv) {
-	if(hsv == null)hsv = [];
+toxi.color.TColor.rgbToHSV = function(r, g, b,hsv) {
+	if(hsv ===undefined)hsv = [];
      var h = 0, s = 0;
-	 var v = MathUtils.max(r, g, b);
-	 var d = v - MathUtils.min(r, g, b);
+	 var v = toxi.MathUtils.max(r, g, b);
+	 var d = v - toxi.MathUtils.min(r, g, b);
 
 	    if (v != 0.0) {
         s = d / v;
@@ -919,7 +920,7 @@ TColor.rgbToHSV = function(r, g, b,hsv) {
         }
     }
 
-    h *= TColor.INV60DEGREES;
+    h *= toxi.color.TColor.INV60DEGREES;
 
     if (h < 0) {
         h += 1.0;
@@ -931,22 +932,22 @@ TColor.rgbToHSV = function(r, g, b,hsv) {
     return hsv;
 }
 
-TColor.RED = TColor.newRGB(1, 0, 0);
-TColor.RYB_WHEEL = [ new Vec2D(0, 0),
-            new Vec2D(15, 8), new Vec2D(30, 17), new Vec2D(45, 26),
-            new Vec2D(60, 34), new Vec2D(75, 41), new Vec2D(90, 48),
-            new Vec2D(105, 54), new Vec2D(120, 60), new Vec2D(135, 81),
-            new Vec2D(150, 103), new Vec2D(165, 123), new Vec2D(180, 138),
-            new Vec2D(195, 155), new Vec2D(210, 171), new Vec2D(225, 187),
-            new Vec2D(240, 204), new Vec2D(255, 219), new Vec2D(270, 234),
-            new Vec2D(285, 251), new Vec2D(300, 267), new Vec2D(315, 282),
-            new Vec2D(330, 298), new Vec2D(345, 329), new Vec2D(360, 0)];
-TColor.GREEN = TColor.newRGB(0, 1, 0);
-TColor.BLUE = TColor.newRGB(0, 0, 1);
-TColor.CYAN = TColor.newRGB(0, 1, 1);
-TColor.MAGENTA = TColor.newRGB(1, 0, 1);
-TColor.YELLOW = TColor.newRGB(1, 1, 0);
-TColor.BLACK = TColor.newRGB(0, 0, 0);
-TColor.WHITE = TColor.newRGB(1, 1, 1);
+toxi.color.TColor.RED = toxi.color.TColor.newRGB(1, 0, 0);
+toxi.color.TColor.RYB_WHEEL = [ new toxi.Vec2D(0, 0),
+            new toxi.Vec2D(15, 8), new toxi.Vec2D(30, 17), new toxi.Vec2D(45, 26),
+            new toxi.Vec2D(60, 34), new toxi.Vec2D(75, 41), new toxi.Vec2D(90, 48),
+            new toxi.Vec2D(105, 54), new toxi.Vec2D(120, 60), new toxi.Vec2D(135, 81),
+            new toxi.Vec2D(150, 103), new toxi.Vec2D(165, 123), new toxi.Vec2D(180, 138),
+            new toxi.Vec2D(195, 155), new toxi.Vec2D(210, 171), new toxi.Vec2D(225, 187),
+            new toxi.Vec2D(240, 204), new toxi.Vec2D(255, 219), new toxi.Vec2D(270, 234),
+            new toxi.Vec2D(285, 251), new toxi.Vec2D(300, 267), new toxi.Vec2D(315, 282),
+            new toxi.Vec2D(330, 298), new toxi.Vec2D(345, 329), new toxi.Vec2D(360, 0)];
+toxi.color.TColor.GREEN = toxi.color.TColor.newRGB(0, 1, 0);
+toxi.color.TColor.BLUE = toxi.color.TColor.newRGB(0, 0, 1);
+toxi.color.TColor.CYAN = toxi.color.TColor.newRGB(0, 1, 1);
+toxi.color.TColor.MAGENTA = toxi.color.TColor.newRGB(1, 0, 1);
+toxi.color.TColor.YELLOW = toxi.color.TColor.newRGB(1, 1, 0);
+toxi.color.TColor.BLACK = toxi.color.TColor.newRGB(0, 0, 0);
+toxi.color.TColor.WHITE = toxi.color.TColor.newRGB(1, 1, 1);
 
 

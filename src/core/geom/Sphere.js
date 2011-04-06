@@ -1,11 +1,11 @@
-function Sphere(a,b){
+toxi.Sphere = function(a,b){
 	if(a === undefined){
-		this.parent.init.call(this,new Vec3D());
+		this.parent.init.call(this,new toxi.Vec3D());
 		this.radius = 1;
 	}
-	else if(a instanceof Vec3D){
+	else if(a instanceof toxi.Vec3D){
 		this.parent.init.call(this,a);
-		if(a instanceof Sphere){
+		if(a instanceof toxi.Sphere){
 			this.radius = a.radius;
 		}
 		else {
@@ -13,16 +13,16 @@ function Sphere(a,b){
 		}
 	}
 	else {
-		this.parent.init.call(this,new Vec3D());
+		this.parent.init.call(this,new toxi.Vec3D());
 		this.radius = a;
 	}
 }
 
-Sphere.prototype = new Vec3D();
-Sphere.constructor = Sphere;
-Sphere.prototype.parent = Vec3D.prototype;
+toxi.Sphere.prototype = new toxi.Vec3D();
+toxi.Sphere.constructor = toxi.Sphere;
+toxi.Sphere.prototype.parent = toxi.Vec3D.prototype;
 
-Sphere.prototype.containsPoint = function(p) {
+toxi.Sphere.prototype.containsPoint = function(p) {
     var d = this.sub(p).magSquared();
     return (d <= this.radius * this.radius);
 }
@@ -42,7 +42,7 @@ Sphere.prototype.containsPoint = function(p) {
  * @return 2-element float array of intersection points or null if ray
  *         doesn't intersect sphere at all.
  */
-Sphere.prototype.intersectRay = function(ray) {
+toxi.Sphere.prototype.intersectRay = function(ray) {
     var result = null;
     var q = ray.sub(this),
 		distSquared = q.magSquared();
@@ -84,7 +84,7 @@ Sphere.prototype.intersectRay = function(ray) {
  *            a non-null vector for storing the result
  * @return true, if sphere intersects triangle ABC
  */
-Sphere.prototype.intersectSphereTriangle = function(t,result) {
+toxi.Sphere.prototype.intersectSphereTriangle = function(t,result) {
     // Find Vec3D P on triangle ABC closest to sphere center
     result.set(t.closestPointOnSurface(this));
 
@@ -102,11 +102,11 @@ Sphere.prototype.intersectSphereTriangle = function(t,result) {
  * @return a unit normal vector to the tangent plane of the ellipsoid in the
  *         point.
  */
-Sphere.prototype.tangentPlaneNormalAt = function(q) {
+toxi.Sphere.prototype.tangentPlaneNormalAt = function(q) {
     return this.sub(q).normalize();
 }
 
-Sphere.prototype.toMesh = function(mesh_or_res,res) {
+toxi.Sphere.prototype.toMesh = function(mesh_or_res,res) {
     if(res === undefined){
     	var mesh = null;
     	var res = mesh_or_res;
@@ -115,6 +115,6 @@ Sphere.prototype.toMesh = function(mesh_or_res,res) {
     	var mesh = mesh_or_res;
     	var res = res;
     }
-    var builder = new SurfaceMeshBuilder(new SphereFunction(this));
+    var builder = new toxi.SurfaceMeshBuilder(new toxi.SphereFunction(this));
     return builder.createMesh(mesh, res, 1);
 }

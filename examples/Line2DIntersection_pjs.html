@@ -2,14 +2,12 @@
 
 <html lang="en">
 <head>
-	<title>Line2D - Intersection</title>
+	<title>Line2D - Intersection - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/math/InterpolateStrategy.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Line2D.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
 	<script>
 	/*
 	 * This code searches for all the <script type="application/processing" target="canvasid">
@@ -51,8 +49,12 @@
 
 	</script>
 </head>
-<body>
-	<h1>Line2D Intersection</h1>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Line2D Intersection</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a>
+		</hgroup>
+	</header>
 <script type="application/processing">
  
 /*
@@ -77,19 +79,19 @@
 
  
 void setup() {
-  size(680,382);
+  size(700,382);
   smooth();
   textSize(9);
 
 }
  
 void draw() {
-  background(255);
-  Line2D l=new Line2D(new Vec2D(250,50), new Vec2D(450,350));
-  Line2D m=new Line2D(new Vec2D(450,200), new Vec2D(mouseX,mouseY));
-  Line2D.LineIntersection isec=l.intersectLine(m);
-  if (isec.getType()==Line2D.LineIntersection.Type.INTERSECTING) {
-    Vec2D pos=isec.getPos();
+  background(240);
+  toxi.Line2D l=new toxi.Line2D(new toxi.Vec2D(250,50), new toxi.Vec2D(450,350));
+  toxi.Line2D m=new toxi.Line2D(new toxi.Vec2D(450,200), new toxi.Vec2D(mouseX,mouseY));
+  toxi.Line2D.LineIntersection isec=l.intersectLine(m);
+  if (isec.getType()==toxi.Line2D.LineIntersection.Type.INTERSECTING) {
+    toxi.Vec2D pos=isec.getPos();
     stroke(255,0,192);
     fill(255,0,192);
     ellipse(pos.x,pos.y,5,5);
@@ -107,15 +109,22 @@ void draw() {
 <canvas id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>
+<section class="grid_12" id="details">
+<aside id="authors" class="grid_6">
 <p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
 	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
-	 <p><strong>Usage:</strong><ul>
+</aside>
+<aside id="usage" class="grid_6">
+	 <p><strong>Usage:</strong><br><ul>
 	 <li>move mouse to move endpoint of line</li>
 	</ul></p>
+</aside>
+<article id="description" class="grid_12">
 <p>
  In this example we calculate the intersection point of two lines, one of which
  can be moved by user interactively.
  </p>
-
+ </article>
+</section>
 </body>
 </html>

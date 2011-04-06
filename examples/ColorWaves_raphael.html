@@ -2,31 +2,49 @@
 
 <html lang="en">
 <head>
-	<title>TColorExample</title>
+	<title>TColorExample - toxiclibs.js examples</title>
 	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
 	<meta name="author" content="Kyle Phillips">
+	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
-	<script type="text/javascript" src="../src/color/TColor.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/raphael-min.js"></script>
 	
-	<style>
-	body { margin: 0; padding: 0; overflow: hidden;}
+	<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Color Waves</h1>
+			<h2>w/ <a href="http://raphaeljs.com">Raphael.js</a></h2>
+		</hgroup>
+	</header>
+	<div class="grid_12" id="notepad">
+	</div>
+	<section id="details" class="grid_12">
+		<aside id="authors" class="grid_6">
+			created by <a href="http://haptic-data.com">Kyle Phillips</a>
+		</aside>
+		<aside id="usage" class="grid_6">
+		<p><strong>Usage:</strong><br>move your mouse <em>(or finger)</em> around</p>
+		</aside>
+		<article id="description" class="grid_12">
+		<p>
+			This example shows using toxi.color.TColor with SVG and the <a href="http://raphaeljs.com" target="_blank">Raphael.js</a> library. Moving your mouse or finger around adjusts the size and color of the circles based on distance.
+		</p>
+		</article>
+	</section>
+	<footer class="grid_12"><a href="http://haptic-data.com/toxiclibsjs/">toxiclibs.js</a></footer>
 	
-	</style>
-	
-	<script>
+	<script type="text/javascript">
 	
 	window.onload = function(e){
 	
 	
- 		var columns = 6, rows = 5;
+ 		var columns = 6, rows = 4;
  		var columnWidth, rowHeight;
  		var circles = [];
  		var translateX = 100, translateY = 100;
- 		var width =window.innerWidth;
- 		var height = window.innerHeight;
+ 		var width =940;
+ 		var height = 600;
  		var container = document.getElementById("notepad");
 		
 		var notepad = Raphael(container,width,height);
@@ -72,7 +90,7 @@
 				var dx = x - box.x;
 				var dy = y - box.y;
 				var distance = Math.sqrt((dx * dx) + (dy * dy));
-				var color = TColor.newHSV(distance/width,0.5,1.0);
+				var color = toxi.color.TColor.newHSV(distance/width,0.5,1.0);
 				//console.log(color.toString());
 				var rgba = "rgba("+(color.red()*255)+","+(color.green()*255)+","+(color.blue()*255)+","+color.alpha+")";
 				circle.attr({"fill": rgba, "scale":distance*0.25});
@@ -86,10 +104,7 @@
 	
 	
 	</script>
-	<style>
-	</style>
-	<body>
-	<div id="notepad">
-	</div>
+
 	
 	</body>
+</html>

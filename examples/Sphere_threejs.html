@@ -1,14 +1,14 @@
 <!DOCTYPE HTML>
 <html lang="en">
 	<head>
-		<title>Line3D Intersection - Three.js</title>
+		<title>Line3D Intersection - Three.js - toxiclibs.js examples</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+		<link href="css/style.css" rel="stylesheet" type="text/css">
 		<style type="text/css">
 			body {
-				background-color: #000000;
+				background-color: #ffffff;
 				margin: 0px;
-				overflow: hidden;
 			}
 
 			a {
@@ -16,17 +16,22 @@
 			}
 		</style>
 	</head>
-	<body>
-		<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-		<script type="text/javascript" src="../src/core/geom/Vec3D.js"></script>
-		<script type="text/javascript" src="../src/core/geom/Line3D.js"></script>
-		<script type="text/javascript" src="../src/core/geom/mesh/Vertex.js"></script>
-		<script type="text/javascript" src="../src/core/geom/Sphere.js"></script>
-		<script type="text/javascript" src="../src/core/geom/mesh/Mesh3D.js"></script>
-		<script type="text/javascript" src="../src/core/geom/mesh/Face.js"></script>
-		<script type="text/javascript" src="../src/core/geom/mesh/TriangleMesh.js"></script>		
-		<script type="text/javascript" src="../src/core/geom/mesh/SphereFunction.js"></script>	
-		<script type="text/javascript" src="../src/core/geom/mesh/SurfaceMeshBuilder.js"></script>
+	<body class="container_12">
+		<header class="grid_12">
+			<hgroup>
+				<h1>Sphere</h1><h2>w/ <a href="http://github.com/mrdoob/three.js">Three.js</a> <em>(not using WebGL)</em></h2>
+			</hgroup>
+		</header>
+			<div class="grid_12" id="threejs_container" style="background-color: #eeeeee;"></div>
+		<section id="details" class="grid_12">
+		<aside id="authors" class="grid_6">created by <a href="http://haptic-data.com">Kyle Phillips</a></aside>
+		<aside id="usage" class="grid_6"><strong>Usage:</strong><br>move your mouse around rotate and zoom the spherical points</aside>
+		<article id="description" class="grid_12">
+			<p>Quick example showing the use of toxi.Sphere within Three.js</p>
+		</article>
+		</section>
+		<footer class="grid_12"><a href="http://haptic-data.com/toxiclibsjs/">toxiclibs.js</a></footer>
+		<script type="text/javascript" src="../build/toxiclibs.js"></script>
 		<script type="text/javascript" src="js/Three.js"></script> 
 
 		<script type="text/javascript">
@@ -35,10 +40,6 @@
 
 			windowHalfX = window.innerWidth / 2,
 			windowHalfY = window.innerHeight / 2,
-
-			SEPARATION = 200,
-			AMOUNTX = 10,
-			AMOUNTY = 10,
 
 			camera, scene, renderer,
 
@@ -55,26 +56,25 @@
 				var container, separation = 100, amountX = 50, amountY = 50,
 				particles;
 
-				container = document.createElement('div');
-				document.body.appendChild(container);
+				container = document.getElementById("threejs_container");
 
-				camera = new THREE.Camera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera = new THREE.Camera( 75, 940/600, 1, 1000 );
 				camera.position.z = 100;
 
 				scene = new THREE.Scene();
 
 				renderer = new THREE.CanvasRenderer();
-				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setSize( 940,600 );
 				container.appendChild( renderer.domElement );
 				
 
 				// particles
 
-				material = new THREE.ParticleCircleMaterial( { color: 0xffff00 } );
+				material = new THREE.ParticleCircleMaterial( { color: 0x92c348 } );
 				var geometry = new THREE.Geometry();
 				
 				
-				var mesh = new Sphere(100).toMesh(null,20);
+				var mesh = new toxi.Sphere(100).toMesh(null,20);
 				var vertices = mesh.getVertices();
 				var numVertices = vertices.length;
 				

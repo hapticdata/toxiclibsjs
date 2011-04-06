@@ -1,4 +1,4 @@
-function IsectData3D(isec){
+toxi.IsectData3D = function(isec){
 	if(isec !== undefined){
 		this.isIntersection = isec.isIntersection;
 		this.dist = isec.dist;
@@ -11,19 +11,19 @@ function IsectData3D(isec){
 	}
 }
 
-IsectData2D.prototype = {
+toxi.IsectData3D.prototype = {
 	clear: function(){
 		this.isIntersection = false;
 		this.dist = 0;
-		this.pos = new Vec3D();
-		this.dir = new Vec3D();
-		this.normal = new Vec3D();
+		this.pos = new toxi.Vec3D();
+		this.dir = new toxi.Vec3D();
+		this.normal = new toxi.Vec3D();
 	},
 	
 	toString: function(){
-		String s = "isec: "+this.isIntersection;
+		var s = "isec: "+this.isIntersection;
 		if(this.isIntersection){
-			s+= " at:"+this.pos+ " dist:"+this.dist+" normal:"+this.normal);
+			s += " at:"+this.pos+ " dist:"+this.dist+" normal:"+this.normal;
 		}
 		return s;
 	}

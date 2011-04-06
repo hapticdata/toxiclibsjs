@@ -1,8 +1,8 @@
-function VertexSelector(mesh){
+toxi.VertexSelector = function(mesh){
 	this.init(mesh);
 }
 
-VertextSelector.prototype = {
+toxi.VertexSelector.prototype = {
 	init: function(mesh){
 		this.mesh = mesh;
 		this.selection = [];

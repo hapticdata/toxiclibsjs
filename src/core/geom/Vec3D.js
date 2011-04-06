@@ -18,11 +18,11 @@
  * @param z
  *            the z
  */
-function Vec3D(x, y, z){
+toxi.Vec3D = function(x, y, z){
 	this.init(x,y,z);
 }
 	
-Vec3D.prototype = {
+toxi.Vec3D.prototype = {
 	
 	abs: function(){
 		this.x = Math.abs(this.x);
@@ -32,11 +32,11 @@ Vec3D.prototype = {
 	},
 	
 	add: function(a,b,c){
-		if(a instanceof Vec3D)
+		if(a instanceof toxi.Vec3D)
 		{
-			return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
+			return new toxi.Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
 		}
-		return new Vec3D(this.x+a,this.y+b,this.z+c);
+		return new toxi.Vec3D(this.x+a,this.y+b,this.z+c);
 		
 	},
 	/**
@@ -106,17 +106,17 @@ Vec3D.prototype = {
 			box_or_min = box_or_min.getMin();
 		}
 		this.x = Math.clip(this.x, this.min.x, this.max.x);
-        this.y = MathUtils.clip(this.y, this.min.y, this.max.y);
-        this.z = MathUtils.clip(this.z, this.min.z, this.max.z);
+        this.y = toxi.MathUtils.clip(this.y, this.min.y, this.max.y);
+        this.z = toxi.MathUtils.clip(this.z, this.min.z, this.max.z);
        return this;
 	},
 	
 	copy: function(){
-		return new Vec3D(this);
+		return new toxi.Vec3D(this);
 	},
 	
 	cross: function(vec){
-		return new Vec3D(this.y*vec.z - vec.y * this.z, this.z * vec.x - vec.z * this.x,this.x * vec.y - vec.x * this.y);
+		return new toxi.Vec3D(this.y*vec.z - vec.y * this.z, this.z * vec.x - vec.z * this.x,this.x * vec.y - vec.x * this.y);
 	},
 	
 	crossInto: function(vec, vecResult){
@@ -173,7 +173,7 @@ Vec3D.prototype = {
 	},
 	
 	equals: function(vec){
-		if(vec instanceof Vec3D)
+		if(vec instanceof toxi.Vec3D)
 		{
 			return this.x == vec.x && this.y == vec.y && this.z == vec.z;
 		}
@@ -214,7 +214,7 @@ Vec3D.prototype = {
 	},
 	
 	getAbs: function(){
-		return new Vec3D(this).abs();
+		return new toxi.Vec3D(this).abs();
 	},
 	
 	getComponent: function(id){
@@ -231,34 +231,34 @@ Vec3D.prototype = {
 	},
 	
 	getConstrained: function(box){
-		return new Vec3D(this).constrain(box);
+		return new toxi.Vec3D(this).constrain(box);
 	},
 	
 	getFloored: function(){
-		return new Vec3D(this).floor();
+		return new toxi.Vec3D(this).floor();
 	},
 	
 	getFrac: function(){
-		return new Vec3D(this).frac();
+		return new toxi.Vec3D(this).frac();
 	},
 	
 	getInverted: function(){
-		return new Vec3d(-this.x,-this.y,-this.z);
+		return new toxi.Vec3D(-this.x,-this.y,-this.z);
 	},
 	
 	getLimited: function(limit){
 		if(this.magSquared() > limit * limit){
 			return this.getNormalizedTo(limit);
 		}
-		return new Vec3D(this);
+		return new toxi.Vec3D(this);
 	},
 	
 	getNormalized: function(){
-		return new Vec3D(this).normalize();
+		return new toxi.Vec3D(this).normalize();
 	},
 	
 	getNormalizedTo: function(length){
-		return new Vec3D(this).normalizedTo(length);
+		return new toxi.Vec3D(this).normalizeTo(length);
 	},
 	
 	getReciprocal: function(){
@@ -270,23 +270,23 @@ Vec3D.prototype = {
 	},
 	
 	getRotatedAroundAxis: function(vec_axis,theta){
-		return new Vec3D(this).rotateAroundAxis(vec_axis,theta);
+		return new toxi.Vec3D(this).rotateAroundAxis(vec_axis,theta);
 	},
 	
 	getRotatedX: function(theta){
-		return new Vec3D(this).rotateX(theta);
+		return new toxi.Vec3D(this).rotateX(theta);
 	},
 	
 	getRotatedY: function(theta){
-		return new Vec3D(this).rotateY(theta);
+		return new toxi.Vec3D(this).rotateY(theta);
 	},
 	
 	getRotatedZ: function(theta){
-		return new Vec3D(this).rotateZ(theta);
+		return new toxi.Vec3D(this).rotateZ(theta);
 	},
 	
 	getSignum: function(){
-		return new Vec3D(this).signum();
+		return new toxi.Vec3D(this).signum();
 	},
 	
 	headingXY: function(){
@@ -306,7 +306,7 @@ Vec3D.prototype = {
 	},
 	
 	init: function(x,y,z){
-		if(x instanceof Vec3D)
+		if(x instanceof toxi.Vec3D)
 		{
 			this.x = x.x;
 			this.y = x.y;
@@ -329,9 +329,9 @@ Vec3D.prototype = {
 	interpolateTo: function(v,f,s) {
 		if(s === undefined)
 		{
-			return new Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - z)*f);
+			return new toxi.Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - z)*f);
 		}
-		return new Vec3D(s.interpolate(this.y,v.y,f),s.interpolate(this.y,v.y,f),s.interpolate(this.z,v.z,f));
+		return new toxi.Vec3D(s.interpolate(this.y,v.y,f),s.interpolate(this.y,v.y,f),s.interpolate(this.z,v.z,f));
         
     },
     
@@ -383,9 +383,9 @@ Vec3D.prototype = {
 	},
 	
 	isMajorAxis: function(tol){
-		var ax = MathUtils.abs(this.x);
-		var ay = MathUtils.abs(this.y);
-		var az = MathUtils.abs(this.z);
+		var ax = toxi.MathUtils.abs(this.x);
+		var ay = toxi.MathUtils.abs(this.y);
+		var az = toxi.MathUtils.abs(this.z);
 		var itol = 1 - tol;
         if (ax > itol) {
 			if (ay < tol) {
@@ -404,7 +404,7 @@ Vec3D.prototype = {
 	},
 	
 	isZeroVector: function(){
-		return Math.abs(this.x) < MathUtils.EPS && Math.abs(this.y) < MathUtils.EPS && MathUtils.abs(this.z) < MathUtils.EPS;
+		return Math.abs(this.x) < toxi.MathUtils.EPS && Math.abs(this.y) < toxi.MathUtils.EPS && toxi.MathUtils.abs(this.z) < toxi.MathUtils.EPS;
 	},
   
  	/**
@@ -421,9 +421,9 @@ Vec3D.prototype = {
 		{
 			b = c = a;
 		}
-		this.x += MathUtils.normalizedRandom()*a;
-		this.y += MathUtils.normalizedRandom()*b;
-		this.z += MathUtils.normalizedRandom()*c;
+		this.x += toxi.MathUtils.normalizedRandom()*a;
+		this.y += toxi.MathUtils.normalizedRandom()*b;
+		this.z += toxi.MathUtils.normalizedRandom()*c;
 		return this;
 	},
 	
@@ -482,7 +482,7 @@ Vec3D.prototype = {
 	normalizeTo: function(length){
 		var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
 		if(mag>0){
-			mag = len / mag;
+			mag = length / mag;
 			this.x *= mag;
 			this.y *= mag;
 			this.z *= mag;
@@ -621,19 +621,19 @@ Vec3D.prototype = {
     },
 
 	scale:function(a,b,c) {
-		if(a instanceof Vec3D) //if it was a vec3d that was passed
+		if(a instanceof toxi.Vec3D) //if it was a vec3d that was passed
 		{
-			return new Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
+			return new toxi.Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
 	    }
 		else if(b==undefined || c==undefined) //if only one float was passed
 		{
 			b = c = a;
 		}
-		return new Vec3D(this.x * a, this.y * b, this.z * c);
+		return new toxi.Vec3D(this.x * a, this.y * b, this.z * c);
 	},
 	
 	scaleSelf: function(a,b,c) {
-		if(a instanceof Vec3D)
+		if(a instanceof toxi.Vec3D)
 		{
 			this.x *= a.x;
 			this.y *= a.y;
@@ -651,7 +651,7 @@ Vec3D.prototype = {
 	},
 	
 	set: function(a,b,c){
-		if(a instanceof Vec3D)
+		if(a instanceof toxi.Vec3D)
 		{
 			this.x = a.x;
 			this.y = a.y;
@@ -715,19 +715,19 @@ Vec3D.prototype = {
 	},
 	
 	sub: function(a,b,c){
-		if(a instanceof Vec3D)
+		if(a instanceof toxi.Vec3D)
 		{
-			return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
+			return  new toxi.Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 		}
 		else if(b === undefined || c === undefined)
 		{
 			b = c = a;
 		}
-		return new Vec3D(this.x - a, this.y - b, this.z - c);
+		return new toxi.Vec3D(this.x - a, this.y - b, this.z - c);
 	},
 	
 	subSelf: function(a,b,c){
-		if(a instanceof Vec3D)
+		if(a instanceof toxi.Vec3D)
 		{
 			this.x -= a.x;
 			this.y -= a.y;
@@ -778,7 +778,7 @@ Vec3D.prototype = {
 	},
 	
 	toSpherical: function(){
-		var xx = Math.abs(this.x) <= MathUtils.EPS ? MathUtils.EPS : this.x;
+		var xx = Math.abs(this.x) <= toxi.MathUtils.EPS ? toxi.MathUtils.EPS : this.x;
         var zz = this.z;
 
         var radius = Math.sqrt((xx * xx) + (this.y * this.y) + (zz * zz));
@@ -796,12 +796,12 @@ Vec3D.prototype = {
   * Defines vector with all coords set to Float.MIN_VALUE. Useful for
   * bounding box operations.
   */
-Vec3D.MIN_VALUE = new Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
+toxi.Vec3D.MIN_VALUE = new toxi.Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
 /**
   * Defines vector with all coords set to Float.MAX_VALUE. Useful for
   * bounding box operations.
  */
-Vec3D.MAX_VALUE = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
+toxi.Vec3D.MAX_VALUE = new toxi.Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
 /**
  * Creates a new vector from the given angle in the XY plane. The Z
  * component of the vector will be zero.
@@ -813,8 +813,8 @@ Vec3D.MAX_VALUE = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
  * 
  * @return new vector in the XY plane
  */
-Vec3D.fromXYTheta = function(theta) {
-	return new Vec3D(Math.cos(theta),Math.sin(theta),0);
+toxi.Vec3D.fromXYTheta = function(theta) {
+	return new toxi.Vec3D(Math.cos(theta),Math.sin(theta),0);
 }
 /**
  * Creates a new vector from the given angle in the XZ plane. The Y
@@ -827,8 +827,8 @@ Vec3D.fromXYTheta = function(theta) {
  * 
  * @return new vector in the XZ plane
  */
- Vec3D.fromXZTheta = function(theta) {
-        return new Vec3D(Math.cos(theta), 0, Math.sin(theta));
+ toxi.Vec3D.fromXZTheta = function(theta) {
+        return new toxi.Vec3D(Math.cos(theta), 0, Math.sin(theta));
  }
 
 /**
@@ -842,8 +842,8 @@ Vec3D.fromXYTheta = function(theta) {
  * 
  * @return new vector in the YZ plane
  */
-Vec3D.fromYZTheta = function(theta) {
-    return new Vec3D(0, Math.cos(theta), Math.sin(theta));
+toxi.Vec3D.fromYZTheta = function(theta) {
+    return new toxi.Vec3D(0, Math.cos(theta), Math.sin(theta));
 }
 
 /**
@@ -857,8 +857,8 @@ Vec3D.fromYZTheta = function(theta) {
  * 
  * @return result as new vector
  */
-Vec3D.max = function(a, b) {
-        return new Vec3D(Math.max(a.x(), b.x()), Math.max(a.y(),
+toxi.Vec3D.max = function(a, b) {
+        return new toxi.Vec3D(Math.max(a.x(), b.x()), Math.max(a.y(),
                 b.y()), Math.max(a.z(), b.z()));
 }
 
@@ -873,8 +873,8 @@ Vec3D.max = function(a, b) {
  * 
  * @return result as new vector
  */
-Vec3D.min = function(a,b) {
-    return new Vec3D(Math.min(a.x(), b.x()), Math.min(a.y(),
+toxi.Vec3D.min = function(a,b) {
+    return new toxi.Vec3D(Math.min(a.x(), b.x()), Math.min(a.y(),
             b.y()), Math.min(a.z(), b.z()));
 }
 
@@ -886,8 +886,11 @@ Vec3D.min = function(a,b) {
  * @return a new random normalized unit vector.
  */
 
-Vec3D.randomVector = function() {
-	var v = new Vec3D(Math.random()*2 - 1, Math.random() * 2 -1, Math.random()* 2 - 1);
+toxi.Vec3D.randomVector = function() {
+	var v = new toxi.Vec3D(Math.random()*2 - 1, Math.random() * 2 -1, Math.random()* 2 - 1);
 	return v.normalize();
 }
+toxi.Vec3D.X_AXIS = new toxi.Vec3D(1,0,0);
+toxi.Vec3D.Y_AXIS = new toxi.Vec3D(0,1,0);
+toxi.Vec3D.Z_AXIS = new toxi.Vec3D(0,0,1);
 

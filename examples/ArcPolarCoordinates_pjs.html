@@ -2,14 +2,13 @@
 
 <html lang="en">
 <head>
-	<title>Arc Polar Coordinates</title>
+	<title>Arc Polar Coordinates  - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
+	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/math/InterpolateStrategy.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
-	<script>
+	<script type="text/javascript">
 	/*
 	 * This code searches for all the <script type="application/processing" target="canvasid">
 	 * in your page and loads each script in the target canvas with the proper id.
@@ -50,8 +49,13 @@
 
 	</script>
 </head>
-<body>
-<h1>Arc Polar Coordinates</h1>
+<body class="container_12">
+<header class="grid_12">
+	<hgroup>
+		<h1>Arc Polar Coordinates</h1>
+		<h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
+	</hgroup>
+</header>
 
 <script type="application/processing">
 /**
@@ -86,7 +90,7 @@ float outerRadius=180;
 int numSteps=10;
 
 void setup() {
-  size(400,400);
+  size(380,380);
 }
 
 void draw() {
@@ -96,7 +100,7 @@ void draw() {
   // in the polar space the vector components are interpreted as:
   // x = radius
   // y = angle
-  Vec2D mousePos=new Vec2D(mouseX,mouseY).sub(width/2,height/2).toPolar();
+  toxi.Vec2D mousePos=new toxi.Vec2D(mouseX,mouseY).sub(width/2,height/2).toPolar();
   // ensure we always interpolate the angle over the smaller difference
   if (abs(theta-mousePos.y)>PI) {
     if (theta>mousePos.y) {
@@ -113,7 +117,7 @@ void draw() {
   // create the arc as tri strip
   noStroke();
   beginShape(TRIANGLE_STRIP);
-  Vec2D p=new Vec2D();
+  toxi.Vec2D p=new toxi.Vec2D();
   for(float i=0,t=theta-PI*0.25; i<numSteps; i++) {
     // convert theta back into cartesian coordinate space
     // the radius of 1 means the resulting vector will be normalized
@@ -128,18 +132,28 @@ void draw() {
   mousePos.toCartesian();
   stroke(255,0,0);
   line(0,0,mousePos.x,mousePos.y);
-  Vec2D arcPos=new Vec2D(innerRadius,theta).toCartesian();
+  toxi.Vec2D arcPos=new toxi.Vec2D(innerRadius,theta).toCartesian();
   stroke(0,0,255);
   line(0,0,arcPos.x,arcPos.y);
 }
 
 </script>
-
+<div class="grid_12">
 <canvas id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>
+</div>
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6">
 <p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
-	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a>
+</p>
+</aside>
+<article id="description" class="grid_12">
 <p>Quick demo & test for working with 2D polar coordinates, interpolation and circle segments. Might be useful for some...</p>
+</article>
+</section>
+<footer class="grid_12"><a href="http://haptic-data.com">toxiclibs.js
+</a></footer>
 </body>
 </html>

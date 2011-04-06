@@ -4,59 +4,117 @@
  * circles from points.
  */
  
-var Circle = function(a,b,c) {
-	this.init(a,b,c);
+toxi.Circle = function(a,b,c) {
+	this.circleInit(a,b,c);
 }
 
 
-Circle.prototype = new Ellipse();
-Circle.constructor = Circle;
-Circle.prototype.parent = Ellipse.prototype;
+toxi.Circle.prototype = new toxi.Ellipse();
+toxi.Circle.prototype.constructor = toxi.Circle;
+toxi.Circle.prototype.parent = toxi.Ellipse.prototype;
 
-Circle.prototype.containsPoint = function(p) {
+
+
+
+
+/**
+ * Factory method to construct a circle which has the two given points lying
+ * on its perimeter. If the points are coincident, the circle will have a
+ * radius of zero.
+ * 
+ * @param p1
+ * @param p2
+ * @return new circle instance
+ */
+toxi.Circle.from2Points = function(p1,p2) {
+    var m = p1.interpolateTo(p2, 0.5);
+    var distanceTo = m.distanceTo(p1);
+    return new toxi.Circle(m, distanceTo);
+}
+
+/**
+ * Factory method to construct a circle which has the three given points
+ * lying on its perimeter. The function returns null, if the 3 points are
+ * co-linear (in which case it's impossible to find a circle).
+ * 
+ * Based on CPP code by Paul Bourke:
+ * http://local.wasp.uwa.edu.au/~pbourke/geometry/circlefrom3/
+ * 
+ * @param p1
+ * @param p2
+ * @param p3
+ * @return new circle instance or null
+ */
+toxi.Circle.from3Points = function(p1,p2,p3) {
+    var circle = undefined,
+    deltaA = p2.sub(p1),
+    deltaB = p3.sub(p2);
+    if (toxi.MathUtils.abs(deltaA.x) <= 0.0000001 && toxi.MathUtils.abs(deltaB.y) <= 0.0000001) {
+        var centroid = new toxi.Vec2D(p2.x + p3.x, p1.y + p2.y).scaleSelf(0.5);
+        var radius = centroid.distanceTo(p1);
+        circle = new toxi.Circle(centroid, radius);
+    } else {
+        var aSlope = deltaA.y / deltaA.x;
+        var bSlope = deltaB.y / deltaB.x;
+        if (toxi.MathUtils.abs(aSlope - bSlope) > 0.0000001 && aSlope != 0) {
+            var x = (aSlope * bSlope * (p1.y - p3.y) + bSlope * (p1.x + p2.x) - aSlope * (p2.x + p3.x)) / (2 * (bSlope - aSlope));
+            var y = -(x - (p1.x + p2.x) / 2) / aSlope + (p1.y + p2.y) / 2;
+            var centroid = new toxi.Vec2D(x, y);
+            var radius = centroid.distanceTo(p1);
+            circle = new toxi.Circle(centroid, radius);
+        }
+    }
+    return circle;
+}
+
+
+
+
+toxi.Circle.prototype.containsPoint = function(p) {
     return this.distanceToSquared(p) <= this.radius.x * this.radius.x;
 }
 
-Circle.prototype.getCircumference = function() {
-    return MathUtils.TWO_PI * this.radius.x;
+toxi.Circle.prototype.getCircumference = function() {
+    return toxi.MathUtils.TWO_PI * this.radius.x;
 }
 
-Circle.prototype.getRadius = function() {
+toxi.Circle.prototype.getRadius = function() {
     return this.radius.x;
 }
 
-Circle.prototype.getTangentPoints = function(p) {
+toxi.Circle.prototype.getTangentPoints = function(p) {
     var m = this.interpolateTo(p, 0.5);
-    return this.intersectsCircle(new Circle(m, m.distanceTo(p)));
+    return this.intersectsCircle(new toxi.Circle(m, m.distanceTo(p)));
 }
 
-Circle.prototype.init = function(a,b,c){
+toxi.Circle.prototype.circleInit = function(a,b,c){
 	if(b === undefined)
 	{
-		if(a instanceof Circle)
+		if(a instanceof toxi.Circle)
 		{
-			this.parent.init.call(this,a,a.radius.x);
+			this.parent.ellipseInit.call(this,a,a.radius.x);
 		}
 		else
 		{
-			this.parent.init.call(this,0,0,a);
+			this.parent.ellipseInit.call(this,0,0,a);
 		}
 	}
 	else
 	{
 		if(c === undefined)
 		{
-			this.parent.init.call(this,a,b);
+			this.parent.ellipseInit.call(this,a,b);
 		}
 		else
 		{
-			this.parent.init.call(this,a,b,c,c);
+			this.parent.ellipseInit.call(this,a,b,c,c);
 		}
 	
 	}
+	return this;
 }
 
-Circle.prototype.intersectsCircle = function(c) {
+toxi.Circle.prototype.intersectsCircle = function(c) {
     var res = null;
     var delta = c.sub(this);
     var d = delta.magnitude();
@@ -75,59 +133,8 @@ Circle.prototype.intersectsCircle = function(c) {
     return res;
 }
 
-Circle.prototype.setRadius = function(r) {
+toxi.Circle.prototype.setRadius = function(r) {
     this.setRadii(r, r);
     return this;
 }
-
-
-/**
- * Factory method to construct a circle which has the two given points lying
- * on its perimeter. If the points are coincident, the circle will have a
- * radius of zero.
- * 
- * @param p1
- * @param p2
- * @return new circle instance
- */
-Circle.from2Points = function(p1,p2) {
-    var m = p1.interpolateTo(p2, 0.5);
-    return new Circle(m, m.distanceTo(p1));
-}
-
-/**
- * Factory method to construct a circle which has the three given points
- * lying on its perimeter. The function returns null, if the 3 points are
- * co-linear (in which case it's impossible to find a circle).
- * 
- * Based on CPP code by Paul Bourke:
- * http://local.wasp.uwa.edu.au/~pbourke/geometry/circlefrom3/
- * 
- * @param p1
- * @param p2
- * @param p3
- * @return new circle instance or null
- */
-Circle.from3Points = function(p1,p2,p3) {
-    var circle = null,
-    deltaA = p2.sub(p1),
-    deltaB = p3.sub(p2);
-    if (MathUtils.abs(deltaA.x) <= 0.0000001 && MathUtils.abs(deltaB.y) <= 0.0000001) {
-        var centroid = new Vec2D(p2.x + p3.x, p1.y + p2.y).scaleSelf(0.5);
-        var radius = centroid.distanceTo(p1);
-        circle = new Circle(centroid, radius);
-    } else {
-        var aSlope = deltaA.y / deltaA.x;
-        var bSlope = deltaB.y / deltaB.x;
-        if (MathUtils.abs(aSlope - bSlope) > 0.0000001) {
-            var x = (aSlope * bSlope * (p1.y - p3.y) + bSlope * (p1.x + p2.x) - aSlope * (p2.x + p3.x)) / (2 * (bSlope - aSlope));
-            var y = -(x - (p1.x + p2.x) / 2) / aSlope + (p1.y + p2.y) / 2;
-            var centroid = new Vec2D(x, y);
-            var radius = centroid.distanceTo(p1);
-            circle = new Circle(centroid, radius);
-        }
-    }
-    return circle;
-}
-
 

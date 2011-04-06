@@ -26,12 +26,12 @@
  * <code>BezierInterpolation b=new BezierInterpolation(1f/3,-1f/3);</code>
  * </p>
  */
-function BezierInterpolation(h1,h2) {
+toxi.BezierInterpolation = function(h1,h2) {
 	this.c1 = h1;
 	this.c2 = h2;
 }
 
-BezierInterpolation.prototype = {
+toxi.BezierInterpolation.prototype = {
 	interpolate: function(a,b,t) {
 		var tSquared = t * t;
 	    var invT = 1.0 - t;
@@ -63,14 +63,14 @@ BezierInterpolation.prototype = {
  * @param isFlipped
  *            true, if slope is inverted
  */
-function CircularInterpolation(isFlipped) {
+toxi.CircularInterpolation = function(isFlipped) {
    if(isFlipped = undefined)
    {
    		this.isFlipped = false;
    	}
 }
 
-CircularInterpolation.prototype = {
+toxi.CircularInterpolation.prototype = {
 	interpolate: function( a, b, f) {
         if (this.isFlipped) {
             return a - (b - a) * (Math.sqrt(1 - f * f) - 1);
@@ -92,9 +92,9 @@ CircularInterpolation.prototype = {
  * 
  * i = b+(a-b)*(0.5+0.5*cos(f*PI))
  */
-function CosineInterpolation(){}
+toxi.CosineInterpolation = function(){}
 
-CosineInterpolation.prototype = {
+toxi.CosineInterpolation.prototype = {
 	interpolate: function(a, b, f) {
     	return b + (a - b) * (0.5 + 0.5 * Math.cos(f * Math.PI));
 	}
@@ -108,13 +108,13 @@ CosineInterpolation.prototype = {
  * 100%. By default {@link LinearInterpolation} is used, however any other
  * {@link InterpolateStrategy} can be specified via the constructor.
  */
-function DecimatedInterpolation(steps,strategy) {
+toxi.DecimatedInterpolation = function(steps,strategy) {
  if(steps === undefined)throw new Error("steps was not passed to constructor");
  this.numSteps = steps;
  this.strategy = (strategy==undefined)? new LinearInterpolation() : strategy;
 }
 
-DecimatedInterpolation.prototype = {	
+toxi.DecimatedInterpolation.prototype = {	
 	interpolate: function(a,b,f) {
         var fd = Math.floor(f * this.numSteps) /  this.numSteps;
         return this.strategy.interpolate(a, b, fd);
@@ -130,11 +130,11 @@ DecimatedInterpolation.prototype = {
  * <li>&gt; 1.0 : ease-out (steep changes from a)</li>
  * </ul>
  */
-function ExponentialInterpolation(exp) {
+toxi.ExponentialInterpolation = function(exp) {
    this.exponent = (exp === undefined)?2 : exp;
 }
 
-ExponentialInterpolation.prototype = {
+toxi.ExponentialInterpolation.prototype = {
 	
 	interpolate: function(a, b, f) {
     return a + (b - a) * Math.pow(f, this.exponent);
@@ -168,8 +168,8 @@ ExponentialInterpolation.prototype = {
  *            bottom-right value (do not use if first 3 are Vec2D)
  * @return interpolated value
  */
-var Interpolation2D = {};
-Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
+toxi.Interpolation2D = {};
+toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
 	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
 	if(_x instanceof Vec2D) //if the first 3 params are passed in as Vec2Ds
 	{
@@ -214,9 +214,9 @@ Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _b
  * i = a + ( b - a ) * f
  */
 
-function LinearInterpolation(){}
+toxi.LinearInterpolation = function(){}
 
-LinearInterpolation.prototype = {
+toxi.LinearInterpolation.prototype = {
 	interpolate: function(a, b, f) {
         return a + (b - a) * f;
 	}
@@ -225,12 +225,12 @@ LinearInterpolation.prototype = {
 /**
  * Initializes the s-curve with default sharpness = 2
  */
-function SigmoidInterpolation(s) {
+toxi.SigmoidInterpolation = function(s) {
 	if(s === undefined)s = 2.0;
 		this.setSharpness(s);
 }
 
-SigmoidInterpolation.prototype = {	
+toxi.SigmoidInterpolation.prototype = {	
 	getSharpness: function() {
 		return this.sharpness;
 	},
@@ -252,11 +252,11 @@ SigmoidInterpolation.prototype = {
  * Defines a single step/threshold function which returns the min value for all
  * factors &lt; threshold and the max value for all others.
  */
-function ThresholdInterpolation(threshold) {
+toxi.ThresholdInterpolation = function(threshold) {
 	this.threshold = threshold;
 }
 
-ThresholdInterpolation.prototype = {
+toxi.ThresholdInterpolation.prototype = {
 	interpolate: function(a, b, f) {
 		return f < this.threshold ? a : b;
 	}
@@ -270,7 +270,7 @@ ThresholdInterpolation.prototype = {
  */
 
 
-function ZoomLensInterpolation(lensPos, lensStrength) {
+toxi.ZoomLensInterpolation = function(lensPos, lensStrength) {
 	this.leftImpl = new CircularInterpolation();
 	this.rightImpl = new CircularInterpolation();
 	this.lensPos = (lenPos === undefined) ? 0.5 :lensPos;
@@ -280,7 +280,7 @@ function ZoomLensInterpolation(lensPos, lensStrength) {
 	this.rightImpl.setFlipped(this.lensStrength < 0);
 }
 
-ZoomLensInterpolation.prototype = {
+toxi.ZoomLensInterpolation.prototype = {
 
 	interpolate: function(min,max,t) {
 	    var val = min + (max - min) * t;

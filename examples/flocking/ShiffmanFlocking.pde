@@ -40,18 +40,18 @@ void setup() {
   flock = new Flock();
   // Add an initial set of boids into the system
   for (int i = 0; i < 70; i++) {
-    flock.addBoid(new Boid(new Vec2D(width/2,height/2),3.0,0.05));
+    flock.addBoid(new Boid(new toxi.Vec2D(width/2,height/2),3.0,0.05));
   }
   smooth();
 }
 
 void draw() {
-  background(255);
+  background(250);
   flock.run();
 }
 
 // Add a new boid into the System
 void mousePressed() {
-  flock.addBoid(new Boid(new Vec2D(mouseX,mouseY),2.0,0.05f));
+  flock.addBoid(new Boid(new toxi.Vec2D(mouseX,mouseY),2.0,0.05f));
 }
 

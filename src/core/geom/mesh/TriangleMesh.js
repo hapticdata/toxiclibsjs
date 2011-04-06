@@ -1,16 +1,24 @@
 //is there any reason for this to implement Mesh3D?
-function TriangleMesh(name,numV,numF){
+toxi.TriangleMesh = function(name,numV,numF){
 	if(name === undefined)name = "untitled";
-	if(numV === undefined)numV = TriangleMesh.DEFAULT_NUM_VERTICES;
-	if(numF === undefined)numF = TriangleMesh.DEFAULT_NUM_FACES;
+	if(numV === undefined)numV = toxi.TriangleMesh.DEFAULT_NUM_VERTICES;
+	if(numF === undefined)numF = toxi.TriangleMesh.DEFAULT_NUM_FACES;
 	this.setName(name);
 	this.vertices = [];
 	this.faces = [];
+	this.numVertices = 0;
+	this.numFaces = 0;
 	this.uniqueVertexID = -1;
 	return this;
 }
 
-TriangleMesh.prototype = {
+
+//statics
+toxi.TriangleMesh.DEFAULT_NUM_VERTICES = 1000;
+toxi.TriangleMesh.DEFAULT_NUM_FACES = 3000;
+toxi.TriangleMesh.DEFAULT_STRIDE = 4;
+
+toxi.TriangleMesh.prototype = {
 
 	addFace: function(a,b,c,n,uvA,uvB,uvC){
 		if(uvC === undefined) //then it wasnt the 7 param method
@@ -21,17 +29,17 @@ TriangleMesh.prototype = {
 				if(uvA === undefined)
 				{
 					//3 param method
-					n = null;
-					uvA = null;
-					uvB = null;
-					uvC = null;
+					n = undefined;
+					uvA = undefined;
+					uvB = undefined;
+					uvC = undefined;
 				}
 				else
 				{
 					//4 param method
-					uvA = null;
-					uvB = null;
-					uvC = null;
+					uvA = undefined;
+					uvB = undefined;
+					uvC = undefined;
 				}
 			}
 			else {
@@ -52,7 +60,7 @@ TriangleMesh.prototype = {
 			console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
 		}
 		else {
-			if(n != null){
+			if(n != undefined){
 				var nc = va.sub(vc).crossSelf(va.sub(vb));
 				if(n.dot(nc)<0){
 					var t = va;
@@ -60,7 +68,7 @@ TriangleMesh.prototype = {
 					vb = t;
 				}
 			}
-			var f = new Face(va,vb,vc,uvA,uvB,uvC);
+			var f = new toxi.Face(va,vb,vc,uvA,uvB,uvC);
 			//console.log(f.toString());
 			this.faces.push(f);
 			this.numFaces++;
@@ -91,7 +99,7 @@ TriangleMesh.prototype = {
 	
 	checkVertex: function(v){
 		var vertex = this.vertices[v];
-		if(vertex == null){
+		if(vertex === undefined){
 			vertex = this.createVertex(v,this.uniqueVertexID++);
 			this.vertices.push(vertex);
 			this.numVertices++;
@@ -102,7 +110,7 @@ TriangleMesh.prototype = {
 	clear: function(){
 		this.vertices = [];
 		this.faces = [];
-		this.bounds = null;
+		this.bounds = undefined;
 		this.numVertices = 0;
 		this.numFaces = 0;
 		return this;
@@ -146,7 +154,7 @@ TriangleMesh.prototype = {
 	},
 	
 	copy: function(){
-		var m = new TriangleMesh(this.name+"-copy",this.numVertices,this.numFaces);
+		var m = new toxi.TriangleMesh(this.name+"-copy",this.numVertices,this.numFaces);
 		var l = this.faces.length;
 		for(var i=0;i<l;i++){
 			var f = this.faces[i];
@@ -156,7 +164,7 @@ TriangleMesh.prototype = {
 	},
 	
 	createVertex: function(v,id){
-		return new Vertex(v,id);
+		return new toxi.Vertex(v,id);
 	},
 	
 	faceOutwards: function(){
@@ -193,14 +201,14 @@ TriangleMesh.prototype = {
 	},
 	
 	getBoundingBox:function(){
-		var minBounds = Vec3D.MAX_VALUE.copy();
-		var maxBounds = Vec3D.MIN_VALUE.copy();
+		var minBounds = toxi.Vec3D.MAX_VALUE.copy();
+		var maxBounds = toxi.Vec3D.MIN_VALUE.copy();
 		var l = this.vertices.length;
 		for(var i=0;i<l;i++){
 			this.minBounds.minSelf(v);
 			this.maxBounds.maxSelf(v);
 		}
-		this.bounds = AABB.fromMinMax(minBounds,maxBounds);
+		this.bounds = toxi.AABB.fromMinMax(minBounds,maxBounds);
 		return this.bounds;
 	},
 	
@@ -210,13 +218,13 @@ TriangleMesh.prototype = {
 		var l = this.vertices.length;
 		for(var i=0;i<l;i++){
 			var v = this.vertices[i];
-			radius = MathUtils.max(radius,v.distanceToSquared(this.centroid));
+			radius = toxi.MathUtils.max(radius,v.distanceToSquared(this.centroid));
 		}
-		return new Sphere(this.centroid,Math.sqrt(radius));
+		return new toxi.Sphere(this.centroid,Math.sqrt(radius));
 	},
 	
 	getClosestVertexToPoint: function(p){
-		var closest = null;
+		var closest = undefined;
 		var minDist = Number.MAX_VALUE;
 		var l = this.vertices.length;
 		for(var i=0;i<l;i++){
@@ -239,7 +247,7 @@ TriangleMesh.prototype = {
      * @return array of xyz normal coords
      */
     getFaceNormalsAsArray: function() {
-        return this.getFaceNormalsAsArray(null, 0, TriangleMesh.DEFAULT_STRIDE);
+        return this.getFaceNormalsAsArray(undefined, 0, toxi.TriangleMesh.DEFAULT_STRIDE);
     },
 
 	/**
@@ -261,8 +269,8 @@ TriangleMesh.prototype = {
      * @return array of xyz normal coords
      */
     getFaceNormalsAsArray: function(normals, offset, stride) {
-        stride = MathUtils.max(stride, 3);
-        if (normals == null) {
+        stride = toxi.MathUtils.max(stride, 3);
+        if (normals == undefined) {
             normals = [];
         }
         var i = offset;
@@ -313,17 +321,6 @@ TriangleMesh.prototype = {
         return this.intersector.getIntersectionData();
     },
 
-    /**
-     * Creates an array of unravelled vertex coordinates for all faces using a
-     * stride setting of 4, resulting in a serialized version of all mesh vertex
-     * coordinates suitable for VBOs.
-     * 
-     * @see #getMeshAsVertexArray(float[], int, int)
-     * @return float array of vertex coordinates
-     */
-    getMeshAsVertexArray: function() {
-        return this.getMeshAsVertexArray(null, 0, TriangleMesh.DEFAULT_STRIDE);
-    },
 	
 	/**
      * Creates an array of unravelled vertex coordinates for all faces. This
@@ -375,20 +372,22 @@ TriangleMesh.prototype = {
      * @return array of xyz vertex coords
      */
     getMeshAsVertexArray: function(verts, offset, stride) {
-    	if(verts ==undefined)
-    	{
-    		verts = null;
-    		offset = 0;
-    		stride = TriangleMesh.DEFAULT_STRIDE;
+    	if(verts ===undefined)
+   		{
+   		  	verts = undefined;
     	}
-        stride = MathUtils.max(stride, 3);
-        if (verts == null) {
+    	if(offset === undefined){ offset = 0;}
+    	if(stride === undefined){
+    		stride = toxi.TriangleMesh.DEFAULT_STRIDE
+    	}
+        stride = toxi.MathUtils.max(stride, 3);
+        if (verts == undefined) {
             verts = [];
         }
-        var i = offset;
+        var i = 0;//offset;
         var l = this.faces.length;
-        for (var i=0;i<l;i++) {
-        	var f = this.faces[i];
+        for (var j=0;j<l;++j) {
+        	var f = this.faces[j];
             verts[i] = f.a.x;
             verts[i + 1] = f.a.y;
             verts[i + 2] = f.a.z;
@@ -475,7 +474,7 @@ TriangleMesh.prototype = {
     },
 
     getVertexForID: function(id) {
-        var vertex = null;
+        var vertex = undefined;
         var l = this.vertices.length;
         for (var i=0;i<l;i++) {
         	var v = this.vertices[i];
@@ -507,9 +506,9 @@ TriangleMesh.prototype = {
      */
     getVertexNormalsAsArray: function(normals, offset,stride) {
    		if(offset === undefined)offset = 0;
-   		if(stride === undefined)stride = TriangleMesh.DEFAULT_STRIDE;
-        stride = MathUtils.max(stride, 3);
-        if (normals == null) {
+   		if(stride === undefined)stride = toxi.TriangleMesh.DEFAULT_STRIDE;
+        stride = toxi.MathUtils.max(stride, 3);
+        if (normals == undefined) {
             normals = [];
         }
         var i = offset;
@@ -550,7 +549,7 @@ TriangleMesh.prototype = {
         stl.endSave();
          console.log(numFaces + " faces written");
         */
-        console.log("TriangleMesh.handleSaveAsSTL() currently not implemented");
+        console.log("toxi.TriangleMesh.handleSaveAsSTL() currently not implemented");
        
     },
 	
@@ -582,7 +581,7 @@ TriangleMesh.prototype = {
         this.addFace(f.b, f.c, c2);
         this.addFace(f.c, a2, c2);
         this.addFace(f.c, f.a, a2);
-        return new Triangle3D(a2, b2, c2);
+        return new toxi.Triangle3D(a2, b2, c2);
     },
     
      /**
@@ -595,7 +594,9 @@ TriangleMesh.prototype = {
      * @return itself
      */
     pointTowards: function(dir) {
-        return this.transform(Quaternion.getAlignmentQuat(dir, Vec3D.Z_AXIS).toMatrix4x4(matrix), true);
+
+    	
+        return this.transform( toxi.Quaternion.getAlignmentQuat(dir, toxi.Vec3D.Z_AXIS).toMatrix4x4(), true);
     },
     
     removeFace: function(f) {
@@ -630,11 +631,11 @@ TriangleMesh.prototype = {
     },
 
     saveAsOBJ: function(obj) {
-        console.log("TriangleMesh.saveAsOBJ() currently not implemented");
+        console.log("toxi.TriangleMesh.saveAsOBJ() currently not implemented");
     },
     
     saveAsSTL: function(a,b,c){
-    	console.log("TriangleMesh.saveAsSTL() currently not implemented");
+    	console.log("toxi.TriangleMesh.saveAsSTL() currently not implemented");
     },
     
     scale: function(scale) {
@@ -647,7 +648,7 @@ TriangleMesh.prototype = {
     },
 
     toString: function() {
-        return "TriangleMesh: " + name + " vertices: " + this.getNumVertices()
+        return "toxi.TriangleMesh: " + this.name + " vertices: " + this.getNumVertices()
                 + " faces: " + this.getNumFaces();
     },
 
@@ -655,7 +656,7 @@ TriangleMesh.prototype = {
       /*  return new WETriangleMesh(name, vertices.size(), faces.size())
                 .addMesh(this);
        */
-       console.log("TriangleMesh.toWEMesh() currently not implemented");
+       console.log("toxi.TriangleMesh.toWEMesh() currently not implemented");
     },
 
    /**

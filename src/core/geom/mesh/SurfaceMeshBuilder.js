@@ -4,26 +4,27 @@
  * to supply a {@link SurfaceFunction} implementation to the builder.
  */
 
-function SurfaceMeshBuilder(func) {
+toxi.SurfaceMeshBuilder = function(func) {
     this.func = func;
 }
 
-SurfaceMeshBuilder.prototype = {
+toxi.SurfaceMeshBuilder.prototype = {
     createMesh: function(mesh_or_res,_res,size,isClosed) {
+    	if(mesh_or_res == null)mesh_or_res = undefined; //this is for in case people use it in toxi's examples for p5
     	var mesh;
     	var res;
     	if(_res === undefined)
     	{
     		res = mesh_or_res;
-        	mesh = new TriangleMesh();
+        	mesh = new toxi.TriangleMesh();
         }
         else {
         	mesh = mesh_or_res;
         	res = _res;
         }
-        if(mesh == null)
+        if(mesh === undefined)
         {
-        	mesh = new TriangleMesh();
+        	mesh = new toxi.TriangleMesh();
         }
         if(size === undefined)
         {
@@ -33,12 +34,12 @@ SurfaceMeshBuilder.prototype = {
         {
         	isClosed = true;
         }
-        var a = new Vec3D(),
-        	b = new Vec3D(),
-        	pa = new Vec3D(),
-        	pb = new Vec3D(),
-        	a0 = new Vec3D(),
-        	b0 = new Vec3D(),
+        var a = new toxi.Vec3D(),
+        	b = new toxi.Vec3D(),
+        	pa = new toxi.Vec3D(),
+        	pb = new toxi.Vec3D(),
+        	a0 = new toxi.Vec3D(),
+        	b0 = new toxi.Vec3D(),
         	phiRes = this.func.getPhiResolutionLimit(res),       
         	phiRange = this.func.getPhiRange(),
         	thetaRes = this.func.getThetaResolutionLimit(res),

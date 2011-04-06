@@ -1,9 +1,9 @@
-function Ray3DIntersector(ray){
+toxi.Ray3DIntersector = function(ray){
 	this.ray = ray;
-	this.isec = new IsectData3D();
+	this.isec = new toxi.IsectData3D();
 }
 
-Ray3DIntersector.prototype = {
+toxi.Ray3DIntersector.prototype = {
 	getIntersectionData: function(){
 		return this.isec;
 	},

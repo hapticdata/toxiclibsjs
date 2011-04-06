@@ -2,27 +2,38 @@
 
 <html lang="en">
 <head>
-	<title>Shiffman Flocking</title>
+	<title>Shiffman Flocking - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
+	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/math/InterpolateStrategy.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 
-<body>
-<h1>Shiffman Flocking</h1>
+<body class="container_12">
+	<header>
+		<hgroup>
+		<h1>Shiffman Flocking</h1>
+		<h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
+		</hgroup>
+	</header>
 <canvas id="myCanvas" data-processing-sources="flocking/ShiffmanFlocking.pde flocking/Boid.pde flocking/Flock.pde" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6">
 <p>Flocking by <a href="http://www.shiffman.net">Daniel Shiffman</a>
 created for The Nature of Code class, ITP, Spring 2009.<br/>
 Ported to toxiclibs by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
 Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<aside id="usage" class="grid_6">
+<p><strong>Usage:</strong> Click mouse to add boids into the system<br>
+Demonstration of <a href="http://www.red3d.com/cwr/">Craig Reynolds' "Flocking" behavior</a><br>
+Rules: Cohesion, Separation, Alignment</p>
+</aside>
+</section>
 
-<p><strong>Usage:</strong> Click mouse to add boids into the system</p>
-<p>Demonstration of <a href="http://www.red3d.com/cwr/">Craig Reynolds' "Flocking" behavior</a><br/>
-<p>Rules: Cohesion, Separation, Alignment</p>
 
+<footer class="grid_12"><a href="http://haptic-data.com/toxiclibsjs">toxiclibs.js</a></footer>
 </body>
 </html>

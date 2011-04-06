@@ -1,27 +1,27 @@
-function Ray2D(a,b,d){
+toxi.Ray2D = function(a,b,d){
 	var o, dir;
 	if(typeof a == 'Number'){
-		o = new Vec2D(a,b);
+		o = new toxi.Vec2D(a,b);
 		dir = d.getNormalized();
 	}
-	else if(typeof a == 'Vec2D'){
+	else if(a instanceof toxi.Vec2D){
 		o = a;
 		dir = b.getNormalized();
 	}
 	else {
-		o = new Vec2D();
-		dir = Vec2D.Y_AXIS.copy();
+		o = new toxi.Vec2D();
+		dir = toxi.Vec2D.Y_AXIS.copy();
 	}
 	this.parent.init.call(this,o);
 	this.dir = dir;
 }
 
-Ray2D.prototype = new Vec2D();
-Ray2D.constructor = Ray2D;
-Ray2D.prototype.parent = Vec2D.prototype;
+toxi.Ray2D.prototype = new toxi.Vec2D();
+toxi.Ray2D.constructor = toxi.Ray2D;
+toxi.Ray2D.prototype.parent = toxi.Vec2D.prototype;
 
 
-Ray2D.prototype.getDirection = function() {
+toxi.Ray2D.prototype.getDirection = function() {
       return this.dir.copy();
 }
 
@@ -31,12 +31,12 @@ Ray2D.prototype.getDirection = function() {
  * Calculates the distance between the given point and the infinite line
  * coinciding with this ray.
  */
-Ray2D.prototype.getDistanceToPoint = function(p) {
+toxi.Ray2D.prototype.getDistanceToPoint = function(p) {
     var sp = p.sub(this);
     return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
 }
 
-Ray2D.prototype.getPointAtDistance = function(dist) {
+toxi.Ray2D.prototype.getPointAtDistance = function(dist) {
     return this.add(this.dir.scale(dist));
 }
 
@@ -47,7 +47,7 @@ Ray2D.prototype.getPointAtDistance = function(dist) {
  *            new direction
  * @return itself
  */
-Ray2D.prototype.setDirection = function(d) {
+toxi.Ray2D.prototype.setDirection = function(d) {
     this.dir.set(d).normalize();
     return this;
 }
@@ -61,10 +61,10 @@ Ray2D.prototype.setDirection = function(d) {
  *            end point distance
  * @return line segment
  */
-Ray2D.prototype.toLine2DWithPointAtDistance = function(dist) {
-    return new Line2D(this, this.getPointAtDistance(dist));
+toxi.Ray2D.prototype.toLine2DWithPointAtDistance = function(dist) {
+    return new toxi.Line2D(this.copy(), this.getPointAtDistance(dist));
 }
 
-Ray2D.prototype.toString = function() {
+toxi.Ray2D.prototype.toString = function() {
     return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
 }

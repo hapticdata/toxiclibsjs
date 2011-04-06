@@ -2,13 +2,11 @@
 
 <html lang="en">
 <head>
-	<title>PolarUnravel</title>
+	<title>Polar Unravel - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
+	<link rel="stylesheet" href="./css/style.css" type="text/css" media="screen">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/math/InterpolateStrategy.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
-	<script type="text/javascript" src="../src/color/TColor.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 	<script>
 	/*
@@ -51,9 +49,15 @@
 
 	</script>
 </head>
-<body>
-<h1>Arc Polar Coordinates</h1>
-<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a></p>
+<body class="container_12">
+<header class="grid_12">
+		<hgroup>
+			<h1>Polar Unravel</h1>
+			<h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
+		</hgroup>
+	</header>
+
+
 <script type="application/processing">
 
 
@@ -82,36 +86,36 @@
 float transition, transTarget;
 
 // use a S-Curve to achieve an ease in/out effect
-InterpolateStrategy is=new SigmoidInterpolation(3);
+toxi.InterpolateStrategy is=new toxi.SigmoidInterpolation(3);
 
 void setup() {
   size(600,600);
 }
 
 void draw() {
-  background(255);
+  background(250);
   float w2=width * 0.5;
   float h2=height * 0.5;
   translate(w2, h2);
   // update transition
   transition += (transTarget - transition) * 0.01;
-  Vec2D normUp = new Vec2D(0, -1);
+  toxi.Vec2D normUp = new toxi.Vec2D(0, -1);
   // define a color container using HSV
-  TColor col = TColor.newHSV(0, 1, 1);
+  toxi.color.TColor col = toxi.color.TColor.newHSV(0, 1, 1);
   for(int i = 270; i < 360 + 270; i += 2) {
     float theta = radians(i);
     // create a polar coordinate
-    Vec2D polar = new Vec2D(100,theta);
+    toxi.Vec2D polar = new toxi.Vec2D(100,theta);
     // use theta as color hue (ensure theta is properly wrapped)
     col.setHue((polar.y / TWO_PI) % 1);
     // also use theta to manipulate line length
     float len = noise(polar.y * 4) * 100;
     // convert polar coord into cartesian space (to obtain position on a circle)
-    Vec2D circ = polar.copy().toCartesian();
+    toxi.Vec2D circ = polar.copy().toCartesian();
     // create another coord splicing the circle at the top and using theta difference as position on a line
-    Vec2D linear = new Vec2D((MathUtils.THREE_HALVES_PI - polar.y) * w2 / PI + w2, 0);
+    toxi.Vec2D linear = new toxi.Vec2D((toxi.MathUtils.THREE_HALVES_PI - polar.y) * w2 / PI + w2, 0);
     // interprete circular position as normal/direction vector 
-    Vec2D dir = circ.getNormalized();
+    toxi.Vec2D dir = circ.getNormalized();
     // interpolate both position & normal based on current transition state
     circ.interpolateToSelf(linear, transition,is);
     dir.interpolateToSelf(normUp, transition,is).normalizeTo(len);
@@ -127,13 +131,19 @@ void mousePressed() {
 }
 
 </script>
-
 <canvas id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>
-<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
+
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6"><p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
 	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
-<p><strong>Usage:</strong> Click mouse to toggle between radial/horizontal layout</p>
+</aside>
+<aside class="grid_6">
+	<p><strong>Usage:</strong> Click mouse to toggle between radial/horizontal layout</p>
+</aside>
+<article id="description" class="grid_12">
+
 <p>
  PolarUnravel demo combines the following 3 features of toxiclibs:
 <ul>
@@ -143,5 +153,8 @@ void mousePressed() {
 <li>Use TColor for working with HSV color space</li>
 </ul>
 </p>
+</article>
+</section>
+<footer class="grid_12"><a href="http://haptic-data.com/toxiclibsjs/">toxiclibs.js</a></footer>
 </body>
 </html>

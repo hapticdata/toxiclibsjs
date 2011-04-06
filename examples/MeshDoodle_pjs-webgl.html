@@ -2,16 +2,11 @@
 
 <html lang="en">
 <head>
-	<title>Mesh Doodle - PJS + WebGL</title>
+	<title>Mesh Doodle - PJS + WebGL - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
 	<!-- Date: 2011-01-09 -->
 
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec3D.js"></script>
-		<script type="text/javascript" src="../src/core/geom/mesh/Vertex.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Vec2D.js"></script>
-	<script type="text/javascript" src="../src/core/geom/mesh/TriangleMesh.js"></script>
-	<script type="text/javascript" src="../src/core/geom/mesh/Face.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 	<script>
 	/*
@@ -93,13 +88,13 @@
 import toxi.geom.*;
 import toxi.geom.mesh.*;
 
-TriangleMesh mesh=new TriangleMesh("doodle");
+toxi.TriangleMesh mesh=new toxi.TriangleMesh("doodle");
 
-Vec3D prev=new Vec3D();
-Vec3D p=new Vec3D();
-Vec3D q=new Vec3D();
+toxi.Vec3D prev=new toxi.Vec3D();
+Vec3D p=new toxi.Vec3D();
+toxi.Vec3D q=new toxi.Vec3D();
 
-Vec2D rotation=new Vec2D();
+toxi.Vec2D rotation=new toxi.Vec2D();
 
 float weight=0;
 
@@ -118,7 +113,7 @@ void draw() {
   noStroke();
   beginShape(TRIANGLES);
   // iterate over all faces/triangles of the mesh
-  Face[] faces = mesh.getFaces();
+  toxi.Face[] faces = mesh.getFaces();
   int numFaces = faces.length;
   for(var i=0;i<numFaces;i++) {
   	
@@ -140,14 +135,14 @@ void _vertex(Vec3D v) {
 
 void mouseMoved() {
   // get 3D rotated mouse position
-  Vec3D pos=new Vec3D(mouseX-width/2,mouseY-height/2,0);
+  toxi.Vec3D pos=new toxi.Vec3D(mouseX-width/2,mouseY-height/2,0);
   pos.rotateX(rotation.x);
   pos.rotateY(rotation.y);
   // use distance to previous point as target stroke weight
   weight+=(sqrt(pos.distanceTo(prev))*2-weight)*0.1;
   // define offset points for the triangle strip
-  Vec3D a=pos.add(0,0,weight);
-  Vec3D b=pos.add(0,0,-weight);
+  toxi.Vec3D a=pos.add(0,0,weight);
+  toxi.Vec3D b=pos.add(0,0,-weight);
   // add 2 faces to the mesh
   mesh.addFace(p,b,q);
   mesh.addFace(p,a,b);

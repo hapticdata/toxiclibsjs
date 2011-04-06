@@ -14,13 +14,13 @@
  * conversion methods to & from Hertz ({@link #hertzToRadians(float, float)})
  * are included in this base class.
  */
-function AbstractWave(phase,freq,amp,offset){
+toxi.AbstractWave = function(phase,freq,amp,offset){
 
 }
 
 
 
-AbstractWave.prototype = {
+toxi.AbstractWave.prototype = {
 	init: function(phase,freq,amp,offset){
 	
 		if(phase !== undefined || freq !== undefined || amp !== undefined || offset !== undefined)
@@ -41,15 +41,15 @@ AbstractWave.prototype = {
      */
 	cyclePhase: function(freq){
 		if(freq === undefined)freq = 0;
-		this.phase = (this.phase + freq) % AbstractWave.TWO_PI;
+		this.phase = (this.phase + freq) % toxi.AbstractWave.TWO_PI;
 		if(this.phase < 0){
-			this.phase += AbstractWave.TWO_PI;
+			this.phase += toxi.AbstractWave.TWO_PI;
 		}
 		return this.phase;
 	},
 	
 	getClass: function(){
-		return "AbstractWave";
+		return "toxi.AbstractWave";
 	},
 	
 	pop: function() {
@@ -71,7 +71,7 @@ AbstractWave.prototype = {
         if (this.stateStack == null) {
             this.stateStack = [];
         }
-        this.stateStack.push(new WaveState(this.phase, this.frequency, this.amp, this.offset));
+        this.stateStack.push(new toxi.WaveState(this.phase, this.frequency, this.amp, this.offset));
     },
 	
 	reset: function() {
@@ -94,8 +94,8 @@ AbstractWave.prototype = {
 	
 };
 
-AbstractWave.PI = 3.14159265358979323846;
-AbstractWave.TWO_PI = 2 * AbstractWave.PI;
+toxi.AbstractWave.PI = 3.14159265358979323846;
+toxi.AbstractWave.TWO_PI = 2 * toxi.AbstractWave.PI;
 
 
 /**
@@ -107,8 +107,8 @@ AbstractWave.TWO_PI = 2 * AbstractWave.PI;
  *            sampling rate in Hz (equals period length @ 1 Hz)
  * @return frequency in radians
  */
-AbstractWave.hertzToRadians = function(hz,sampleRate) {
-        return hz / sampleRate * AbstractWave.TWO_PI;
+toxi.AbstractWave.hertzToRadians = function(hz,sampleRate) {
+        return hz / sampleRate * toxi.AbstractWave.TWO_PI;
 }
 
 /**
@@ -120,15 +120,15 @@ AbstractWave.hertzToRadians = function(hz,sampleRate) {
  *            sampling rate in Hz (equals period length @ 1 Hz)
  * @return freq in Hz
  */
-AbstractWave.radiansToHertz = function(f,sampleRate) {
-    return f / AbstractWave.TWO_PI * sampleRate;
+toxi.AbstractWave.radiansToHertz = function(f,sampleRate) {
+    return f / toxi.AbstractWave.TWO_PI * sampleRate;
 }
 
 
 
 
 
-function AMFMSineWave(a,b,c,d,e){
+toxi.AMFMSineWave = function(a,b,c,d,e){
 	if(typeof c == "number")
 	{
 		this.parent.init.call(this,a,b,1,c);
@@ -143,21 +143,21 @@ function AMFMSineWave(a,b,c,d,e){
 	}
 }
 
-AMFMSineWave.prototype = new AbstractWave();
-AMFMSineWave.constructor = AMFMSineWave;
-AMFMSineWave.prototype.parent = AbstractWave.prototype;
+toxi.AMFMSineWave.prototype = new toxi.AbstractWave();
+toxi.AMFMSineWave.constructor = toxi.AMFMSineWave;
+toxi.AMFMSineWave.prototype.parent = toxi.AbstractWave.prototype;
 
-AMFMSineWave.prototype.getClass = function(){
+toxi.AMFMSineWave.prototype.getClass = function(){
 return "AMFMSineWave";
 }
 
-AMFMSineWave.prototype.pop = function(){
+toxi.AMFMSineWave.prototype.pop = function(){
 	this.parent.pop.call(this);
 	this.amod.pop();
 	this.fmod.pop();
 }
 
-AMFMSineWave.prototype.push = function() {
+toxi.AMFMSineWave.prototype.push = function() {
     this.parent.push.call(this);
     this.amod.push();
     this.fmod.push();
@@ -168,7 +168,7 @@ AMFMSineWave.prototype.push = function() {
  * 
  * @see toxi.math.waves.AbstractWave#reset()
  */
-AMFMSineWave.prototype.reset = function(){
+toxi.AMFMSineWave.prototype.reset = function(){
 	this.parent.reset.call(this);
 	this.fmod.reset();
 	this.amod.reset();
@@ -181,7 +181,7 @@ AMFMSineWave.prototype.reset = function(){
  * 
  * @see toxi.math.waves.AbstractWave#update()
  */
-AMFMSineWave.prototype.update = function() {
+toxi.AMFMSineWave.prototype.update = function() {
     this.amp = this.amod.update();
     this.value = this.amp * Math.sin(this.phase) + this.offset;
     this.cyclePhase(this.frequency + this.fmod.update());
@@ -190,20 +190,20 @@ AMFMSineWave.prototype.update = function() {
 
 
 
-function ConstantWave(value) {
+toxi.ConstantWave = function(value) {
 	  this.parent.init.call(this);
 	 this.value = value;
 }
 
-ConstantWave.prototype = new AbstractWave();
-ConstantWave.constructor = ConstantWave;
-ConstantWave.prototype.parent = AbstractWave.prototype;
+toxi.ConstantWave.prototype = new toxi.AbstractWave();
+toxi.ConstantWave.constructor = toxi.ConstantWave;
+toxi.ConstantWave.prototype.parent = toxi.AbstractWave.prototype;
 
-ConstantWave.prototype.getClass = function(){
+toxi.ConstantWave.prototype.getClass = function(){
 	return "ConstantWave";
 }
 
-ConstantWave.prototype.update = function() {
+toxi.ConstantWave.prototype.update = function() {
 	return this.value;
 }
 
@@ -225,11 +225,11 @@ ConstantWave.prototype.update = function() {
  * </p>
  */
 
-function FMHarmonicSquareWave(a,b,c,d,e) {
+toxi.FMHarmonicSquareWave = function(a,b,c,d,e) {
 	this.maxHarmonics = 3;
 	if(typeof c == "number")
 	{
-		if(e === undefined)e = new ConstantWave(0);
+		if(e === undefined)e = new toxi.ConstantWave(0);
     	this.parent.init.call(this,a,b,c,d);
     	this.fmod = e;
 	}
@@ -240,25 +240,25 @@ function FMHarmonicSquareWave(a,b,c,d,e) {
 	}
 }
 
-FMHarmonicSquareWave.prototype = new AbstractWave();
-FMHarmonicSquareWave.constructor = FMHarmonicSquareWave;
-FMHarmonicSquareWave.prototype.parent = AbstractWave.prototype;
+toxi.FMHarmonicSquareWave.prototype = new toxi.AbstractWave();
+toxi.FMHarmonicSquareWave.constructor = toxi.FMHarmonicSquareWave;
+toxi.FMHarmonicSquareWave.prototype.parent = toxi.AbstractWave.prototype;
 
-FMHarmonicSquareWave.prototype.getClass = function(){
+toxi.FMHarmonicSquareWave.prototype.getClass = function(){
 	return "FMHarmonicSquareWave";
 }
 
-FMHarmonicSquareWave.prototype.pop = function() {
+toxi.FMHarmonicSquareWave.prototype.pop = function() {
 	this.parent.pop.call(this);
     this.fmod.pop();
 }
 
-FMHarmonicSquareWave.prototype.push = function() {
+toxi.FMHarmonicSquareWave.prototype.push = function() {
     this.parent.push.call(this);
     this.fmod.push();
 }
 
-FMHarmonicSquareWave.prototype.reset = function() {
+toxi.FMHarmonicSquareWave.prototype.reset = function() {
     this.parent.reset.call(this);
     this.fmod.reset();
 }
@@ -270,7 +270,7 @@ FMHarmonicSquareWave.prototype.reset = function() {
  * 
  * @see toxi.math.waves.AbstractWave#update()
  */
-FMHarmonicSquareWave.prototype.update = function() {
+toxi.FMHarmonicSquareWave.prototype.update = function() {
     this.value = 0;
     for (var i = 1; i <= this.maxHarmonics; i += 2) {
         this.value += 1.0 / i *  Math.sin(i * this.phase);
@@ -282,7 +282,7 @@ FMHarmonicSquareWave.prototype.update = function() {
 }
 
 
-function FMSawtoothWave(a,b,c,d,e){
+toxi.FMSawtoothWave = function(a,b,c,d,e){
 	if(typeof c == "number")
 	{
 		this.parent.init.call(this,a,b,c,d);
@@ -295,42 +295,42 @@ function FMSawtoothWave(a,b,c,d,e){
 	}
 }
 
-FMSawtoothWave.prototype = new AbstractWave();
-FMSawtoothWave.constructor = FMSawtoothWave;
-FMSawtoothWave.prototype.parent = AbstractWave.prototype;
+toxi.FMSawtoothWave.prototype = new toxi.AbstractWave();
+toxi.FMSawtoothWave.constructor = toxi.FMSawtoothWave;
+toxi.FMSawtoothWave.prototype.parent = toxi.AbstractWave.prototype;
 
-FMSawtoothWave.prototype.getClass = function(){
+toxi.FMSawtoothWave.prototype.getClass = function(){
 	return "FMSawtoothWave";
 }
 
 
-FMSawtoothWave.prototype.pop = function(){
+toxi.FMSawtoothWave.prototype.pop = function(){
 	this.parent.pop.call(this);
 	this.fmod.pop();
 }
 
 
-FMSawtoothWave.prototype.push = function(){
+toxi.FMSawtoothWave.prototype.push = function(){
 	this.parent.push.call(this);
 	this.fmod.push();
 }
 
 
-FMSawtoothWave.prototype.reset = function(){
+toxi.FMSawtoothWave.prototype.reset = function(){
 	this.parent.reset.call(this);
 	this.fmod.reset();
 }
 
 
-FMSawtoothWave.prototype.update = function(){
-	this.value = ((this.phase / AbstractWave.TWO_PI)*2 - 1) * this.amp + this.offset;
+toxi.FMSawtoothWave.prototype.update = function(){
+	this.value = ((this.phase / toxi.AbstractWave.TWO_PI)*2 - 1) * this.amp + this.offset;
 	this.cyclePhase(this.frequency + this.fmod.update());
 	return this.value;
 }
 
 
 
-function FMSineWave(a,b,c,d,e){
+toxi.FMSineWave = function(a,b,c,d,e){
 	if(typeof(c) == "number")
 	{
 		this.parent.init.call(this,a,b,c,d);
@@ -343,30 +343,30 @@ function FMSineWave(a,b,c,d,e){
 	}
 }
 
-FMSineWave.prototype = new AbstractWave();
-FMSineWave.constructor = FMSineWave;
-FMSineWave.prototype.parent = AbstractWave.prototype;
+toxi.FMSineWave.prototype = new toxi.AbstractWave();
+toxi.FMSineWave.constructor = toxi.FMSineWave;
+toxi.FMSineWave.prototype.parent = toxi.AbstractWave.prototype;
 
-FMSineWave.prototype.getClass = function(){
+toxi.FMSineWave.prototype.getClass = function(){
 	return "FMSineWave";
 }
 
-FMSineWave.prototype.pop = function(){
+toxi.FMSineWave.prototype.pop = function(){
 	this.parent.pop.call(this);
 	this.fmod.pop();
 }
 
-FMSineWave.prototype.push = function(){
+toxi.FMSineWave.prototype.push = function(){
 	this.parent.push.call(this);
 	this.fmod.push();
 }
 
-FMSineWave.prototype.reset = function(){
+toxi.FMSineWave.prototype.reset = function(){
 	this.parent.reset.call(this);
 	this.fmod.reset();
 }
 
-FMSineWave.prototype.update = function(){
+toxi.FMSineWave.prototype.update = function(){
 	this.value = (Math.sin(this.phase)*this.amp) + this.offset;
 	this.cyclePhase(this.frequency + this.fmod.update());
 	return this.value;
@@ -374,13 +374,13 @@ FMSineWave.prototype.update = function(){
 
 
 
-function FMSquareWave(a,b,c,d,e)
+toxi.FMSquareWave = function(a,b,c,d,e)
 {
 	if(typeof c == "number")
 	{
 		if(e === undefined)
 		{
-			this.parent.init.call(this,a,b,c,d, new ConstantWave(0));
+			this.parent.init.call(this,a,b,c,d, new toxi.ConstantWave(0));
 		}
 		else
 		{
@@ -395,48 +395,48 @@ function FMSquareWave(a,b,c,d,e)
 	}
 }
 
-FMSquareWave.prototype = new AbstractWave();
-FMSquareWave.constructor = FMSquareWave;
-FMSquareWave.prototype.parent = AbstractWave.prototype;
+toxi.FMSquareWave.prototype = new toxi.AbstractWave();
+toxi.FMSquareWave.constructor = toxi.FMSquareWave;
+toxi.FMSquareWave.prototype.parent = toxi.AbstractWave.prototype;
 
-FMSquareWave.prototype.getClass = function(){
+toxi.FMSquareWave.prototype.getClass = function(){
 	return "FMSquareWave";
 }
 
-FMSquareWave.prototype.pop = function(){
+toxi.FMSquareWave.prototype.pop = function(){
 		
 	this.parent.pop.call(this);
 	this.fmod.pop();
 }
 
-FMSquareWave.prototype.push = function(){
+toxi.FMSquareWave.prototype.push = function(){
 	this.parent.push.call(this);
 	this.fmod.push();
 }
 
-FMSquareWave.prototype.reset = function(){
+toxi.FMSquareWave.prototype.reset = function(){
 	this.parent.reset.call(this);
 	this.fmod.reset();
 }
 
-FMSquareWave.prototype.update = function(){
-	this.value = (this.phase / AbstractWave.TWO_PI < 0.5 ? 1 : -1)*this.amp + this.offset;
+toxi.FMSquareWave.prototype.update = function(){
+	this.value = (this.phase / toxi.AbstractWave.TWO_PI < 0.5 ? 1 : -1)*this.amp + this.offset;
 	this.cyclePhase(this.frequency + this.fmod.update());
 	return this.value;
 }
 
 
 
-function FMTriangleWave(a,b,c,d,e){
+toxi.FMTriangleWave = function(a,b,c,d,e){
 	if(typeof c == "number"){
-		if(e != undefined)
+		if(e !== undefined)
 		{
 			this.parent.init.call(this,a,b,c,d);
 			this.fmod = e;
 		}
 		else
 		{
-			this.parent.init.call(this,a,b,c,d, new ConstantWave(0));
+			this.parent.init.call(this,a,b,c,d, new toxi.ConstantWave(0));
 		}
 	}
 	else
@@ -446,31 +446,31 @@ function FMTriangleWave(a,b,c,d,e){
 }
 
 
-FMTriangleWave.prototype = new AbstractWave();
-FMTriangleWave.constructor = FMTriangleWave;
-FMTriangleWave.prototype.parent = AbstractWave.prototype;
+toxi.FMTriangleWave.prototype = new toxi.AbstractWave();
+toxi.FMTriangleWave.constructor = toxi.FMTriangleWave;
+toxi.FMTriangleWave.prototype.parent = toxi.AbstractWave.prototype;
 
-FMTriangleWave.prototype.getClass = function(){
+toxi.FMTriangleWave.prototype.getClass = function(){
 	return "FMTriangleWave";
 }
 
-FMTriangleWave.prototype.pop = function(){
+toxi.FMTriangleWave.prototype.pop = function(){
 	this.parent.pop.call(this);
 	this.fmod.pop();
 }
 
-FMTriangleWave.prototype.push = function(){
+toxi.FMTriangleWave.prototype.push = function(){
 	this.parent.push.call(this);
 	this.fmod.push();
 }
 
-FMTriangleWave.prototype.reset = function(){
+toxi.FMTriangleWave.prototype.reset = function(){
 	this.parent.reset.call(this);
 	this.fmod.reset();
 }
 
-FMTriangleWave.prototype.update = function(){
-	this.value = 2 * this.amp * (Math.abs(AbstractWave.PI - this.phase) * MathUtils.INV_PI - 0.5) + this.offset;
+toxi.FMTriangleWave.prototype.update = function(){
+	this.value = 2 * this.amp * (Math.abs(toxi.AbstractWave.PI - this.phase) * toxi.MathUtils.INV_PI - 0.5) + this.offset;
 	this.cyclePhase(this.frequency + this.fmod.update());
 	return this.value;
 }
@@ -478,27 +478,27 @@ FMTriangleWave.prototype.update = function(){
 
 
 //all parameters optional
-function SineWave(phase,freq,amp,offset) {
+toxi.SineWave = function(phase,freq,amp,offset) {
    this.parent.init.call(this,phase,freq,amp,offset);
 }
 
-SineWave.prototype = new AbstractWave();
-SineWave.constructor = SineWave;
-SineWave.prototype.parent = AbstractWave.prototype;
+toxi.SineWave.prototype = new toxi.AbstractWave();
+toxi.SineWave.constructor = toxi.SineWave;
+toxi.SineWave.prototype.parent = toxi.AbstractWave.prototype;
 
-SineWave.prototype.getClass = function(){
+toxi.SineWave.prototype.getClass = function(){
 	return "SineWave";
 }
 
-SineWave.prototype.pop = function(){		
+toxi.SineWave.prototype.pop = function(){		
 	this.parent.pop.call(this);
 }
 
-SineWave.prototype.push = function(){
+toxi.SineWave.prototype.push = function(){
 	this.parent.push.call(this);
 }
 
-SineWave.prototype.update = function() {
+toxi.SineWave.prototype.update = function() {
    this.value = (Math.sin(this.phase) * this.amp) + this.offset;
    this.cyclePhase(this.frequency);
    return this.value;
@@ -506,7 +506,7 @@ SineWave.prototype.update = function() {
 	
 
 
-function WaveState(phase,frequency,amp,offset){
+toxi.WaveState = function(phase,frequency,amp,offset){
 	this.phase = phase;
 	this.frequency = frequency;
 	this.amp = amp;

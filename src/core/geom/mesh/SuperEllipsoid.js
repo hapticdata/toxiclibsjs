@@ -1,25 +1,25 @@
-function SuperEllipsoid(n1,n2) {
+toxi.SuperEllipsoid = function(n1,n2) {
     this.p1 = n1;
 	this.p2 = n2;
 }
 
-SuperEllipsoid.prototype = {
+toxi.SuperEllipsoid.prototype = {
     computeVertexFor: function(p,phi,theta) {
-        phi -= MathUtils.HALF_PI;
-        var cosPhi = MathUtils.cos(phi),
-        	cosTheta = MathUtils.cos(theta),
-        	sinPhi = MathUtils.sin(phi),
-        	sinTheta = MathUtils.sin(theta);
+        phi -= toxi.MathUtils.HALF_PI;
+        var cosPhi = toxi.MathUtils.cos(phi),
+        	cosTheta = toxi.MathUtils.cos(theta),
+        	sinPhi = toxi.MathUtils.sin(phi),
+        	sinTheta = toxi.MathUtils.sin(theta);
 
-        var t = MathUtils.sign(cosPhi) * Math.pow(MathUtils.abs(cosPhi), this.p1);
-        p.x = t * MathUtils.sign(cosTheta) * Math.pow(Math.abs(cosTheta), this.p2);
-        p.y = MathUtils.sign(sinPhi) * Math.pow(Math.abs(sinPhi), this.p1);
-        p.z = t * MathUtils.sign(sinTheta) * Math.pow(MathUtils.abs(sinTheta), this.p2);
+        var t = toxi.MathUtils.sign(cosPhi) * Math.pow(toxi.MathUtils.abs(cosPhi), this.p1);
+        p.x = t * toxi.MathUtils.sign(cosTheta) * Math.pow(Math.abs(cosTheta), this.p2);
+        p.y = toxi.MathUtils.sign(sinPhi) * Math.pow(Math.abs(sinPhi), this.p1);
+        p.z = t * toxi.MathUtils.sign(sinTheta) * Math.pow(toxi.MathUtils.abs(sinTheta), this.p2);
         return p;
     },
  
  	getPhiRange: function() {
-        return MathUtils.TWO_PI;
+        return toxi.MathUtils.TWO_PI;
     },
 
 	getPhiResolutionLimit: function(res) {
@@ -27,7 +27,7 @@ SuperEllipsoid.prototype = {
     },
 
 	getThetaRange: function() {
-        return MathUtils.TWO_PI;
+        return toxi.MathUtils.TWO_PI;
     },
 
 	getThetaResolutionLimit: function(res) {

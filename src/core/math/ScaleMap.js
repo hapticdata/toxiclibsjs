@@ -1,7 +1,10 @@
-function Range(min,max)
+toxi.Range = function(min,max)
 {
 	this.min = min;
 	this.max = max;
+}
+toxi.Range.prototype.toString = function(){
+	return "{ min: "+this.min+ ", max: "+this.max+"}";
 }
 
 
@@ -21,14 +24,14 @@ function Range(min,max)
  * @param minOut
  * @param maxOut
  */
-function ScaleMap(minIn, maxIn, minOut, maxOut) {
-	this.mapFunction = new LinearInterpolation();
+toxi.ScaleMap = function(minIn, maxIn, minOut, maxOut) {
+	this.mapFunction = new toxi.LinearInterpolation();
 	this.setInputRange(minIn, maxIn);
 	this.setOutputRange(minOut, maxOut);
 }
 
 
-ScaleMap.prototype = {
+toxi.ScaleMap.prototype = {
 	
     /**
      * Computes mapped value in the target interval and ensures the input value
@@ -38,7 +41,7 @@ ScaleMap.prototype = {
      * @return mapped value
      */
    getClippedValueFor: function(val) {
-        var t = MathUtils.clipNormalized( ((val - this._in.min) / this._interval));
+        var t = toxi.MathUtils.clipNormalized( ((val - this._in.min) / this._interval));
         return this.mapFunction.interpolate(0, this.mapRange, t) + this._out.min;
     },
 
@@ -98,7 +101,7 @@ ScaleMap.prototype = {
      * @param max
      */
     setInputRange: function(min,max) {
-        this._in = new Range(min,max);
+        this._in = new toxi.Range(min,max);
         this._interval = max - min;
     },
 
@@ -121,7 +124,11 @@ ScaleMap.prototype = {
      *            new max output value
      */
     setOutputRange: function(min, max) {
-        this._out = new Range(min, max);
+        this._out = new toxi.Range(min, max);
         this.mapRange = max - min;
+    },
+    
+    toString: function(){
+    	return "toxi.ScaleMap, inputRange: "+this._in.toString() + " outputRange: "+this._out.toString();
     }
 };

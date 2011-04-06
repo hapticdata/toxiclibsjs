@@ -1,43 +1,30 @@
-/**
- 		T O X I C L I B S . JS  - 0.01
-		a port of toxiclibs for Java / Processing written by Karsten Schmidt
-		
-		License				: GNU Lesser General Public version 2.1
-		Developer			: Kyle Phillips: http://haptic-data.com
-		Java Version		: http://toxiclibs.org
-*/
-
-
-/** requires Vec3D.interpolateTo
-AABB.fromMinMax = function(min,max){
-	var a = Vec3D.min(min);
-	var b = Vec3D.max(max);
-	return new AABB()
-}*/
-
-function AABB(a,b){
+toxi.AABB = function(a,b){
 	var vec;
 	var extent;
 	if(a === undefined)
 	{
 		this.parent.init.call(this);
-		this.setExtent(new Vec3D());
+		this.setExtent(new toxi.Vec3D());
 	}
 	else if(typeof(a) == "number")
 	{
-		this.parent.init.call(new Vec3D());
+		this.parent.init.call(new toxi.Vec3D());
 		this.setExtent(a);
 	}
-	else if(a instanceof Vec3D)
+	else if(a instanceof toxi.Vec3D)
 	{
 		this.parent.init.call(this,a);
-		if(b === undefined)
+		if(b === undefined && a instanceof toxi.AABB)
 		{
 			this.setExtent(a.getExtent());
 		}
 		else
 		{
-			this.setExtent(b);
+			if(typeof b == "number"){
+				this.setExtent(new toxi.Vec3D(b,b,b));
+			}else { //should be an AABB
+				this.setExtent(b);
+			}
 		}
 	}
 	
@@ -46,18 +33,23 @@ function AABB(a,b){
 
 
 
+toxi.AABB.fromMinMax = function(min,max){
+	var a = toxi.Vec3D.min(min);
+	var b = toxi.Vec3D.max(max);
+	return new toxi.AABB(a.interpolateTo(b,0.5),b.sub(a).scaleSelf(0.5));
+}
 
-AABB.prototype = new Vec3D();
-AABB.prototype.constructor = AABB;
-AABB.prototype.parent = Vec3D.prototype;
+toxi.AABB.prototype = new toxi.Vec3D();
+toxi.AABB.prototype.constructor = toxi.AABB;
+toxi.AABB.prototype.parent = toxi.Vec3D.prototype;
 
 
-AABB.prototype.containsPoint = function(p) {
+toxi.AABB.prototype.containsPoint = function(p) {
     return p.isInAABB(this);
 }
 	
-AABB.prototype.copy = function() {
-    return new AABB(this);
+toxi.AABB.prototype.copy = function() {
+    return new toxi.AABB(this);
 }
 	
 	/**
@@ -67,34 +59,34 @@ AABB.prototype.copy = function() {
 	 * 
 	 * @return box size
 	 */
-AABB.prototype.getExtent = function() {
+toxi.AABB.prototype.getExtent = function() {
    return this.extent.copy();
 }
 	
-AABB.prototype.getMax = function() {
+toxi.AABB.prototype.getMax = function() {
    // return this.add(extent);
    return this.max.copy();
 }
 
-AABB.prototype.getMin = function() {
+toxi.AABB.prototype.getMin = function() {
    return this.min.copy();
 }
-/*
-AABB.prototype.getNormalForPoint = function(p) {
-        p = p.sub(this);
-        var pabs = this.extent.sub(p.getAbs());
-        var psign = p.getSignum();
-        var normal = Vec3D.X_AXIS.scale(psign.x);
-        float minDist = pabs.x;
-        if (pabs.y < minDist) {
-            minDist = pabs.y;
-            normal = Vec3D.Y_AXIS.scale(psign.y);
-        }
-        if (pabs.z < minDist) {
-            normal = Vec3D.Z_AXIS.scale(psign.z);
-        }
-        return normal;
-    }*/
+
+toxi.AABB.prototype.getNormalForPoint = function(p) {
+    p = p.sub(this);
+    var pabs = this.extent.sub(p.getAbs());
+    var psign = p.getSignum();
+    var normal = Vec3D.X_AXIS.scale(psign.x);
+    var minDist = pabs.x;
+    if (pabs.y < minDist) {
+        minDist = pabs.y;
+        normal = Vec3D.Y_AXIS.scale(psign.y);
+    }
+    if (pabs.z < minDist) {
+        normal = Vec3D.Z_AXIS.scale(psign.z);
+    }
+    return normal;
+}
 
     /**
      * Adjusts the box size and position such that it includes the given point.
@@ -103,13 +95,13 @@ AABB.prototype.getNormalForPoint = function(p) {
      *            point to include
      * @return itself
      */
-/*AABB.prototype.includePoint = function(p) {
-        this.min.minSelf(p);
-        this.max.maxSelf(p);
-        this.set(this.min.interpolateTo(this.max, 0.5));
-        this.extent.set(this.max.sub(this.min).scaleSelf(0.5);
-        return this;
-    }*/
+toxi.AABB.prototype.includePoint = function(p) {
+    this.min.minSelf(p);
+    this.max.maxSelf(p);
+    this.set(this.min.interpolateTo(this.max, 0.5));
+    this.extent.set(this.max.sub(this.min).scaleSelf(0.5));
+    return this;
+}
 
 /**
 * Checks if the box intersects the passed in one.
@@ -118,12 +110,12 @@ AABB.prototype.getNormalForPoint = function(p) {
 *            box to check
 * @return true, if boxes overlap
 */
-AABB.prototype.intersectsBox = function(box) {
+toxi.AABB.prototype.intersectsBox = function(box) {
     var t = box.sub(this);
     return Math.abs(t.x) <= (this.extent.x + box.extent.x)
             && Math.abs(t.y) <= (this.extent.y + box.extent.y)
             && Math.abs(t.z) <= (this.extent.z + box.extent.z);
- }
+}
 
 /**
  * Calculates intersection with the given ray between a certain distance
@@ -143,95 +135,92 @@ AABB.prototype.intersectsBox = function(box) {
  * @return intersection point on the bounding box (only the first is
  *         returned) or null if no intersection
  */
-/*
-AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
-        varinvDir = ray.getDirection().reciprocal();
-        var signDirX = invDir.x < 0;
-        var signDirY = invDir.y < 0;
-        var signDirZ = invDir.z < 0;
-        var bbox = signDirX ? this.max : this.min;
-        var tmin = (bbox.x - ray.x) * invDir.x;
-        bbox = signDirX ? this.min : this.max;
-        var tmax = (bbox.x - ray.x) * invDir.x;
-        bbox = signDirY ? this.max : this.min;
-        var tymin = (bbox.y - ray.y) * invDir.y;
-        bbox = signDirY ? this.min : this.max;
-        var tymax = (bbox.y - ray.y) * invDir.y;
-        if ((tmin > tymax) || (tymin > tmax)) {
-            return null;
-        }
-        if (tymin > tmin) {
-            tmin = tymin;
-        }
-        if (tymax < tmax) {
-            tmax = tymax;
-        }
-        bbox = signDirZ ? max : min;
-        var tzmin = (bbox.z - ray.z) * invDir.z;
-        bbox = signDirZ ? min : max;
-        var tzmax = (bbox.z - ray.z) * invDir.z;
-        if ((tmin > tzmax) || (tzmin > tmax)) {
-            return null;
-        }
-        if (tzmin > tmin) {
-            tmin = tzmin;
-        }
-        if (tzmax < tmax) {
-            tmax = tzmax;
-        }
-        if ((tmin < maxDist) && (tmax > minDist)) {
-            return ray.getPointAtDistance(tmin);
-        }
+
+toxi.AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
+    var invDir = ray.getDirection().reciprocal();
+    var signDirX = invDir.x < 0;
+    var signDirY = invDir.y < 0;
+    var signDirZ = invDir.z < 0;
+    var bbox = signDirX ? this.max : this.min;
+    var tmin = (bbox.x - ray.x) * invDir.x;
+    bbox = signDirX ? this.min : this.max;
+    var tmax = (bbox.x - ray.x) * invDir.x;
+    bbox = signDirY ? this.max : this.min;
+    var tymin = (bbox.y - ray.y) * invDir.y;
+    bbox = signDirY ? this.min : this.max;
+    var tymax = (bbox.y - ray.y) * invDir.y;
+    if ((tmin > tymax) || (tymin > tmax)) {
         return null;
     }
-*/
-/*
-    public boolean intersectsSphere(Sphere s) {
-        return intersectsSphere(s, s.radius);
+    if (tymin > tmin) {
+        tmin = tymin;
     }
-*/
-
-    /**
-     * @param c
-     *            sphere centre
-     * @param r
-     *            sphere radius
-     * @return true, if AABB intersects with sphere
-     */
-/*
-    public boolean intersectsSphere(Vec3D c, float r) {
-        float s, d = 0;
-        // find the square of the distance
-        // from the sphere to the box
-        if (c.x < min.x) {
-            s = c.x - min.x;
-            d = s * s;
-        } else if (c.x > max.x) {
-            s = c.x - max.x;
-            d += s * s;
-        }
-
-        if (c.y < min.y) {
-            s = c.y - min.y;
-            d += s * s;
-        } else if (c.y > max.y) {
-            s = c.y - max.y;
-            d += s * s;
-        }
-
-        if (c.z < min.z) {
-            s = c.z - min.z;
-            d += s * s;
-        } else if (c.z > max.z) {
-            s = c.z - max.z;
-            d += s * s;
-        }
-
-        return d <= r * r;
+    if (tymax < tmax) {
+        tmax = tymax;
     }
-*/
-/*
-    public boolean intersectsTriangle(Triangle3D tri) {
+    bbox = signDirZ ? max : min;
+    var tzmin = (bbox.z - ray.z) * invDir.z;
+    bbox = signDirZ ? min : max;
+    var tzmax = (bbox.z - ray.z) * invDir.z;
+    if ((tmin > tzmax) || (tzmin > tmax)) {
+        return null;
+    }
+    if (tzmin > tmin) {
+        tmin = tzmin;
+    }
+    if (tzmax < tmax) {
+        tmax = tzmax;
+    }
+    if ((tmin < maxDist) && (tmax > minDist)) {
+        return ray.getPointAtDistance(tmin);
+    }
+    return undefined;
+}
+
+/**
+ * @param c
+ *            sphere centre
+ * @param r
+ *            sphere radius
+ * @return true, if AABB intersects with sphere
+ */
+
+toxi.AABB.prototype.intersectsSphere = function(c, r) {
+	if(arguments.length > 1){ //must've been a sphere
+		r = c.radius;
+	}
+    var s = undefined, 
+    	d = 0;
+    // find the square of the distance
+    // from the sphere to the box
+    if (c.x < this.min.x) {
+        s = c.x - this.min.x;
+        d = s * s;
+    } else if (c.x > this.max.x) {
+        s = c.x - this.max.x;
+        d += s * s;
+    }
+
+    if (c.y < this.min.y) {
+        s = c.y - this.min.y;
+        d += s * s;
+    } else if (c.y > this.max.y) {
+        s = c.y - this.max.y;
+        d += s * s;
+    }
+
+    if (c.z < this.min.z) {
+        s = c.z - this.min.z;
+        d += s * s;
+    } else if (c.z > this.max.z) {
+        s = c.z - this.max.z;
+        d += s * s;
+    }
+
+    return d <= r * r;
+}
+
+toxi.AABB.prototype.intersectsTriangle = function(tri) {
         // use separating axis theorem to test overlap between triangle and box
         // need to test for overlap in these directions:
         //
@@ -241,8 +230,8 @@ AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
         // 2) normal of the triangle
         // 3) crossproduct(edge from tri, {x,y,z}-directin)
         // this gives 3x3=9 more tests
-        Vec3D v0, v1, v2;
-        Vec3D normal, e0, e1, e2, f;
+        var v0 = undefined, v1 = undefined, v2 = undefined;
+        var normal = undefined, e0 = undefined, e1 = undefined, e2 = undefined, f = undefined;
 
         // move everything so that the boxcenter is in (0,0,0)
         v0 = tri.a.sub(this);
@@ -256,44 +245,44 @@ AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
 
         // test the 9 tests first (this was faster)
         f = e0.getAbs();
-        if (testAxis(e0.z, -e0.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, extent.y,
-                extent.z)) {
+        if (this.testAxis(e0.z, -e0.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y,
+                this.extent.z)) {
             return false;
         }
-        if (testAxis(-e0.z, e0.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, extent.x,
-                extent.z)) {
+        if (this.testAxis(-e0.z, e0.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x,
+                this.extent.z)) {
             return false;
         }
-        if (testAxis(e0.y, -e0.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, extent.x,
-                extent.y)) {
+        if (this.testAxis(e0.y, -e0.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x,
+                this.extent.y)) {
             return false;
         }
 
         f = e1.getAbs();
-        if (testAxis(e1.z, -e1.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, extent.y,
-                extent.z)) {
+        if (this.testAxis(e1.z, -e1.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y,
+                this.extent.z)) {
             return false;
         }
-        if (testAxis(-e1.z, e1.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, extent.x,
-                extent.z)) {
+        if (this.testAxis(-e1.z, e1.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x,
+                this.extent.z)) {
             return false;
         }
-        if (testAxis(e1.y, -e1.x, f.y, f.x, v0.x, v0.y, v1.x, v1.y, extent.x,
-                extent.y)) {
+        if (this.testAxis(e1.y, -e1.x, f.y, f.x, v0.x, v0.y, v1.x, v1.y, this.extent.x,
+                this.extent.y)) {
             return false;
         }
 
         f = e2.getAbs();
-        if (testAxis(e2.z, -e2.y, f.z, f.y, v0.y, v0.z, v1.y, v1.z, extent.y,
-                extent.z)) {
+        if (this.testAxis(e2.z, -e2.y, f.z, f.y, v0.y, v0.z, v1.y, v1.z, this.extent.y,
+               this.extent.z)) {
             return false;
         }
-        if (testAxis(-e2.z, e2.x, f.z, f.x, v0.x, v0.z, v1.x, v1.z, extent.x,
-                extent.z)) {
+        if (this.testAxis(-e2.z, e2.x, f.z, f.x, v0.x, v0.z, v1.x, v1.z, this.extent.x,
+                this.extent.z)) {
             return false;
         }
-        if (testAxis(e2.y, -e2.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, extent.x,
-                extent.y)) {
+        if (this.testAxis(e2.y, -e2.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x,
+                this.extent.y)) {
             return false;
         }
 
@@ -303,37 +292,36 @@ AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
         // the triangle against the AABB
 
         // test in X-direction
-        if (MathUtils.min(v0.x, v1.x, v2.x) > extent.x
-                || MathUtils.max(v0.x, v1.x, v2.x) < -extent.x) {
+        if (toxi.MathUtils.min(v0.x, v1.x, v2.x) > this.extent.x
+                || toxi.MathUtils.max(v0.x, v1.x, v2.x) < -this.extent.x) {
             return false;
         }
 
         // test in Y-direction
-        if (MathUtils.min(v0.y, v1.y, v2.y) > extent.y
-                || MathUtils.max(v0.y, v1.y, v2.y) < -extent.y) {
+        if (toxi.MathUtils.min(v0.y, v1.y, v2.y) > this.extent.y
+                || toxi.MathUtils.max(v0.y, v1.y, v2.y) < -this.extent.y) {
             return false;
         }
 
         // test in Z-direction
-        if (MathUtils.min(v0.z, v1.z, v2.z) > extent.z
-                || MathUtils.max(v0.z, v1.z, v2.z) < -extent.z) {
+        if (toxi.MathUtils.min(v0.z, v1.z, v2.z) > this.extent.z
+                || toxi.MathUtils.max(v0.z, v1.z, v2.z) < -this.extent.z) {
             return false;
         }
 
         // test if the box intersects the plane of the triangle
         // compute plane equation of triangle: normal*x+d=0
         normal = e0.cross(e1);
-        float d = -normal.dot(v0);
-        if (!planeBoxOverlap(normal, d, extent)) {
+        var d = -normal.dot(v0);
+        if (!this.planeBoxOverlap(normal, d, extent)) {
             return false;
         }
         return true;
     }
-*/
 
-AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
-    var vmin = new Vec3D();
-    var vmax = new Vec3D();
+toxi.AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
+    var vmin = new toxi.Vec3D();
+    var vmax = new toxi.Vec3D();
 
     if (normal.x > 0.0) {
         vmin.x = -maxbox.x;
@@ -374,13 +362,13 @@ AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
  * @see toxi.geom.Vec3D#set(float, float, float)
  */
 
-AABB.prototype.set = function(a,b,c) {
-		if(typeof(a)==AABB)
+toxi.AABB.prototype.set = function(a,b,c) {
+		if(typeof(a)==toxi.AABB)
 		{
-        	this.extent.set(box.extent);
-        	return this.parent.set.call(this,box);
+        	this.extent.set(a.extent);
+        	return this.parent.set.call(this,a);
 		}
-		if(typeof(a)==Vec3D)
+		if(typeof(a)==toxi.Vec3D)
 		{
 			b = a.y;
 			c = a.z;
@@ -394,12 +382,12 @@ AABB.prototype.set = function(a,b,c) {
  }
 
 
-AABB.prototype.setExtent = function(extent) {
+toxi.AABB.prototype.setExtent = function(extent) {
         this.extent = extent.copy();
         return this.updateBounds();
  }
 
-AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
+toxi.AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
     var p0 = a * va + b * vb;
     var p2 = a * wa + b * wb;
     var min;
@@ -415,48 +403,47 @@ AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
     return (min > rad || max < -rad);
 }
 
-/*   public Mesh3D toMesh() {
-return toMesh(null);
+toxi.AABB.prototype.toMesh = function(mesh){
+	if(mesh === undefined){
+		mesh = new toxi.TriangleMesh("aabb",8,12);	
+	}
+	var a = new toxi.Vec3D(this.min.x,this.max.y,this.max.z),
+		b = new toxi.Vec3D(this.max.x,this.max.y,this.max.z),
+		c = new toxi.Vec3D(this.max.x,this.min.y, this.max.z),
+		d = new toxi.Vec3D(this.min.x, this.min.y, this.max.z),
+		e = new toxi.Vec3D(this.min.x, this.max.y, this.min.z),
+		f = new toxi.Vec3D(this.max.x, this.max.y, this.min.z),
+		g = new toxi.Vec3D(this.max.x, this.min.y, this.min.z),
+		h = new toxi.Vec3D(this.min.x, this.min.y, this.min.z);
+		
+		// front
+		mesh.addFace(a, b, d, undefined, undefined, undefined, undefined);
+		mesh.addFace(b, c, d, undefined, undefined, undefined, undefined);
+		// back
+		mesh.addFace(f, e, g, undefined, undefined, undefined, undefined);
+		mesh.addFace(e, h, g, undefined, undefined, undefined, undefined);
+		// top
+		mesh.addFace(e, f, a, undefined, undefined, undefined, undefined);
+		mesh.addFace(f, b, a, undefined, undefined, undefined, undefined);
+		// bottom
+		mesh.addFace(g, h, d, undefined, undefined, undefined, undefined);
+		mesh.addFace(g, d, c, undefined, undefined, undefined, undefined);
+		// left
+		mesh.addFace(e, a, h, undefined, undefined, undefined, undefined);
+		mesh.addFace(a, d, h, undefined, undefined, undefined, undefined);
+		// right
+		mesh.addFace(b, f, g, undefined, undefined, undefined, undefined);
+		mesh.addFace(b, g, c, undefined, undefined, undefined, undefined);
+		return mesh;
+
 }
-public Mesh3D toMesh(Mesh3D mesh) {
-if (mesh == null) {
-    mesh = new TriangleMesh("aabb", 8, 12);
-}
-Vec3D a = new Vec3D(min.x, max.y, max.z);
-Vec3D b = new Vec3D(max.x, max.y, max.z);
-Vec3D c = new Vec3D(max.x, min.y, max.z);
-Vec3D d = new Vec3D(min.x, min.y, max.z);
-Vec3D e = new Vec3D(min.x, max.y, min.z);
-Vec3D f = new Vec3D(max.x, max.y, min.z);
-Vec3D g = new Vec3D(max.x, min.y, min.z);
-Vec3D h = new Vec3D(min.x, min.y, min.z);
-// front
-mesh.addFace(a, b, d, null, null, null, null);
-mesh.addFace(b, c, d, null, null, null, null);
-// back
-mesh.addFace(f, e, g, null, null, null, null);
-mesh.addFace(e, h, g, null, null, null, null);
-// top
-mesh.addFace(e, f, a, null, null, null, null);
-mesh.addFace(f, b, a, null, null, null, null);
-// bottom
-mesh.addFace(g, h, d, null, null, null, null);
-mesh.addFace(g, d, c, null, null, null, null);
-// left
-mesh.addFace(e, a, h, null, null, null, null);
-mesh.addFace(a, d, h, null, null, null, null);
-// right
-mesh.addFace(b, f, g, null, null, null, null);
-mesh.addFace(b, g, c, null, null, null, null);
-return mesh;
-}
-*/
+
     /*
      * (non-Javadoc)
      * 
      * @see toxi.geom.Vec3D#toString()
      */
-AABB.prototype.toString = function() {
+toxi.AABB.prototype.toString = function() {
    return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
 }
 
@@ -466,9 +453,9 @@ AABB.prototype.toString = function() {
 * 
 * @return itself
 */
-AABB.prototype.updateBounds = function() {
+toxi.AABB.prototype.updateBounds = function() {
   // this is check is necessary for the constructor
-  if (this.extent != null) {
+  if (this.extent != undefined) {
       this.min = this.sub(this.extent);
       this.max = this.add(this.extent);
   }

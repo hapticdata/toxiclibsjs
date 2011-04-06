@@ -4,9 +4,9 @@
  * column-major formats...
  */
 
-function Matrix4x4(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
+toxi.Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
 	this.temp = [];
-	if(v11 === undefined) //if no variables were supplied
+	if(arguments.length == 0) //if no variables were supplied
 	{
 		this.matrix = [];
 		this.matrix[0] = [1,0,0,0];
@@ -25,7 +25,7 @@ function Matrix4x4(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v
 	{
 		var array = v11;
 		if (array.length != 9 && array.length != 16) {
-            throw new Error("Matrix4x4: Array length must == 9 or 16");
+            throw new Error("toxi.Matrix4x4: Array length must == 9 or 16");
         }
         if (array.length == 16) {
         	this.matrix = [];
@@ -44,7 +44,7 @@ function Matrix4x4(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v
         }
 
 	}
-	else {
+	else if(v11 instanceof toxi.Matrix4x4){
 	//else it should've been a Matrix4x4 that was passed in
 	
 		var m = v11;
@@ -65,13 +65,16 @@ function Matrix4x4(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v
 		}
 	
 	}
+	else {
+		console.error("toxi.Matrix4x4: incorrect parameters used to construct new instance");
+	}
 
 }
 
-Matrix4x4.prototype = {
+toxi.Matrix4x4.prototype = {
 	
 	add: function(rhs) {
-        var result = new Matrix4x4(this);
+        var result = new toxi.Matrix4x4(this);
         return result.addSelf(rhs);
     },
 
@@ -94,7 +97,7 @@ Matrix4x4.prototype = {
      * @return transformed vector
      */
     applyTo: function(v) {
-        return this.applyToSelf(new Vec3D(v));
+        return this.applyToSelf(new toxi.Vec3D(v));
     },
 
     applyToSelf: function(v) {
@@ -107,31 +110,31 @@ Matrix4x4.prototype = {
     },
 
     copy: function() {
-        return new Matrix4x4(this);
+        return new toxi.Matrix4x4(this);
     },
 
     getInverted: function() {
-        return new Matrix4x4(this).invert();
+        return new toxi.Matrix4x4(this).invert();
     },
 
     getRotatedAroundAxis: function(axis,theta) {
-        return new Matrix4x4(this).rotateAroundAxis(axis, theta);
+        return new toxi.Matrix4x4(this).rotateAroundAxis(axis, theta);
     },
 
     getRotatedX: function(theta) {
-        return new Matrix4x4(this).rotateX(theta);
+        return new toxi.Matrix4x4(this).rotateX(theta);
     },
 
     getRotatedY: function(theta) {
-        return new Matrix4x4(this).rotateY(theta);
+        return new toxi.Matrix4x4(this).rotateY(theta);
     },
 
     getRotatedZ: function(theta) {
-        return new Matrix4x4(this).rotateZ(theta);
+        return new toxi.Matrix4x4(this).rotateZ(theta);
     },
 
     getTransposed: function() {
-        return new Matrix4x4(this).transpose();
+        return new toxi.Matrix4x4(this).transpose();
     },
 
     identity: function() {
@@ -161,7 +164,7 @@ Matrix4x4.prototype = {
         var tmp = []; //12
         var src = []; //16
         var dst = []; //16
-        var mat = this.toArray(null);
+        var mat = this.toArray();
 
         for (var i = 0; i < 4; i++) {
             var i4 = i << 2;
@@ -266,10 +269,10 @@ Matrix4x4.prototype = {
 
     multiply: function(a) {
     	if(typeof(a) == "number"){
-	        return new Matrix4x4(this).multiply(a);
+	        return new toxi.Matrix4x4(this).multiply(a);
 	    }
 	    //otherwise it should be a Matrix4x4
-	    return new Matrix4x4(this).multiplySelf(a);
+	    return new toxi.Matrix4x4(this).multiplySelf(a);
     },
 
     multiplySelf: function(a) {
@@ -296,10 +299,10 @@ Matrix4x4.prototype = {
                         m[0] * mm0[j] + m[1] * mm1[j] + m[2] * mm2[j] + m[3]
                                 * mm3[j];
             }
-            m[0] = temp[0];
-            m[1] = temp[1];
-            m[2] = temp[2];
-            m[3] = temp[3];
+            m[0] = this.temp[0];
+            m[1] = this.temp[1];
+            m[2] = this.temp[2];
+            m[3] = this.temp[3];
         }
         return this;
     },
@@ -322,10 +325,10 @@ Matrix4x4.prototype = {
         t = 1 - c;
         tx = t * x;
         ty = t * y;
-        Matrix4x4.TEMP.set(tx * x + c, tx * y + s * z, tx * z - s * y, 0, tx * y - s * z,
+        toxi.Matrix4x4.TEMP.set(tx * x + c, tx * y + s * z, tx * z - s * y, 0, tx * y - s * z,
                 ty * y + c, ty * z + s * x, 0, tx * z + s * y, ty * z - s * x,
                 t * z * z + c, 0, 0, 0, 0, 1);
-        return this.multiplySelf(Matrix4x4.TEMP);
+        return this.multiplySelf(toxi.Matrix4x4.TEMP);
     },
 
     /**
@@ -336,11 +339,11 @@ Matrix4x4.prototype = {
      * @return itself
      */
     rotateX: function(theta) {
-        Matrix4x4.TEMP.identity();
-        Matrix4x4.TEMP.matrix[1][1] = Matrix4x4.TEMP.matrix[2][2] = Math.cos(theta);
-        Matrix4x4.TEMP.matrix[2][1] = Math.sin(theta);
-        Matrix4x4.TEMP.matrix[1][2] = -Matrix4x4.TEMP.matrix[2][1];
-        return this.multiplySelf(Matrix4x4.TEMP);
+        toxi.Matrix4x4.TEMP.identity();
+        toxi.Matrix4x4.TEMP.matrix[1][1] = toxi.Matrix4x4.TEMP.matrix[2][2] = Math.cos(theta);
+        toxi.Matrix4x4.TEMP.matrix[2][1] = Math.sin(theta);
+        toxi.Matrix4x4.TEMP.matrix[1][2] = -toxi.Matrix4x4.TEMP.matrix[2][1];
+        return this.multiplySelf(toxi.Matrix4x4.TEMP);
     },
 
     /**
@@ -351,29 +354,29 @@ Matrix4x4.prototype = {
      * @return itself
      */
     rotateY: function(theta) {
-        Matrix4x4.TEMP.identity();
-        Matrix4x4.TEMP.matrix[0][0] = Matrix4x4.TEMP.matrix[2][2] = Math.cos(theta);
-        Matrix4x4.TEMP.matrix[0][2] = Math.sin(theta);
-        Matrix4x4.TEMP.matrix[2][0] = -Matrix4x4.TEMP.matrix[0][2];
-        return this.multiplySelf(Matrix4x4.TEMP);
+        toxi.Matrix4x4.TEMP.identity();
+        toxi.Matrix4x4.TEMP.matrix[0][0] = toxi.Matrix4x4.TEMP.matrix[2][2] = Math.cos(theta);
+        toxi.Matrix4x4.TEMP.matrix[0][2] = Math.sin(theta);
+        toxi.Matrix4x4.TEMP.matrix[2][0] = -toxi.Matrix4x4.TEMP.matrix[0][2];
+        return this.multiplySelf(toxi.Matrix4x4.TEMP);
     },
 
     // Apply Rotation about Z to Matrix
     rotateZ: function(theta) {
-        Matrix4x4.TEMP.identity();
-        Matrix4x4.TEMP.matrix[0][0] = Matrix4x4.TEMP.matrix[1][1] = Math.cos(theta);
-        Matrix4x4.TEMP.matrix[1][0] = Math.sin(theta);
-        Matrix4x4.TEMP.matrix[0][1] = -Matrix4x4.TEMP.matrix[1][0];
-        return this.multiplySelf(Matrix4x4.TEMP);
+        toxi.Matrix4x4.TEMP.identity();
+        toxi.Matrix4x4.TEMP.matrix[0][0] = toxi.Matrix4x4.TEMP.matrix[1][1] = Math.cos(theta);
+        toxi.Matrix4x4.TEMP.matrix[1][0] = Math.sin(theta);
+        toxi.Matrix4x4.TEMP.matrix[0][1] = -toxi.Matrix4x4.TEMP.matrix[1][0];
+        return this.multiplySelf(toxi.Matrix4x4.TEMP);
     },
 
     scale: function(a,b,c) {
     
-    	return new Matrix4x4(this).scaleSelf(a,b,c);
+    	return new toxi.Matrix4x4(this).scaleSelf(a,b,c);
     },
 
     scaleSelf: function(a,b,c) {
-    	if(a instanceof Vec3D)
+    	if(a instanceof toxi.Vec3D)
     	{
     		b = a.y;
     		c = a.z;
@@ -385,11 +388,11 @@ Matrix4x4.prototype = {
 			c = a;
 		}
     	
-        Matrix4x4.TEMP.identity();
-        Matrix4x4.TEMP.matrix[0][0] = a;
-        Matrix4x4.TEMP.matrix[1][1] = b;
-        Matrix4x4.TEMP.matrix[2][2] = c
-        return this.multiplySelf(Matrix4x4.TEMP);
+        toxi.Matrix4x4.TEMP.identity();
+        toxi.Matrix4x4.TEMP.matrix[0][0] = a;
+        toxi.Matrix4x4.TEMP.matrix[1][1] = b;
+        toxi.Matrix4x4.TEMP.matrix[2][2] = c
+        return this.multiplySelf(toxi.Matrix4x4.TEMP);
     },
 
   	set: function(a,b,c, d, e,f,g, h, i, j, k, l, m, n, o, p) {
@@ -433,7 +436,7 @@ Matrix4x4.prototype = {
 
    
     sub: function(m) {
-        return new Matrix4x4(this).subSelf(m);
+        return new toxi.Matrix4x4(this).subSelf(m);
     },
 
     subSelf: function(mat) {
@@ -456,7 +459,7 @@ Matrix4x4.prototype = {
      * @return matrix as 16 element array
      */
     toArray: function(result) {
-        if (result == null) {
+        if (result ===undefined) {
             result = [];
         }
         for (var i = 0, k = 0; i < 4; i++) {
@@ -488,7 +491,7 @@ Matrix4x4.prototype = {
     },
 
     toTransposedFloatArray: function(result) {
-        if (result == null) {
+        if (result === undefined) {
             result = [];
         }
         for (var i = 0, k = 0; i < 4; i++) {
@@ -500,20 +503,20 @@ Matrix4x4.prototype = {
     },
 
     translate: function(dx,dy,dz) {
-        return new Matrix4x4(this).translateSelf(dx, dy, dz);
+        return new toxi.Matrix4x4(this).translateSelf(dx, dy, dz);
     },
 
     translateSelf: function( dx, dy, dz) {
-    	if(dx instanceof Vec3D){
+    	if(dx instanceof toxi.Vec3D){
     		dy = dx.y;
     		dz = dx.z;
     		dx = dx.x;
     	}
-        Matrix4x4.TEMP.identity();
-        Matrix4x4.TEMP.matrix[0][3] = dx;
-        Matrix4x4.TEMP.matrix[1][3] = dy;
-        Matrix4x4.TEMP.matrix[2][3] = dz;
-        return this.multiplySelf(Matrix4x4.TEMP);
+        toxi.Matrix4x4.TEMP.identity();
+        toxi.Matrix4x4.TEMP.matrix[0][3] = dx;
+        toxi.Matrix4x4.TEMP.matrix[1][3] = dy;
+        toxi.Matrix4x4.TEMP.matrix[2][3] = dz;
+        return this.multiplySelf(toxi.Matrix4x4.TEMP);
     },
 
     /**
@@ -530,4 +533,4 @@ Matrix4x4.prototype = {
     }
 };
 
-Matrix4x4.TEMP = new Matrix4x4();
+toxi.Matrix4x4.TEMP = new toxi.Matrix4x4();

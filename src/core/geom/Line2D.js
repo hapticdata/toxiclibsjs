@@ -7,13 +7,13 @@
 		Java Version		: http://toxiclibs.org
 */
 
-function Line2D( a, b) {
+toxi.Line2D = function( a, b) {
   this.a = a;
   this.b = b;
 }
 
 
-Line2D.prototype = {
+toxi.Line2D.prototype = {
     /**
      * Computes the closest point on this line to the point given.
      * 
@@ -35,14 +35,14 @@ Line2D.prototype = {
     },
 
     copy: function() {
-        return new Line2D(this.a.copy(), this.b.copy());
+        return new toxi.Line2D(this.a.copy(), this.b.copy());
     },
 
    equals: function(obj) {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof Line2D)) {
+        if (!(obj instanceof toxi.Line2D)) {
             return false;
         }
         var l = obj;
@@ -105,16 +105,16 @@ Line2D.prototype = {
             var ub = nb / denom;
             if (ua >= 0.0 && ua <= 1.0 && ub >= 0.0 && ub <= 1.0) {
                 isec =
-                        new Line2D.LineIntersection(Line2D.LineIntersection.Type.INTERSECTING,
+                        new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.INTERSECTING,
                                 this.a.interpolateTo(this.b, ua));
             } else {
-                isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.NON_INTERSECTING, null);
+                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.NON_INTERSECTING, null);
             }
         } else {
             if (na == 0.0 && nb == 0.0) {
-                isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.COINCIDENT, null);
+                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.COINCIDENT, null);
             } else {
-                isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.COINCIDENT, null);
+                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.COINCIDENT, null);
             }
         }
         return isec;
@@ -151,11 +151,11 @@ Line2D.prototype = {
     },
 
     splitIntoSegments: function(segments,stepLength,addFirst) {
-        return Line2D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
+        return toxi.Line2D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
     },
 
     toRay2D: function() {
-        //return new Ray2D(this.a.copy(), this.b.sub(this.a).normalize());
+        return new toxi.Ray2D(this.a.copy(), this.b.sub(this.a).normalize());
     }
 };
 
@@ -181,7 +181,7 @@ Line2D.prototype = {
  *            false, if A is NOT to be added to results
  * @return list of result vectors
  */
-Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
+toxi.Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
     if (segments == null) {
         segments = [];
     }
@@ -203,13 +203,13 @@ Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
 }
 
 
-Line2D.LineIntersection = function(type, pos)
+toxi.Line2D.LineIntersection = function(type, pos)
 {
 	this.type = type;
 	this.pos = pos;
 }
 
-Line2D.LineIntersection.prototype = {
+toxi.Line2D.LineIntersection.prototype = {
 	getPos: function(){
 		return this.pos.copy();
 	},
@@ -223,4 +223,4 @@ Line2D.LineIntersection.prototype = {
 	}	
 };
 
-Line2D.LineIntersection.Type = { COINCIDENT: 0, PARALLEL: 1, NON_INTERSECTING: 2, INTERSECTING: 3};
+toxi.Line2D.LineIntersection.Type = { COINCIDENT: 0, PARALLEL: 1, NON_INTERSECTING: 2, INTERSECTING: 3};

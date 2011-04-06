@@ -8,83 +8,83 @@
 */
 
 
-var MathUtils = {};
+toxi.MathUtils = {};
 /**
  * Square root of 2
  */
-MathUtils.SQRT2 = Math.sqrt(2);
+toxi.MathUtils.SQRT2 = Math.sqrt(2);
 
 /**
  * Square root of 3
  */
-MathUtils.SQRT3 = Math.sqrt(3);
+toxi.MathUtils.SQRT3 = Math.sqrt(3);
 
 /**
  * Log(2)
  */
-MathUtils.LOG2 = Math.log(2);
+toxi.MathUtils.LOG2 = Math.log(2);
 
 /**
  * PI
  */
-MathUtils.PI = 3.14159265358979323846;
+toxi.MathUtils.PI = 3.14159265358979323846;
 
 /**
  * The reciprocal of PI: (1/PI)
  */
-MathUtils.INV_PI = 1.0 / MathUtils.PI;
+toxi.MathUtils.INV_PI = 1.0 / toxi.MathUtils.PI;
 
 /**
  * PI/2
  */
-MathUtils.HALF_PI = MathUtils.PI / 2;
+toxi.MathUtils.HALF_PI = toxi.MathUtils.PI / 2;
 
 /**
  * PI/3
  */
-MathUtils.THIRD_PI = MathUtils.PI / 3;
+toxi.MathUtils.THIRD_PI = toxi.MathUtils.PI / 3;
 
 /**
  * PI/4
  */
-MathUtils.QUARTER_PI = MathUtils.PI / 4;
+toxi.MathUtils.QUARTER_PI = toxi.MathUtils.PI / 4;
 
 /**
  * PI*2
  */
-MathUtils.TWO_PI = MathUtils.PI * 2;
+toxi.MathUtils.TWO_PI = toxi.MathUtils.PI * 2;
 
 /**
  * PI*1.5
  */
-MathUtils.THREE_HALVES_PI = MathUtils.TWO_PI - MathUtils.HALF_PI;
+toxi.MathUtils.THREE_HALVES_PI = toxi.MathUtils.TWO_PI - toxi.MathUtils.HALF_PI;
 
 /**
  * PI*PI
  */
-MathUtils.PI_SQUARED = MathUtils.PI * MathUtils.PI;
+toxi.MathUtils.PI_SQUARED = toxi.MathUtils.PI * toxi.MathUtils.PI;
 
 /**
  * Epsilon value
  */
-MathUtils.EPS = 1.1920928955078125E-7;
+toxi.MathUtils.EPS = 1.1920928955078125E-7;
 
 /**
  * Degrees to radians conversion factor
  */
-MathUtils.DEG2RAD = MathUtils.PI / 180;
+toxi.MathUtils.DEG2RAD = toxi.MathUtils.PI / 180;
 
 /**
  * Radians to degrees conversion factor
  */
-MathUtils.RAD2DEG = 180 / MathUtils.PI;
+toxi.MathUtils.RAD2DEG = 180 / toxi.MathUtils.PI;
 
-MathUtils.SHIFT23 = 1 << 23;
-MathUtils.INV_SHIFT23 = 1.0 / MathUtils.SHIFT23;
+toxi.MathUtils.SHIFT23 = 1 << 23;
+toxi.MathUtils.INV_SHIFT23 = 1.0 / toxi.MathUtils.SHIFT23;
 
-MathUtils.SIN_A = -4.0 / (MathUtils.PI * MathUtils.PI);
-MathUtils.SIN_B = 4.0 / MathUtils.PI;
-MathUtils.SIN_P = 9.0 / 40;
+toxi.MathUtils.SIN_A = -4.0 / (toxi.MathUtils.PI * toxi.MathUtils.PI);
+toxi.MathUtils.SIN_B = 4.0 / toxi.MathUtils.PI;
+toxi.MathUtils.SIN_P = 9.0 / 40;
 
 
 
@@ -92,7 +92,7 @@ MathUtils.SIN_P = 9.0 / 40;
  * @param x
  * @return absolute value of x
  */
-MathUtils.abs = Math.abs;
+toxi.MathUtils.abs = Math.abs;
 
 /**
  * Rounds up the value to the nearest higher power^2 value.
@@ -100,7 +100,7 @@ MathUtils.abs = Math.abs;
  * @param x
  * @return power^2 value
  */
-MathUtils.ceilPowerOf2 = function(x) {
+toxi.MathUtils.ceilPowerOf2 = function(x) {
     var pow2 = 1;
     while (pow2 < x) {
         pow2 <<= 1;
@@ -108,7 +108,7 @@ MathUtils.ceilPowerOf2 = function(x) {
     return pow2;
 }
 
-MathUtils.clip = function(a, _min, _max) {
+toxi.MathUtils.clip = function(a, _min, _max) {
     return a < _min ? _min : (a > _max ? _max : a);
 }
 /**
@@ -118,7 +118,7 @@ MathUtils.clip = function(a, _min, _max) {
  * @return clipped value
  * @since 0012
  */
-MathUtils.clipNormalized = function(a) {
+toxi.MathUtils.clipNormalized = function(a) {
     if (a < 0) {
         return 0;
     } else if (a > 1) {
@@ -127,7 +127,7 @@ MathUtils.clipNormalized = function(a) {
     return a;
 }
 
-MathUtils.cos = Math.cos;
+toxi.MathUtils.cos = Math.cos;
 
 /**
  * Fast cosine approximation.
@@ -136,8 +136,8 @@ MathUtils.cos = Math.cos;
  *            angle in -PI/2 .. +PI/2 interval
  * @return cosine
  */
-MathUtils.fastCos = function(x) {
-    return MathUtils.fastSin(x + ((x > MathUtils.HALF_PI) ? -MathUtils.THREE_HALVES_PI : MathUtils.HALF_PI));
+toxi.MathUtils.fastCos = function(x) {
+    return toxi.MathUtils.fastSin(x + ((x > toxi.MathUtils.HALF_PI) ? -toxi.MathUtils.THREE_HALVES_PI : toxi.MathUtils.HALF_PI));
 }
 
 /**
@@ -147,12 +147,12 @@ MathUtils.fastCos = function(x) {
  *            angle in -PI/2 .. +PI/2 interval
  * @return sine
  */
-MathUtils.fastSin = function(x) {
-    x = MathUtils.SIN_B * x + MathUtils.SIN_A * x * Math.abs(x);
-    return MathUtils.SIN_P * (x * Math.abs(x) - x) + x;
+toxi.MathUtils.fastSin = function(x) {
+    x = toxi.MathUtils.SIN_B * x + toxi.MathUtils.SIN_A * x * Math.abs(x);
+    return toxi.MathUtils.SIN_P * (x * Math.abs(x) - x) + x;
 }
 
-MathUtils.flipCoin = function(rnd) {
+toxi.MathUtils.flipCoin = function(rnd) {
     return Math.random() < 0.5;
 }
 
@@ -164,7 +164,7 @@ MathUtils.flipCoin = function(rnd) {
  * @return floored value as integer
  */
 
-MathUtils.floor = function(x) {
+toxi.MathUtils.floor = function(x) {
    var y = parseInt(x);
    if (x < 0 && x != y) {
        y--;
@@ -178,16 +178,16 @@ MathUtils.floor = function(x) {
  * @param x
  * @return power^2 value
  */
-MathUtils.floorPowerOf2 = function(x) {
-  return parseInt( Math.pow(2, parseInt((Math.log(x) / MathUtils.LOG2))));
+toxi.MathUtils.floorPowerOf2 = function(x) {
+  return parseInt( Math.pow(2, parseInt((Math.log(x) / toxi.MathUtils.LOG2))));
 }
 
-MathUtils.max =  function(a, b, c) {
+toxi.MathUtils.max =  function(a, b, c) {
 	if(!c) return Math.max(a,b);
     return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
 }
 
-MathUtils.min = function(a, b, c) {
+toxi.MathUtils.min = function(a, b, c) {
 	if(!c)return Math.min(a,b);
     return (a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c);
 }
@@ -197,15 +197,15 @@ MathUtils.min = function(a, b, c) {
  * 
  * @return random float
  */
-MathUtils.normalizedRandom = function() {
+toxi.MathUtils.normalizedRandom = function() {
   return Math.random() * 2 - 1;
 }
 
-MathUtils.radians = function(degrees) {
-  return degrees * MathUtils.DEG2RAD;
+toxi.MathUtils.radians = function(degrees) {
+  return degrees * toxi.MathUtils.DEG2RAD;
 }
 
-MathUtils.random = function(min,max) {
+toxi.MathUtils.random = function(min,max) {
 	if(!min && !max)return Math.random();
 	else if(!max){ //if only one is provided, then thats actually the max
 		max = min;
@@ -215,26 +215,26 @@ MathUtils.random = function(min,max) {
 }
 
 
-MathUtils.reduceAngle = function(theta) {
-    theta %= MathUtils.TWO_PI;
-    if (Math.abs(theta) > MathUtils.PI) {
-        theta = theta - MathUtils.TWO_PI;
+toxi.MathUtils.reduceAngle = function(theta) {
+    theta %= toxi.MathUtils.TWO_PI;
+    if (Math.abs(theta) > toxi.MathUtils.PI) {
+        theta = theta - toxi.MathUtils.TWO_PI;
     }
-    if (Math.abs(theta) > MathUtils.HALF_PI) {
-        theta = MathUtils.PI - theta;
+    if (Math.abs(theta) > toxi.MathUtils.HALF_PI) {
+        theta = toxi.MathUtils.PI - theta;
     }
     return theta;
 }
 
 
-MathUtils.sign = function(x) {
+toxi.MathUtils.sign = function(x) {
     return x < 0 ? -1 : (x > 0 ? 1 : 0);
 }
 
-MathUtils.sin = function(theta) {
-   theta = MathUtils.reduceAngle(theta);
-   if (Math.abs(theta) <= MathUtils.QUARTER_PI) {
-       return MathUtils.fastSin(theta);
+toxi.MathUtils.sin = function(theta) {
+   theta = toxi.MathUtils.reduceAngle(theta);
+   if (Math.abs(theta) <= toxi.MathUtils.QUARTER_PI) {
+       return toxi.MathUtils.fastSin(theta);
    }
-   return MathUtils.fastCos(MathUtils.HALF_PI - theta);
+   return toxi.MathUtils.fastCos(toxi.MathUtils.HALF_PI - theta);
 }

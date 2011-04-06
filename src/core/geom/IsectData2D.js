@@ -1,4 +1,4 @@
-function IsectData2D(isec){
+toxi.IsectData2D = function(isec){
 	if(isec !== undefined){
 		this.isIntersection = isec.isIntersection;
 		this.dist = isec.dist;
@@ -11,13 +11,13 @@ function IsectData2D(isec){
 	}
 }
 
-IsectData2D.prototype = {
+toxi.IsectData2D.prototype = {
 	clear: function(){
 		this.isIntersection = false;
 		this.dist = 0;
-		this.pos = new Vec2D();
-		this.dir = new Vec2D();
-		this.normal = new Vec2D();
+		this.pos = new toxi.Vec2D();
+		this.dir = new toxi.Vec2D();
+		this.normal = new toxi.Vec2D();
 	},
 	
 	toString: function(){

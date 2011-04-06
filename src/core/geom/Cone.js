@@ -18,19 +18,19 @@
      * @param len
      *            length of the cone
      */
-function Cone(pos,dir,rNorth, rSouth,len) {
+toxi.Cone = function(pos,dir,rNorth, rSouth,len) {
     this.parent.init.call(this,pos);
     this.dir = dir.getNormalized();
-    this.radiusNorth = rNorth;
+    this.radiusNorth = rNxiorth;
     this.radiusSouth = rSouth;
     this.length = len;
 }
 
-Cone.prototype = new Vec3D();
-Cone.constructor = Cone;
-Cone.prototype.parent = Vec3D.prototype;
+toxi.Cone.prototype = new toxi.Vec3D();
+toxi.Cone.constructor = toxi.Cone;
+toxi.Cone.prototype.parent = toxi.Vec3D.prototype;
 
-Cone.prototype.toMesh = function(a,b,c,topClosed,bottomClosed) {
+toxi.Cone.prototype.toMesh = function(a,b,c,topClosed,bottomClosed) {
 	if(topClosed === undefined)topClosed = true;
 	if(bottomClosed === undefined)bottomClosed = true;
 	if(b === undefined)
@@ -69,7 +69,7 @@ Cone.prototype.toMesh = function(a,b,c,topClosed,bottomClosed) {
     var numV = steps * 2 + 2;
     var numF = steps * 2 + (topClosed ? steps : 0) + (bottomClosed ? steps : 0);
     if (mesh == null) {
-        mesh = new TriangleMesh("cone", numV, numF);
+        mesh = new toxi.TriangleMesh("cone", numV, numF);
     }
     for (var i = 0, j = 1; i < steps; i++, j++) {
         if (j == steps) {

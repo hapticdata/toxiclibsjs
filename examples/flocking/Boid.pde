@@ -3,17 +3,17 @@
 
 class Boid {
 
-  Vec2D loc;
-  Vec2D vel;
-  Vec2D acc;
+  toxi.Vec2D loc;
+  toxi.Vec2D vel;
+  toxi.Vec2D acc;
   float r;
   float maxforce;
   float maxspeed;
 
-  public Boid(Vec2D l, float ms, float mf) {
+  public Boid(toxi.Vec2D l, float ms, float mf) {
     loc=l;
-    acc = new Vec2D();
-    vel = Vec2D.randomVector();
+    acc = new toxi.Vec2D();
+    vel = toxi.Vec2D.randomVector();
     r = 2.0;
     maxspeed = ms;
     maxforce = mf;
@@ -28,9 +28,9 @@ class Boid {
 
   // We accumulate a new acceleration each time based on three rules
   void flock(ArrayList boids) {
-    Vec2D sep = separate(boids);   // Separation
-    Vec2D ali = align(boids);      // Alignment
-    Vec2D coh = cohesion(boids);   // Cohesion
+    toxi.Vec2D sep = separate(boids);   // Separation
+    toxi.Vec2D ali = align(boids);      // Alignment
+    toxi.Vec2D coh = cohesion(boids);   // Cohesion
     // Arbitrarily weight these forces
     sep.scaleSelf(1.5);
     ali.scaleSelf(1.0);
@@ -52,19 +52,19 @@ class Boid {
     acc.clear();
   }
 
-  void seek(Vec2D target) {
+  void seek(toxi.Vec2D target) {
     acc.addSelf(steer(target,false));
   }
 
-  void arrive(Vec2D target) {
+  void arrive(toxi.Vec2D target) {
     acc.addSelf(steer(target,true));
   }
 
   // A method that calculates a steering vector towards a target
   // Takes a second argument, if true, it slows down as it approaches the target
-  Vec2D steer(Vec2D target, boolean slowdown) {
-    Vec2D steer;  // The steering vector
-    Vec2D desired = target.sub(loc);  // A vector pointing from the location to the target
+  toxi.Vec2D steer(toxi.Vec2D target, boolean slowdown) {
+    toxi.Vec2D steer;  // The steering vector
+    toxi.Vec2D desired = target.sub(loc);  // A vector pointing from the location to the target
     float d = desired.magnitude(); // Distance from the target is the magnitude of the vector
     // If the distance is greater than 0, calc steering (otherwise return zero vector)
     if (d > 0) {
@@ -77,7 +77,7 @@ class Boid {
       steer = desired.sub(vel).limit(maxforce);  // Limit to maximum steering force
     } 
     else {
-      steer = new Vec2D();
+      steer = new toxi.Vec2D();
     }
     return steer;
   }
@@ -108,9 +108,9 @@ class Boid {
 
   // Separation
   // Method checks for nearby boids and steers away
-  Vec2D separate (ArrayList boids) {
+  toxi.Vec2D separate(ArrayList boids) {
     float desiredseparation = 25.0f;
-    Vec2D steer = new Vec2D();
+    toxi.Vec2D steer = new toxi.Vec2D();
     int count = 0;
     // For every boid in the system, check if it's too close
     for (int i = 0 ; i < boids.size(); i++) {
@@ -119,7 +119,7 @@ class Boid {
       // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
       if ((d > 0) && (d < desiredseparation)) {
         // Calculate vector pointing away from neighbor
-        Vec2D diff = loc.sub(other.loc);
+        toxi.Vec2D diff = loc.sub(other.loc);
         diff.normalizeTo(1.0/d);
         steer.addSelf(diff);
         count++;            // Keep track of how many
@@ -142,9 +142,9 @@ class Boid {
 
   // Alignment
   // For every nearby boid in the system, calculate the average velocity
-  Vec2D align (ArrayList boids) {
+  toxi.Vec2D align (ArrayList boids) {
     float neighbordist = 50.0;
-    Vec2D steer = new Vec2D();
+    toxi.Vec2D steer = new toxi.Vec2D();
     int count = 0;
     for (int i = 0 ; i < boids.size(); i++) {
       Boid other = (Boid) boids.get(i);
@@ -170,9 +170,9 @@ class Boid {
 
   // Cohesion
   // For the average location (i.e. center) of all nearby boids, calculate steering vector towards that location
-  Vec2D cohesion (ArrayList boids) {
+  toxi.Vec2D cohesion (ArrayList boids) {
     float neighbordist = 50.0;
-    Vec2D sum = new Vec2D();   // Start with empty vector to accumulate all locations
+    toxi.Vec2D sum = new toxi.Vec2D();   // Start with empty vector to accumulate all locations
     int count = 0;
     for (int i = 0 ; i < boids.size(); i++) {
       Boid other = (Boid) boids.get(i);

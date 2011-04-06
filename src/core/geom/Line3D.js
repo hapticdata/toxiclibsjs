@@ -8,25 +8,23 @@
 */
 
 
-function Line3D(vec_a, vec_b) {
+toxi.Line3D = function(vec_a, vec_b) {
     this.a = vec_a;
     this.b = vec_b;
 }
 
-Line3D.prototype = {
+toxi.Line3D.prototype = {
 	
 	closestLineTo: function(l) {
 
        var p43 = l.a.sub(l.b);
        if (p43.isZeroVector()) {
-       		console.log("ZERO");
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+           return new toxi.Line3D.LineIntersection(toxi.Line3D.LineIntersection.Type.NON_INTERSECTING);
        }
 
        var p21 = this.b.sub(this.a);
        if (p21.isZeroVector()) {
-       	console.log("NON-INTERSECTING");
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+           return new toxi.Line3D.LineIntersection(toxi.Line3D.LineIntersection.Type.NON_INTERSECTING);
        }
        var p13 = this.a.sub(l.a);
 
@@ -37,9 +35,8 @@ Line3D.prototype = {
        var d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
 
        var denom = d2121 * d4343 - d4321 * d4321;
-       if (Math.abs(denom) < MathUtils.EPS) {
-       console.log("NON-INTERSECTIN2");
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+       if (Math.abs(denom) < toxi.MathUtils.EPS) {
+           return new toxi.Line3D.LineIntersection(toxi.Line3D.LineIntersection.Type.NON_INTERSECTING);
        }
        var numer = d1343 * d4321 - d1321 * d4343;
        var mua = numer / denom;
@@ -47,7 +44,7 @@ Line3D.prototype = {
 
        var pa = this.a.add(p21.scaleSelf(mua));
        var pb = l.a.add(p43.scaleSelf(mub));
-       return new Line3D.LineIntersection(Line3D.LineIntersection.Type.INTERSECTING, new Line3D(pa, pb), mua,mub);
+       return new toxi.Line3D.LineIntersection(toxi.Line3D.LineIntersection.Type.INTERSECTING, new toxi.Line3D(pa, pb), mua,mub);
    	},
 
    /**
@@ -71,14 +68,14 @@ Line3D.prototype = {
    	},
 
    copy: function() {
-       return new Line3D(this.a.copy(), this.b.copy());
+       return new toxi.Line3D(this.a.copy(), this.b.copy());
    	},
 
 	equals: function(obj) {
        if (this == obj) {
            return true;
        }
-       if ((typeof(obj) != Line3D)) {
+       if ((typeof(obj) != toxi.Line3D)) {
            return false;
        }
        return (this.a.equals(obj.a) || this.a.equals(l.b))
@@ -134,7 +131,7 @@ Line3D.prototype = {
 
 
    splitIntoSegments: function(segments,stepLength, addFirst) {
-       return Line3D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
+       return toxi.Line3D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
    },
 
 
@@ -163,7 +160,7 @@ Line3D.prototype = {
     *            false, if A is NOT to be added to results
     * @return list of result vectors
     */
-Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst) {
+toxi.Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst) {
     if (segments == null) {
         segments = [];
     }
@@ -185,7 +182,7 @@ Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst
 }
 
 
-Line3D.LineIntersection = function(type,line,mua,mub){
+toxi.Line3D.LineIntersection = function(type,line,mua,mub){
 	this.type = type;
 	if(mua == null)mua = 0;
 	if(mub == null)mub = 0;
@@ -193,7 +190,7 @@ Line3D.LineIntersection = function(type,line,mua,mub){
 	this.coeff = [mua,mub];
 }
 
-Line3D.LineIntersection.prototype = {
+toxi.Line3D.LineIntersection.prototype = {
 	
 	getCoefficient: function(){
 		return this.coeff;
@@ -214,7 +211,7 @@ Line3D.LineIntersection.prototype = {
 	},
 	
 	isIntersectionInside: function(){
-		return this.type == Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
+		return this.type == toxi.Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
 	},
 	
 	toString: function(){
@@ -222,7 +219,7 @@ Line3D.LineIntersection.prototype = {
 	}
 };
 	
-Line3D.LineIntersection.Type = {};
-Line3D.LineIntersection.Type.NON_INTERSECTING = 0;
-Line3D.LineIntersection.Type.INTERSECTING = 1;
+toxi.Line3D.LineIntersection.Type = {};
+toxi.Line3D.LineIntersection.Type.NON_INTERSECTING = 0;
+toxi.Line3D.LineIntersection.Type.INTERSECTING = 1;
 

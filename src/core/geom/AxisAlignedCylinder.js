@@ -1,11 +1,11 @@
-function AxisAlignedCylinder(pos,radius,length) {
+toxi.AxisAlignedCylinder = function(pos,radius,length) {
 	this.init(pos,radius,length);
 }
 
-AxisAlignedCylinder.prototype = {
+toxi.AxisAlignedCylinder.prototype = {
 	
 	init: function(pos,radius,length){
-		this.pos = pos.copy();
+		this.pos = (pos===undefined)? undefined: pos.copy();
 		this.setRadius(radius);
 		this.setLength(length);
 	},
@@ -79,13 +79,13 @@ AxisAlignedCylinder.prototype = {
     toMesh: function(a,b,c) {
     	if(a === undefined)
     	{
-    		return new Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(null,12,0,true,true);
+    		return new toxi.Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(null,12,0,true,true);
     	}
-    	else if(a instanceof Mesh3D)
+    	else if(a instanceof toxi.TriangleMesh3D)
     	{
-    		return new Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(a,b,c,true,true);
+    		return new toxi.Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(a,b,c,true,true);
     	}
-		return new Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(null,a,b,true,true);    	
+		return new toxi.Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(null,a,b,true,true);    	
     }
 
 };

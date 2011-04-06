@@ -2,11 +2,11 @@
 
 <html lang="en">
 <head>
-	<title>TColorExample</title>
+	<title>TColorExample - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
+	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../src/core/math/MathUtils.js"></script>
-	<script type="text/javascript" src="../src/color/TColor.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 	<script>
 	/*
@@ -49,139 +49,103 @@
 
 	</script>
 </head>
-<body>
-<h1>TColor Example</h1>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>TColor Example</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
+		</hgroup>
+	</header>
 <script type="application/processing">
-import toxi.color.*;
-import toxi.color.theory.*;
 
-import toxi.math.conversion.*;
-import toxi.geom.*;
-import toxi.math.*;
-import toxi.geom.mesh2d.*;
-import toxi.util.datatypes.*;
-import toxi.util.events.*;
-import toxi.geom.mesh.subdiv.*;
-import toxi.geom.mesh.*;
-import toxi.math.waves.*;
-import toxi.util.*;
-import toxi.math.noise.*;
+toxi.color.TColor c1;
+toxi.color.TColor c2;
 
+PFont font;
 
-import processing.opengl.*;
-boolean running = true;
+void setup()
+{
+	
+	size(200,200);
+	
+	font = createFont("Arial",14);
+	textFont(font);
+	textSize(14);
+	
+	//setup colors
+	c1 = toxi.color.TColor.newRGB(random(1),0,0);
+	setNextColor();
+	
+	//NOTICE IM CHANGING THE COLOR MODE TO BE BETWEEN 0.0 - 1.0
+	colorMode(RGB,1.0);
+	
 
-float radius = 120;
-float subRadius = 100;
-float numPoints = 50;
-float subCircle = 5; // second number of circles
-float ellipseRadius = 80;
-float subEllipseRadius = 10;
-float rot = 0.0;
-float subRot = 0.0;
-
-boolean step = true;
-
-
-void setup() {
-  size(1000,1000,OPENGL);
-  smooth();
-  hint(ENABLE_OPENGL_4X_SMOOTH);
-  /*
-   a 360 degree rotation around a point is equal to PI * 2 in radians,
-   radians is the unit of measurement to use
-   */
-  float radian = radians(360);
-  println("radians: "+radian); //this prints out the value of TWO_PI
-  float deg = degrees(radian);
-  println("degrees: "+deg); //this prints out 360
-  colorMode(RGB,1.0);
 }
 
+void draw()
+{
 
-void draw() {
-  if(!step)return;
-  if(running){
-    rot += 0.01;
-  subRot += 0.02;
-  }
-  background(0.1);
-  translate(width/2,height/2); // lets put our origin in the center
-  scale(1.5);
-  rotate(rot);
-
-
-  //here we take the full rotation around a circle and divide it by the number of points we want
-  float radialStep = radians(360) / (numPoints); 
-  float subStep = radians(360) / (subCircle); 
-  //scary stuff
- 
- for(int i=0;i<numPoints;i++) {   
-    float currentAngle = i * radialStep;
-    //cos will return a value between -1 and 1, so we multiply that by our desired radius
-    float x = cos(currentAngle) * radius; 
-    float y = sin(currentAngle) * radius; 
-   TColor c = TColor.newRGB(i/numPoints,0.35,0.35);
-   fill(c.red(),c.green(),c.blue(),0.5);  
-   stroke(c.red(),c.green(),c.blue(),0.85);
-    pushMatrix(); //push a new context to our stack
-    translate(x,y); // lets put our origin in the center
-    rotate(subRot);
-    //ellipse(0,0,ellipseRadius,ellipseRadius); 
-   
-   float lastX = 0, lastY = 0;
-   float firstX = 0, firstY = 0;
- for(int j=0; j<subCircle;j++) { 
-      float r = (subRadius/2) * cos((subRot*1.5));
-      r+= subRadius;
-      float subAngle = j * subStep;
-      float subX = cos(subAngle) * r; 
-      float subY = sin(subAngle) * r; 
-
-      strokeWeight(1.5);
-      //translate(x,y); // lets put our origin in the center
-      if(j>0)
-      {
-        line(lastX,lastY,subX,subY);
-      }
-      else {
-        firstX = subX;
-        firstY = subY;
-      }
-
-      lastX = subX;
-      lastY = subY;
-      //ellipse(subX,subY,subEllipseRadius,subEllipseRadius);
-      
-    }
-    line(lastX,lastY,firstX,firstY);
-    popMatrix(); //remove that new context (this returns us back to the center origin
-  }
-  
-// step = false;
+	background(0);
+	
+	fill(c1.red(),c1.green(),c1.blue());
+	rect(10,10,25,25);
+	fill(c2.red(),c2.green(),c2.blue());
+	rect(45,10,25,25);
+	fill(1,1,1);
+	text("blend between 2 colors",10,55);
+	text("darken colors",10,110);
+	text("desaturate colors", 10, 170);
+	
+	stroke(1,1,1);
+	float mod = (frameCount%1000);
+	float step = (mod/1000);
+	if(step == 0.0){
+		c1 = c2;
+		setNextColor();
+	}
+	toxi.color.TColor c3 = c1.copy().blend(c2,step);
+	fill(c3.red(),c3.green(),c3.blue());
+	rect(80,10,110,25);
+	
+	toxi.color.TColor c1Dark = c1.copy().darken(step);
+	toxi.color.TColor c2Dark = c2.copy().darken(step);
+	fill(c1Dark.red(),c1Dark.green(),c1Dark.blue());
+	rect(10,70,85,25);
+	fill(c2Dark.red(),c2Dark.green(),c2Dark.blue());
+	rect(105,70,85,25);
+	
+	toxi.color.TColor c1de = c1.copy().desaturate(step);
+	toxi.color.TColor c2de = c2.copy().desaturate(step);
+	fill(c1de.red(),c1de.green(),c1de.blue());
+	rect(10,130,85,25);
+	fill(c2de.red(),c2de.green(),c2de.blue());
+	rect(105,130,85,25);
+	
+	noStroke();
+	fill(0,0,0);
+	rect(width-100,height-25,100,25);
+	noFill();
+	fill(1,1,1);
+	text("step: "+step,width-80,height-10);
+	
 }
 
-
-void keyPressed(){
-  if(key == 's'){
-    saveFrame(frameCount+".tif");
-  }
-  else if(key == 'r'){
-    running = (running)?false : true;
-  }
-  else
-  {
-    step = true;
-  }
+void setNextColor(){
+	c2 = toxi.color.TColor.newHSV(random(1),1.0,1.0);
 }
 </script>
 
 <canvas id="myCanvas" width="200" height="200">
 	your browser doesnt support canvas
 </canvas>
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6">
 <p>example and toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<article id="description" class="grid_9">
 <p>
 Works with DOM elements, and any other library as well
 </p>
+</article>
+</section>
 </body>
 </html>

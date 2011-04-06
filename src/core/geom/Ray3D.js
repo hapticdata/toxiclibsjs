@@ -1,7 +1,7 @@
-function Ray3D(a,b,c,d){
+toxi.Ray3D = function(a,b,c,d){
 	var o, dir;
 	if(arguments.length == 4){
-		o = new Vec3D(a,b,c);
+		o = new toxi.Vec3D(a,b,c);
 		dir = d;
 	}
 	else if(arguments.length == 2){
@@ -9,16 +9,16 @@ function Ray3D(a,b,c,d){
 		dir = b;
 	}
 	else {
-		o = new Vec3D();
-		dir = Vec3D.Y_AXIS.copy();
+		o = new toxi.Vec3D();
+		dir = toxi.Vec3D.Y_AXIS.copy();
 	}
 	this.parent.init.call(this,o);
 	this.dir = dir;
 }
 
-Ray3D.prototype = new Vec3D();
-Ray3D.constructor = Ray3D;
-Ray3D.prototype.parent = Vec3D.prototype;
+toxi.Ray3D.prototype = new toxi.Vec3D();
+toxi.Ray3D.constructor = toxi.Ray3D;
+toxi.Ray3D.prototype.parent = toxi.Vec3D.prototype;
 
 
 
@@ -27,7 +27,7 @@ Ray3D.prototype.parent = Vec3D.prototype;
  * 
  * @return vector
  */
-Ray3D.prototype.getDirection = function() {
+toxi.Ray3D.prototype.getDirection = function() {
     return this.dir.copy();
 }
 
@@ -38,7 +38,7 @@ Ray3D.prototype.getDirection = function() {
  * @param p
  * @return
  */
-Ray3D.prototype.getDistanceToPoint = function(p) {
+toxi.Ray3D.prototype.getDistanceToPoint = function(p) {
     var sp = p.sub(this);
     return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
 }
@@ -50,7 +50,7 @@ Ray3D.prototype.getDistanceToPoint = function(p) {
  * @param dist
  * @return vector
  */
-Ray3D.prototype.getPointAtDistance = function(dist) {
+toxi.Ray3D.prototype.getPointAtDistance = function(dist) {
     return this.add(this.dir.scale(dist));
 }
 
@@ -61,7 +61,7 @@ Ray3D.prototype.getPointAtDistance = function(dist) {
  *            new direction
  * @return itself
  */
-Ray3D.prototype.setDirection = function(d) {
+toxi.Ray3D.prototype.setDirection = function(d) {
     this.dir.set(d).normalize();
     return this;
 }
@@ -75,10 +75,10 @@ Ray3D.prototype.setDirection = function(d) {
  *            end point distance
  * @return line segment
  */
-Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
+toxi.Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
     return new Line3D(this, this.getPointAtDistance(dist));
 }
 
-Ray3D.prototype.toString = function() {
+toxi.Ray3D.prototype.toString = function() {
     return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
 }

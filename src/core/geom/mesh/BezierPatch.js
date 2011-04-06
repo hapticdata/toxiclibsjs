@@ -2,16 +2,16 @@
  * 4x4 bezier patch implementation with tesselation support (dynamic resolution)
  * for generating triangle mesh representations.
  */
-function BezierPatch(points){
+toxi.BezierPatch = function(points){
 	this.points = (points === undefined)?[] : points;
     for (var i = 0; i < 4; i++) {
         for (var j = 0; j < 4; j++) {
-            this.points[i][j] = new Vec3D();
+            this.points[i][j] = new toxi.Vec3D();
         }
     }
-}
+};
 
-BezierPatch.prototype = {
+toxi.BezierPatch.prototype = {
 	
 	computePointAt: function(u,v) {
         return this.computePointAt(u, v, this.points);
@@ -25,15 +25,15 @@ BezierPatch.prototype = {
     toMesh: function(mesh_or_res,res) {
     	if(res === undefined)
     	{
-    		var mesh = new TriangleMesh();
+    		var mesh = new toxi.TriangleMesh();
     		res = mesh_or_res;
     	}
     	else
     	{
     		var mesh = mesh_or_res;
     	}
-        var curr = new Vec3D[res + 1];
-        var prev = new Vec3D[res + 1];
+        var curr = new toxi.Vec3D[res + 1];
+        var prev = new toxi.Vec3D[res + 1];
         var r1 = 1.0 / res;
         for (var y = 0; y <= res; y++) {
             for (var x = 0; x <= res; x++) {
@@ -69,8 +69,8 @@ BezierPatch.prototype = {
  * @return point on surface
  */
 
-BezierPatch.computePointAt(u,v,points){
-final float u1 = 1 - u;
+toxi.BezierPatch.computePointAt = function(u,v,points){
+		var u1 = 1 - u;
         var u1squared = u1 * u1 * 3 * u,
         u1cubed = u1 * u1 * u1,
         usquared = u * u,
@@ -129,6 +129,6 @@ final float u1 = 1 - u;
                         * (p3[0].z * v1cubed + p3[1].z * v1sqv + p3[2].z
                                 * v1vsq + p3[3].z * vcubed);
 
-        return new Vec3D(x, y, z);
+        return new toxi.Vec3D(x, y, z);
 
-}
+};

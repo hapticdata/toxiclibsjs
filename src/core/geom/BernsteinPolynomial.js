@@ -7,7 +7,7 @@
  *            number of subdivision steps between each control point of the
  *            spline3d
  */
-function BernsteinPolynomial(res) {
+toxi.BernsteinPolynomial = function(res) {
         this.resolution = res;
         var b0 = new Array(res),
         	b1 = new Array(res),
