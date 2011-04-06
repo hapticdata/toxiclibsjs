@@ -9,58 +9,58 @@ Toxiclibs.js is a javascript port of Karsten Schmidt's Toxiclibs for Java and Pr
 classes currently in the toxiclibs.js compiled build:
 
 Geometry (toxi. namespace)
-*AABB
-*AxisAlignedCylinder
-*BernsetinPolynomial
-*Circle
-*CircleIntersector
-*Cone
-*Ellipse
-*IsectData2D
-*IsectData3D
-*Line2D
-*Line3D
-*Matrix4x4
-*Polygon2D
-*Quaternion
-*Ray2D
-*Ray3D
-*Ray3DIntersector
-*Sphere
-*Spline2D
-*Triangle
-*Vec2D
-*Vec3D
-*XAxisCylinder
-*YAxisCylinder
-*ZAxisCylinder
+* AABB
+* AxisAlignedCylinder
+* BernsetinPolynomial
+* Circle
+* CircleIntersector
+* Cone
+* Ellipse
+* IsectData2D
+* IsectData3D
+* Line2D
+* Line3D
+* Matrix4x4
+* Polygon2D
+* Quaternion
+* Ray2D
+* Ray3D
+* Ray3DIntersector
+* Sphere
+* Spline2D
+* Triangle
+* Vec2D
+* Vec3D
+* XAxisCylinder
+* YAxisCylinder
+* ZAxisCylinder
 
 Math (toxi. namespace)
-*MathUtils
-*InterpolationStrategy (abstract)
-*BezierInterpolation
-*CircularInterpolation
-*CosineInterpolation
-*DecimatedInterpolation
-*ExponentialInterpolation
-*Interpolation2D
-*LinearInterpolation
-*SigmoidInterpolation
-*ThresholdInterpolation
-*ZoomLensInterpolation
-*ScaleMap
-*SinCosLUT
-*AbstractWave (abstract)
-*AMFMSineWave
-*FMHarmonicSquareWave
-*FMSawtoothWave
-*FMSineWave
-*FMSquareWave
-*FMTriangleWave
-*SineWave
+* MathUtils
+* InterpolationStrategy (abstract)
+* BezierInterpolation
+* CircularInterpolation
+* CosineInterpolation
+* DecimatedInterpolation
+* ExponentialInterpolation
+* Interpolation2D
+* LinearInterpolation
+* SigmoidInterpolation
+* ThresholdInterpolation
+* ZoomLensInterpolation
+* ScaleMap
+* SinCosLUT
+* AbstractWave (abstract)
+* AMFMSineWave
+* FMHarmonicSquareWave
+* FMSawtoothWave
+* FMSineWave
+* FMSquareWave
+* FMTriangleWave
+* SineWave
 
 Color (toxi.color. namespace)
-*TColor
+* TColor
 
 
 
