@@ -25,6 +25,7 @@ COMMON_FILES = [
 	'core/geom/BernsteinPolynomial.js',
 	'core/geom/Spline2D.js',
 	'core/geom/Ellipse.js',
+	'core/geom/Rect.js',
 	'core/geom/Circle.js',
 	'core/geom/CircleIntersector.js',
 	'core/geom/Line2D.js',
