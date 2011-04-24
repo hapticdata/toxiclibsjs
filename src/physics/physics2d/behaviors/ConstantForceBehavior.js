@@ -5,8 +5,8 @@ toxi.physics2d.ConstantForceBehavior = function(force){
 };
 
 toxi.physics2d.ConstantForceBehavior.prototype = {
-	apply: function(p){
-		p.addForce()
+	applyBehavior: function(p){ //apply() is reserved, so this is now applyBehavior
+		p.addForce(this.scaledForce);
 	},
 	
 	configure: function(timeStep){
@@ -20,12 +20,15 @@ toxi.physics2d.ConstantForceBehavior.prototype = {
 	
 	initConstantForceBehavior: function(force){
 		this.force = force;
-		console.log("took: "+this.force);
 		this.scaleForce = new toxi.Vec2D();
 		this.timeStep = 0;
 	},
 	setForce: function(forceVec){
 		this.force = forceVec;
 		this.scaledForce = this.force.scale(this.timeStep);
+	},
+	
+	toString: function(){
+		return "behavior force: "+ this.force+ " scaledForce: "+this.scaledForce+ " timeStep: "+this.timeStep;
 	}
 };

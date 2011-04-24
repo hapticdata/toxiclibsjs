@@ -1,6 +1,6 @@
 toxi.physics2d.AttractionBehavior = function(attractor,radius,strength,jitter){
 	if(arguments.length < 3){
-		throw new Error("toxi.physics2d.AttractionBehavior did not receive correct parameters");
+		throw { name: "IncorrectParameters", message: "Constructor received incorrect Parameters"};
 	}
 	jitter == (jitter === undefined) ? 0 : jitter;
 	
@@ -11,13 +11,11 @@ toxi.physics2d.AttractionBehavior = function(attractor,radius,strength,jitter){
 };
 
 toxi.physics2d.AttractionBehavior.prototype = {
-	apply: function(p){
+	applyBehavior: function(p){ //apply() is reserved, so this is now applyBehavior
 		var delta = this.attractor.sub(p);
 		var dist = delta.magSquared();
 		if(dist < this.radiusSquared){
-			var f =
-				delta.normalizeTo(1.0 - dist / this.radiusSquared)
-					.jitter(this.jitter).scaleSelf(this.attrStrength);
+			var f = delta.normalizeTo((1.0 - dist / this.radiusSquared)).jitter(this.jitter).scaleSelf(this.attrStrength);
 			p.addForce(f);
 		}
 	},

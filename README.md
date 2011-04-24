@@ -27,6 +27,7 @@ Geometry (toxi. namespace)
 * Ray2D
 * Ray3D
 * Ray3DIntersector
+* Rect
 * Sphere
 * Spline2D
 * Triangle

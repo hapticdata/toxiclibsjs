@@ -9,17 +9,17 @@ toxi.physics2d.removeItemFrom = function(item,array){
 }
 
 toxi.physics2d.VerletPhysics2D = function(gravity, numIterations, drag, timeStep){
-	if(gravity !== undefined){
-		this.addBehavior(new toxi.physics.GravityBehavior(gravity));
-	}
-	
 	this.behaviors = [];
 	this.particles = [];
 	this.springs = [];
-	
 	this.numIterations = (numIterations === undefined) ? 50 : numIterations;
 	this.timeStep = (timeStep === undefined) ? 1 : timeStep;
 	this.setDrag(drag || 0);
+	
+	if(gravity !== undefined){
+		this.addBehavior(new toxi.physics.GravityBehavior(gravity));
+	}
+
 }
 
 toxi.physics2d.VerletPhysics2D.addConstraintToAll = function(c, list){
@@ -35,9 +35,15 @@ toxi.physics2d.VerletPhysics2D.removeConstraintFromAll = function(c,list){
 }
 
 toxi.physics2d.VerletPhysics2D.prototype = {
+	
 	addBehavior: function(behavior){
+		if(behavior === undefined){
+			throw { name: "TypeError",
+					message: "Incorrect Parameters for toxi.physics2d.VerletPhysics2D addBehavior"
+				};
+		}
 		behavior.configure(this.timeStep);
-		
+		this.behaviors.push(behavior);
 	},
 	
 	addParticle: function(p){
@@ -166,18 +172,19 @@ toxi.physics2d.VerletPhysics2D.prototype = {
 	updateParticles: function(){
 		var i = 0;
 		var j = 0;
+		var b = undefined;
 		var p = undefined;
 		for(i = 0;i<this.behaviors.length;i++){
-			var b = this.behaviors[i];
+			b = this.behaviors[i];
 			for(j = 0;j<this.particles.length;j++){
 				p = this.particles[j];
-				b.apply(p);
+				b.applyBehavior(p);
 			}
-			for(j = 0;j<this.particles.length;j++){
-				p = this.particles[j];
-				p.scaleVelocity(this.drag);
-				p.update();
-			}
+		}
+		for(j = 0;j<this.particles.length;j++){
+			p = this.particles[j];
+			p.scaleVelocity(this.drag);
+			p.update();
 		}
 	},
 	
@@ -187,7 +194,7 @@ toxi.physics2d.VerletPhysics2D.prototype = {
 		for(i = this.numIterations; i > 0; i--){
 			for(j = 0;j<this.springs.length;j++){
 				var s = this.springs[j];
-				s.update(i == 1);
+				//s.update(i === 1);
 			}
 		}
 	}

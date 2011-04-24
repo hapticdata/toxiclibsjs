@@ -1,11 +1,12 @@
 toxi.physics2d.VerletParticle2D = function(x,y,w){
+	this.force = new toxi.Vec2D();
 	if(x instanceof toxi.Vec2D){
 		if(x instanceof toxi.physics2d.VerletParticle2D){
 			
 			y = x.y;
 			w = x.weight;
 			x = x.x;
-			this.isLocked = x.isLocked;
+			this._isLocked = x._isLocked;
 			
 		} else if(y === undefined){
 			y = x.y;
@@ -17,10 +18,12 @@ toxi.physics2d.VerletParticle2D = function(x,y,w){
 			x = x.x;
 		}
 	}
-	this.parent.init(x,y);
+	this._isLocked = false;
+	this.init(x,y);
 	this.prev = new toxi.Vec2D(this);
 	this.temp = new toxi.Vec2D();
-	this.setWeight(w || 1);
+	w = (w === undefined) ? 1 : w;
+	this.setWeight(w);
 }
 
 toxi.extend(toxi.physics2d.VerletParticle2D,toxi.Vec2D);
@@ -29,7 +32,11 @@ toxi.physics2d.VerletParticle2D.prototype.addBehavior = function(behavior,timeSt
 	if(this.behaviors === undefined){
 		this.behaviors = [];
 	}
-	this.behaviors.configure(timeStep);
+	if(behavior === undefined){
+		throw { name: "TypeError", message: "behavior was undefined"};
+	}
+	timeStep = (timeStep === undefined)? 1 : timeStep;
+	behavior.configure(timeStep);
 	this.behaviors.push(behavior);
 	return this;
 };
@@ -56,7 +63,7 @@ toxi.physics2d.VerletParticle2D.prototype.applyBehaviors = function(){
 	if(this.behaviors !== undefined){
 		var i = 0;
 		for(i = 0;i<this.behaviors.length;i++){
-			this.behaviors[i].apply(this);
+			this.behaviors[i].applyBehavior(this);
 		}
 	}
 };
@@ -65,7 +72,7 @@ toxi.physics2d.VerletParticle2D.prototype.applyConstraints = function(){
 	if(this.constraints !== undefined){
 		var i =0;
 		for(i =0;i<this.constraints.length;i++){
-			this.constraints[i].apply(this);
+			this.constraints[i].applyConstraint(this);
 		}
 	}
 };
@@ -73,11 +80,7 @@ toxi.physics2d.VerletParticle2D.prototype.applyConstraints = function(){
 //protected
 toxi.physics2d.VerletParticle2D.prototype.applyForce = function(){
 	this.temp.set(this);
-	this.addSelf(
-		this.sub(this.prev).addSelf(
-			this.force.scale(this.weigth)
-		)
-	);
+	this.addSelf(this.sub(this.prev).addSelf(this.force.scale(this.weight)));
 	this.prev.set(this.temp);
 	this.force.clear();
 };
@@ -109,11 +112,11 @@ toxi.physics2d.VerletParticle2D.prototype.getWeight = function(){
 };
 
 toxi.physics2d.VerletParticle2D.prototype.isLocked = function(){
-	return this.isLocked;
+	return this._isLocked;
 };
 
 toxi.physics2d.VerletParticle2D.prototype.lock = function(){
-	this.isLoced = true;
+	this._isLocked = true;
 	return this;
 };
 
@@ -152,12 +155,12 @@ toxi.physics2d.VerletParticle2D.prototype.setWeight = function(w){
 
 toxi.physics2d.VerletParticle2D.prototype.unlock = function() {
 	this.clearVelocity();
-	this.isLocked = false;
+	this._isLocked = false;
 	return this;
 };
 
 toxi.physics2d.VerletParticle2D.prototype.update = function(){
-	if(!this.isLocked){
+	if(!this._isLocked){
 		this.applyBehaviors();
 		this.applyForce();
 		this.applyConstraints();
