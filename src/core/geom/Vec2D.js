@@ -169,15 +169,15 @@ toxi.Vec2D.prototype = {
 		{
 			switch(id) {
 				case 0:
-				 id = Axis.X;
+				 id = toxi.Vec2D.Axis.X;
 				case 1:
-				id = Axis.Y;
+				id = toxi.Vec2D.Axis.Y;
 			}
 		}
         switch (id) {
-            case Axis.X:
+            case toxi.Vec2D.Axis.X:
                 return this.x;
-            case Axis.Y:
+            case toxi.Vec2D.Axis.Y:
                 return this.y;
         }
         return 0;
@@ -509,6 +509,18 @@ toxi.Vec2D.prototype = {
 		return this;
 	},
 	
+	setComponent: function(id, val) {
+		switch (id) {
+		case toxi.Vec2D.Axis.X:
+			this.x = val;
+			break;
+		case toxi.Vec2D.Axis.Y:
+			this.y = val;
+			break;
+		}
+		return this;
+	},
+	
 	/**
      * Replaces all vector components with the signum of their original values.
      * In other words if a components value was negative its new value will be
@@ -579,6 +591,7 @@ toxi.Vec2D.prototype = {
 	
 };
 
+
 toxi.Vec2D.X_AXIS = new toxi.Vec2D(1,0); 
 toxi.Vec2D.Y_AXIS = new toxi.Vec2D(0,1); 
 toxi.Vec2D.ZERO = new toxi.Vec2D();
@@ -602,13 +615,11 @@ toxi.Vec2D.randomVector = function(rnd){
 
 
 
-toxi.Axis = function(vec)
-{
-	this.vector = vec;
-	
-	function getVector(){
-		return this.vector;
+toxi.Vec2D.Axis = {
+	X: {
+		getVector: function(){ return toxi.Vec2D.X_AXIS; }
+	},
+	Y: {
+		getVector: function(){ return toxi.Vec2D.Y_AXIS; }
 	}
-}
-toxi.Axis.X = toxi.Vec2D.X_AXIS; 
-toxi.Axis.Y = toxi.Vec2D.Y_AXIS;
+};

@@ -54,8 +54,34 @@ COMMON_FILES = [
 	'core/geom/Line3D.js',
 	'core/geom/Ray2D.js',
 	'core/geom/IsectData2D.js',
+]
+
+COLOR_FILES = [
 	'color/toxi-color.js',
 	'color/TColor.js'
+]
+
+
+PHYSICS2D_FILES = [
+	'physics/physics2d/physics2d.js',
+	'physics/physics2d/VerletParticle2D.js',
+	'physics/physics2d/VerletSpring2D.js',
+	'physics/physics2d/behaviors/AttractionBehavior.js',
+	'physics/physics2d/behaviors/ConstantForceBehavior.js',
+	'physics/physics2d/behaviors/GravityBehavior.js',
+	'physics/physics2d/constraints/AngularConstraint.js',
+	'physics/physics2d/constraints/AxisConstraint.js',
+	'physics/physics2d/constraints/CircularConstraint.js',
+	'physics/physics2d/constraints/MaxConstraint.js',
+	'physics/physics2d/constraints/MinConstraint.js',
+	'physics/physics2d/constraints/RectConstraint.js',
+	'physics/physics2d/ParticlePath2D.js',
+	'physics/physics2d/ParticleString2D.js',
+	'physics/physics2d/PullBackString2D.js',
+	'physics/physics2d/VerletConstrainedSpring2D.js',
+	'physics/physics2d/VerletMinDistanceSpring2D.js',
+	'physics/physics2d/VerletPhysics2D.js'
+
 ]
 
 
@@ -144,6 +170,9 @@ def parse_args():
 	if ap:
 		parser = argparse.ArgumentParser(description='Build and compress toxiclibs.js')
 		parser.add_argument('--includes', help='Build includes.js', action='store_true')
+		parser.add_argument('--physics2d', help='Build toxi-physics2d.js', action='store_true')
+		parser.add_argument('--core', help='Build toxi-core.js', action='store_true')
+		parser.add_argument('--color', help='Build toxi-color.js', action='store_true')
 		parser.add_argument('--common', help='Build toxiclibs.js', action='store_const', const=True)
 		parser.add_argument('--debug', help='Generate debug versions', action='store_const', const=True, default=False)
 		parser.add_argument('--all', help='Build all Toxiclibs.js versions', action='store_true')
@@ -153,6 +182,9 @@ def parse_args():
 	else:
 		parser = optparse.OptionParser(description='Build and compress Three.js')
 		parser.add_option('--includes', dest='includes', help='Build includes.js', action='store_true')
+		parser.add_option('--physics2d', dest='physics2d', help='Build toxi-physics2d.js', action='store_true')
+		parser.add_option('--core', dest='core', help='Build toxi-core.js', action='store_true')
+		parser.add_option('--color', dest='color', help='Build toxi-color.js', action='store_true')
 		parser.add_option('--common', dest='common', help='Build toxiclibs.js', action='store_const', const=True)
 		parser.add_option('--debug', dest='debug', help='Generate debug versions', action='store_const', const=True, default=False)
 		parser.add_option('--all', dest='all', help='Build all Toxiclibs.js versions', action='store_true')
@@ -173,7 +205,10 @@ def main(argv=None):
 	debug = args.debug
 
 	config = [
-	['toxiclibs', 	  	'includes_common', COMMON_FILES, args.common]
+		['toxiclibs','common', COMMON_FILES + COLOR_FILES + PHYSICS2D_FILES, args.common],
+		['toxi-core','core', COMMON_FILES, args.core],
+		['toxi-color','color', COLOR_FILES, args.cologitr],
+		['toxi-physics2d','physics2d', PHYSICS2D_FILES, args.physics2d]
 	]
 
 	for fname_lib, fname_inc, files, enabled in config:

@@ -1,13 +1,3 @@
-toxi.physics2d = toxi.physics2d || {};
-
-toxi.physics2d.removeItemFrom = function(item,array){
-	var index = array.indexOf(item);
-	if(index > -1){
-		return array.splice(index,1);
-	}
-	return undefined;
-}
-
 toxi.physics2d.VerletPhysics2D = function(gravity, numIterations, drag, timeStep){
 	this.behaviors = [];
 	this.particles = [];
@@ -194,7 +184,7 @@ toxi.physics2d.VerletPhysics2D.prototype = {
 		for(i = this.numIterations; i > 0; i--){
 			for(j = 0;j<this.springs.length;j++){
 				var s = this.springs[j];
-				//s.update(i === 1);
+				s.update(i === 1);
 			}
 		}
 	}

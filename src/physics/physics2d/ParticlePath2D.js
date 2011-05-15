@@ -1,5 +1,5 @@
 toxi.physics2d.ParticlePath2D = function(points){
-	this.initSpline2D(points);
+	toxi.Spline2D.call(this,points);
 	this.particles = [];
 };
 toxi.extend(toxi.physics2d.ParticlePath2D,toxi.Spline2D);
@@ -16,7 +16,7 @@ toxi.extend(toxi.physics2d.ParticlePath2D,toxi.Spline2D);
 		this.computeVertices(subDiv);
 		var i = 0;
 		var dv = this.getDecimatedVertices(step,true);
-		for(i = 0; i < dv){
+		for(i = 0; i < dv; i++){
 			var p = this.createSingleParticle(v,mass);
 			this.particles.push(p);
 			physics.addParticle(p);

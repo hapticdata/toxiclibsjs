@@ -2,11 +2,10 @@ toxi.physics2d.AttractionBehavior = function(attractor,radius,strength,jitter){
 	if(arguments.length < 3){
 		throw { name: "IncorrectParameters", message: "Constructor received incorrect Parameters"};
 	}
-	jitter == (jitter === undefined) ? 0 : jitter;
-	
+	this.jitter = jitter || 0;	
 	this.attractor = attractor;
 	this.strength = strength;
-	this.jitter = jitter;
+
 	this.setRadius(radius);
 };
 

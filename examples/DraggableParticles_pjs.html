@@ -2,17 +2,10 @@
 
 <html lang="en">
 <head>
-	<title>Attration 2D - toxiclibs.js examples</title>
+	<title>Draggable Particles - toxiclibs.js examples</title>
 	<meta name="author" content="Kyle Phillips">
 	<!-- Date: 2011-01-09 -->
 	<script type="text/javascript" src="../build/toxiclibs.js"></script>
-	<script type="text/javascript" src="../src/core/geom/Rect.js"></script>
-	<script type="text/javascript" src="../src/physics/physics2d/VerletPhysics2D.js"></script>
-	<script type="text/javascript" src="../src/physics/physics2d/VerletParticle2D.js"></script>
-	<script type="text/javascript" src="../src/physics/physics2d/VerletSpring2D.js"></script>
-	<script type="text/javascript" src="../src/physics/physics2d/behaviors/AttractionBehavior.js"></script>
-	<script type="text/javascript" src="../src/physics/physics2d/behaviors/ConstantForceBehavior.js"></script>
-	<script type="text/javascript" src="../src/physics/physics2d/behaviors/GravityBehavior.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 	<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
 	<script>
@@ -59,23 +52,12 @@
 <body class="container_12">
 	<header class="grid_12">
 		<hgroup>
-			<h1>Attraction 2D</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a>
+			<h1>Draggable Particles</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a>
 		</hgroup>
 	</header>
 <script type="application/processing">
 
-/**
- * <p>This example demonstrates how to use the behavior handling
- * (new since toxiclibs-0020 release) and specifically the attraction
- * behavior to create forces around the current locations of particles
- * in order to attract (or deflect) other particles nearby.</p>
- *
- * <p>Behaviors can be added and removed dynamically on both a
- * global level (for the entire physics simulation) as well as for
- * individual particles only.</p>
- * 
- * <p>Usage: Click and drag mouse to attract particles</p>
- */
+
 
 /* 
  * Copyright (c) 2010 Karsten Schmidt
@@ -96,70 +78,77 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
- 
+
 import toxi.geom.*;
 import toxi.physics2d.*;
-import toxi.physics2d.behaviors.*;
-
-int NUM_PARTICLES = 350;
 
 VerletPhysics2D physics;
-AttractionBehavior mouseAttractor;
+VerletParticle2D selected=null;
 
-Vec2D mousePos;
+// squared snap distance for picking particles
+float snapDist=10*10;
 
 void setup() {
-  size(680, 382);
-  // setup physics with 10% drag
-  physics = new toxi.physics2d.VerletPhysics2D();
-  physics.setDrag(0.05);
-  physics.setWorldBounds(new toxi.Rect(0, 0, width, height));
-  // the NEW way to add gravity to the simulation, using behaviors
-  physics.addBehavior(new toxi.physics2d.GravityBehavior(new toxi.Vec2D(0, 0.15)));
-}
-
-void addParticle() {
- Vec2D randLoc = toxi.Vec2D.randomVector().scale(5).addSelf(width / 2, 0);
-  VerletParticle2D p = new toxi.physics2d.VerletParticle2D(randLoc);
-  physics.addParticle(p);
-  // add a negative attraction force field around the new particle
-  physics.addBehavior(new toxi.physics2d.AttractionBehavior(p, 20, -1.2, 0.01));
+  size(600,600);
+  physics=new toxi.physics2d.VerletPhysics2D();
+  physics.setWorldBounds(new toxi.Rect(0,0,width,height));
+  // create 10 particle strings of 20 particles each
+  for(int i=0; i<10; i++) {
+    ParticleString2D s = new toxi.physics2d.ParticleString2D(physics,new toxi.Vec2D(width/2,height/2),toxi.Vec2D.fromTheta(i*0.1*TWO_PI).scaleSelf(10),20,1,0.5);
+  }
 }
 
 void draw() {
-  background(255,0,0);
-  noStroke();
-  fill(255);
-  if (physics.particles.length < NUM_PARTICLES) {
-    addParticle();
-  }
+  background(245);
+  noFill();
   physics.update();
-  for (int i=0;i<physics.particles.length;i++) {
-  	VerletParticle2D p = physics.particles[i];
-    ellipse(p.x, p.y, 5, 5);
+  // draw all springs
+  int springLen = physics.springs.length;
+  for(int i =0;i < springLen; i++) {
+    VerletSpring2D s = physics.springs[i];
+    line(s.a.x,s.a.y,s.b.x,s.b.y);
   }
- 
-  
+  // draw all particles
+  int partLen = physics.particles.length;
+  for(int i = 0;i<partLen; i++) {
+    VerletParticle2D p= physics.particles[i];
+    // selected particle in cyan, all others in black
+    stroke(p==selected ? 0xff00ffff : 0xff000000);
+    ellipse(p.x,p.y,5,5);
+  }
 }
 
+// check all particles if mouse pos is less than snap distance
 void mousePressed() {
-  addParticle();
-  mousePos = new toxi.Vec2D(mouseX, mouseY);
-  // create a new positive attraction force field around the mouse position (radius=250px)
-  mouseAttractor = new toxi.physics2d.AttractionBehavior(mousePos, 250, 0.9);
-  physics.addBehavior(mouseAttractor);
+  selected=null;
+  Vec2D mousePos=new toxi.Vec2D(mouseX,mouseY);
+  int partLen = physics.particles.length;
+  for(int i = 0;i<partLen;i++) {
+    VerletParticle2D p= physics.particles[i];
+    // if mouse is close enough, keep a reference to
+    // the selected particle and lock it (becomes unmovable by physics)
+    if (p.distanceToSquared(mousePos)<snapDist) {
+      selected=p;
+      selected.lock();
+      break;
+    }
+  }
 }
 
+// only react to mouse dragging events if we have a selected particle
 void mouseDragged() {
-  // update mouse attraction focal point
-  mousePos.set(mouseX, mouseY);
+  if (selected!=null) {
+    selected.set(mouseX,mouseY);
+  }
 }
 
+// if we had a selected particle unlock it again and kill reference
 void mouseReleased() {
-  // remove the mouse attraction when button has been released
-  physics.removeBehavior(mouseAttractor);
+  if (selected!=null) {
+    selected.unlock();
+    selected=null;
+  }
 }
-
 
 </script>
 
@@ -173,17 +162,16 @@ void mouseReleased() {
 </aside>
 <aside id="usage" class="grid_6">
 	 <p><strong>Usage:</strong><br><ul>
-	 <li>Click and drag mouse to attract particles</li>
+	 <li>Click and drag the particles</li>
 	</ul></p>
 </aside>
 <article id="description" class="grid_12">
-<p>This example demonstrates how to use the behavior handling
-(new since toxiclibs-0020 release) and specifically the attraction
-behavior to create forces around the current locations of particles
-in order to attract (or deflect) other particles nearby.</p>
-<p>Behaviors can be added and removed dynamically on both a
-global level (for the entire physics simulation) as well as for
-individual particles only.</p>
+<p>Draggable particle demo showing how to handle mouse events on
+particles and allow them to be dragged around with the mouse.
+ <p>See original discussion at:
+ http://processing.org/discourse/yabb2/YaBB.pl?num=1266335586
+ </p>
+</p>
  </article>
 </section>
 </body>

@@ -1,5 +1,5 @@
 toxi.physics2d.VerletMinDistanceSpring2D = function(particleA,particleB,len,str){
-	this.initVerletSpring2D(particleA,particleB,len,str);
+	toxi.physics2d.VerletSpring2D.call(this,particleA,particleB,len,str);
 	this.setRestLength(len);
 };
 

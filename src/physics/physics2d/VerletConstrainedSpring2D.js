@@ -1,5 +1,5 @@
 toxi.physics2d.VerletConstrainedSpring2D = function(particleA, particleB, len, str, limit){
-	this.initVerletSpring2D(particleA,particleB,len,str);
+	toxi.physics2d.VerletSpring2D.call(this,particleA,particleB,len,str);
 	this.limit = (limit === undefined) ? Number.MAX_VALUE : limit;
 };
 

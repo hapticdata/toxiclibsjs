@@ -1,7 +1,4 @@
 toxi.physics2d.VerletSpring2D = function(a,b,len,str){
-	if(arguments.length < 4){
-		throw new Error("Incorrect Parameters, toxi.physics2d.VerletSpring2D requires 2 VerletParticle2D's, restLength and strength");
-	}
 	this.a = a;
 	this.b = b;
 	this.restLength = len;
@@ -43,9 +40,8 @@ toxi.physics2d.VerletSpring2D.prototype = {
 	update: function(applyConstraints){ //protected
 		var delta = this.b.sub(this.a);
 		//add minute offset to avoid div-by-zero errors
-		var dist = delta.magnitude() + toxi.physics2D.EPS;
-		var normDistStrength = 
-			(dist - this.restLength) / (dist * (this.a.invWeight + this.b.invWeight)) * strength;
+		var dist = delta.magnitude() + toxi.physics2d.VerletSpring2D.EPS;
+		var normDistStrength = (dist - this.restLength) / (dist * (this.a.invWeight + this.b.invWeight)) * this.strength;
 		if(!this.a.isLocked && !this.isALocked){
 			this.a.addSelf(
 				delta.scale(normDistStrength * this.a.invWeight)
