@@ -52,8 +52,7 @@ COMMON_FILES = [
 	'core/geom/YAxisCylinder.js',
 	'core/geom/ZAxisCylinder.js',
 	'core/geom/Line3D.js',
-	'core/geom/Ray2D.js',
-	'core/geom/IsectData2D.js',
+	'core/geom/Ray2D.js'
 ]
 
 COLOR_FILES = [
@@ -81,7 +80,6 @@ PHYSICS2D_FILES = [
 	'physics/physics2d/VerletConstrainedSpring2D.js',
 	'physics/physics2d/VerletMinDistanceSpring2D.js',
 	'physics/physics2d/VerletPhysics2D.js'
-
 ]
 
 

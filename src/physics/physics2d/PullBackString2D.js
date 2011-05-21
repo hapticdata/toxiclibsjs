@@ -6,7 +6,7 @@
  */
  
  toxi.physics2d.PullBackString2D = function(a,b,strength){
- 	toxi.physics2d.VerletSpring2D.call(this,a,b,strength);
+ 	toxi.physics2d.VerletSpring2D.call(this,a,b,0,strength);
  	a.lock();
  	this.setRestLength(0.5);
  };

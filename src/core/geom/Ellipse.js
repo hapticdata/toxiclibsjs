@@ -3,7 +3,44 @@
  */
 
 toxi.Ellipse = function(a,b,c,d) {
-	this.ellipseInit(a,b,c,d);
+	this.radius = new toxi.Vec2D();
+	if(arguments.length == 0){
+		this.parent.init.call(this,0,0);
+		this.setRadii(1,1);
+	}
+	else if(a instanceof toxi.Vec2D)
+	{
+		this.parent.init.call(this,a.x,a.y);
+		if(b instanceof toxi.Vec2D)
+		{
+			this.setRadii(b.x,b.y);
+		}
+		else
+		{
+			this.setRadii(b,b);
+		}
+	}
+	else
+	{
+		if(d === undefined)
+		{
+			if(c === undefined)
+			{
+				this.parent.init.call(this,0,0);
+				this.setRadii(a,b);
+			}
+			else
+			{
+				this.parent.init.call(this,a,b);
+				this.setRadii(c,c);
+			}
+		}
+		else
+		{
+			this.parent.init.call(this,a,b);
+			this.setRadii(c,d);
+		}
+	}
 }
 
  
@@ -64,50 +101,6 @@ toxi.Ellipse.prototype.getFoci = function() {
 toxi.Ellipse.prototype.getRadii = function() {
     return this.radius.copy();
 }
-
-
-toxi.Ellipse.prototype.ellipseInit = function(a,b,c,d){
-	this.radius = new toxi.Vec2D();
-	if(a === undefined){
-		this.parent.init.call(this,0,0);
-		this.setRadii(1,1);
-	}
-	else if(a instanceof toxi.Vec2D)
-	{
-		this.parent.init.call(this,a.x,a.y);
-		if(b instanceof toxi.Vec2D)
-		{
-			this.setRadii(b.x,b.y);
-		}
-		else
-		{
-			this.setRadii(b,b);
-		}
-	}
-	else
-	{
-		if(d === undefined)
-		{
-			if(c === undefined)
-			{
-				this.parent.init.call(this,0,0);
-				this.setRadii(a,b);
-			}
-			else
-			{
-				this.parent.init.call(this,a,b);
-				this.setRadii(c,c);
-			}
-		}
-		else
-		{
-			this.parent.init.call(this,a,b);
-			this.setRadii(c,d);
-		}
-	}
-	return this;
-}
-
 
 
 /**

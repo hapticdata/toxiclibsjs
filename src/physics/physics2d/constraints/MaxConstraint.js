@@ -3,7 +3,7 @@ toxi.physics2d.MaxConstraint = function(axis,threshold){
 	this.threshold = threshold;	
 };
 
-toxi.physics2d.MaxConstraint.prototype.apply = function(p){
+toxi.physics2d.MaxConstraint.prototype.applyConstraint = function(p){
 	if(p.getComponent(this.axis) > this.threshold){
 		p.setComponent(this.axis,this.threshold);
 	}

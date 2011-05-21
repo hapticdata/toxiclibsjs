@@ -5,13 +5,29 @@
  */
  
 toxi.Circle = function(a,b,c) {
-	this.circleInit(a,b,c);
-}
+	if(arguments.length == 1)
+	{
+		if(a instanceof toxi.Circle)
+		{
+			toxi.Ellipse.apply(this,[a,a.radius.x]);
+		}
+		else
+		{
+			toxi.Ellipse.apply(this,[0,0,a]);
+		}
+	}
+	else if(arguments.length == 2)
+	{
+		toxi.Ellipse.apply(this,[a,b]);
+	}
+	else
+	{
+		toxi.Ellipse.apply(this,[a,b,c,c]);
+	}
+};
 
 
-toxi.Circle.prototype = new toxi.Ellipse();
-toxi.Circle.prototype.constructor = toxi.Circle;
-toxi.Circle.prototype.parent = toxi.Ellipse.prototype;
+toxi.extend(toxi.Circle,toxi.Ellipse);
 
 
 
@@ -87,32 +103,6 @@ toxi.Circle.prototype.getTangentPoints = function(p) {
     return this.intersectsCircle(new toxi.Circle(m, m.distanceTo(p)));
 }
 
-toxi.Circle.prototype.circleInit = function(a,b,c){
-	if(b === undefined)
-	{
-		if(a instanceof toxi.Circle)
-		{
-			this.parent.ellipseInit.call(this,a,a.radius.x);
-		}
-		else
-		{
-			this.parent.ellipseInit.call(this,0,0,a);
-		}
-	}
-	else
-	{
-		if(c === undefined)
-		{
-			this.parent.ellipseInit.call(this,a,b);
-		}
-		else
-		{
-			this.parent.ellipseInit.call(this,a,b,c,c);
-		}
-	
-	}
-	return this;
-}
 
 toxi.Circle.prototype.intersectsCircle = function(c) {
     var res = null;
