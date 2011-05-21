@@ -178,7 +178,7 @@ def parse_args():
 		args = parser.parse_args()
 
 	else:
-		parser = optparse.OptionParser(description='Build and compress Three.js')
+		parser = optparse.OptionParser(description='Build and compress toxiclibs.js')
 		parser.add_option('--includes', dest='includes', help='Build includes.js', action='store_true')
 		parser.add_option('--physics2d', dest='physics2d', help='Build toxi-physics2d.js', action='store_true')
 		parser.add_option('--core', dest='core', help='Build toxi-core.js', action='store_true')
