@@ -1,9 +1,19 @@
-Toxiclibs.js is a javascript port of Karsten Schmidt's Toxiclibs for Java and Processing. Toxiclibs.js works great with the Processing.js visualization library for <canvas> but is not dependent on it. It can be used with other libraries such as Raphael.js, Three.js or by itself.
+[Toxiclibs.js](http://haptic-data.com/toxiclibsjs) is a javascript port of [Karsten Schmidt's Toxiclibs](http://toxiclibs.org) for Java and Processing. Toxiclibs.js works great with the Processing.js visualization library for <canvas> but is not dependent on it. It can be used with any other library or by itself.
 
 
 
-* Examples of toxiclibs.js can be found at [http://haptic-data.com/toxiclibsjs](http://haptic-data.com/toxiclibsjs)
+* Examples of toxiclibs.js can be found at [http://haptic-data.com/toxiclibsjs](http://haptic-data.com/toxiclibsjs), and are included in the examples/ folder of the repository.
 * Examples of the original library can be found at [http://toxiclibs.org](http://toxiclibs.org)
+
+
+### A few examples ###
+[![additive_waves](http://haptic-data.com/toxiclibsjs/img/additive_waves.jpg)](http://haptic-data.com/toxiclibsjs/examples/AdditiveWaves_pjs-webgl.html)
+[![smooth_doodle](http://haptic-data.com/toxiclibsjs/img/smooth_doodle.gif)](http://haptic-data.com/toxiclibsjs/examples/SmoothDoodle_canvas.html)
+[![polar_unravel](http://haptic-data.com/toxiclibsjs/img/img/polar_unravel.gif)](http://haptic-data.com/toxiclibsjs/examples/PolarUnravel_pjs.html)
+[![circle_3_points](http://haptic-data.com/toxiclibsjs/img/circle_3_points.gif)](http://haptic-data.com/toxiclibsjs/examples/Circle3Points_pjs.html)
+[![line2d_intersection](http://haptic-data.com/toxiclibsjs/img/line2d_intersection.gif)](http://haptic-data.com/toxiclibsjs/examples/Line2DIntersection_pjs.html)
+
+
 
 
 classes currently in the toxiclibs.js compiled build:
@@ -65,6 +75,26 @@ Math (toxi. namespace)
 Color (toxi.color. namespace)
 
 * TColor
+
+VerletPhysics2D (toxi.physics2d namespace)
+
+* 	VerletParticle2D
+*	VerletSpring2D
+*	AttractionBehavior
+*	ConstantForceBehavior
+*	GravityBehavior
+*	AngularConstraint
+*	AxisConstraint
+*	CircularConstraint
+*	MaxConstraint
+*	MinConstraint
+*	RectConstraint
+*	ParticlePath2D
+*	ParticleString2D
+*	PullBackString2D
+*	VerletConstrainedSpring2D
+*	VerletMinDistanceSpring2D
+*	VerletPhysics2D
 
 
 

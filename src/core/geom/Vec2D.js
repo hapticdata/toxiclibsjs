@@ -12,7 +12,18 @@ toxi.Vec2D = function(a,b){
 	this.init(a,b);
 
 }
-	
+
+toxi.Vec2D.Axis = {
+	X: {
+		getVector: function(){ return toxi.Vec2D.X_AXIS; },
+		toString: function(){ return "toxi.Vec2D.Axis.X"; }
+	},
+	Y: {
+		getVector: function(){ return toxi.Vec2D.Y_AXIS; },
+		toString: function(){ return "toxi.Vec2D.Axis.Y"; }
+	}
+};
+
 toxi.Vec2D.prototype = {
 
 	abs: function() {
@@ -165,22 +176,16 @@ toxi.Vec2D.prototype = {
     },
 
 	getComponent: function(id) {
-		if(id instanceof Number)
-		{
-			switch(id) {
-				case 0:
-				 id = toxi.Vec2D.Axis.X;
-				case 1:
-				id = toxi.Vec2D.Axis.Y;
-			}
+		if(typeof id == 'number')
+		{			
+			id = (id == 0) ? toxi.Vec2D.Axis.X : toxi.Vec2D.Axis.Y;
 		}
-        switch (id) {
-            case toxi.Vec2D.Axis.X:
-                return this.x;
-            case toxi.Vec2D.Axis.Y:
-                return this.y;
-        }
-        return 0;
+		if(id == toxi.Vec2D.Axis.X){
+			return this.x;
+		} else if(id == toxi.Vec2D.Axis.Y){
+			return this.y;
+		}
+		return 0;
     },
 
 	getConstrained: function(r) {
@@ -510,13 +515,10 @@ toxi.Vec2D.prototype = {
 	},
 	
 	setComponent: function(id, val) {
-		switch (id) {
-		case toxi.Vec2D.Axis.X:
+		if(id === toxi.Vec2D.Axis.X){
 			this.x = val;
-			break;
-		case toxi.Vec2D.Axis.Y:
+		} else if(id === toxi.Vec2D.Axis.Y){
 			this.y = val;
-			break;
 		}
 		return this;
 	},
@@ -612,14 +614,3 @@ toxi.Vec2D.randomVector = function(rnd){
 	var v = new toxi.Vec2D(Math.random()*2 - 1, Math.random() * 2 - 1);
 	return v.normalize();
 }
-
-
-
-toxi.Vec2D.Axis = {
-	X: {
-		getVector: function(){ return toxi.Vec2D.X_AXIS; }
-	},
-	Y: {
-		getVector: function(){ return toxi.Vec2D.Y_AXIS; }
-	}
-};

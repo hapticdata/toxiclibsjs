@@ -1,9 +1,9 @@
 toxi.physics2d.MinConstraint = function(axis,threshold){
 	this.axis = axis;
-	this.threshold = threhold;
+	this.threshold = threshold;
 };
 
-toxi.physics2d.MinConstraint.prototype.apply = function(p){
+toxi.physics2d.MinConstraint.prototype.applyConstraint = function(p){
 	if(p.getComponent(this.axis) < this.threshold){
 		p.setComponent(this.axis, this.threshold);
 	}

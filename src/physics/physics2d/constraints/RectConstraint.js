@@ -1,14 +1,14 @@
 toxi.physics2d.RectConstraint = function(a,b){
 	if(arguments.length == 1){
 		this.rect = a.copy();
-	} else if(arguments.lengt > 1){
+	} else if(arguments.length > 1){
 		this.rect = new toxi.Rect(a,b);
 	}
 	this.intersectRay = new toxi.Ray2D(this.rect.getCentroid(), new toxi.Vec2D());
 };
 
 toxi.physics2d.RectConstraint.prototype = {
-	apply: function(p){
+	applyConstraint: function(p){
 		if(this.rect.containsPoint(p)){
 			p.set(this.rect.intersectsRay(this.intersectRay.setDirection(this.intersectRay.sub(p)),0,Number.MAX_VALUE));
 		}

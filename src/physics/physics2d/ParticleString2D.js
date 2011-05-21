@@ -25,7 +25,7 @@
 	 		p = this.particles[i];
 	 		this.physics.addParticle(p);
 	 		if(prev !== undefined){
-	 			s = this.createSpring(prev,p,prev.distanceTo(p),stregnth_step);
+	 			s = this.createSpring(prev,p,prev.distanceTo(p),strength_step);
 	 			this.links.push(s);
 	 			this.physics.addSpring(s);	
 	 		}
@@ -53,7 +53,17 @@
  	}
  };
  
- /**
+
+     
+toxi.physics2d.ParticleString2D.prototype = {
+	clear: function(){
+		for(var i = 0, len = this.links.length; i < len; i++){
+			this.physics.removeSpringElements(s);
+		}
+		this.particles.clear();
+		this.links.clear();
+	},
+	 /**
      * Creates a number of particles along a line and connects them into a
      * string using springs.
      * 
@@ -70,16 +80,6 @@
      * @param strength
      *            spring strength
      */
-     
-toxi.physics2d.ParticleString2D.prototype = {
-	clear: function(){
-		for(var i = 0, len = this.links.length; i < len; i++){
-			this.physics.removeSpringElements(s);
-		}
-		this.particles.clear();
-		this.links.clear();
-	},
-	
 	createSpring: function(a,b,len,strength){
 		return new toxi.physics2d.VerletSpring2D(a,b,len,strength);
 	},

@@ -52,8 +52,7 @@ COMMON_FILES = [
 	'core/geom/YAxisCylinder.js',
 	'core/geom/ZAxisCylinder.js',
 	'core/geom/Line3D.js',
-	'core/geom/Ray2D.js',
-	'core/geom/IsectData2D.js',
+	'core/geom/Ray2D.js'
 ]
 
 COLOR_FILES = [
@@ -81,7 +80,6 @@ PHYSICS2D_FILES = [
 	'physics/physics2d/VerletConstrainedSpring2D.js',
 	'physics/physics2d/VerletMinDistanceSpring2D.js',
 	'physics/physics2d/VerletPhysics2D.js'
-
 ]
 
 
@@ -207,7 +205,7 @@ def main(argv=None):
 	config = [
 		['toxiclibs','common', COMMON_FILES + COLOR_FILES + PHYSICS2D_FILES, args.common],
 		['toxi-core','core', COMMON_FILES, args.core],
-		['toxi-color','color', COLOR_FILES, args.cologitr],
+		['toxi-color','color', COLOR_FILES, args.color],
 		['toxi-physics2d','physics2d', PHYSICS2D_FILES, args.physics2d]
 	]
 
