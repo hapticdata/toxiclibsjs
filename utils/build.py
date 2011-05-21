@@ -180,7 +180,7 @@ def parse_args():
 		args = parser.parse_args()
 
 	else:
-		parser = optparse.OptionParser(description='Build and compress Three.js')
+		parser = optparse.OptionParser(description='Build and compress toxiclibs.js')
 		parser.add_option('--includes', dest='includes', help='Build includes.js', action='store_true')
 		parser.add_option('--physics2d', dest='physics2d', help='Build toxi-physics2d.js', action='store_true')
 		parser.add_option('--core', dest='core', help='Build toxi-core.js', action='store_true')
@@ -207,7 +207,7 @@ def main(argv=None):
 	config = [
 		['toxiclibs','common', COMMON_FILES + COLOR_FILES + PHYSICS2D_FILES, args.common],
 		['toxi-core','core', COMMON_FILES, args.core],
-		['toxi-color','color', COLOR_FILES, args.cologitr],
+		['toxi-color','color', COLOR_FILES, args.color],
 		['toxi-physics2d','physics2d', PHYSICS2D_FILES, args.physics2d]
 	]
 

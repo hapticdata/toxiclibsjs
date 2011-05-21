@@ -502,11 +502,17 @@ toxi.color.TColor.prototype = {
 	},
 	
 	toHex: function() {
-	    var hex = this.toARGB().toString(16);
-	    if (hex.length > 6) {
-	        hex = hex.substring(2);
-	    }
-	    return hex;
+        var hexes = "",
+            d;
+        for (var i = 0; i < 3; i++) {
+            d = parseInt(this.rgb[i] * 255).toString(16);
+            if (d.length == 1) {
+                hexes += "0" + d;
+            } else {
+                hexes += d;
+            }
+        }
+        return hexes;
 	},
 	
 	toHSVAArray: function(hsva) {
