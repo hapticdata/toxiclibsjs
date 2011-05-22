@@ -9,9 +9,12 @@
 ### A few examples ###
 [![additive_waves](http://haptic-data.com/toxiclibsjs/img/additive_waves.jpg)](http://haptic-data.com/toxiclibsjs/examples/AdditiveWaves_pjs-webgl.html)
 [![smooth_doodle](http://haptic-data.com/toxiclibsjs/img/smooth_doodle.gif)](http://haptic-data.com/toxiclibsjs/examples/SmoothDoodle_canvas.html)
-[![polar_unravel](http://haptic-data.com/toxiclibsjs/img/img/polar_unravel.gif)](http://haptic-data.com/toxiclibsjs/examples/PolarUnravel_pjs.html)
+[![polar_unravel](http://haptic-data.com/toxiclibsjs/img/polar_unravel.gif)](http://haptic-data.com/toxiclibsjs/examples/PolarUnravel_pjs.html)
 [![circle_3_points](http://haptic-data.com/toxiclibsjs/img/circle_3_points.gif)](http://haptic-data.com/toxiclibsjs/examples/Circle3Points_pjs.html)
 [![line2d_intersection](http://haptic-data.com/toxiclibsjs/img/line2d_intersection.gif)](http://haptic-data.com/toxiclibsjs/examples/Line2DIntersection_pjs.html)
+[![attraction2d](http://haptic-data.com/toxiclibsjs/img/physics2d_attraction2d.gif)](http://haptic-data.com/toxiclibsjs/examples/Attraction2D_pjs.html)
+[![draggable_particles](http://haptic-data.com/toxiclibsjs/img/physics2d_draggableparticles.gif)](http://haptic-data.com/toxiclibsjs/examples/DraggableParticles_pjs.html)
+[![softbody_square](http://haptic-data.com/toxiclibsjs/img/physics2d_softbodysquare.gif)](http://haptic-data.com/toxiclibsjs/examples/SoftBodySquare_pjs.html)
 
 
 
