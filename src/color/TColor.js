@@ -119,7 +119,7 @@ toxi.color.TColor.prototype = {
 	    this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
 	    this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
 	    this.rgb[2] += (crgb[2] - this.rgb[2]) * t;
-	    this._alpha += (c.alpha - this._alpha) * t;
+	    this._alpha += (c.alpha() - this._alpha) * t;
 	    return this.setRGB(this.rgb);
 	},
 	
@@ -199,7 +199,7 @@ toxi.color.TColor.prototype = {
 	        var dr = c.rgb[0] - rgb[0];
 	        var dg = c.rgb[1] - rgb[1];
 	        var db = c.rgb[2] - rgb[2];
-	        var da = c.alpha - alpha;
+	        var da = c.alpha() - this._alpha;
 	        var d = Math.sqrt(dr * dr + dg * dg + db * db + da * da);
 	        return d < toxi.color.TColor.EPS;
 	    }
@@ -776,7 +776,7 @@ toxi.color.TColor.newCMYK = function(c, m, y, k) {
 toxi.color.TColor.newCMYKA = function(c, m, y, k, a) {
     var col = new TColor();
     col.setCMYK([c, m, y, k ]);
-    col.alpha = toxi.MathUtils.clip(a, 0, 1);
+    col.setAlpha(toxi.MathUtils.clip(a, 0, 1));
     return col;
 }
 
@@ -793,7 +793,7 @@ toxi.color.TColor.newGray = function(gray) {
 toxi.color.TColor.newGrayAlpha = function(gray, alpha) {
     var c = new toxi.color.TColor();
     c.setRGB([gray, gray, gray ]);
-    c.alpha = alpha;
+    c.setAlpha(alpha);
     return c;
 }
 
@@ -806,7 +806,7 @@ toxi.color.TColor.newGrayAlpha = function(gray, alpha) {
 toxi.color.TColor.newHex = function(hexRGB) {
     var c = new toxi.color.TColor();
     c.setRGB(toxi.color.TColor.hexToRGB(hexRGB));
-    c.alpha = 1;
+    c.setAlpha(1);
     return c;
 }
 
@@ -826,7 +826,7 @@ toxi.color.TColor.newHSV = function(h, s, v) {
 toxi.color.TColor.newHSVA = function(h, s,v,a) {
     var c = new toxi.color.TColor();
     c.setHSV(h, s, v);
-    c.alpha = toxi.MathUtils.clip(a, 0, 1);
+    c.setAlpha(toxi.MathUtils.clip(a, 0, 1));
     return c;
 }
 
@@ -855,7 +855,7 @@ toxi.color.TColor.newRGB = function(r, g, b) {
 toxi.color.TColor.newRGBA = function( r, g, b, a) {
     var c = new toxi.color.TColor();
     c.setRGB([ r, g, b ]);
-    c.alpha = toxi.MathUtils.clip(a, 0, 1);
+    c.setAlpha(toxi.MathUtils.clip(a, 0, 1));
     return c;
 }
 

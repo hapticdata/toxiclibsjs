@@ -5,12 +5,12 @@
 toxi.Ellipse = function(a,b,c,d) {
 	this.radius = new toxi.Vec2D();
 	if(arguments.length == 0){
-		this.parent.init.call(this,0,0);
+		toxi.Vec2D.apply(this,[0,0]);
 		this.setRadii(1,1);
 	}
 	else if(a instanceof toxi.Vec2D)
 	{
-		this.parent.init.call(this,a.x,a.y);
+		toxi.Vec2D.apply(this,[a.x,a.y]);
 		if(b instanceof toxi.Vec2D)
 		{
 			this.setRadii(b.x,b.y);
@@ -26,31 +26,28 @@ toxi.Ellipse = function(a,b,c,d) {
 		{
 			if(c === undefined)
 			{
-				this.parent.init.call(this,0,0);
+				toxi.Vec2D.apply(this,[0,0]);
 				this.setRadii(a,b);
 			}
 			else
 			{
-				this.parent.init.call(this,a,b);
+				toxi.Vec2D.apply(this,[a,b]);
 				this.setRadii(c,c);
 			}
 		}
 		else
 		{
-			this.parent.init.call(this,a,b);
+			toxi.Vec2D.apply(this,[a,b]);
 			this.setRadii(c,d);
 		}
 	}
-}
+};
 
- 
-toxi.Ellipse.prototype = new toxi.Vec2D();
-toxi.Ellipse.prototype.constructor = toxi.Ellipse;
-toxi.Ellipse.prototype.parent = toxi.Vec2D.prototype;
+toxi.extend(toxi.Ellipse,toxi.Vec2D);
 
 toxi.Ellipse.prototype.containsPoint = function(p) {
     var foci = this.getFoci();
-    return p.distanceTo(foci[0]) + p.distanceTo(foci[1]) < 2 * MathUtils.max(this.radius.x, this.radius.y);
+    return p.distanceTo(foci[0]) + p.distanceTo(foci[1]) < 2 * toxi.MathUtils.max(this.radius.x, this.radius.y);
 }
 
 /**
@@ -59,7 +56,7 @@ toxi.Ellipse.prototype.containsPoint = function(p) {
  * @return area
  */
 toxi.Ellipse.prototype.getArea = function() {
-    return MathUtils.PI * radius.x * radius.y;
+    return toxi.MathUtils.PI * radius.x * radius.y;
 }
 
 /**
@@ -77,7 +74,7 @@ toxi.Ellipse.prototype.getCircumference = function() {
     // wikipedia solution:
     // return (float) (MathUtils.PI * (3 * (radius.x + radius.y) - Math
     // .sqrt((3 * radius.x + radius.y) * (radius.x + 3 * radius.y))));
-    return Math.sqrt(0.5 * this.radius.magSquared()) * MathUtils.TWO_PI;
+    return Math.sqrt(0.5 * this.radius.magSquared()) * toxi.MathUtils.TWO_PI;
 }
 
 /**
@@ -131,9 +128,10 @@ toxi.Ellipse.prototype.setRadii = function(rx,ry) {
  */
 toxi.Ellipse.prototype.toPolygon2D = function(res) {
     var poly = new toxi.Polygon2D();
-    var step = MathUtils.TWO_PI / res;
+    var step = toxi.MathUtils.TWO_PI / res;
     for (var i = 0; i < res; i++) {
-        poly.add(toxi.Vec2D.fromTheta(i * step).scaleSelf(this.radius).addSelf(this));
+    	var v = toxi.Vec2D.fromTheta(i * step).scaleSelf(this.radius).addSelf(this);
+        poly.add(v);
     }
     return poly;
 }
