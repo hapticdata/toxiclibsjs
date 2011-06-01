@@ -7,7 +7,16 @@
 		Java Version		: http://toxiclibs.org
 */
 
-
+//http://stackoverflow.com/questions/57803/how-to-convert-decimal-to-hex-in-javascript
+//TLDR: not as straightforward as i.toString(16)
+var dec2hex = function(i) {
+  var result = "0000";
+  if      (i >= 0    && i <= 15)    { result = "000" + i.toString(16); }
+  else if (i >= 16   && i <= 255)   { result = "00"  + i.toString(16); }
+  else if (i >= 256  && i <= 4095)  { result = "0"   + i.toString(16); }
+  else if (i >= 4096 && i <= 65535) { result =         i.toString(16); }
+  return result;
+}
 
 toxi.color.TColor = function(tcolor){
 	this.rgb = new Array(3);
@@ -196,9 +205,9 @@ toxi.color.TColor.prototype = {
 	equals: function(o) {
 	    if (o !== undefined && o instanceof toxi.color.TColor) {
 	        var c =  o;
-	        var dr = c.rgb[0] - rgb[0];
-	        var dg = c.rgb[1] - rgb[1];
-	        var db = c.rgb[2] - rgb[2];
+	        var dr = c.rgb[0] - this.rgb[0];
+	        var dg = c.rgb[1] - this.rgb[1];
+	        var db = c.rgb[2] - this.rgb[2];
 	        var da = c.alpha() - this._alpha;
 	        var d = Math.sqrt(dr * dr + dg * dg + db * db + da * da);
 	        return d < toxi.color.TColor.EPS;
@@ -338,7 +347,7 @@ toxi.color.TColor.prototype = {
 	    }
 
 	    this.hsv[0] = (h % 360) / 360.0;
-	    return this.setHSV(hsv);
+	    return this.setHSV(this.hsv);
 	
 	},
 	
@@ -502,17 +511,11 @@ toxi.color.TColor.prototype = {
 	},
 	
 	toHex: function() {
-        var hexes = "",
-            d;
-        for (var i = 0; i < 3; i++) {
-            d = parseInt(this.rgb[i] * 255).toString(16);
-            if (d.length == 1) {
-                hexes += "0" + d;
-            } else {
-                hexes += d;
-            }
-        }
-        return hexes;
+	    var hex = dec2hex(this.toARGB());
+	    if (hex.length > 6) {
+	        hex = hex.substring(2);
+	    }
+	    return hex;
 	},
 	
 	toHSVAArray: function(hsva) {
@@ -890,13 +893,13 @@ toxi.color.TColor.rgbToCMYK = function(r, g, b,cmyk) {
  * @param b
  * @return hex string
  */
-toxi.color.TColor.rgbToHex = function(r, g, b) {
-    var hex = (toxi.MathUtils.clip(r, 0, 1) * 0xff).toString(16) + 
-				(toxi.MathUtils.clip(g, 0, 1) * 0xff).toString(16) + 
-				(toxi.MathUtils.clip(b, 0, 1) * 0xff).toString(16);
+ toxi.color.TColor.rgbToHex = function(r, g, b) {
+     var hex = dec2hex(toxi.MathUtils.clip(r, 0, 1) * 0xff) + 
+ 				dec2hex(toxi.MathUtils.clip(g, 0, 1) * 0xff) + 
+ 				dec2hex(toxi.MathUtils.clip(b, 0, 1) * 0xff);
 
-    return hex;
-}
+     return hex;
+ }
 
 /**
  * Converts the RGB values into an HSV array.
