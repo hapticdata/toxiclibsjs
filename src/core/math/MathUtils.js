@@ -129,6 +129,10 @@ toxi.MathUtils.clipNormalized = function(a) {
 
 toxi.MathUtils.cos = Math.cos;
 
+toxi.MathUtils.degrees = function(radians) {
+    return radians * this.RAD2DEG;
+}
+
 /**
  * Fast cosine approximation.
  * 
