@@ -111,7 +111,7 @@ toxi.CosineInterpolation.prototype = {
 toxi.DecimatedInterpolation = function(steps,strategy) {
  if(steps === undefined)throw new Error("steps was not passed to constructor");
  this.numSteps = steps;
- this.strategy = (strategy==undefined)? new LinearInterpolation() : strategy;
+ this.strategy = (strategy===undefined)? new toxi.LinearInterpolation() : strategy;
 }
 
 toxi.DecimatedInterpolation.prototype = {	
