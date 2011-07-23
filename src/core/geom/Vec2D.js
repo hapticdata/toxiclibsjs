@@ -8,8 +8,17 @@
 */
 
 toxi.Vec2D = function(a,b){
-	//this.init = toxi.Vec2D.prototype.init;	
-	this.init(a,b);
+	if(a instanceof toxi.Vec2D)
+	{
+		b = a.y;
+		a = a.x;
+	}
+	else{
+		if(a === undefined)a = 0;
+		if(b === undefined)b = 0;
+	}
+	this.x = a;
+	this.y = b;
 
 }
 
@@ -260,21 +269,6 @@ toxi.Vec2D.prototype = {
         return Math.atan2(this.y, this.x);
     },
     
-    init: function(a,b){
-		if(a instanceof toxi.Vec2D)
-		{
-			b = a.y;
-			a = a.x;
-		}
-		else{
-			if(a === undefined)a = 0;
-			if(b === undefined)b = 0;
-		}
-		this.x = a;
-		this.y = b;
-	},
-
-
     interpolateTo: function(v, f, s) {
 		if(s === undefined){
         	return new toxi.Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);

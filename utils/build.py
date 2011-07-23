@@ -30,6 +30,7 @@ COMMON_FILES = [
 	'core/geom/CircleIntersector.js',
 	'core/geom/Line2D.js',
 	'core/geom/Triangle.js',
+	'core/geom/Triangle2D.js',
 	'core/geom/IsectData2D.js',
 	'core/geom/IsectData3D.js',
 	'core/geom/Matrix4x4.js',

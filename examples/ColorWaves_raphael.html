@@ -75,7 +75,7 @@
 			updateFor(event.touches[0].pageX,event.touches[0].pageY);
 		
 		},false);
-		
+
 		function updateFor(activeX,activeY)
 		{
 
@@ -91,8 +91,8 @@
 				var dy = y - box.y;
 				var distance = Math.sqrt((dx * dx) + (dy * dy));
 				var color = toxi.color.TColor.newHSV(distance/width,0.5,1.0);
-				//console.log(color.toString());
-				var rgba = "rgba("+(color.red()*255)+","+(color.green()*255)+","+(color.blue()*255)+","+color.alpha+")";
+
+				var rgba = "rgba("+(color.red()*255)+","+(color.green()*255)+","+(color.blue()*255)+","+color.alpha()+")";
 				circle.attr({"fill": rgba, "scale":distance*0.25});
 			}
 

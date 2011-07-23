@@ -1,7 +1,9 @@
 //expected to implement ParticleBehavior interface
 
 toxi.physics2d.ConstantForceBehavior = function(force){
-	this.initConstantForceBehavior(force);
+	this.force = force;
+	this.scaleForce = new toxi.Vec2D();
+	this.timeStep = 0;
 };
 
 toxi.physics2d.ConstantForceBehavior.prototype = {
@@ -18,11 +20,6 @@ toxi.physics2d.ConstantForceBehavior.prototype = {
 		return this.force;
 	},
 	
-	initConstantForceBehavior: function(force){
-		this.force = force;
-		this.scaleForce = new toxi.Vec2D();
-		this.timeStep = 0;
-	},
 	setForce: function(forceVec){
 		this.force = forceVec;
 		this.scaledForce = this.force.scale(this.timeStep);

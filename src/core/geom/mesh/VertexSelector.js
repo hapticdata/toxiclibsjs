@@ -1,12 +1,9 @@
 toxi.VertexSelector = function(mesh){
-	this.init(mesh);
-}
+	this.mesh = mesh;
+	this.selection = [];
+};
 
 toxi.VertexSelector.prototype = {
-	init: function(mesh){
-		this.mesh = mesh;
-		this.selection = [];
-	},
 	/**
      * Adds all vertices selected by the given selector to the current
      * selection. The other selector needs to be assigned to the same mesh

@@ -5,7 +5,6 @@ toxi.physics2d.AttractionBehavior = function(attractor,radius,strength,jitter){
 	this.jitter = jitter || 0;	
 	this.attractor = attractor;
 	this.strength = strength;
-
 	this.setRadius(radius);
 };
 

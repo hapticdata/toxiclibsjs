@@ -12,15 +12,11 @@ toxi.Ray3D = function(a,b,c,d){
 		o = new toxi.Vec3D();
 		dir = toxi.Vec3D.Y_AXIS.copy();
 	}
-	this.parent.init.call(this,o);
+	toxi.Vec3D.apply(this,[o]);
 	this.dir = dir;
 }
 
-toxi.Ray3D.prototype = new toxi.Vec3D();
-toxi.Ray3D.constructor = toxi.Ray3D;
-toxi.Ray3D.prototype.parent = toxi.Vec3D.prototype;
-
-
+toxi.extend(toxi.Ray3D,toxi.Vec3D);
 
  /**
  * Returns a copy of the ray's direction vector.
@@ -29,7 +25,7 @@ toxi.Ray3D.prototype.parent = toxi.Vec3D.prototype;
  */
 toxi.Ray3D.prototype.getDirection = function() {
     return this.dir.copy();
-}
+};
 
 /**
  * Calculates the distance between the given point and the infinite line
@@ -41,7 +37,7 @@ toxi.Ray3D.prototype.getDirection = function() {
 toxi.Ray3D.prototype.getDistanceToPoint = function(p) {
     var sp = p.sub(this);
     return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
-}
+};
 
 /**
  * Returns the point at the given distance on the ray. The distance can be
@@ -52,7 +48,7 @@ toxi.Ray3D.prototype.getDistanceToPoint = function(p) {
  */
 toxi.Ray3D.prototype.getPointAtDistance = function(dist) {
     return this.add(this.dir.scale(dist));
-}
+};
 
 /**
  * Uses a normalized copy of the given vector as the ray direction.
@@ -64,7 +60,7 @@ toxi.Ray3D.prototype.getPointAtDistance = function(dist) {
 toxi.Ray3D.prototype.setDirection = function(d) {
     this.dir.set(d).normalize();
     return this;
-}
+};
 
 /**
  * Converts the ray into a 3D Line segment with its start point coinciding
@@ -77,8 +73,8 @@ toxi.Ray3D.prototype.setDirection = function(d) {
  */
 toxi.Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
     return new Line3D(this, this.getPointAtDistance(dist));
-}
+};
 
 toxi.Ray3D.prototype.toString = function() {
     return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
-}
+};

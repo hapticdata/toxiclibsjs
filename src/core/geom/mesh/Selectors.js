@@ -4,10 +4,11 @@
  */
 
 toxi.BoxSelector = function(mesh,box) {
-    this.parent.init.call(this,mesh);
+    toxi.VertexSelector.apply(this,[mesh]);
     this.box = box;
-}
-    
+};
+toxi.extend(toxi.BoxSelector,toxi.VertexSelector);
+
 toxi.BoxSelector.prototype.selectVertices = function() {
     this.clearSelection();
     var verts = this.mesh.getVertices();
@@ -19,38 +20,29 @@ toxi.BoxSelector.prototype.selectVertices = function() {
         }
     }
     return this;
-}
-
-toxi.BoxSelector.prototype = new toxi.VertexSelector();
-toxi.BoxSelector.constructor = toxi.BoxSelector;
-toxi.BoxSelector.prototype.parent = toxi.VertexSelector.prototype;
-
-
+};
 
 toxi.DefaultSelector = function(mesh){
-	this.parent.init.call(this,mesh);
-}
-		
+	toxi.VertexSelector.apply(this,[mesh]);
+};
+toxi.extend(toxi.DefaultSelector,toxi.VertexSelector);	
 toxi.DefaultSelector.prototype.selectVertices = function(){
 	this.clearSelection();
 	this.selection.addAll(this.mesh.getVertices());
 	return this;
-}
+};
 
-toxi.DefaultSelector.prototype = new toxi.VertexSelector();
-toxi.DefaultSelector.constructor = toxi.DefaultSelector;
-toxi.DefaultSelector.prototype.parent = toxi.VertexSelector.prototype;
 
 
 
 
 toxi.PlaneSelector = function(mesh,plane,classifier, tolerance) {
-    this.parent.init.call(this,mesh);
+    toxi.VertexSelector.apply(this,[mesh]);
     this.plane = plane;
     this.classifier = classifier;
     this.tolerances = (tolerance === undefined)? 0.0001 : tolerance;
-}
-
+};
+toxi.extend(toxi.PlaneSelector,toxi.VertexSelector);
 toxi.PlaneSelector.prototype.selectVertices = function() {
     this.clearSelection();
     var verts = this.mesh.getVertices();
@@ -62,8 +54,4 @@ toxi.PlaneSelector.prototype.selectVertices = function() {
         }
     }
     return this;
-}
-
-toxi.PlaneSelector.prototype = new toxi.VertexSelector();
-toxi.PlaneSelector.constructor = toxi.PlaneSelector;
-toxi.PlaneSelector.prototype.parent = toxi.VertexSelector.prototype;
+};

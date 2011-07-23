@@ -18,8 +18,8 @@ toxi.physics2d.VerletParticle2D = function(x,y,w){
 			x = x.x;
 		}
 	}
+	toxi.Vec2D.apply(this,[x,y]);
 	this.isLocked = false;
-	this.init(x,y);
 	this.prev = new toxi.Vec2D(this);
 	this.temp = new toxi.Vec2D();
 	w = (w === undefined) ? 1 : w;

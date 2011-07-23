@@ -1,10 +1,10 @@
 toxi.Sphere = function(a,b){
 	if(a === undefined){
-		this.parent.init.call(this,new toxi.Vec3D());
+		toxi.Vec3D.apply(this,[new toxi.Vec3D()]);
 		this.radius = 1;
 	}
 	else if(a instanceof toxi.Vec3D){
-		this.parent.init.call(this,a);
+		toxi.Vec3D.apply(this,[a]);
 		if(a instanceof toxi.Sphere){
 			this.radius = a.radius;
 		}
@@ -13,19 +13,17 @@ toxi.Sphere = function(a,b){
 		}
 	}
 	else {
-		this.parent.init.call(this,new toxi.Vec3D());
+		toxi.Vec3D.apply(this,[new toxi.Vec3D()]);
 		this.radius = a;
 	}
-}
+};
+toxi.extend(toxi.Sphere,toxi.Vec3D);
 
-toxi.Sphere.prototype = new toxi.Vec3D();
-toxi.Sphere.constructor = toxi.Sphere;
-toxi.Sphere.prototype.parent = toxi.Vec3D.prototype;
 
 toxi.Sphere.prototype.containsPoint = function(p) {
     var d = this.sub(p).magSquared();
     return (d <= this.radius * this.radius);
-}
+};
 
 /**
  * Alternative to {@link SphereIntersectorReflector}. Computes primary &
@@ -70,7 +68,7 @@ toxi.Sphere.prototype.intersectRay = function(ray) {
         result = [a,b];
     }
     return result;
-}
+};
 
 /**
  * Considers the current vector as centre of a collision sphere with radius
@@ -92,7 +90,7 @@ toxi.Sphere.prototype.intersectSphereTriangle = function(t,result) {
     // center to Vec3D p is less than the (squared) sphere radius
     var v = result.sub(this);
     return v.magSquared() <= this.radius * this.radius;
-}
+};
 
 /**
  * Calculates the normal vector on the sphere in the direction of the
@@ -104,7 +102,7 @@ toxi.Sphere.prototype.intersectSphereTriangle = function(t,result) {
  */
 toxi.Sphere.prototype.tangentPlaneNormalAt = function(q) {
     return this.sub(q).normalize();
-}
+};
 
 toxi.Sphere.prototype.toMesh = function(mesh_or_res,res) {
     if(res === undefined){
@@ -117,4 +115,4 @@ toxi.Sphere.prototype.toMesh = function(mesh_or_res,res) {
     }
     var builder = new toxi.SurfaceMeshBuilder(new toxi.SphereFunction(this));
     return builder.createMesh(mesh, res, 1);
-}
+};

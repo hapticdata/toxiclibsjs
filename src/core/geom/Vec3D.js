@@ -19,7 +19,19 @@
  *            the z
  */
 toxi.Vec3D = function(x, y, z){
-	this.init(x,y,z);
+	if(x instanceof toxi.Vec3D){
+		this.x = x.x;
+		this.y = x.y;
+		this.z = x.z;
+	} else if(x === undefined){ //if none or all were passed
+		this.x = 0.0;
+		this.y = 0.0;
+		this.z = 0.0;
+	} else {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
 }
 	
 toxi.Vec3D.prototype = {
@@ -303,27 +315,6 @@ toxi.Vec3D.prototype = {
 	
 	immutable: function(){
 		return this; //cant make read-only in javascript, implementing to avoid erro
-	},
-	
-	init: function(x,y,z){
-		if(x instanceof toxi.Vec3D)
-		{
-			this.x = x.x;
-			this.y = x.y;
-			this.z = x.z;
-		}
-		else if(x === undefined) //if none or all were passed
-		{
-			this.x = 0.0;
-			this.y = 0.0;
-			this.z = 0.0;
-		}
-		else
-		{
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
 	},
 	
 	interpolateTo: function(v,f,s) {

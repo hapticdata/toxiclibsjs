@@ -1,9 +1,8 @@
 toxi.XAxisCylinder = function(pos,radius,length){
-	this.init(pos,radius,length);
+	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };
-toxi.XAxisCylinder.prototype = new toxi.AxisAlignedCylinder();
-toxi.XAxisCylinder.constructor = toxi.XAxisCylinder;
-toxi.XAxisCylinder.prototype.parent = toxi.AxisAlignedCylinder.prototype;
+
+toxi.extend(toxi.XAxisCylinder,toxi.AxisAlignedCylinder);
 
 toxi.XAxisCylinder.prototype.containsPoint = function(p){
 	if(toxi.MathUtils.abs(p.x - this.pos.x) < this.length * 0.5){
@@ -17,7 +16,4 @@ toxi.XAxisCylinder.prototype.containsPoint = function(p){
 };
 toxi.XAxisCylinder.prototype.getMajorAxis = function(){
 	return toxi.Vec3D.Axis.X;
-};
-toxi.XAxisCylinder.prototype.init = function(pos,radius,length){
-	this.parent.init.call(this,pos,radius,length);
 };

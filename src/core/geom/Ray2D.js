@@ -12,18 +12,14 @@ toxi.Ray2D = function(a,b,d){
 		o = new toxi.Vec2D();
 		dir = toxi.Vec2D.Y_AXIS.copy();
 	}
-	this.parent.init.call(this,o);
+	toxi.Vec2D.apply(this,[o]);
 	this.dir = dir;
 }
-
-toxi.Ray2D.prototype = new toxi.Vec2D();
-toxi.Ray2D.constructor = toxi.Ray2D;
-toxi.Ray2D.prototype.parent = toxi.Vec2D.prototype;
-
+toxi.extend(toxi.Ray2D,toxi.Vec2D);
 
 toxi.Ray2D.prototype.getDirection = function() {
       return this.dir.copy();
-}
+};
 
 
 
@@ -34,11 +30,11 @@ toxi.Ray2D.prototype.getDirection = function() {
 toxi.Ray2D.prototype.getDistanceToPoint = function(p) {
     var sp = p.sub(this);
     return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
-}
+};
 
 toxi.Ray2D.prototype.getPointAtDistance = function(dist) {
     return this.add(this.dir.scale(dist));
-}
+};
 
 /**
  * Uses a normalized copy of the given vector as the ray direction.
@@ -50,7 +46,7 @@ toxi.Ray2D.prototype.getPointAtDistance = function(dist) {
 toxi.Ray2D.prototype.setDirection = function(d) {
     this.dir.set(d).normalize();
     return this;
-}
+};
 
 /**
  * Converts the ray into a 2D Line segment with its start point coinciding
@@ -63,8 +59,8 @@ toxi.Ray2D.prototype.setDirection = function(d) {
  */
 toxi.Ray2D.prototype.toLine2DWithPointAtDistance = function(dist) {
     return new toxi.Line2D(this.copy(), this.getPointAtDistance(dist));
-}
+};
 
 toxi.Ray2D.prototype.toString = function() {
     return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
-}
+};

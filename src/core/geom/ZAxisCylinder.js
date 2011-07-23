@@ -1,9 +1,7 @@
 toxi.ZAxisCylinder = function(pos,radius,length){
-	this.parent.init.call(this,pos,radius,length);
+	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };
-toxi.ZAxisCylinder.prototype = new toxi.AxisAlignedCylinder();
-toxi.ZAxisCylinder.constructor =  toxi.ZAxisCylinder;
-toxi.ZAxisCylinder.prototype.parent = toxi.AxisAlignedCylinder.prototype;
+toxi.extend(toxi.ZAxisCylinder,toxi.AxisAlignedCylinder);
 toxi.ZAxisCylinder.prototype.containsPoint = function(p){
 	 if (MathUtils.abs(p.z - this.pos.z) < this.length * 0.5) {
             var dx = p.x - this.pos.x;

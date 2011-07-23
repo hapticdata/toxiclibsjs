@@ -5,27 +5,19 @@
  */
  
 toxi.Circle = function(a,b,c) {
-	if(arguments.length == 1)
-	{
-		if(a instanceof toxi.Circle)
-		{
+	if(arguments.length == 1){
+		if(a instanceof toxi.Circle){
 			toxi.Ellipse.apply(this,[a,a.radius.x]);
-		}
-		else
-		{
+		} else {
 			toxi.Ellipse.apply(this,[0,0,a]);
 		}
-	}
-	else if(arguments.length == 2)
-	{
+	} else if(arguments.length == 2){
 		toxi.Ellipse.apply(this,[a,b]);
-	}
-	else
-	{
+	} else {
+		console.log("hit");
 		toxi.Ellipse.apply(this,[a,b,c,c]);
 	}
 };
-
 
 toxi.extend(toxi.Circle,toxi.Ellipse);
 
@@ -46,7 +38,7 @@ toxi.Circle.from2Points = function(p1,p2) {
     var m = p1.interpolateTo(p2, 0.5);
     var distanceTo = m.distanceTo(p1);
     return new toxi.Circle(m, distanceTo);
-}
+};
 
 /**
  * Factory method to construct a circle which has the three given points
@@ -81,27 +73,27 @@ toxi.Circle.from3Points = function(p1,p2,p3) {
         }
     }
     return circle;
-}
+};
 
 
 
 
 toxi.Circle.prototype.containsPoint = function(p) {
     return this.distanceToSquared(p) <= this.radius.x * this.radius.x;
-}
+};
 
 toxi.Circle.prototype.getCircumference = function() {
     return toxi.MathUtils.TWO_PI * this.radius.x;
-}
+};
 
 toxi.Circle.prototype.getRadius = function() {
     return this.radius.x;
-}
+};
 
 toxi.Circle.prototype.getTangentPoints = function(p) {
     var m = this.interpolateTo(p, 0.5);
     return this.intersectsCircle(new toxi.Circle(m, m.distanceTo(p)));
-}
+};
 
 
 toxi.Circle.prototype.intersectsCircle = function(c) {
@@ -121,10 +113,10 @@ toxi.Circle.prototype.intersectsCircle = function(c) {
         res = [i1, i2 ];
     }
     return res;
-}
+};
 
 toxi.Circle.prototype.setRadius = function(r) {
     this.setRadii(r, r);
     return this;
-}
+};
 

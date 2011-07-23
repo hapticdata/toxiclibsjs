@@ -1,14 +1,10 @@
 toxi.AxisAlignedCylinder = function(pos,radius,length) {
-	this.init(pos,radius,length);
-}
+	this.pos = (pos===undefined)? undefined: pos.copy();
+	this.setRadius(radius);
+	this.setLength(length);
+};
 
 toxi.AxisAlignedCylinder.prototype = {
-	
-	init: function(pos,radius,length){
-		this.pos = (pos===undefined)? undefined: pos.copy();
-		this.setRadius(radius);
-		this.setLength(length);
-	},
     /**
      * Checks if the given point is inside the cylinder.
      * 
@@ -87,5 +83,4 @@ toxi.AxisAlignedCylinder.prototype = {
     	}
 		return new toxi.Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(null,a,b,true,true);    	
     }
-
 };

@@ -19,34 +19,31 @@
      *            length of the cone
      */
 toxi.Cone = function(pos,dir,rNorth, rSouth,len) {
-    this.parent.init.call(this,pos);
+   	toxi.Vec3D.apply(this,[pos]);
     this.dir = dir.getNormalized();
     this.radiusNorth = rNxiorth;
     this.radiusSouth = rSouth;
     this.length = len;
-}
+};
 
-toxi.Cone.prototype = new toxi.Vec3D();
-toxi.Cone.constructor = toxi.Cone;
-toxi.Cone.prototype.parent = toxi.Vec3D.prototype;
+toxi.extend(toxi.Cone,toxi.Vec3D);
 
 toxi.Cone.prototype.toMesh = function(a,b,c,topClosed,bottomClosed) {
-	if(topClosed === undefined)topClosed = true;
-	if(bottomClosed === undefined)bottomClosed = true;
-	if(b === undefined)
-	{
+	if(topClosed === undefined){
+		topClosed = true;
+	}
+	if(bottomClosed === undefined){
+		bottomClosed = true;
+	}
+	if(b === undefined){
 		var mesh = null;
 		var steps = a;
 		var thetaOffset = 0;
-	}
-	else if( c === undefined)
-	{
+	} else if( c === undefined){
 		var mesh = null;
 		var steps = a;
 		var thetaOffset = b;
-	}
-	else
-	{
+	} else {
 		var mesh = a;
 		var steps = b;
 		var thetaOffset = c;
@@ -85,4 +82,4 @@ toxi.Cone.prototype.toMesh = function(a,b,c,topClosed,bottomClosed) {
         }
     }
     return mesh;
-}
+};
