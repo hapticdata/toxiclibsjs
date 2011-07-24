@@ -44,11 +44,25 @@ Geometry (toxi. namespace)
 * Sphere
 * Spline2D
 * Triangle
+* Triangle2D
 * Vec2D
 * Vec3D
 * XAxisCylinder
 * YAxisCylinder
 * ZAxisCylinder
+* Mesh->
+ * BezierPatch
+ * Face
+ * BoxSelector
+ * DefaultSelector
+ * PlaneSelector
+ * VertexSelector
+ * SphereFunction
+ * SphericalHarmonics
+ * SuperEllipsoid
+ * SurfaceMeshBuilder
+ * TriangleMesh
+ * Vertex
 
 Math (toxi. namespace)
 
@@ -66,14 +80,15 @@ Math (toxi. namespace)
 * ZoomLensInterpolation
 * ScaleMap
 * SinCosLUT
-* AbstractWave (abstract)
-* AMFMSineWave
-* FMHarmonicSquareWave
-* FMSawtoothWave
-* FMSineWave
-* FMSquareWave
-* FMTriangleWave
-* SineWave
+* Waves->
+ * AbstractWave (abstract)
+ * AMFMSineWave
+ * FMHarmonicSquareWave
+ * FMSawtoothWave
+ * FMSineWave
+ * FMSquareWave
+ * FMTriangleWave
+ * SineWave
 
 Color (toxi.color. namespace)
 
@@ -83,15 +98,17 @@ VerletPhysics2D (toxi.physics2d namespace)
 
 * 	VerletParticle2D
 *	VerletSpring2D
-*	AttractionBehavior
-*	ConstantForceBehavior
-*	GravityBehavior
-*	AngularConstraint
-*	AxisConstraint
-*	CircularConstraint
-*	MaxConstraint
-*	MinConstraint
-*	RectConstraint
+* Behaviors ->
+ *	AttractionBehavior
+ *	ConstantForceBehavior
+ *	GravityBehavior
+* Constraints->
+ *	AngularConstraint
+ *	AxisConstraint
+ *	CircularConstraint
+ *	MaxConstraint
+ *	MinConstraint
+ *	RectConstraint
 *	ParticlePath2D
 *	ParticleString2D
 *	PullBackString2D
