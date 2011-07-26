@@ -4,11 +4,11 @@
  */
 toxi.SphericalHarmonics = function(m) {
     this.m = m;
-}
+};
 
 toxi.SphericalHarmonics.prototype = {
 
-    // FIXME check where flipped vertex order is coming from sometimes
+    // toxiclibs - FIXME check where flipped vertex order is coming from sometimes
     computeVertexFor: function(p,phi,theta) {
         var r = 0;
         r += Math.pow(toxi.MathUtils.sin(this.m[0] * theta), this.m[1]);

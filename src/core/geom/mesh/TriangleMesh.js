@@ -4,6 +4,7 @@ toxi.TriangleMesh = function(name,numV,numF){
 	if(numV === undefined)numV = toxi.TriangleMesh.DEFAULT_NUM_VERTICES;
 	if(numF === undefined)numF = toxi.TriangleMesh.DEFAULT_NUM_FACES;
 	this.setName(name);
+	this.matrix = new toxi.Matrix4x4();
 	this.vertices = [];
 	this.faces = [];
 	this.numVertices = 0;
@@ -21,35 +22,28 @@ toxi.TriangleMesh.DEFAULT_STRIDE = 4;
 toxi.TriangleMesh.prototype = {
 
 	addFace: function(a,b,c,n,uvA,uvB,uvC){
-		if(uvC === undefined) //then it wasnt the 7 param method
-		{
-			if(uvB === undefined)//then it wasnt the 6 param method
-			{
+		if(uvC === undefined){ //then it wasnt the 7 param method
+			if(uvB === undefined){ //then it wasnt the 6 param method
 				//its either the 3 or 4 param method
-				if(uvA === undefined)
-				{
+				if(uvA === undefined){
 					//3 param method
 					n = undefined;
 					uvA = undefined;
 					uvB = undefined;
 					uvC = undefined;
-				}
-				else
-				{
+				} else {
 					//4 param method
 					uvA = undefined;
 					uvB = undefined;
 					uvC = undefined;
 				}
-			}
-			else {
+			} else {
 				//6 param method
 				//pass down the chain
 				uvC = uvB;
 				uvB = uvA;
 				uvA = n;
 			}
-			
 		}
 		//7 param method
 		var va = this.checkVertex(a);
@@ -58,8 +52,7 @@ toxi.TriangleMesh.prototype = {
 		
 		if(va.id == vb.id || va.id == vc.id || vb.id == vc.id){
 			console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
-		}
-		else {
+		} else {
 			if(n != undefined){
 				var nc = va.sub(vc).crossSelf(va.sub(vb));
 				if(n.dot(nc)<0){
@@ -119,8 +112,7 @@ toxi.TriangleMesh.prototype = {
 	computeCentroid: function(){
 		this.centroid.clear();
 		var l = this.vertices.length;
-		for(var i=0;i<l;i++)
-		{
+		for(var i=0;i<l;i++){
 			this.centroid.addSelf(this.vertices[i]);
 		}
 		return this.centroid.scaleSelf(1.0/this.numVertices).copy();
@@ -128,8 +120,7 @@ toxi.TriangleMesh.prototype = {
 	
 	computeFaceNormals: function(){
 		var l = this.faces.length;
-		for(var i=0;i<l;i++)
-		{
+		for(var i=0;i<l;i++){
 			this.faces[i].computeNormal();
 		}
 	},
@@ -170,8 +161,7 @@ toxi.TriangleMesh.prototype = {
 	faceOutwards: function(){
 		this.computeCentroid();
 		var l = this.faces.length;
-		for(var i=0;i<l;i++)
-		{
+		for(var i=0;i<l;i++){
 			var f = this.faces[i];
 			var n = f.getCentroid().sub(this.centroid);
 			var dot = n.dot(f.normal);
@@ -372,11 +362,12 @@ toxi.TriangleMesh.prototype = {
      * @return array of xyz vertex coords
      */
     getMeshAsVertexArray: function(verts, offset, stride) {
-    	if(verts ===undefined)
-   		{
+    	if(verts ===undefined){
    		  	verts = undefined;
     	}
-    	if(offset === undefined){ offset = 0;}
+    	if(offset === undefined){ 
+    		offset = 0;
+    	}
     	if(stride === undefined){
     		stride = toxi.TriangleMesh.DEFAULT_STRIDE
     	}
@@ -594,23 +585,21 @@ toxi.TriangleMesh.prototype = {
      * @return itself
      */
     pointTowards: function(dir) {
-
-    	
         return this.transform( toxi.Quaternion.getAlignmentQuat(dir, toxi.Vec3D.Z_AXIS).toMatrix4x4(), true);
     },
     
     removeFace: function(f) {
     	var index = -1;
     	var l = this.faces.length;
-    	for(var i=0;i<l;i++)
-    	{
-    		if(this.faces[i] == f)
-    		{
+    	for(var i=0;i<l;i++){
+    		if(this.faces[i] == f){
     			index = i;
     			break;
     		}
     	}
-        if(index > -1)this.faces.splice(index,1);
+        if(index > -1){
+        	this.faces.splice(index,1);
+        }
     },
     
     
