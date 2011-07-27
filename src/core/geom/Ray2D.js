@@ -1,20 +1,17 @@
 toxi.Ray2D = function(a,b,d){
 	var o, dir;
-	if(typeof a == 'Number'){
-		o = new toxi.Vec2D(a,b);
-		dir = d.getNormalized();
+	if(arguments.length == 3){
+		toxi.Vec2D.apply(this,[a,b]);
+		this.dir = d.getNormalized();
+	} else if(arguments.length == 2){
+		toxi.Vec2D.apply(this,[a]);
+		this.dir = b.getNormalized();
+	} else if(arguments.length == 0){
+		toxi.Vec2D.apply(this);
+		this.dir = toxi.Vec2D.Y_AXIS.copy();
 	}
-	else if(a instanceof toxi.Vec2D){
-		o = a;
-		dir = b.getNormalized();
-	}
-	else {
-		o = new toxi.Vec2D();
-		dir = toxi.Vec2D.Y_AXIS.copy();
-	}
-	toxi.Vec2D.apply(this,[o]);
-	this.dir = dir;
-}
+	console.log(this);
+};
 toxi.extend(toxi.Ray2D,toxi.Vec2D);
 
 toxi.Ray2D.prototype.getDirection = function() {
@@ -58,7 +55,7 @@ toxi.Ray2D.prototype.setDirection = function(d) {
  * @return line segment
  */
 toxi.Ray2D.prototype.toLine2DWithPointAtDistance = function(dist) {
-    return new toxi.Line2D(this.copy(), this.getPointAtDistance(dist));
+    return new toxi.Line2D(this, this.getPointAtDistance(dist));
 };
 
 toxi.Ray2D.prototype.toString = function() {
