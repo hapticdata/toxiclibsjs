@@ -9,25 +9,25 @@ toxi.SurfaceMeshBuilder = function(func) {
 }
 
 toxi.SurfaceMeshBuilder.prototype = {
-    createMesh: function(mesh_or_res,_res,size,isClosed) {
-    	if(mesh_or_res == null){
-    		mesh_or_res = undefined; //this is for in case people use it in toxi's examples for p5
+    createMesh: function() {
+    	//should have either 1, 3 or 4 parameters
+    	var mesh = undefined, res = undefined, size = 1, isClosed = true;
+    	if(arguments.length == 1){ //res
+    		res = arguments[0];
+    	} else if(arguments.length ==3 ){ //meh, res, size
+    		mesh = arguments[0];
+    		res = arguments[1];
+    		size = arguments[2];
+    	} else if(arguments.length == 4){
+    		mesh = arguments[0];
+    		res = arguments[1];
+    		size = arguments[2];
+    		isClosed = arguments[3];
     	}
-    	var mesh;
-    	var res;
-    	if(_res === undefined){
-    		res = mesh_or_res;
-        	mesh = new toxi.TriangleMesh();
-        } else {
-        	mesh = mesh_or_res;
-        	res = _res;
-        } if(mesh === undefined){
-        	mesh = new toxi.TriangleMesh();
-        } if(size === undefined){
-        	size = 1;
-        } if(isClosed === undefined) {
-        	isClosed = true;
-        }
+    	if(mesh == null || mesh == undefined){
+    		mesh = new toxi.TriangleMesh(); //this is for in case people use it in toxi's examples for p5
+    	}
+    	
         var a = new toxi.Vec3D(),
         	b = new toxi.Vec3D(),
         	pa = new toxi.Vec3D(),

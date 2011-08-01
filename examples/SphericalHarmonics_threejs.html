@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<title>Spherical Harmonics Mesh Builder - Three.js - toxiclibs.js examples</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+		<link href="css/style.css" rel="stylesheet" type="text/css">
+		<style type="text/css">
+			body {
+				background-color: #000000;
+				margin: 0px;
+				padding: 0;
+				overflow: hidden;
+			}
+
+			a {
+				color:#0078ff;
+			}
+			#guiAbout {
+				background-color: black;
+				padding: 10px;
+				font-size: 12px;
+			}
+			#about {
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<!--<header>
+			<hgroup>
+				<h1>Sphere</h1><h2>w/ <a href="http://github.com/mrdoob/three.js">Three.js</a> <em>(not using WebGL)</em></h2>
+			</hgroup>
+		</header>-->
+			<div id="threejs_container"></div>
+			<div id="about"><p><strong>Spherical Harmonics Mesh Builder</strong> demonstrates how to use the SurfaceMeshBuilder class in conjunction with a spherical harmonics function to dynamically create a variety of organic looking forms. The function is described in detail on <a href="http://paulbourke.net/geometry/sphericalh/">Paul Bourke's website</a>.<br> This example also demonstrates new features within <a href="http://haptic-data.com/toxiclibsjs">Toxiclibs.js</a> that help support working within <a href="https://github.com/mrdoob/three.js">Three.js</a>.</p>
+			<p>Example and port by <a href="http://haptic-data.com">Kyle Phillips</a>,<br> original lib by <a href="http://postspectacular.com">Karsten Schmidt</a></p>
+			<div id="m"></div>
+			</div>
+		<!--<section id="details" class="grid_12">
+		<aside id="authors" class="grid_6">created by <a href="http://haptic-data.com">Kyle Phillips</a></aside>
+		<aside id="usage" class="grid_6"><strong>Usage:</strong><br>move your mouse around rotate and zoom the spherical points</aside>
+		<article id="description" class="grid_12">
+			<p>Quick example showing the use of toxi.Sphere within Three.js</p>
+		</article>
+		</section>
+		<footer class="grid_12"><a href="http://haptic-data.com/toxiclibsjs/">toxiclibs.js</a></footer>
+	-->
+		<script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
+		<script type="text/javascript" src="../build/toxiclibs.js"></script>
+		<script type="text/javascript" src="js/Three.js"></script> 
+		<script type="text/javascript" src="../src/three.js/ToxiclibsSupport.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/RequestAnimationFrame.js"></script>
+		<!--<script src="js/Stats.js"></script>-->
+		<script src="js/DAT.GUI.min.js"></script>
+		<script type="text/javascript">
+			
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+			
+			var container = document.getElementById('threejs_container'),
+				$m = $("#m"),
+				mouse = new toxi.Vec2D(),
+				cameraSensitivity = 1.2,
+				stage = new toxi.Vec2D(window.innerWidth,window.innerHeight),
+				canRotateWorld = true,
+				camera = new THREE.TrackballCamera({
+					fov: 45, 
+					aspect: stage.x / stage.y,
+					near: 1,
+					far: 2000,
+					rotateSpeed: 1.0,
+					noPan: true,
+					noZoom: false,
+					staticMoving: false,
+					dynamicDampingFactor: 0.05
+				}),
+				scene = new THREE.Scene(),
+				renderer = new THREE.WebGLRenderer({antiaalised: true}),
+				//stats = new Stats(),
+				objectRadius = 65,
+				meshResolution = 100,
+				m = [],
+				changeHarmonics = true,
+				toxiToThreeSupport = new toxi.THREE.ToxiclibsSupport(scene),
+				threeMesh = undefined; //<--we'll put the converted mesh here
+			
+			camera.position.x = 400;
+			camera.position.y = 400;
+			camera.position.z = 400;
+			
+			renderer.setSize(stage.x,stage.y);
+			container.appendChild(renderer.domElement);
+			
+			/*stats.domElement.style.position = 'absolute';
+			stats.domElement.style.top = '0px';
+			container.appendChild( stats.domElement );*/
+			
+			///the stuff more unique to this sketch
+			var material = new THREE.MeshNormalMaterial({color: 0xBAE8E6, opacity: 1.0});
+			randomizeHarmonics();
+			
+			//GUI
+			var gui = new DAT.GUI();
+			$("#guidat").find(".guidat").prepend('<div id="guiAbout">'+$("#about").html()+"</div>")
+			
+			gui.add(this,"objectRadius").name("Mesh Scale").min(10).max(300).onChange(function(){
+				threeMesh.scale = new THREE.Vector3(objectRadius,objectRadius,objectRadius);
+			});
+			gui.add(material,"wireframe");
+			gui.add(this,"meshResolution").name("Mesh Resolution").min(10).max(250).step(1);
+			gui.add(this,"changeHarmonics").name("New Random Parameters");
+			gui.add(this,"changeMesh").name("Generate New Mesh!");
+			
+			function animate() { 
+				requestAnimationFrame( animate );
+				render();
+				//stats.update();
+			}
+			
+			function render() {
+				/*if(canRotateWorld){
+					camera.position.x += ( (mouse.x*cameraSensitivity) - camera.position.x ) * 0.05;
+					camera.position.y += ( - ( mouse.y * cameraSensitivity) - camera.position.y ) * 0.05;
+				}*/
+				renderer.render( scene, camera );
+			}
+			
+			animate();
+			
+			function randomizeHarmonics(){
+				m = [];
+				for(var i=0; i<8; i++) {
+				  m.push(parseInt(Math.random()*9));
+				}
+				$m.remove();
+				$m = $('<div id="m">m: ['+m+']'+'</div>');
+				$("#guiAbout").append($m)
+			}
+			
+
+			function changeMesh(res){
+				if(res === undefined){
+					res = meshResolution;
+				}
+				if(threeMesh !== undefined) {
+					scene.removeObject(threeMesh);
+				}
+				if(changeHarmonics) {
+					randomizeHarmonics();
+				}
+				var sh = new toxi.SphericalHarmonics(m);
+				var mesh = new toxi.SurfaceMeshBuilder( sh ); 
+				var toxiMesh = mesh.createMesh(new toxi.TriangleMesh(),res,1,true);
+				threeMesh = toxiToThreeSupport.addMesh(toxiMesh,material);
+				//threeMesh = new THREE.Mesh(toxiToThreeSupport.createGeometry(toxiMesh),material);
+				threeMesh.scale = new THREE.Vector3(objectRadius,objectRadius,objectRadius);
+				threeMesh.doubleSided = true;
+				//console.log(threeMesh);
+				scene.addObject(threeMesh);
+			};
+			
+			
+			document.onmousemove = (function(){
+				var halfWindow = stage.scale(0.5);
+				return 	function (event) {
+					mouse.x = ( event.clientX - halfWindow.x );
+					mouse.y = ( event.clientY - halfWindow.y );
+				}
+			})();
+			
+			//create first mesh
+			changeMesh(meshResolution);
+			var positions = [];
+			for(var k=0;k<500;k++){
+				var p = positions.push(toxi.Vec3D.randomVector().scale(200+Math.random()*300));
+			}
+			toxiToThreeSupport.addParticles(positions, new THREE.ParticleBasicMaterial({
+				color: 0xffff00,
+				transparent: true,
+				blending: THREE.AdditiveBlending
+			}));
+		</script>
+	</body>
+</html>
