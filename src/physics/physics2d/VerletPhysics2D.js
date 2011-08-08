@@ -7,7 +7,7 @@ toxi.physics2d.VerletPhysics2D = function(gravity, numIterations, drag, timeStep
 	this.setDrag(drag || 0);
 	
 	if(gravity !== undefined){
-		this.addBehavior(new toxi.physics.GravityBehavior(gravity));
+		this.addBehavior(new toxi.physics2d.GravityBehavior(gravity));
 	}
 
 }
