@@ -10,16 +10,12 @@ toxi.Ray2D = function(a,b,d){
 		toxi.Vec2D.apply(this);
 		this.dir = toxi.Vec2D.Y_AXIS.copy();
 	}
-	console.log(this);
 };
 toxi.extend(toxi.Ray2D,toxi.Vec2D);
 
 toxi.Ray2D.prototype.getDirection = function() {
       return this.dir.copy();
 };
-
-
-
 /**
  * Calculates the distance between the given point and the infinite line
  * coinciding with this ray.

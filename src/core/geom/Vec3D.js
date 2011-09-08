@@ -19,7 +19,7 @@
  *            the z
  */
 toxi.Vec3D = function(x, y, z){
-	if(x instanceof toxi.Vec3D){
+	if(x instanceof Object && x.x !== undefined && x.y !== undefined && x.z !== undefined){
 		this.x = x.x;
 		this.y = x.y;
 		this.z = x.z;
@@ -44,8 +44,7 @@ toxi.Vec3D.prototype = {
 	},
 	
 	add: function(a,b,c){
-		if(a instanceof toxi.Vec3D)
-		{
+		if(a instanceof Object){
 			return new toxi.Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
 		}
 		return new toxi.Vec3D(this.x+a,this.y+b,this.z+c);
@@ -63,14 +62,11 @@ toxi.Vec3D.prototype = {
      * @return itself
      */
 	addSelf: function(a,b,c){
-		if(a != undefined && b!=undefined && c!=undefined)
-		{
+		if(a != undefined && b!=undefined && c!=undefined){
 			this.x += a;
 			this.y += b;
 			this.z += c;
-		}
-		else
-		{
+		} else {
 			this.x += a.x;
 			this.y += a.y;
 			this.z += a.z;
@@ -80,8 +76,7 @@ toxi.Vec3D.prototype = {
 	
 	angleBetween: function(vec, faceNormalizeBool){
 		var theta;
-		if(faceNormalizeBool)
-		{
+		if(faceNormalizeBool){
 			theta = this.getNormalized().dot(vec.getNormalized());
 		} else {
 			theta = this.dot(vec);
@@ -90,8 +85,7 @@ toxi.Vec3D.prototype = {
 	},
 	
 	
-	clear: function()
-	{
+	clear: function(){
 		this.x = this.y = this.z = 0;
 		return this;
 	},
@@ -112,8 +106,7 @@ toxi.Vec3D.prototype = {
      * @return itself
      */
 	constrain: function(box_or_min, max){
-		if(box_or_min instanceof AABB)
-		{
+		if(box_or_min instanceof AABB){
 			max = box_or_min.getMax();
 			box_or_min = box_or_min.getMin();
 		}
@@ -170,8 +163,7 @@ toxi.Vec3D.prototype = {
 	},
 	
 	distanceToSquared: function(vec){
-		if(vec!=undefined)
-		{
+		if(vec!=undefined){
 			var dx = this.x - vec.x;
 			var dy = this.y - vec.y;
 			var dz = this.z - vec.z;
@@ -185,20 +177,16 @@ toxi.Vec3D.prototype = {
 	},
 	
 	equals: function(vec){
-		if(vec instanceof toxi.Vec3D)
-		{
+		if(vec instanceof toxi.Vec3D){
 			return this.x == vec.x && this.y == vec.y && this.z == vec.z;
 		}
 		return false;
 	},
 	
 	equalsWithTolerance: function(vec,tolerance){
-		if(Math.abs(this.x-vec.x) < tolerance)
-		{
-			if(Math.abs(this.y - vec.y) < tolerance)
-			{
-				if(Math.abs(this.z - vec.z) < tolerance)
-				{
+		if(Math.abs(this.x-vec.x) < tolerance){
+			if(Math.abs(this.y - vec.y) < tolerance){
+				if(Math.abs(this.z - vec.z) < tolerance){
 					return true;
 				}
 			}
@@ -314,12 +302,11 @@ toxi.Vec3D.prototype = {
 	},
 	
 	immutable: function(){
-		return this; //cant make read-only in javascript, implementing to avoid erro
+		return this; //cant make read-only in javascript, implementing to avoid error
 	},
 	
 	interpolateTo: function(v,f,s) {
-		if(s === undefined)
-		{
+		if(s === undefined){
 			return new toxi.Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - z)*f);
 		}
 		return new toxi.Vec3D(s.interpolate(this.y,v.y,f),s.interpolate(this.y,v.y,f),s.interpolate(this.z,v.z,f));
@@ -327,14 +314,11 @@ toxi.Vec3D.prototype = {
     },
     
     interpolateToSelf: function(v,f,s){
-    	if(s === undefined)
-    	{
+    	if(s === undefined){
     		this.x += (v.x-this.x)*f;
     		this.y += (v.y-this.y)*f;
     		this.z += (v.z-this.z)*f;
-    	}
-    	else
-    	{
+    	} else {
     		this.x = s.interpolate(this.x,v.x,f);
     		this.y = s.interpolate(this.y,v.y,f);
     		this.z = s.interpolate(this.z,v.z,f);
@@ -352,21 +336,17 @@ toxi.Vec3D.prototype = {
 	},
 	
 	isInAABB: function(box_or_origin, boxExtent){
-		if(boxExtent)
-		{
+		if(boxExtent) {
 			var w = boxExtent.x;
-			if(this.x < box_or_origin.x - w || this.x > box_or_origin.x + w)
-			{
+			if(this.x < box_or_origin.x - w || this.x > box_or_origin.x + w){
 				return false;
 			}
 			w = boxExtent.y;
-			if(this.y < box_or_origin.y - w || this.y > box_or_origin.y + w)
-			{
+			if(this.y < box_or_origin.y - w || this.y > box_or_origin.y + w){
 				return false;
 			}
 			w = boxExtent.y;
-			if(this.z < box_or_origin.z - w || this.y > box_or_origin.z + w)
-			{
+			if(this.z < box_or_origin.z - w || this.y > box_or_origin.z + w){
 				return false;
 			}
 		}
@@ -408,8 +388,7 @@ toxi.Vec3D.prototype = {
      * @return the vec3 d
      */
 	jitter: function(a,b,c){
-		if(b==undefined || c==undefined)
-		{
+		if(b==undefined || c==undefined){
 			b = c = a;
 		}
 		this.x += toxi.MathUtils.normalizedRandom()*a;
@@ -419,7 +398,7 @@ toxi.Vec3D.prototype = {
 	},
 	
 	limit: function(lim){
-		if(magSquared() > lim * lim){
+		if(this.magSquared() > lim * lim){
 			return this.normalize().scaleSelf(lim);
 		}
 		return this;
@@ -448,13 +427,12 @@ toxi.Vec3D.prototype = {
 	},
 	
 	modSelf: function(basex,basey,basez){
-		if(basey==undefined || basez==undefined)
-		{
+		if(basey==undefined || basez==undefined){
 			basey = basez = basex;
 		}
-		this.x %= base;
-		this.y %= base;
-		this.z %= base;
+		this.x %= basex;
+		this.y %= basey;
+		this.z %= basez;
 		return this;
 	},
 	
@@ -502,32 +480,32 @@ toxi.Vec3D.prototype = {
      * @return itself
      */
 	rotateAroundAxis: function(vec_axis,theta){
-		var ax = vec_axis.x;
-		var ay = vec_axis.y;
-        var az = vec_axis.z;
-        var ux = ax * x;
-        var uy = ax * y;
-        var uz = ax * z;
-        var vx = ay * x;
-        var vy = ay * y;
-        var vz = ay * z;
-        var wx = az * x;
-        var wy = az * y;
-        var wz = az * z;
-        var si = Math.sin(theta);
-        var co = Math.cos(theta);
-        var xx =
-                (ax * (ux + vy + wz)
-                        + (x * (ay * ay + az * az) - ax * (vy + wz)) * co + (-wy + vz)
-                        * si);
-        var yy =
-               (ay * (ux + vy + wz)
-                        + (y * (ax * ax + az * az) - ay * (ux + wz)) * co + (wx - uz)
-                        * si);
-        var zz =
-               (az * (ux + vy + wz)
-                        + (z * (ax * ax + ay * ay) - az * (ux + vy)) * co + (-vx + uy)
-                        * si);
+		var ax = vec_axis.x,
+			ay = vec_axis.y,
+        	az = vec_axis.z,
+        	ux = ax * this.x,
+        	uy = ax * this.y,
+        	uz = ax * this.z,
+        	vx = ay * this.x,
+        	vy = ay * this.y,
+        	vz = ay * this.z,
+        	wx = az * this.x,
+        	wy = az * this.y,
+        	wz = az * this.z;
+        	si = Math.sin(theta);
+        	co = Math.cos(theta);
+        var xx = (ax 
+        	* (ux + vy + wz)
+        	+ (this.x * (ay * ay + az * az) - ax * (vy + wz)) 
+        	* co + (-wy + vz) * si);
+        var yy = (ay 
+        	* (ux + vy + wz)
+            + (this.y * (ax * ax + az * az) - ay * (ux + wz)) 
+            * co + (wx - uz) * si);
+        var zz = (az 
+        	* (ux + vy + wz)
+            + (this.z * (ax * ax + ay * ay) - az * (ux + vy)) 
+            * co + (-vx + uy) * si);
         this.x = xx;
         this.y = yy;
         this.z = zz;
@@ -612,27 +590,22 @@ toxi.Vec3D.prototype = {
     },
 
 	scale:function(a,b,c) {
-		if(a instanceof toxi.Vec3D) //if it was a vec3d that was passed
-		{
+		if(a instanceof toxi.Vec3D) { //if it was a vec3d that was passed
 			return new toxi.Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
 	    }
-		else if(b==undefined || c==undefined) //if only one float was passed
-		{
+		else if(b==undefined || c==undefined) { //if only one float was passed
 			b = c = a;
 		}
 		return new toxi.Vec3D(this.x * a, this.y * b, this.z * c);
 	},
 	
 	scaleSelf: function(a,b,c) {
-		if(a instanceof toxi.Vec3D)
-		{
+		if(a instanceof Object){
 			this.x *= a.x;
 			this.y *= a.y;
 			this.z *= a.z;
 			return true;
-		}
-		else if(b==undefined || c==undefined)
-		{
+		} else if(b==undefined || c==undefined) {
 			b = c = a;
 		}
 		this.x *= a;
@@ -642,15 +615,13 @@ toxi.Vec3D.prototype = {
 	},
 	
 	set: function(a,b,c){
-		if(a instanceof toxi.Vec3D)
+		if(a instanceof Object)
 		{
 			this.x = a.x;
 			this.y = a.y;
 			this.z = a.z;
 			return this;
-		}
-		else if(b==undefined || c==undefined)
-		{
+		} else if(b==undefined || c==undefined) {
 			b = c = a;
 		}
 		this.x = a;
@@ -666,9 +637,8 @@ toxi.Vec3D.prototype = {
 	},
 	
 	shuffle:function(nIterations){
-		var t;
-		for(var i=0;i<nIterations;i++)
-		{
+		var t = undefined;
+		for(var i=0;i<nIterations;i++) {
 			switch(Math.floor(Math.random()*3)){
 				case 0:
 				t = this.x;
@@ -706,7 +676,7 @@ toxi.Vec3D.prototype = {
 	},
 	
 	sub: function(a,b,c){
-		if(a instanceof toxi.Vec3D)
+		if(a instanceof Object)
 		{
 			return  new toxi.Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 		}
@@ -718,15 +688,13 @@ toxi.Vec3D.prototype = {
 	},
 	
 	subSelf: function(a,b,c){
-		if(a instanceof toxi.Vec3D)
-		{
+		if(a instanceof Object){
 			this.x -= a.x;
 			this.y -= a.y;
 			this.z -= a.z;
 			return this;
 		}
-		else if(b==undefined || c==undefined)
-		{
+		else if(b==undefined || c==undefined){
 			b = c= a;
 		}
 		this.x -= a;
@@ -736,15 +704,15 @@ toxi.Vec3D.prototype = {
 	},
 	
 	to2DXY: function(){
-		return new Vec2D(this.x,this.y);
+		return new toxi.Vec2D(this.x,this.y);
 	},
 	
 	to2DXZ: function(){
-		return new Vec2D(this.x,this.z);
+		return new toxi.Vec2D(this.x,this.z);
 	},
 	
 	to2DYZ: function(){
-		return new Vec2D(this.y,this.z);
+		return new toxi.Vec2D(this.y,this.z);
 	},
 	
 	toArray: function(){
@@ -752,7 +720,7 @@ toxi.Vec3D.prototype = {
 	},
 	
 	toArray4:function(w){
-		var ta = toArray();
+		var ta = this.toArray();
 		ta[3] = w;
 		return ta;
 	},
@@ -849,8 +817,7 @@ toxi.Vec3D.fromYZTheta = function(theta) {
  * @return result as new vector
  */
 toxi.Vec3D.max = function(a, b) {
-        return new toxi.Vec3D(Math.max(a.x(), b.x()), Math.max(a.y(),
-                b.y()), Math.max(a.z(), b.z()));
+        return new toxi.Vec3D(Math.max(a.x(), b.x()), Math.max(a.y(),b.y()), Math.max(a.z(), b.z()));
 }
 
 /**
@@ -865,8 +832,7 @@ toxi.Vec3D.max = function(a, b) {
  * @return result as new vector
  */
 toxi.Vec3D.min = function(a,b) {
-    return new toxi.Vec3D(Math.min(a.x(), b.x()), Math.min(a.y(),
-            b.y()), Math.min(a.z(), b.z()));
+    return new toxi.Vec3D(Math.min(a.x(), b.x()), Math.min(a.y(), b.y()), Math.min(a.z(), b.z()));
 }
 
 
@@ -881,7 +847,34 @@ toxi.Vec3D.randomVector = function() {
 	var v = new toxi.Vec3D(Math.random()*2 - 1, Math.random() * 2 -1, Math.random()* 2 - 1);
 	return v.normalize();
 }
+toxi.Vec3D.ZERO = new toxi.Vec3D(0,0,0);
 toxi.Vec3D.X_AXIS = new toxi.Vec3D(1,0,0);
 toxi.Vec3D.Y_AXIS = new toxi.Vec3D(0,1,0);
 toxi.Vec3D.Z_AXIS = new toxi.Vec3D(0,0,1);
+toxi.Vec3D.Axis = {
+	X: {
+		getVector: function(){ 
+			return toxi.Vec3D.X_AXIS;
+		},
+		toString: function(){
+			return "toxi.Vec3D.Axis.X";
+		}
+	},
+	Y: {
+		getVector: function(){ 
+			return toxi.Vec3D.Y_AXIS;
+		},
+		toString: function(){
+			return "toxi.Vec3D.Axis.Y";
+		}
+	},
+	Z: {
+		getVector: function(){ 
+			return toxi.Vec3D.Z_AXIS;
+		},
+		toString: function(){
+			return "toxi.Vec3D.Axis.Z";
+		}
+	}
+};
 

@@ -1,4 +1,4 @@
-// toxi-physics2d.js r36 - http://github.com/hapticdata/toxiclibsjs
+// toxi-physics2d.js r38 - http://github.com/hapticdata/toxiclibsjs
 toxi.physics2d=toxi.physics2d||{};toxi.physics2d.removeItemFrom=function(a,b){var c=b.indexOf(a);if(c>-1)return b.splice(c,1);console.log("undefined")};
 toxi.physics2d.VerletParticle2D=function(a,b,c){this.force=new toxi.Vec2D;if(a instanceof toxi.Vec2D)if(a instanceof toxi.physics2d.VerletParticle2D){b=a.y;c=a.weight;a=a.x;this.isLocked=a.isLocked}else{if(b===undefined){b=a.y;c=1}else{c=b;b=a.y}a=a.x}toxi.Vec2D.apply(this,[a,b]);this.isLocked=false;this.prev=new toxi.Vec2D(this);this.temp=new toxi.Vec2D;c=c===undefined?1:c;this.setWeight(c)};toxi.extend(toxi.physics2d.VerletParticle2D,toxi.Vec2D);
 toxi.physics2d.VerletParticle2D.prototype.addBehavior=function(a,b){if(this.behaviors===undefined)this.behaviors=[];if(a===undefined)throw{name:"TypeError",message:"behavior was undefined"};b=b===undefined?1:b;a.configure(b);this.behaviors.push(a);return this};toxi.physics2d.VerletParticle2D.prototype.addConstraint=function(a){if(this.constraints===undefined)this.constraints=[];this.constraints.push(a);return this};

@@ -28,6 +28,7 @@ COMMON_FILES = [
 	'core/geom/Rect.js',
 	'core/geom/Circle.js',
 	'core/geom/CircleIntersector.js',
+	'core/geom/Cone.js',
 	'core/geom/Line2D.js',
 	'core/geom/Triangle.js',
 	'core/geom/Triangle2D.js',

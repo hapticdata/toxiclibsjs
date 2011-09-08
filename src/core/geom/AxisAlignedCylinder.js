@@ -73,14 +73,20 @@ toxi.AxisAlignedCylinder.prototype = {
      * @return mesh instance
      */
     toMesh: function(a,b,c) {
-    	if(a === undefined)
-    	{
-    		return new toxi.Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(null,12,0,true,true);
+    	var opts = {
+    		mesh: undefined,
+    		steps: 12,
+    		thetaOffset: 0
+    	};
+    	if(arguments.length == 1 && typeof arguments[0] == 'object'){ //options object
+    		for(var prop in arguments[0]){
+    			opts[prop] = arguments[0][prop];
+    		}
+    	} else if(arguments.length == 2){
+    		opts.steps = arguments[0];
+    		opts.thetaOffset = arguments[1];
     	}
-    	else if(a instanceof toxi.TriangleMesh3D)
-    	{
-    		return new toxi.Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(a,b,c,true,true);
-    	}
-		return new toxi.Cone(this.pos,this.getMajorAxis().getVector(),this.radius,this.radius,this.length).toMesh(null,a,b,true,true);    	
+       	var cone = new toxi.Cone(this.pos,this.getMajorAxis().getVector(), this.radius, this.radius, this.length);
+    	return cone.toMesh(opts.mesh,opts.steps,opts.thetaOffset,true,true);
     }
 };

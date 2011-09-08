@@ -14,7 +14,7 @@ toxi.Ray3D = function(a,b,c,d){
 	}
 	toxi.Vec3D.apply(this,[o]);
 	this.dir = dir;
-}
+};
 
 toxi.extend(toxi.Ray3D,toxi.Vec3D);
 
@@ -72,7 +72,7 @@ toxi.Ray3D.prototype.setDirection = function(d) {
  * @return line segment
  */
 toxi.Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
-    return new Line3D(this, this.getPointAtDistance(dist));
+    return new toxi.Line3D(this, this.getPointAtDistance(dist));
 };
 
 toxi.Ray3D.prototype.toString = function() {

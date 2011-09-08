@@ -10,7 +10,7 @@
      * @param pos
      *            centre position
      * @param dir
-     *            direction
+     *            direction vector
      * @param rNorth
      *            radius on the side in the forward direction
      * @param rSouth
@@ -21,65 +21,83 @@
 toxi.Cone = function(pos,dir,rNorth, rSouth,len) {
    	toxi.Vec3D.apply(this,[pos]);
     this.dir = dir.getNormalized();
-    this.radiusNorth = rNxiorth;
+    this.radiusNorth = rNorth;
     this.radiusSouth = rSouth;
     this.length = len;
 };
 
 toxi.extend(toxi.Cone,toxi.Vec3D);
 
-toxi.Cone.prototype.toMesh = function(a,b,c,topClosed,bottomClosed) {
-	if(topClosed === undefined){
-		topClosed = true;
+toxi.Cone.prototype.toMesh = function(args) {
+	var opts = {
+		mesh : undefined,
+		steps : NaN,
+		thetaOffset : 0,
+		topClosed : true,
+		bottomClosed : true
+	};
+	
+		
+	if ( arguments.length == 1) {
+		if ( typeof arguments[0] == 'object' ) {
+			//##then it was a javascript option-object
+			var optionsObject = arguments[0];
+			for(var prop in optionsObject){
+				opts[prop] = optionsObject[prop];
+			}
+		} else {
+			opts.steps = arguments[0];
+		}
 	}
-	if(bottomClosed === undefined){
-		bottomClosed = true;
+	else if ( arguments.length == 2 ) {
+		opts.steps = arguments[0];
+		opts.thetaOffset = arguments[1];
 	}
-	if(b === undefined){
-		var mesh = null;
-		var steps = a;
-		var thetaOffset = 0;
-	} else if( c === undefined){
-		var mesh = null;
-		var steps = a;
-		var thetaOffset = b;
-	} else {
-		var mesh = a;
-		var steps = b;
-		var thetaOffset = c;
+	else if ( arguments.length == 5 ) {
+		opts.mesh = arguments[0];
+		opts.steps = arguments[1];
+		opts.thetaOffset = arguments[2];
+		opts.topClosed = arguments[3];
+		opts.bottomClosed = arguments[4];
 	}
 	
 	var c = this.add(0.01, 0.01, 0.01),
-    	n = c.cross(this.dir.getNormalized()).normalize(),
-    	halfAxis = this.dir.scale(this.length * 0.5),
-    	p = sub(halfAxis),
-    	q = add(halfAxis),
-    	south = new Array(steps),
-    	north = new Array(steps);
-    	phi = MathUtils.TWO_PI / steps;
-    for (var i = 0; i < steps; i++) {
-        var theta = i * phi + thetaOffset;
-        nr = n.getRotatedAroundAxis(this.dir, theta);
-        south[i] = nr.scale(this.radiusSouth).addSelf(p);
-        north[i] = nr.scale(this.radiusNorth).addSelf(q);
-    }
-    var numV = steps * 2 + 2;
-    var numF = steps * 2 + (topClosed ? steps : 0) + (bottomClosed ? steps : 0);
-    if (mesh == null) {
-        mesh = new toxi.TriangleMesh("cone", numV, numF);
-    }
-    for (var i = 0, j = 1; i < steps; i++, j++) {
-        if (j == steps) {
-            j = 0;
-        }
-        mesh.addFace(south[i], north[i], south[j], null, null, null, null);
-        mesh.addFace(south[j], north[i], north[j], null, null, null, null);
-        if (bottomClosed) {
-            mesh.addFace(p, south[i], south[j], null, null, null, null);
-        }
-        if (topClosed) {
-            mesh.addFace(north[i], q, north[j], null, null, null, null);
-        }
-    }
-    return mesh;
+		n = c.cross(this.dir.getNormalized()).normalize(),
+		halfAxis = this.dir.scale(this.length * 0.5),
+		p = this.sub(halfAxis),
+		q = this.add(halfAxis),
+		south = [],
+		north = [],
+		phi = (Math.PI*2) / opts.steps;
+	
+	
+	var i = 0;
+	for(i=0;i<opts.steps;i++){
+		var theta = i * phi + opts.thetaOffset;
+		var nr = n.getRotatedAroundAxis(this.dir,theta);
+			
+			south[i] = nr.scale(this.radiusSouth).addSelf(p),
+			north[i] = nr.scale(this.radiusNorth).addSelf(q);
+	}
+	
+	
+	var numV = opts.steps * 2 + 2,
+		numF = opts.steps * 2 + (opts.topClosed ? opts.steps : 0) + (opts.bottomClosed ? opts.steps : 0),
+		mesh = opts.mesh || new toxi.TriangleMesh("cone",numV,numF);
+
+	for(i=0, j=1; i<opts.steps; i++, j++){
+		if(j == opts.steps){
+			j = 0;
+		}
+		mesh.addFace(south[i],north[i],south[j],undefined,undefined,undefined,undefined);
+		mesh.addFace(south[j],north[i],north[j],undefined,undefined,undefined,undefined);
+		if(opts.bottomClosed){
+			mesh.addFace(p, south[i], south[j], undefined,undefined,undefined,undefined);
+		}
+		if(opts.topClosed){
+			mesh.addFace(north[i], q, north[j], undefined,undefined,undefined,undefined);
+		}
+	}
+	
+	return mesh;
 };
