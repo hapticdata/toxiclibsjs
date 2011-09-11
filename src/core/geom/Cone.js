@@ -42,9 +42,11 @@ toxi.Cone.prototype.toMesh = function(args) {
 		if ( arguments[0] instanceof Object) {
 			//##then it was a javascript option-object
 			var optionsObject = arguments[0];
-			for(var prop in optionsObject){
-				opts[prop] = optionsObject[prop];
-			}
+			opts.mesh = optionsObject.mesh;
+			opts.steps = optionsObject.steps || optionsObject.resolution || optionsObject.res;
+			opts.thetaOffset = optiontsObject.thetaOffset || opts.thetaOffset;
+			opts.topClosed = optionsObject.topClosed || opts.topClosed;
+			opts.bottomClosed = optionsObject.bottomClosed || opts.bottomClosed;
 		} else {
 			opts.steps = arguments[0];
 		}

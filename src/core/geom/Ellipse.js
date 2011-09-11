@@ -12,7 +12,7 @@ toxi.Ellipse = function(a,b,c,d) {
 		if(b instanceof toxi.Vec2D){
 			this.setRadii(b.x,b.y);
 		} else {
-			this.setRadii(b,b);
+			this.setRadii(b,c);
 		}
 	} else {
 		if(d === undefined) {

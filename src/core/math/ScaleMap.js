@@ -23,7 +23,15 @@ toxi.Range.prototype.toString = function(){
  * @param minOut
  * @param maxOut
  */
+ 
 toxi.ScaleMap = function(minIn, maxIn, minOut, maxOut) {
+	if(arguments.length == 1 && arguments[0].input !== undefined && arguments[0].output !== undefined){ //opts object
+		var arg = arguments[0];
+		minIn = arg.input.min;
+		maxIn = arg.input.max;
+		minOut = arg.output.min;
+		maxOut = argu.output.max;
+	}
 	this.mapFunction = new toxi.LinearInterpolation();
 	this.setInputRange(minIn, maxIn);
 	this.setOutputRange(minOut, maxOut);

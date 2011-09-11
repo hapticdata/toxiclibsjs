@@ -3,7 +3,7 @@ toxi.Polygon2D = function(){
 	var i,l;
 	if(arguments.length > 1){ //comma-separated Vec2D's were passed in
 		for(i=0, l = arguments.length;i<l;i++){
-			this.add(p.copy());
+			this.add(arguments[i].copy());
 		}
 	} else if(arguments.length == 1){
 		var arg = arguments[0];

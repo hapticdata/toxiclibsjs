@@ -1,23 +1,24 @@
 toxi.processing = toxi.processing || {};
 
-toxi.processing.ToxiclibsSupport = function(processing,optional_gfx){
-	this.sketch = processing;
-	console.log("sketch");
-	console.log(this.sketch);
-	console.log("p")
-	console.log(this.sketch.p);
-	this.app = processing;
-	if(optional_gfx !== undefined){
-		this.gfx = processing;
-	} else {
-		this.gfx = this.app;
-	}
-}
+(function(){
+	toxi.processing.ToxiclibsSupport = function(processing,optional_gfx){
+		this.sketch = processing;
+		console.log("sketch");
+		console.log(this.sketch);
+		console.log("p")
+		console.log(this.sketch.p);
+		this.app = processing;
+		if(optional_gfx !== undefined){
+			this.gfx = processing;
+		} else {
+			this.gfx = this.app;
+		}
+		this._normalMap = new toxi.Matrix4x4().translateSelf(128,128,128).scaleSelf(127);
+	};
 
-toxi.processing.ToxiclibsSupport.prototype = (function(){
-	var normalMap = new toxi.Matrix4x4().translateSelf(128,128,128).scaleSelf(127);
-	
-	return {
+
+
+	toxi.processing.ToxiclibsSupport.prototype = {
 		box: function(aabb,smooth){
 			var mesh = aabb.toMesh();
 			if(smooth === undefined){
@@ -50,7 +51,13 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 				smooth = arguments[2];
 			}
 			
-			var mesh = cone.toMesh(new toxi.TriangleMesh(),res,thetaOffset,topClosed,bottomClosed);
+			var mesh = cone.toMesh({
+				mesh: new toxi.TriangleMesh(),
+				steps: res,
+				thetaOffset: thetaOffset,
+				topClosed: topClosed,
+				bottomClosed: bottomClosed
+			});
 			
 			if(smooth){
 				mesh.computeVertexNormals();
@@ -74,13 +81,20 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 			}
 		},
 		
-		ellipse: function(e){
+		/*
+		Pjs currently doesn't provide access to PGraphics properties,
+		such as ellipseMode. So I am allowing it as an optional propery
+		*/
+		ellipse: function(e,ellipseMode){
 			var r = e.getRadii();
-			if(this.gfx.ellipseMode === this.app.CENTER){
+			if(ellipseMode === undefined){
+				ellipseMode = this.app.CENTER;
+			}
+			if(ellipseMode === this.app.CENTER){
 				this.gfx.ellipse(e.x,e.y,r.x*2,r.y*2);
-			} else if(this.gfx.ellipseMode === this.app.RADIUS){
+			} else if(ellipseMode === this.app.RADIUS){
 				this.gfx.ellipse(e.x,e.y,r.x*2,r.y*2);
-			} else if(this.gfx.ellipseMode === this.app.CORNER || this.gfx.ellipseMode === this.app.CORNERS){
+			} else if(ellipseMode === this.app.CORNER || this.gfx.ellipseMode === this.app.CORNERS){
 				this.gfx.ellipse(e.x-r.x,e.y-r.y,r.x*2,r.y*2);
 			}
 		},
@@ -90,8 +104,8 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 		},
 		
 		line: function(){
-			var a = undefined,
-				b = undefined;
+			var a,
+				b;
 			if(arguments.length == 1){
 				var line = arguments[0];
 				a = line.a;
@@ -100,7 +114,6 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 				a = arguments[0],
 				b = arguments[1];
 			}
-			
 			if(a.z === undefined){
 				this.gfx.line(a.x,a.y,b.x,b.y);
 			} else {
@@ -109,17 +122,17 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 		},
 		
 		lineStrip2D: function(points){
-			var isFilled = this.fill; //TODO <-- verify how this works!
-			this.gfx.fill = false;
+			//var isFilled = this.fill; //TODO <-- verify how this works!
+			//this.gfx.fill = false;
 			this.processVertices2D(points,this.app.POLYGON,false);
-			this.gfx.fill = isFilled;
+			//this.gfx.fill = isFilled;
 		},
 		
 		lineStrip3D: function(points){
-			var isFilled = this.gfx.fill;
-			this.gfx.fill = false;
+			//var isFilled = this.gfx.fill;
+			//this.gfx.fill = false;
 			this.processVertices3D(points,this.app.POLYGON,false);
-			this.gfx.fill = isFilled;
+			//this.gfx.fill = isFilled;
 		},
 		
 		mesh: function(mesh,smooth,normalLength){
@@ -195,15 +208,15 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 			if(vertexNormals){
 				for(i=0;i<len;i++){
 					var f = mesh.faces[i],
-						n = normalMap.applyTo(f.a.normal);
+						n = this._normalMap.applyTo(f.a.normal);
 					this.gfx.fill(n.x,n.y,n.z);
 					this.gfx.normal(f.a.normal.x,f.a.normal.y,f.a.normal.z);
 					this.gfx.vertex(f.a.x,f.a.y,f.a.z);
-					n = normalMap.applyTo(f.b.normal);
+					n = this._normalMap.applyTo(f.b.normal);
 					this.gfx.fill(n.x,n.y,n.z);
 					this.gfx.normal(f.b.normal.x,f.b.normal.y,f.b.normal.z);
 					this.gfx.vertex(f.b.x,f.b.y,f.b.z);
-					n = normalMap.applyTo(f.c.nromal);
+					n = this._normalMap.applyTo(f.c.nromal);
 					this.gfx.fil(n.x,n.y,n.z);
 					this.gfx.normal(f.c.normal.x,f.c.normal.y,f.c.normal.z);
 					this.gfx.vertex(f.c.x,f.c.y,f.c.z);
@@ -282,7 +295,7 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 		},
 		
 		polygon2D: function(poly){
-			this.processVertices2D(poly.vertices,this.app.POLYGON,true);
+			this.processVertices2D(poly.vertices,this.app.POLYGON,false);
 		},
 		//TODO points should be iterator
 		processVertices2D: function(points, shapeID, closed){
@@ -325,14 +338,21 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 			}
 		},
 		
-		rect: function(r){
-			if(this.gfx.rectMode === this.app.CORNER){
+		/*
+		Pjs currently doesn't provide access to PGraphics properties,
+		such as rectMode. So I am allowing it as an optional propery
+		*/
+		rect: function(r,rectMode){
+			if(rectMode === undefined){
+				rectMode = this.app.CORNER;
+			}
+			if(rectMode === this.app.CORNER){
 				this.gfx.rect(r.x,r.y,r.width,r.height);
-			} else if(this.gfx.rectMode === this.app.CORNERS){
+			} else if(rectMode === this.app.CORNERS){
 				this.gfx.rect(r.x,r.y,r.x+r.width,r.y+r.height);
-			} else if(this.gfx.rectMode === this.app.CENTER){
+			} else if(rectMode === this.app.CENTER){
 				this.gfx.rect(r.x+r.widt*0.5,r.y+r.height*0.5,r.width,r.height);
-			} else if(this.gfx.rectMode === this.app.RADIUS){
+			} else if(rectMode === this.app.RADIUS){
 				var rw = r.width * 0.5,
 					rh = r.height *0.5;
 				this.gfx.rect(r.x+rw,r.y+rh,rw,rh);
@@ -389,11 +409,17 @@ toxi.processing.ToxiclibsSupport.prototype = (function(){
 			if(isFullShape || isFullShape === undefined){
 				this.gfx.beginShape(this.app.TRIANGLES);
 			}
-			var n = tri.computeNormal();
-			this.gfx.normal(n.x,n.y,n.z);
-			this.gfx.vertex(tri.a.x, tri.a.y, tri.a.z);
-        	this.gfx.vertex(tri.b.x, tri.b.y, tri.b.z);
-        	this.gfx.vertex(tri.c.x, tri.c.y, tri.c.z);
+			if(tri instanceof toxi.Triangle){
+				var n = tri.computeNormal();
+				this.gfx.normal(n.x,n.y,n.z);
+				this.gfx.vertex(tri.a.x, tri.a.y, tri.a.z);
+				this.gfx.vertex(tri.b.x, tri.b.y, tri.b.z);
+				this.gfx.vertex(tri.c.x, tri.c.y, tri.c.z);
+			} else { //should be Triangle2D
+				this.gfx.vertex(tri.a.x,tri.a.y);
+				this.gfx.vertex(tri.b.x,tri.b.y);
+				this.gfx.vertex(tri.c.x,tri.c.y);
+			}
         	if(isFullShape || isFullShape === undefined){
         		this.gfx.endShape();
         	}
