@@ -19,11 +19,11 @@
      *            length of the cone
      */
 toxi.Cone = function(pos,dir,rNorth, rSouth,len) {
-   	toxi.Vec3D.apply(this,[pos]);
-    this.dir = dir.getNormalized();
-    this.radiusNorth = rNorth;
-    this.radiusSouth = rSouth;
-    this.length = len;
+	toxi.Vec3D.apply(this,[pos]);
+	this.dir = dir.getNormalized();
+	this.radiusNorth = rNorth;
+	this.radiusSouth = rSouth;
+	this.length = len;
 };
 
 toxi.extend(toxi.Cone,toxi.Vec3D);
@@ -39,7 +39,7 @@ toxi.Cone.prototype.toMesh = function(args) {
 	
 		
 	if ( arguments.length == 1) {
-		if ( typeof arguments[0] == 'object' ) {
+		if ( arguments[0] instanceof Object) {
 			//##then it was a javascript option-object
 			var optionsObject = arguments[0];
 			for(var prop in optionsObject){
@@ -76,8 +76,8 @@ toxi.Cone.prototype.toMesh = function(args) {
 		var theta = i * phi + opts.thetaOffset;
 		var nr = n.getRotatedAroundAxis(this.dir,theta);
 			
-			south[i] = nr.scale(this.radiusSouth).addSelf(p),
-			north[i] = nr.scale(this.radiusNorth).addSelf(q);
+		south[i] = nr.scale(this.radiusSouth).addSelf(p);
+		north[i] = nr.scale(this.radiusNorth).addSelf(q);
 	}
 	
 	

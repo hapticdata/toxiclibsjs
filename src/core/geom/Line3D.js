@@ -1,17 +1,7 @@
-/**
- 		T O X I C L I B S . JS  - 0.01
-		a port of toxiclibs for Java / Processing written by Karsten Schmidt
-		
-		License				: GNU Lesser General Public version 2.1
-		Developer			: Kyle Phillips: http://haptic-data.com
-		Java Version		: http://toxiclibs.org
-*/
-
-
 toxi.Line3D = function(vec_a, vec_b) {
     this.a = vec_a;
     this.b = vec_b;
-}
+};
 
 toxi.Line3D.prototype = {
 	
@@ -45,7 +35,7 @@ toxi.Line3D.prototype = {
        var pa = this.a.add(p21.scaleSelf(mua));
        var pb = l.a.add(p43.scaleSelf(mub));
        return new toxi.Line3D.LineIntersection(toxi.Line3D.LineIntersection.Type.INTERSECTING, new toxi.Line3D(pa, pb), mua,mub);
-   	},
+	},
 
    /**
     * Computes the closest point on this line to the given one.
@@ -54,7 +44,7 @@ toxi.Line3D.prototype = {
     *            point to check against
     * @return closest point on the line
     */
-  	closestPointTo: function(p) {
+	closestPointTo: function(p) {
        var v = this.b.sub(this.a);
        var t = p.sub(this.a).dot(v) / v.magSquared();
        // Check to see if t is beyond the extents of the line segment
@@ -65,11 +55,11 @@ toxi.Line3D.prototype = {
        }
        // Return the point between 'a' and 'b'
        return this.a.add(v.scaleSelf(t));
-   	},
+	},
 
-   copy: function() {
+	copy: function() {
        return new toxi.Line3D(this.a.copy(), this.b.copy());
-   	},
+	},
 
 	equals: function(obj) {
        if (this == obj) {
@@ -78,9 +68,8 @@ toxi.Line3D.prototype = {
        if ((typeof(obj) != toxi.Line3D)) {
            return false;
        }
-       return (this.a.equals(obj.a) || this.a.equals(l.b))
-               && (this.b.equals(l.b) || this.b.equals(l.a));
-   	},
+       return (this.a.equals(obj.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
+	},
 
    getDirection: function() {
        return this.b.sub(this.a).normalize();
@@ -107,11 +96,11 @@ toxi.Line3D.prototype = {
    },
 
 
-   offsetAndGrowBy: function(offset,scale,ref) {
-       var m = this.getMidPoint();
-       var d = this.getDirection();
-       var n = this.a.cross(d).normalize();
-       if (ref != null && m.sub(ref).dot(n) < 0) {
+	offsetAndGrowBy: function(offset,scale,ref) {
+		var m = this.getMidPoint(),
+			d = this.getDirection(),
+			n = this.a.cross(d).normalize();
+       if (ref !== undefined && m.sub(ref).dot(n) < 0) {
            n.invert();
        }
        n.normalizeTo(offset);
@@ -161,7 +150,7 @@ toxi.Line3D.prototype = {
     * @return list of result vectors
     */
 toxi.Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst) {
-    if (segments == null) {
+    if (segments === undefined) {
         segments = [];
     }
     if (addFirst) {
@@ -179,16 +168,16 @@ toxi.Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, add
     }
     segments.push(vec_b.copy());
     return segments;
-}
+};
 
 
 toxi.Line3D.LineIntersection = function(type,line,mua,mub){
 	this.type = type;
-	if(mua == null)mua = 0;
-	if(mub == null)mub = 0;
+	if(mua === undefined){ mua = 0; }
+	if(mub === undefined){ mub = 0; }
 	this.line = line;
 	this.coeff = [mua,mub];
-}
+};
 
 toxi.Line3D.LineIntersection.prototype = {
 	
@@ -197,12 +186,12 @@ toxi.Line3D.LineIntersection.prototype = {
 	},
 	
 	getLength: function(){
-		if(this.line == null)return null;
+		if(this.line === undefined){ return undefined; }
 		return this.line.getLength();
 	},
 	
 	getLine: function(){
-		if(this.line==null)return null;
+		if(this.line === undefined){ return undefined; }
 		return this.line.copy();
 	},
 	
@@ -219,7 +208,8 @@ toxi.Line3D.LineIntersection.prototype = {
 	}
 };
 	
-toxi.Line3D.LineIntersection.Type = {};
-toxi.Line3D.LineIntersection.Type.NON_INTERSECTING = 0;
-toxi.Line3D.LineIntersection.Type.INTERSECTING = 1;
+toxi.Line3D.LineIntersection.Type = {
+	NON_INTERSECTING: 0,
+	INTERSECTING: 1
+};
 

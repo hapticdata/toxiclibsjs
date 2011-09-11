@@ -54,7 +54,8 @@ COMMON_FILES = [
 	'core/geom/YAxisCylinder.js',
 	'core/geom/ZAxisCylinder.js',
 	'core/geom/Line3D.js',
-	'core/geom/Ray2D.js'
+	'core/geom/Ray2D.js',
+	'core/geom/Ray3D.js'
 ]
 
 COLOR_FILES = [
@@ -145,16 +146,18 @@ def buildLib(files, debug, outputFilename):
 	text = merge(files)
 
 	if debug:
-		text = makeDebug(text)
-		outputFilename = outputFilename + 'Debug'
+		outputFilename = 'uncompressed/' + outputFilename + '-debug'
+		text = addHeader( makeDebug(text) ,outputFilename)
+	else:
+		text = addHeader(compress(text),outputFilename)
 
 	outputFilename = outputFilename + '.js'
 
 	print "=" * 40
 	print "Compiling", outputFilename
 	print "=" * 40
-
-	output(addHeader(compress(text), outputFilename), outputFilename)
+	
+	output(text, outputFilename)
 
 
 def buildIncludes(files, outputFilename):

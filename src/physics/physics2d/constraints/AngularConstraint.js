@@ -9,7 +9,7 @@ toxi.physics2d.AngularConstraint = function(theta_p,theta){
 		this.rootPos = new toxi.Vec2D();
 		this.theta = theta_p;
 	}
-	if(parseInt(this.theta) != this.theta){
+	if(parseInt(this.theta,10) != this.theta){
 		this.theta = toxi.MathUtils.radians(this.theta);
 	}
 };

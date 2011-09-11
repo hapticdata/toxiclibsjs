@@ -64,7 +64,7 @@ toxi.Rect.prototype = {
 	},
 	
 	getEdge: function(id){
-		var edge = undefined;
+		var edge;
 		switch(id){
 			case 0:
 				edge = new toxi.Line2D(
@@ -156,7 +156,7 @@ toxi.Rect.prototype = {
 	},
 	
 	set: function(x,y,width,height){
-		if(arguments.length ==- 1){
+		if(arguments.length == -1){
 			this.y = x.y;
 			this.width = x.width;
 			this.height = x.height;

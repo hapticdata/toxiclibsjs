@@ -1,25 +1,17 @@
 toxi.AABB = function(a,b){
-	var vec;
-	var extent;
-	if(a === undefined)
-	{
+	var vec,
+		extent;
+	if(a === undefined){
 		toxi.Vec3D.apply(this);
 		this.setExtent(new toxi.Vec3D());
-	}
-	else if(typeof(a) == "number")
-	{
+	} else if(typeof(a) == "number") {
 		toxi.Vec3D.apply(this,[new toxi.Vec3D()]);
 		this.setExtent(a);
-	}
-	else if(a instanceof toxi.Vec3D)
-	{
+	} else if(a instanceof toxi.Vec3D) {
 		toxi.Vec3D.apply(this,[a]);
-		if(b === undefined && a instanceof toxi.AABB)
-		{
+		if(b === undefined && a instanceof toxi.AABB) {
 			this.setExtent(a.getExtent());
-		}
-		else
-		{
+		} else {
 			if(typeof b == "number"){
 				this.setExtent(new toxi.Vec3D(b,b,b));
 			}else { //should be an AABB
@@ -32,8 +24,6 @@ toxi.AABB = function(a,b){
 };
 
 toxi.extend(toxi.AABB,toxi.Vec3D);
-
-
 
 toxi.AABB.fromMinMax = function(min,max){
 	var a = toxi.Vec3D.min(min);
@@ -73,14 +63,14 @@ toxi.AABB.prototype.getNormalForPoint = function(p) {
     p = p.sub(this);
     var pabs = this.extent.sub(p.getAbs());
     var psign = p.getSignum();
-    var normal = Vec3D.X_AXIS.scale(psign.x);
+    var normal = toxi.Vec3D.X_AXIS.scale(psign.x);
     var minDist = pabs.x;
     if (pabs.y < minDist) {
         minDist = pabs.y;
-        normal = Vec3D.Y_AXIS.scale(psign.y);
+        normal = toxi.Vec3D.Y_AXIS.scale(psign.y);
     }
     if (pabs.z < minDist) {
-        normal = Vec3D.Z_AXIS.scale(psign.z);
+        normal = toxi.Vec3D.Z_AXIS.scale(psign.z);
     }
     return normal;
 };
@@ -109,9 +99,7 @@ toxi.AABB.prototype.includePoint = function(p) {
 */
 toxi.AABB.prototype.intersectsBox = function(box) {
     var t = box.sub(this);
-    return Math.abs(t.x) <= (this.extent.x + box.extent.x)
-            && Math.abs(t.y) <= (this.extent.y + box.extent.y)
-            && Math.abs(t.z) <= (this.extent.z + box.extent.z);
+    return Math.abs(t.x) <= (this.extent.x + box.extent.x) && Math.abs(t.y) <= (this.extent.y + box.extent.y) && Math.abs(t.z) <= (this.extent.z + box.extent.z);
 };
 
 /**
@@ -183,11 +171,11 @@ toxi.AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
  */
 
 toxi.AABB.prototype.intersectsSphere = function(c, r) {
-	if(arguments.length > 1){ //must've been a sphere
+	if(arguments.length == 1){ //must've been a sphere
 		r = c.radius;
 	}
-    var s = undefined, 
-    	d = 0;
+    var s, 
+		d = 0;
     // find the square of the distance
     // from the sphere to the box
     if (c.x < this.min.x) {
@@ -227,8 +215,14 @@ toxi.AABB.prototype.intersectsTriangle = function(tri) {
 	// 2) normal of the triangle
 	// 3) crossproduct(edge from tri, {x,y,z}-directin)
 	// this gives 3x3=9 more tests
-	var v0 = undefined, v1 = undefined, v2 = undefined;
-	var normal = undefined, e0 = undefined, e1 = undefined, e2 = undefined, f = undefined;
+	var v0, 
+		v1, 
+		v2,
+		normal, 
+		e0, 
+		e1, 
+		e2, 
+		f;
 
 	// move everything so that the boxcenter is in (0,0,0)
 	v0 = tri.a.sub(this);
@@ -242,44 +236,35 @@ toxi.AABB.prototype.intersectsTriangle = function(tri) {
 
 	// test the 9 tests first (this was faster)
 	f = e0.getAbs();
-	if (this.testAxis(e0.z, -e0.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y,
-	        this.extent.z)) {
+	if (this.testAxis(e0.z, -e0.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
 	    return false;
 	}
-	if (this.testAxis(-e0.z, e0.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x,
-	        this.extent.z)) {
+	if (this.testAxis(-e0.z, e0.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
 	    return false;
 	}
-	if (this.testAxis(e0.y, -e0.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x,
-	        this.extent.y)) {
+	if (this.testAxis(e0.y, -e0.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
 	    return false;
 	}
 
 	f = e1.getAbs();
-	if (this.testAxis(e1.z, -e1.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y,
-	        this.extent.z)) {
+	if (this.testAxis(e1.z, -e1.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
 	    return false;
 	}
-	if (this.testAxis(-e1.z, e1.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x,
-	        this.extent.z)) {
+	if (this.testAxis(-e1.z, e1.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
 	    return false;
 	}
-	if (this.testAxis(e1.y, -e1.x, f.y, f.x, v0.x, v0.y, v1.x, v1.y, this.extent.x,
-	        this.extent.y)) {
+	if (this.testAxis(e1.y, -e1.x, f.y, f.x, v0.x, v0.y, v1.x, v1.y, this.extent.x, this.extent.y)) {
 	    return false;
 	}
 
 	f = e2.getAbs();
-	if (this.testAxis(e2.z, -e2.y, f.z, f.y, v0.y, v0.z, v1.y, v1.z, this.extent.y,
-	       this.extent.z)) {
+	if (this.testAxis(e2.z, -e2.y, f.z, f.y, v0.y, v0.z, v1.y, v1.z, this.extent.y, this.extent.z)) {
 	    return false;
 	}
-	if (this.testAxis(-e2.z, e2.x, f.z, f.x, v0.x, v0.z, v1.x, v1.z, this.extent.x,
-	        this.extent.z)) {
+	if (this.testAxis(-e2.z, e2.x, f.z, f.x, v0.x, v0.z, v1.x, v1.z, this.extent.x, this.extent.z)) {
 	    return false;
 	}
-	if (this.testAxis(e2.y, -e2.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x,
-	        this.extent.y)) {
+	if (this.testAxis(e2.y, -e2.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
 	    return false;
 	}
 
@@ -289,20 +274,17 @@ toxi.AABB.prototype.intersectsTriangle = function(tri) {
 	// the triangle against the AABB
 
 	// test in X-direction
-	if (toxi.MathUtils.min(v0.x, v1.x, v2.x) > this.extent.x
-	        || toxi.MathUtils.max(v0.x, v1.x, v2.x) < -this.extent.x) {
+	if (toxi.MathUtils.min(v0.x, v1.x, v2.x) > this.extent.x || toxi.MathUtils.max(v0.x, v1.x, v2.x) < -this.extent.x) {
 	    return false;
 	}
 
 	// test in Y-direction
-	if (toxi.MathUtils.min(v0.y, v1.y, v2.y) > this.extent.y
-	        || toxi.MathUtils.max(v0.y, v1.y, v2.y) < -this.extent.y) {
+	if (toxi.MathUtils.min(v0.y, v1.y, v2.y) > this.extent.y || toxi.MathUtils.max(v0.y, v1.y, v2.y) < -this.extent.y) {
 	    return false;
 	}
 
 	// test in Z-direction
-	if (toxi.MathUtils.min(v0.z, v1.z, v2.z) > this.extent.z
-	        || toxi.MathUtils.max(v0.z, v1.z, v2.z) < -this.extent.z) {
+	if (toxi.MathUtils.min(v0.z, v1.z, v2.z) > this.extent.z || toxi.MathUtils.max(v0.z, v1.z, v2.z) < -this.extent.z) {
 	    return false;
 	}
 
@@ -360,13 +342,11 @@ toxi.AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
  */
 
 toxi.AABB.prototype.set = function(a,b,c) {
-		if(typeof(a)==toxi.AABB)
-		{
-        	this.extent.set(a.extent);
-        	return this.parent.set.call(this,a);
+		if(a  instanceof toxi.AABB) {
+			this.extent.set(a.extent);
+			return toxi.Vec3D.set.apply(this,[a]);
 		}
-		if(typeof(a)==toxi.Vec3D)
-		{
+		if(a instanceof toxi.Vec3D){
 			b = a.y;
 			c = a.z;
 			a = a.a;
@@ -448,7 +428,7 @@ toxi.AABB.prototype.toString = function() {
 */
 toxi.AABB.prototype.updateBounds = function() {
   // this is check is necessary for the constructor
-  if (this.extent != undefined) {
+  if (this.extent !== undefined) {
       this.min = this.sub(this.extent);
       this.max = this.add(this.extent);
   }

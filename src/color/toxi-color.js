@@ -1,1 +1,1 @@
-toxi.color = (toxi.color === undefined) ? {} : toxi.color;
+toxi.color = toxi.color || {};

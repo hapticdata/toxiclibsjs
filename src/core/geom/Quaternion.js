@@ -15,7 +15,7 @@ toxi.Quaternion = function (qw,vx,y,z){
 		this.y = q.y;
 		this.z = q.z;
 	}
-}
+};
 
 
 toxi.Quaternion.prototype = {
@@ -56,8 +56,8 @@ toxi.Quaternion.prototype = {
 		if(arguments.length == 3){
 			t = is.interpolate(0,1,t);
 		}
-		var scale = undefined,
-			invscale = undefined,
+		var scale,
+			invscale,
 			dot = toxi.MathUtils.clip(this.dot(target),-1,1);
 			if((1.0-dot) >= toxi.MathUtils.EPS){
 				var theta = Math.acos(dot);
@@ -179,9 +179,11 @@ toxi.Quaternion.prototype = {
 		var wz = this.w * z2;
 		
 		var st = x2 +','+y2+','+z2+','+xx+','+xy+','+xz+','+yy+','+yz+','+zz+','+wx+','+wy+','+wz;
-		return result.set(1 - (yy + zz), xy - wz, xz + wy, 0, xy + wz,
-                1 - (xx + zz), yz - wx, 0, xz - wy, yz + wx, 1 - (xx + yy), 0,
-                0, 0, 0, 1);
+		return result.set(
+			1 - (yy + zz), xy - wz, xz + wy, 0, xy + wz,
+			1 - (xx + zz), yz - wx, 0, xz - wy, yz + wx, 1 - (xx + yy), 0,
+			0, 0, 0, 1
+		);
 	},
 	toString: function(){
 		return "{axis: ["+this.x+","+this.y+","+this.z+"], w: "+this.w+"}";
@@ -193,9 +195,9 @@ toxi.Quaternion.DOT_THRESHOLD = 0.9995;
 
 toxi.Quaternion.createFromAxisAngle = function(axis,angle){
 	angle *= 0.5;
-	var sin = toxi.MathUtils.sin(angle);
-	var cos = toxi.MathUtils.cos(angle);
-	var q = new toxi.Quaternion(cos,axis.getNormalizedTo(sin));
+	var sin = toxi.MathUtils.sin(angle),
+		cos = toxi.MathUtils.cos(angle),
+		q = new toxi.Quaternion(cos,axis.getNormalizedTo(sin));
 	return q;
 };
 
@@ -204,7 +206,7 @@ toxi.Quaternion.createFromEuler = function(pitch,yaw,roll){
 	yaw *=0.5;
 	roll *= 0.5;
 	
-	var sinPitch = toxi.MathUtils.sin(pitch);
+	var sinPitch = toxi.MathUtils.sin(pitch),
 		cosPitch = toxi.MathUtils.cos(pitch),
 		sinYaw = toxi.MathUtils.sin(yaw),
 		cosYaw = toxi.MathUtils.cos(yaw),
@@ -263,9 +265,9 @@ toxi.Quaternion.createFromMatrix = function(m){
  };
  
  toxi.Quaternion.getAlignmentQuat = function(dir,forward){
- 		var target = dir.getNormalized();
-        var axis = forward.cross(target);
-        var length = axis.magnitude() + 0.0001;
-        var angle = Math.atan2(length, forward.dot(target));
+		var target = dir.getNormalized(),
+			axis = forward.cross(target),
+			length = axis.magnitude() + 0.0001,
+			angle = Math.atan2(length, forward.dot(target));
         return this.createFromAxisAngle(axis, angle);
  };

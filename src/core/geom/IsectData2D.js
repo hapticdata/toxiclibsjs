@@ -9,7 +9,7 @@ toxi.IsectData2D = function(isec){
 	else {
 		this.clear();
 	}
-}
+};
 
 toxi.IsectData2D.prototype = {
 	clear: function(){

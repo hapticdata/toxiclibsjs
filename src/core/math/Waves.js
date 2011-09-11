@@ -1,22 +1,11 @@
 /**
- 		T O X I C L I B S . JS  - 0.01
-		a port of toxiclibs for Java / Processing written by Karsten Schmidt
-		
-		License				: GNU Lesser General Public version 2.1
-		Developer			: Kyle Phillips: http://haptic-data.com
-		Java Version		: http://toxiclibs.org
-*/
-
-
-/**
  * Abstract wave oscillator type which needs to be subclassed to implement
  * different waveforms. Please note that the frequency unit is radians, but
  * conversion methods to & from Hertz ({@link #hertzToRadians(float, float)})
  * are included in this base class.
  */
 toxi.AbstractWave = function(phase,freq,amp,offset){
-	if(phase !== undefined || freq !== undefined || amp !== undefined || offset !== undefined)
-	{
+	if(phase !== undefined || freq !== undefined || amp !== undefined || offset !== undefined){
 		this.setPhase(phase);
 		this.frequency = freq;
 		if(amp === undefined)amp = 1;
@@ -49,22 +38,22 @@ toxi.AbstractWave.prototype = {
 	},
 	
 	pop: function() {
-        if (this.stateStack == null || (this.stateStack != null && this.stateStack.length <= 0)) {
+        if (this.stateStack === undefined || (this.stateStack !== undefined && this.stateStack.length <= 0)) {
             //throw new Error("no wave states on stack");
 			console.log(this.toString());
 			console.log("no wave states on stack");
         }
 		else{
-        	var s = this.stateStack.pop();
-        	this.phase = s.phase;
-        	this.frequency = s.frequency;
-        	this.amp = s.amp;
-        	this.offset = s.offset;
+			var s = this.stateStack.pop();
+			this.phase = s.phase;
+			this.frequency = s.frequency;
+			this.amp = s.amp;
+		this.offset = s.offset;
 		}
     },
 
 	push: function() {
-        if (this.stateStack == null) {
+        if (this.stateStack === undefined) {
             this.stateStack = [];
         }
         this.stateStack.push(new toxi.WaveState(this.phase, this.frequency, this.amp, this.offset));
@@ -105,7 +94,7 @@ toxi.AbstractWave.TWO_PI = 2 * toxi.AbstractWave.PI;
  */
 toxi.AbstractWave.hertzToRadians = function(hz,sampleRate) {
         return hz / sampleRate * toxi.AbstractWave.TWO_PI;
-}
+};
 
 /**
  * Converts a frequency from radians to Hertz.
@@ -118,7 +107,7 @@ toxi.AbstractWave.hertzToRadians = function(hz,sampleRate) {
  */
 toxi.AbstractWave.radiansToHertz = function(f,sampleRate) {
     return f / toxi.AbstractWave.TWO_PI * sampleRate;
-}
+};
 
 
 
@@ -220,8 +209,8 @@ toxi.FMHarmonicSquareWave = function(a,b,c,d,e) {
 		if(e === undefined){
 			e = new toxi.ConstantWave(0);
 		}
-    	toxi.AbstractWave.apply(this,[a,b,c,d]);
-    	this.fmod = e;
+		toxi.AbstractWave.apply(this,[a,b,c,d]);
+		this.fmod = e;
 	} else{
 		toxi.AbstractWave.apply(this,[a,b]);
 		this.fmod = c;

@@ -4,7 +4,7 @@
 
 toxi.Ellipse = function(a,b,c,d) {
 	this.radius = new toxi.Vec2D();
-	if(arguments.length == 0){
+	if(arguments.length === 0){
 		toxi.Vec2D.apply(this,[0,0]);
 		this.setRadii(1,1);
 	} else if(a instanceof toxi.Vec2D) {
@@ -117,9 +117,9 @@ toxi.Ellipse.prototype.toPolygon2D = function(res) {
     var poly = new toxi.Polygon2D();
     var step = toxi.MathUtils.TWO_PI / res;
     for (var i = 0; i < res; i++) {
-    	var v = toxi.Vec2D.fromTheta(i * step).scaleSelf(this.radius).addSelf(this);
-        poly.add(v);
-    }
+		var v = toxi.Vec2D.fromTheta(i * step).scaleSelf(this.radius).addSelf(this);
+		poly.add(v);
+	}
     return poly;
 };
 

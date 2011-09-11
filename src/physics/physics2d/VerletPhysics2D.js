@@ -2,36 +2,30 @@ toxi.physics2d.VerletPhysics2D = function(gravity, numIterations, drag, timeStep
 	this.behaviors = [];
 	this.particles = [];
 	this.springs = [];
-	this.numIterations = (numIterations === undefined) ? 50 : numIterations;
-	this.timeStep = (timeStep === undefined) ? 1 : timeStep;
+	this.numIterations = numIterations || 50;
+	this.timeStep = timeStep || 1;
 	this.setDrag(drag || 0);
 	
 	if(gravity !== undefined){
 		this.addBehavior(new toxi.physics2d.GravityBehavior(gravity));
 	}
-
-}
+};
 
 toxi.physics2d.VerletPhysics2D.addConstraintToAll = function(c, list){
 	for(var i=0;i<list.length;i++){
 		list[i].addConstraint(c);
 	}
-}
+};
 
 toxi.physics2d.VerletPhysics2D.removeConstraintFromAll = function(c,list){
 	for(var i=0;i<list.length;i++){
 		list[i].removeConstraint(c);
 	}
-}
+};
 
 toxi.physics2d.VerletPhysics2D.prototype = {
 	
 	addBehavior: function(behavior){
-		if(behavior === undefined){
-			throw { name: "TypeError",
-					message: "Incorrect Parameters for toxi.physics2d.VerletPhysics2D addBehavior"
-				};
-		}
 		behavior.configure(this.timeStep);
 		this.behaviors.push(behavior);
 	},
@@ -55,8 +49,8 @@ toxi.physics2d.VerletPhysics2D.prototype = {
 	},
 	
 	constrainToBounds: function(){ //protected
-		var p = undefined;
-		var i = 0;
+		var p,
+			i = 0;
 		for(i=0;i<this.particles.length;i++){
 			p = this.particles[i];
 			if(p.bounds !== undefined){
@@ -74,8 +68,8 @@ toxi.physics2d.VerletPhysics2D.prototype = {
 	getCurrentBounds: function(){
 		var min = new toxi.Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
 		var max = new toxi.Vec2D(Number.MIN_VALUE, Number.MIN_VALUE);
-		var i = 0;
-		var p = undefined;
+		var i = 0,
+			p;
 		for(i = 0;i<this.particles.length;i++){
 			p = this.particles[i];
 			min.minSelf(p);
@@ -160,10 +154,10 @@ toxi.physics2d.VerletPhysics2D.prototype = {
 	},
 	
 	updateParticles: function(){
-		var i = 0;
-		var j = 0;
-		var b = undefined;
-		var p = undefined;
+		var i = 0,
+			j = 0,
+			b,
+			p;
 		for(i = 0;i<this.behaviors.length;i++){
 			b = this.behaviors[i];
 			for(j = 0;j<this.particles.length;j++){
@@ -179,8 +173,8 @@ toxi.physics2d.VerletPhysics2D.prototype = {
 	},
 	
 	updateSprings: function(){
-		var i = 0;
-		var j = 0;
+		var i = 0,
+			j = 0;
 		for(i = this.numIterations; i > 0; i--){
 			for(j = 0;j<this.springs.length;j++){
 				var s = this.springs[j];

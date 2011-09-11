@@ -1,7 +1,7 @@
 toxi.CircleIntersector = function(circle) {
     this.circle = circle;
     this.isec = undefined;
-}
+};
 
 toxi.CircleIntersector.prototype = {
 

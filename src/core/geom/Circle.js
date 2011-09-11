@@ -54,24 +54,26 @@ toxi.Circle.from2Points = function(p1,p2) {
  * @return new circle instance or null
  */
 toxi.Circle.from3Points = function(p1,p2,p3) {
-    var circle = undefined,
-    deltaA = p2.sub(p1),
-    deltaB = p3.sub(p2);
-    if (toxi.MathUtils.abs(deltaA.x) <= 0.0000001 && toxi.MathUtils.abs(deltaB.y) <= 0.0000001) {
-        var centroid = new toxi.Vec2D(p2.x + p3.x, p1.y + p2.y).scaleSelf(0.5);
-        var radius = centroid.distanceTo(p1);
-        circle = new toxi.Circle(centroid, radius);
-    } else {
-        var aSlope = deltaA.y / deltaA.x;
-        var bSlope = deltaB.y / deltaB.x;
-        if (toxi.MathUtils.abs(aSlope - bSlope) > 0.0000001 && aSlope != 0) {
-            var x = (aSlope * bSlope * (p1.y - p3.y) + bSlope * (p1.x + p2.x) - aSlope * (p2.x + p3.x)) / (2 * (bSlope - aSlope));
-            var y = -(x - (p1.x + p2.x) / 2) / aSlope + (p1.y + p2.y) / 2;
-            var centroid = new toxi.Vec2D(x, y);
-            var radius = centroid.distanceTo(p1);
-            circle = new toxi.Circle(centroid, radius);
-        }
-    }
+    var circle,
+		deltaA = p2.sub(p1),
+		deltaB = p3.sub(p2),
+		centroid,
+		radius;
+	if (toxi.MathUtils.abs(deltaA.x) <= 0.0000001 && toxi.MathUtils.abs(deltaB.y) <= 0.0000001) {
+		centroid = new toxi.Vec2D(p2.x + p3.x, p1.y + p2.y).scaleSelf(0.5);
+		radius = centroid.distanceTo(p1);
+		circle = new toxi.Circle(centroid, radius);
+	} else {
+		var aSlope = deltaA.y / deltaA.x;
+		var bSlope = deltaB.y / deltaB.x;
+		if (toxi.MathUtils.abs(aSlope - bSlope) > 0.0000001 && aSlope !== 0) {
+			var x = (aSlope * bSlope * (p1.y - p3.y) + bSlope * (p1.x + p2.x) - aSlope * (p2.x + p3.x)) / (2 * (bSlope - aSlope));
+			var y = -(x - (p1.x + p2.x) / 2) / aSlope + (p1.y + p2.y) / 2;
+			centroid = new toxi.Vec2D(x, y);
+			radius = centroid.distanceTo(p1);
+			circle = new toxi.Circle(centroid, radius);
+		}
+	}
     return circle;
 };
 
@@ -97,11 +99,11 @@ toxi.Circle.prototype.getTangentPoints = function(p) {
 
 
 toxi.Circle.prototype.intersectsCircle = function(c) {
-    var res = null;
-    var delta = c.sub(this);
-    var d = delta.magnitude();
-    var r1 = this.radius.x;
-    var r2 = c.radius.x;
+    var res,
+		delta = c.sub(this),
+		d = delta.magnitude(),
+		r1 = this.radius.x,
+		r2 = c.radius.x;
     if (d <= r1 + r2 && d >= Math.abs(r1 - r2)) {
         var a = (r1 * r1 - r2 * r2 + d * d) / (2.0 * d);
         d = 1 / d;

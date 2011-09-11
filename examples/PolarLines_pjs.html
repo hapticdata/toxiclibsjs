@@ -9,46 +9,6 @@
 	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script src="../src/toxi-packaging.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
-	<script type="text/javascript">
-	/*
-	 * This code searches for all the <script type="application/processing" target="canvasid">
-	 * in your page and loads each script in the target canvas with the proper id.
-	 * It is useful to smooth the process of adding Processing code in your page and starting
-	 * the Processing.js engine.
-	 */
-
-	if (window.addEventListener) {
-	  window.addEventListener("load", function() {
-	    var scripts = document.getElementsByTagName("script");
-	    var canvasArray = Array.prototype.slice.call(document.getElementsByTagName("canvas"));
-	    var canvas;
-	    for (var i = 0, j = 0; i < scripts.length; i++) {
-	      if (scripts[i].type == "application/processing") {
-	        var src = scripts[i].getAttribute("target");
-	        if (src && src.indexOf("#") > -1) {
-	          canvas = document.getElementById(src.substr(src.indexOf("#") + 1));
-	          if (canvas) {
-	            new Processing(canvas, scripts[i].text);
-	            for (var k = 0; k< canvasArray.length; k++)
-	            {
-	              if (canvasArray[k] === canvas) {
-	                // remove the canvas from the array so we dont override it in the else
-	                canvasArray.splice(k,1);
-	              }
-	            }
-	          }
-	        } else {    
-	          if (canvasArray.length >= j) {
-	            new Processing(canvasArray[j], scripts[i].text);          
-	          }
-	          j++;
-	        }       
-	      }
-	    }
-	  }, false);
-	}
-
-	</script>
 </head>
 <body class="container_12">
 <header class="grid_12">
@@ -58,7 +18,7 @@
 	</hgroup>
 </header>
 
-<script type="application/processing">
+<script id="code" type="text/processing" data-processing-target="myCanvas">
 /**
  * PolarLines demo shows the difference between lines in normal cartesian
  * and polar coordinate systems, where a line is actually a curve/spiral.
@@ -91,10 +51,12 @@
 import toxi.geom.*;
 
 
-toxi.globalize();
 
 void setup() {
   size(640,560);
+  console.log($p);
+  toxi.globalize(this);
+  console.log(this);
   smooth();
 }
 
@@ -105,7 +67,7 @@ void draw() {
   strokeWeight(2);
 
   // start point at radius 10, 0 degrees
-  Vec2D a=new Vec2D(10,0);
+  Vec2D a= new Vec2D(10,0);
 
   // end point at mouse position
   Vec2D b=new Vec2D(mouseX,mouseY).sub(width/2,height/2).toPolar();
@@ -135,6 +97,10 @@ void draw() {
   }
 }
 
+</script>
+<script>
+	var code = document.getElementById("code").innerHTML;
+	console.log(Processing.compile(code).sourceCode);
 </script>
 <div class="grid_12">
 <canvas id="myCanvas" width="200" height="200">

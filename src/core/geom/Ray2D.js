@@ -6,7 +6,7 @@ toxi.Ray2D = function(a,b,d){
 	} else if(arguments.length == 2){
 		toxi.Vec2D.apply(this,[a]);
 		this.dir = b.getNormalized();
-	} else if(arguments.length == 0){
+	} else if(arguments.length === 0){
 		toxi.Vec2D.apply(this);
 		this.dir = toxi.Vec2D.Y_AXIS.copy();
 	}
@@ -55,5 +55,5 @@ toxi.Ray2D.prototype.toLine2DWithPointAtDistance = function(dist) {
 };
 
 toxi.Ray2D.prototype.toString = function() {
-    return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
+    return "origin: " + toxi.Vec2D.prototype.toString.apply(this) + " dir: " + this.dir;
 };

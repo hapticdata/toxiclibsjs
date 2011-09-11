@@ -14,7 +14,7 @@ toxi.BoxSelector.prototype.selectVertices = function() {
     var verts = this.mesh.getVertices();
     var l = verts.length;
     for (var i=0;i<l;i++) {
-    	var v = verts[i];
+		var v = verts[i];
         if (this.box.containsPoint(v)) {
             this.selection.add(v);
         }
@@ -48,7 +48,7 @@ toxi.PlaneSelector.prototype.selectVertices = function() {
     var verts = this.mesh.getVertices();
     var l = verts.length;
     for (var i=0;i<l;i++) {
-    	var v = verts[i];
+		var v = verts[i];
         if (this.plane.classifyPoint(v, this.tolerance) == this.classifier) {
             this.selection.add(v);
         }

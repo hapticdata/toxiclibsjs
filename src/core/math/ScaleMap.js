@@ -1,11 +1,10 @@
-toxi.Range = function(min,max)
-{
+toxi.Range = function(min,max){
 	this.min = min;
 	this.max = max;
-}
+};
 toxi.Range.prototype.toString = function(){
 	return "{ min: "+this.min+ ", max: "+this.max+"}";
-}
+};
 
 
 /**
@@ -28,7 +27,7 @@ toxi.ScaleMap = function(minIn, maxIn, minOut, maxOut) {
 	this.mapFunction = new toxi.LinearInterpolation();
 	this.setInputRange(minIn, maxIn);
 	this.setOutputRange(minOut, maxOut);
-}
+};
 
 
 toxi.ScaleMap.prototype = {
@@ -129,6 +128,6 @@ toxi.ScaleMap.prototype = {
     },
     
     toString: function(){
-    	return "toxi.ScaleMap, inputRange: "+this._in.toString() + " outputRange: "+this._out.toString();
+		return "toxi.ScaleMap, inputRange: "+this._in.toString() + " outputRange: "+this._out.toString();
     }
 };

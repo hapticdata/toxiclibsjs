@@ -1,12 +1,3 @@
-/**
- 		T O X I C L I B S . JS  - 0.01
-		a port of toxiclibs for Java / Processing written by Karsten Schmidt
-		
-		License				: GNU Lesser General Public version 2.1
-		Developer			: Kyle Phillips: http://haptic-data.com
-		Java Version		: http://toxiclibs.org
-*/
-
 
 /**
  * Bezier curve interpolation with configurable coefficients. The curve
@@ -29,17 +20,14 @@
 toxi.BezierInterpolation = function(h1,h2) {
 	this.c1 = h1;
 	this.c2 = h2;
-}
+};
 
 toxi.BezierInterpolation.prototype = {
 	interpolate: function(a,b,t) {
 		var tSquared = t * t;
 	    var invT = 1.0 - t;
 	    var invTSquared = invT * invT;
-	    return (a * invTSquared * invT)
-	            + (3 * (this.c1 * (b - a) + a) * t * invTSquared)
-	            + (3 * (this.c2 * (b - a) + b) * tSquared * invT)
-	            + (b * tSquared * t);
+	    return (a * invTSquared * invT) + (3 * (this.c1 * (b - a) + a) * t * invTSquared) + (3 * (this.c2 * (b - a) + b) * tSquared * invT) + (b * tSquared * t);
 	},
 
     setCoefficients:function(a, b) {
@@ -64,11 +52,10 @@ toxi.BezierInterpolation.prototype = {
  *            true, if slope is inverted
  */
 toxi.CircularInterpolation = function(isFlipped) {
-   if(isFlipped = undefined)
-   {
-   		this.isFlipped = false;
-   	}
-}
+   if(isFlipped === undefined){
+		this.isFlipped = false;
+	}
+};
 
 toxi.CircularInterpolation.prototype = {
 	interpolate: function( a, b, f) {
@@ -92,11 +79,11 @@ toxi.CircularInterpolation.prototype = {
  * 
  * i = b+(a-b)*(0.5+0.5*cos(f*PI))
  */
-toxi.CosineInterpolation = function(){}
+toxi.CosineInterpolation = function(){};
 
 toxi.CosineInterpolation.prototype = {
 	interpolate: function(a, b, f) {
-    	return b + (a - b) * (0.5 + 0.5 * Math.cos(f * Math.PI));
+		return b + (a - b) * (0.5 + 0.5 * Math.cos(f * Math.PI));
 	}
 };
 
@@ -109,10 +96,12 @@ toxi.CosineInterpolation.prototype = {
  * {@link InterpolateStrategy} can be specified via the constructor.
  */
 toxi.DecimatedInterpolation = function(steps,strategy) {
- if(steps === undefined)throw new Error("steps was not passed to constructor");
+ if(steps === undefined){
+	throw new Error("steps was not passed to constructor");
+ }
  this.numSteps = steps;
  this.strategy = (strategy===undefined)? new toxi.LinearInterpolation() : strategy;
-}
+};
 
 toxi.DecimatedInterpolation.prototype = {	
 	interpolate: function(a,b,f) {
@@ -132,12 +121,11 @@ toxi.DecimatedInterpolation.prototype = {
  */
 toxi.ExponentialInterpolation = function(exp) {
    this.exponent = (exp === undefined)?2 : exp;
-}
+};
 
 toxi.ExponentialInterpolation.prototype = {
-	
 	interpolate: function(a, b, f) {
-    return a + (b - a) * Math.pow(f, this.exponent);
+		return a + (b - a) * Math.pow(f, this.exponent);
     }
 };
 
@@ -171,7 +159,7 @@ toxi.ExponentialInterpolation.prototype = {
 toxi.Interpolation2D = {};
 toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
 	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if(_x instanceof Vec2D) //if the first 3 params are passed in as Vec2Ds
+	if(_x instanceof Object) //if the first 3 params are passed in as Vec2Ds
 	{
 		x = _x.x;
 		y = _x.y;
@@ -186,9 +174,7 @@ toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _b
 		tr = _x2;
 		bl = _y2;
 		br = _tl;
-	}
-	else
-	{
+	} else {
 		x = _x;
 		y = _y;
 		x1 = _x1;
@@ -214,7 +200,7 @@ toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _b
  * i = a + ( b - a ) * f
  */
 
-toxi.LinearInterpolation = function(){}
+toxi.LinearInterpolation = function(){};
 
 toxi.LinearInterpolation.prototype = {
 	interpolate: function(a, b, f) {
@@ -226,9 +212,11 @@ toxi.LinearInterpolation.prototype = {
  * Initializes the s-curve with default sharpness = 2
  */
 toxi.SigmoidInterpolation = function(s) {
-	if(s === undefined)s = 2.0;
-		this.setSharpness(s);
-}
+	if(s === undefined){
+		s = 2.0;
+	}
+	this.setSharpness(s);
+};
 
 toxi.SigmoidInterpolation.prototype = {	
 	getSharpness: function() {
@@ -245,7 +233,6 @@ toxi.SigmoidInterpolation.prototype = {
 	    this.sharpness = s;
 	    this.sharpPremult = 5 * s;
 	}
-	
 };
 
 /**
@@ -254,7 +241,7 @@ toxi.SigmoidInterpolation.prototype = {
  */
 toxi.ThresholdInterpolation = function(threshold) {
 	this.threshold = threshold;
-}
+};
 
 toxi.ThresholdInterpolation.prototype = {
 	interpolate: function(a, b, f) {
@@ -271,36 +258,33 @@ toxi.ThresholdInterpolation.prototype = {
 
 
 toxi.ZoomLensInterpolation = function(lensPos, lensStrength) {
-	this.leftImpl = new CircularInterpolation();
-	this.rightImpl = new CircularInterpolation();
+	this.leftImpl = new toxi.CircularInterpolation();
+	this.rightImpl = new toxi.CircularInterpolation();
 	this.lensPos = (lenPos === undefined) ? 0.5 :lensPos;
-	this.lensStrength = (lenStrength==undefined) ? 1 :lensStrength;
+	this.lensStrength = (lenStrength===undefined) ? 1 :lensStrength;
 	this.absStrength = Math.abs(this.lensStrength);
 	this.leftImpl.setFlipped(this.lensStrength > 0);
 	this.rightImpl.setFlipped(this.lensStrength < 0);
-}
+};
 
 toxi.ZoomLensInterpolation.prototype = {
-
 	interpolate: function(min,max,t) {
 	    var val = min + (max - min) * t;
 	    if (t < this.lensPos) {
-	        val +=
-	                (this.leftImpl.interpolate(min, min + (max - min) * this.lensPos, t/ this.lensPos) - val)* this.absStrength;
+	        val += (this.leftImpl.interpolate(min, min + (max - min) * this.lensPos, t/ this.lensPos) - val)* this.absStrength;
 	    } else {
-	        val +=
-	                (this.rightImpl.interpolate(min + (max - min) * this.lensPos, max,(t - this.lensPos) / (1 - this.lensPos)) - val) * this.absStrength;
+	        val += (this.rightImpl.interpolate(min + (max - min) * this.lensPos, max,(t - this.lensPos) / (1 - this.lensPos)) - val) * this.absStrength;
 	    }
 	    return val;
 	},
 	
 	setLensPos: function(pos, smooth) {
-	    this.lensPos += (MathUtils.clipNormalized(pos) - this.lensPos) * smooth;
+	    this.lensPos += (toxi.MathUtils.clipNormalized(pos) - this.lensPos) * smooth;
 	},
 	
 	setLensStrength: function(str, smooth) {
-	    this.lensStrength += (MathUtils.clip(str, -1, 1) - this.lensStrength) * smooth;
-	    this.absStrength = MathUtils.abs(this.lensStrength);
+	    this.lensStrength += (toxi.MathUtils.clip(str, -1, 1) - this.lensStrength) * smooth;
+	    this.absStrength = toxi.MathUtils.abs(this.lensStrength);
 	    this.leftImpl.setFlipped(this.lensStrength > 0);
 	    this.rightImpl.setFlipped(this.lensStrength < 0);
 	}

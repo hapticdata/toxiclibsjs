@@ -1,67 +1,18 @@
-/**
- 		T O X I C L I B S . JS  - 0.01
-		a port of toxiclibs for Java / Processing written by Karsten Schmidt
-		
-		License				: GNU Lesser General Public version 2.1
-		Developer			: Kyle Phillips: http://haptic-data.com
-		Java Version		: http://toxiclibs.org
-*/
-
-
 toxi.MathUtils = {};
-/**
- * Square root of 2
- */
 toxi.MathUtils.SQRT2 = Math.sqrt(2);
-
-/**
- * Square root of 3
- */
 toxi.MathUtils.SQRT3 = Math.sqrt(3);
-
-/**
- * Log(2)
- */
 toxi.MathUtils.LOG2 = Math.log(2);
-
-/**
- * PI
- */
 toxi.MathUtils.PI = 3.14159265358979323846;
 
 /**
  * The reciprocal of PI: (1/PI)
  */
 toxi.MathUtils.INV_PI = 1.0 / toxi.MathUtils.PI;
-
-/**
- * PI/2
- */
 toxi.MathUtils.HALF_PI = toxi.MathUtils.PI / 2;
-
-/**
- * PI/3
- */
 toxi.MathUtils.THIRD_PI = toxi.MathUtils.PI / 3;
-
-/**
- * PI/4
- */
 toxi.MathUtils.QUARTER_PI = toxi.MathUtils.PI / 4;
-
-/**
- * PI*2
- */
 toxi.MathUtils.TWO_PI = toxi.MathUtils.PI * 2;
-
-/**
- * PI*1.5
- */
 toxi.MathUtils.THREE_HALVES_PI = toxi.MathUtils.TWO_PI - toxi.MathUtils.HALF_PI;
-
-/**
- * PI*PI
- */
 toxi.MathUtils.PI_SQUARED = toxi.MathUtils.PI * toxi.MathUtils.PI;
 
 /**
@@ -78,22 +29,12 @@ toxi.MathUtils.DEG2RAD = toxi.MathUtils.PI / 180;
  * Radians to degrees conversion factor
  */
 toxi.MathUtils.RAD2DEG = 180 / toxi.MathUtils.PI;
-
 toxi.MathUtils.SHIFT23 = 1 << 23;
 toxi.MathUtils.INV_SHIFT23 = 1.0 / toxi.MathUtils.SHIFT23;
-
 toxi.MathUtils.SIN_A = -4.0 / (toxi.MathUtils.PI * toxi.MathUtils.PI);
 toxi.MathUtils.SIN_B = 4.0 / toxi.MathUtils.PI;
 toxi.MathUtils.SIN_P = 9.0 / 40;
-
-
-
-/**
- * @param x
- * @return absolute value of x
- */
 toxi.MathUtils.abs = Math.abs;
-
 /**
  * Rounds up the value to the nearest higher power^2 value.
  * 
@@ -169,7 +110,7 @@ toxi.MathUtils.flipCoin = function(rnd) {
  */
 
 toxi.MathUtils.floor = function(x) {
-   var y = parseInt(x);
+   var y = parseInt(x,10);
    if (x < 0 && x != y) {
        y--;
    }
@@ -183,7 +124,7 @@ toxi.MathUtils.floor = function(x) {
  * @return power^2 value
  */
 toxi.MathUtils.floorPowerOf2 = function(x) {
-  return parseInt( Math.pow(2, parseInt((Math.log(x) / toxi.MathUtils.LOG2))));
+  return parseInt( Math.pow(2, parseInt((Math.log(x) / toxi.MathUtils.LOG2),10)),10);
 };
 
 toxi.MathUtils.max =  function(a, b, c) {
@@ -218,7 +159,6 @@ toxi.MathUtils.random = function(min,max) {
     return Math.random() * (max - min) + min;
 };
 
-
 toxi.MathUtils.reduceAngle = function(theta) {
     theta %= toxi.MathUtils.TWO_PI;
     if (Math.abs(theta) > toxi.MathUtils.PI) {
@@ -229,7 +169,6 @@ toxi.MathUtils.reduceAngle = function(theta) {
     }
     return theta;
 };
-
 
 toxi.MathUtils.sign = function(x) {
     return x < 0 ? -1 : (x > 0 ? 1 : 0);

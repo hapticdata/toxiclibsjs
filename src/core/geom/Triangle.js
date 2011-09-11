@@ -4,7 +4,7 @@ toxi.Triangle = function(a,b,c){
 		this.b = b;
 		this.c = c;
 	}
-}
+};
 
 toxi.Triangle.createEquilateralFrom = function(a, b) {
     var c = a.interpolateTo(b, 0.5);
@@ -12,22 +12,22 @@ toxi.Triangle.createEquilateralFrom = function(a, b) {
     var n = a.cross(dir.normalize());
     c.addSelf(n.normalizeTo(dir.magnitude() * toxi.MathUtils.SQRT3 / 2));
     return new toxi.Triangle(a, b, c);
-}
+};
 
 toxi.Triangle.isClockwiseInXY = function(a, b, c) {
-var determ = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
-return (determ < 0.0);
-}
+	var determ = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
+	return (determ < 0.0);
+};
 
 toxi.Triangle.isClockwiseInXZ = function(a, b,c) {
-    var determ = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
-    return (determ < 0.0);
-}
+	var determ = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
+	return (determ < 0.0);
+};
 
 toxi.Triangle.isClockwiseInYZ = function(a,b,c) {
     var determ = (b.y - a.y) * (c.z - a.z) - (c.y - a.y) * (b.z - a.z);
     return (determ < 0.0);
-}
+};
 
 
 toxi.Triangle.prototype = {
@@ -142,9 +142,7 @@ toxi.Triangle.prototype = {
     },
 
     fromBarycentric: function(p) {
-        return new toxi.Vec3D(this.a.x * p.x() + this.b.x * p.y() + this.c.x * p.z(), this.a.y * p.x()
-                + this.b.y * p.y() + this.c.y * p.z(), this.a.z * p.x() + this.b.z * p.y() + this.c.z
-                * p.z());
+        return new toxi.Vec3D(this.a.x * p.x() + this.b.x * p.y() + this.c.x * p.z(), this.a.y * p.x() + this.b.y * p.y() + this.c.y * p.z(), this.a.z * p.x() + this.b.z * p.y() + this.c.z * p.z());
     },
 
     getBoundingBox: function() {

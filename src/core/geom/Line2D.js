@@ -1,16 +1,7 @@
-/**
- 		T O X I C L I B S . JS  - 0.01
-		a port of toxiclibs for Java / Processing written by Karsten Schmidt
-		
-		License				: GNU Lesser General Public version 2.1
-		Developer			: Kyle Phillips: http://haptic-data.com
-		Java Version		: http://toxiclibs.org
-*/
-
 toxi.Line2D = function( a, b) {
   this.a = a;
   this.b = b;
-}
+};
 
 
 toxi.Line2D.prototype = {
@@ -46,8 +37,7 @@ toxi.Line2D.prototype = {
             return false;
         }
         var l = obj;
-        return (this.a.equals(l.a) || this.a.equals(l.b))
-                && (this.b.equals(l.b) || this.b.equals(l.a));
+        return (this.a.equals(l.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
     },
 
     getDirection: function() {
@@ -91,49 +81,42 @@ toxi.Line2D.prototype = {
      * @return intersection result
      */
     intersectLine: function(l) {
-        var isec = null;
-        var denom =
-                (l.b.y - l.a.y) * (this.b.x - this.a.x) - (l.b.x - l.a.x) * (this.b.y - this.a.y);
-
-        var na =
-                (l.b.x - l.a.x) * (this.a.y - l.a.y) - (l.b.y - l.a.y)
-                        * (this.a.x - l.a.x);
-        var nb = (this.b.x - this.a.x) * (this.a.y - l.a.y) - (this.b.y - this.a.y) * (this.a.x - l.a.x);
-
-        if (denom != 0.0) {
-            var ua = na / denom;
-            var ub = nb / denom;
+		var isec,
+			denom = (l.b.y - l.a.y) * (this.b.x - this.a.x) - (l.b.x - l.a.x) * (this.b.y - this.a.y),
+			na = (l.b.x - l.a.x) * (this.a.y - l.a.y) - (l.b.y - l.a.y) * (this.a.x - l.a.x),
+			nb = (this.b.x - this.a.x) * (this.a.y - l.a.y) - (this.b.y - this.a.y) * (this.a.x - l.a.x);
+		if (denom !== 0) {
+			var ua = na / denom,
+				ub = nb / denom;
             if (ua >= 0.0 && ua <= 1.0 && ub >= 0.0 && ub <= 1.0) {
-                isec =
-                        new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.INTERSECTING,
-                                this.a.interpolateTo(this.b, ua));
+                isec =new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.INTERSECTING,this.a.interpolateTo(this.b, ua));
             } else {
-                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.NON_INTERSECTING, null);
+                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.NON_INTERSECTING, undefined);
             }
         } else {
-            if (na == 0.0 && nb == 0.0) {
-                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.COINCIDENT, null);
+            if (na === 0 && nb === 0) {
+                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.COINCIDENT, undefined);
             } else {
-                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.COINCIDENT, null);
+                isec = new toxi.Line2D.LineIntersection(toxi.Line2D.LineIntersection.Type.COINCIDENT, undefined);
             }
         }
         return isec;
     },
 
     offsetAndGrowBy: function(offset,scale, ref) {
-        var m = this.getMidPoint();
-        var d = this.getDirection();
-        var n = d.getPerpendicular();
-        if (ref != null && m.sub(ref).dot(n) < 0) {
-            n.invert();
-        }
-        n.normalizeTo(offset);
-        this.a.addSelf(n);
-        this.b.addSelf(n);
-        d.scaleSelf(scale);
-        this.a.subSelf(d);
-        this.b.addSelf(d);
-        return this;
+		var m = this.getMidPoint();
+		var d = this.getDirection();
+		var n = d.getPerpendicular();
+		if (ref !== undefined && m.sub(ref).dot(n) < 0) {
+			n.invert();
+		}
+		n.normalizeTo(offset);
+		this.a.addSelf(n);
+		this.b.addSelf(n);
+		d.scaleSelf(scale);
+		this.a.subSelf(d);
+		this.b.addSelf(d);
+		return this;
     },
 
     scale: function(scale) {
@@ -182,7 +165,7 @@ toxi.Line2D.prototype = {
  * @return list of result vectors
  */
 toxi.Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
-    if (segments == null) {
+    if (segments === undefined) {
         segments = [];
     }
     if (addFirst) {
@@ -200,14 +183,14 @@ toxi.Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
     }
     segments.push(b.copy());
     return segments;
-}
+};
 
 
 toxi.Line2D.LineIntersection = function(type, pos)
 {
 	this.type = type;
 	this.pos = pos;
-}
+};
 
 toxi.Line2D.LineIntersection.prototype = {
 	getPos: function(){

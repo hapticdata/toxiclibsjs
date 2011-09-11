@@ -1,1 +1,1 @@
-toxi.Mesh3D = function(){}
+toxi.Mesh3D = function(){};

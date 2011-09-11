@@ -1,25 +1,15 @@
-/**
- 		T O X I C L I B S . JS  - 0.01
-		a port of toxiclibs for Java / Processing written by Karsten Schmidt
-		
-		License				: GNU Lesser General Public version 2.1
-		Developer			: Kyle Phillips: http://haptic-data.com
-		Java Version		: http://toxiclibs.org
-*/
-
 toxi.Vec2D = function(a,b){
-	if(a instanceof Object && a.x !== undefined && a.y !==undefined)
-	{
+	if(a instanceof Object && a.x !== undefined && a.y !== undefined){
 		b = a.y;
 		a = a.x;
-	} else{
+	} else {
 		if(a === undefined)a = 0;
 		if(b === undefined)b = 0;
 	}
 	this.x = a;
 	this.y = b;
 
-}
+};
 
 toxi.Vec2D.Axis = {
 	X: {
@@ -35,18 +25,16 @@ toxi.Vec2D.Axis = {
 (function(){
 	//private, 
 	var _getXY = function(a,b) {
-		if(a instanceof Object)
-		{
+		if(a instanceof Object){
 			b = a.y;
 			a = a.x;
 		}
 		else {
-			if(a != undefined && b === undefined)
-			{
+			if(a !== undefined && b === undefined){
 				b = a;
 			}
-			else if(a === undefined)a = 0;
-			else if(b === undefined)b = 0;
+			else if(a === undefined){ a = 0; }
+			else if(b === undefined){ b = 0; }
 		}
 		return {x: a, y: b};
 	};
@@ -83,7 +71,7 @@ toxi.Vec2D.Axis = {
 	    },
 	
 		angleBetween: function(v, faceNormalize) {
-			if(faceNormalize == undefined){
+			if(faceNormalize === undefined){
 				var dot = this.dot(v);
 				return Math.acos(this.dot(v));
 			}
@@ -109,8 +97,8 @@ toxi.Vec2D.Axis = {
 	        }
 	        return this.magSquared() - vec.magSquared();
 	    },
-	
-	 	/**
+
+		/**
 	     * Forcefully fits the vector in the given rectangle.
 	     * 
 	     * @param a
@@ -120,14 +108,12 @@ toxi.Vec2D.Axis = {
 	     * @return itself
 	     */
 	    constrain: function(a,b) {
-			if(a instanceof toxi.Vec2D && b instanceof toxi.Vec2D)
-			{
+			if(a instanceof Object && b instanceof Object){
 				this.x = toxi.MathUtils.clip(this.x, a.x, b.x);
 		        this.y = toxi.MathUtils.clip(this.y, a.y, b.y);
-			} else if(a.x != undefined && a.y != undefined && a.width != undefined && a.height != undefined)
-			{
+			} else if(a.x !== undefined && a.y !== undefined && a.width !== undefined && a.height !== undefined){
 				this.x = toxi.MathUtils.clip(this.x, a.x, a.x + a.width);
-	        	this.y = toxi.MathUtils.clip(this.y, a.y, a.y + a.height);
+				this.y = toxi.MathUtils.clip(this.y, a.y, a.y + a.height);
 			}
 	        return this;
 	    },
@@ -205,7 +191,7 @@ toxi.Vec2D.Axis = {
 		getComponent: function(id) {
 			if(typeof id == 'number')
 			{			
-				id = (id == 0) ? toxi.Vec2D.Axis.X : toxi.Vec2D.Axis.Y;
+				id = (id === 0) ? toxi.Vec2D.Axis.X : toxi.Vec2D.Axis.Y;
 			}
 			if(id == toxi.Vec2D.Axis.X){
 				return this.x;
@@ -271,9 +257,8 @@ toxi.Vec2D.Axis = {
 	    
 	    interpolateTo: function(v, f, s) {
 			if(s === undefined){
-	        	return new toxi.Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
-			}
-			else
+				return new toxi.Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
+			} else
 			{
 				return new toxi.Vec2D(s.interpolate(this.x,v.x,f),s.interpolate(this.y,v.y,f));
 			}
@@ -290,13 +275,10 @@ toxi.Vec2D.Axis = {
 	     * @return itself, result overrides current vector
 	     */
 	    interpolateToSelf: function(v, f, s) {
-			if(s === undefined)
-			{
-	        	this.x += (v.x - this.x) * f;
-	        	this.y += (v.y - this.y) * f;
-			}
-			else
-			{
+			if(s === undefined) {
+				this.x += (v.x - this.x) * f;
+				this.y += (v.y - this.y) * f;
+			} else {
 				this.x = s.interpolate(this.x,v.x,f);
 				this.y = s.interpolate(this.y,v.y,f);
 			}
@@ -349,8 +331,7 @@ toxi.Vec2D.Axis = {
 	    },
 	
 	    isZeroVector: function() {
-	        return Math.abs(this.x) < toxi.MathUtils.EPS
-	                && Math.abs(this.y) < toxi.MathUtils.EPS;
+	        return Math.abs(this.x) < toxi.MathUtils.EPS && Math.abs(this.y) < toxi.MathUtils.EPS;
 	    },
 	
 	    /**
@@ -444,12 +425,12 @@ toxi.Vec2D.Axis = {
 	        return this;
 	    },
 	    
-	    positiveHeading: function(){
-	    	var dist = Math.sqrt(this.x * this.x + this.y * this.y);
-	    	if(this.y >= 0){
-	    		return Math.acos(this.x / dist);
-	    	}
-	    	return (Math.acos(-this.x / dist) + toxi.MathUtils.PI);
+	    positiveHeading: function() {
+			var dist = Math.sqrt(this.x * this.x + this.y * this.y);
+			if (this.y >= 0){
+				return Math.acos(this.x / dist);
+			}
+			return (Math.acos(-this.x / dist) + toxi.MathUtils.PI);
 	    },
 	
 	    reciprocal: function() {
@@ -515,7 +496,7 @@ toxi.Vec2D.Axis = {
 		setComponent: function(id, val) {
 			if(typeof id == 'number')
 			{			
-				id = (id == 0) ? toxi.Vec2D.Axis.X : toxi.Vec2D.Axis.Y;
+				id = (id === 0) ? toxi.Vec2D.Axis.X : toxi.Vec2D.Axis.Y;
 			}
 			if(id === toxi.Vec2D.Axis.X){
 				this.x = val;
@@ -533,8 +514,8 @@ toxi.Vec2D.Axis = {
 	     * @return itself
 	     */
 		signum: function() {
-	        this.x = (this.x < 0 ? -1 : this.x == 0 ? 0 : 1);
-	        this.y = (this.y < 0 ? -1 : this.y == 0 ? 0 : 1);
+	        this.x = (this.x < 0 ? -1 : this.x === 0 ? 0 : 1);
+	        this.y = (this.y < 0 ? -1 : this.y === 0 ? 0 : 1);
 	        return this;
 	    },
 	

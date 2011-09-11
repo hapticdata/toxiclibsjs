@@ -1,27 +1,26 @@
 toxi.Polygon2D = function(){
 	this.vertices = [];
+	var i,l;
 	if(arguments.length > 1){ //comma-separated Vec2D's were passed in
-		var l = agruments.length;
-		for(var i=0;i<l;i++){
+		for(i=0, l = arguments.length;i<l;i++){
 			this.add(p.copy());
 		}
 	} else if(arguments.length == 1){
 		var arg = arguments[0];
 		if(arg instanceof Array){ // if it was an array of points
-			var l = arg.length;
-			for(var i=0;i<l;i++){
+			for(i=0,l = arg.length;i<l;i++){
 				this.add(arg[i].copy());
 			}
 		}
 	} //otherwise no args were passed, and thats ok
 
-}
+};
 
 
 toxi.Polygon2D.prototype = {
 
 	add: function(p){
-		if(!(this.vertices.indexOf(p) >= 0)){
+		if(this.vertices.indexOf(p) < 0){
 			this.vertices.push(p);
 		}
 	},
@@ -29,7 +28,7 @@ toxi.Polygon2D.prototype = {
 	containsPoint: function(p){
 		var num = this.vertices.length;
 		var i,j = num-1;
-		var addNodes = false;
+		var oddNodes = false;
 		var px = p.x;
 		var py = p.y;
 		for(i=0;i<num;i++){
@@ -42,7 +41,7 @@ toxi.Polygon2D.prototype = {
 			}
 			j = i;
 		}
-		return addNodes;
+		return oddNodes;
 	},
 	
 	flipVertexOrder: function(){
@@ -78,7 +77,7 @@ toxi.Polygon2D.prototype = {
 	
 	getCircumference: function(){
 		var circ = 0;
-		for(var i=0;num=this.vertices.length,i<num;i++){
+		for(var i=0,num=this.vertices.length;i<num;i++){
 			circ += this.vertices[i].distanceTo(this.vertices[(i+1)%num]);
 		}
 		return circ;

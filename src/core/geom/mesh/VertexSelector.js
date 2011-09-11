@@ -9,8 +9,7 @@ toxi.VertexSelector.prototype = {
      * selection. The other selector needs to be assigned to the same mesh
      * instance.
      * 
-     * @param sel2
-     *            other selector
+     * @param sel2 other selector
      * @return itself
      */
 
@@ -53,7 +52,7 @@ toxi.VertexSelector.prototype = {
         var vertices = mesh.getVertices();
         var l = vertices.length;
         for (var i=0;i<l;i++) {
-        	var v = vertices[i];
+			var v = vertices[i];
             if (!selection.contains(v)) {
                 newSel.add(v);
             }
@@ -70,9 +69,9 @@ toxi.VertexSelector.prototype = {
      * @return itself
      */
     selectSimilar: function(points) {
-    	var l = points.length;
+		var l = points.length;
         for (var i=0;i<l;i++) {
-        	var v = points[i];
+			var v = points[i];
             this.selection.add(this.mesh.getClosestVertexToPoint(v));
         }
         return this;

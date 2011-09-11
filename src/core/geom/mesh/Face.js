@@ -7,20 +7,19 @@ toxi.Face = function(a,b,c,uvA,uvB,uvC) {
     this.b.addFaceNormal(this.normal);
     this.c.addFaceNormal(this.normal);
     
-    if(uvA !== undefined)
-    {
-    	this.uvA = uvA;
-    	this.uvB = uvB;
-    	this.uvC = uvC;
+    if(uvA !== undefined){
+		this.uvA = uvA;
+		this.uvB = uvB;
+		this.uvC = uvC;
     }
-}
+};
 
 toxi.Face.prototype = {
 	computeNormal: function() {
         this.normal = this.a.sub(this.c).crossSelf(this.a.sub(this.b)).normalize();
     },
 
- 	flipVertexOrder: function() {
+	flipVertexOrder: function() {
         var t = this.a;
         this.a = this.b;
         this.b = t;
@@ -33,10 +32,10 @@ toxi.Face.prototype = {
     
     getClass: function(){
 		return "toxi.Face";
-    },
+	},
 
     getVertices: function(verts) {
-        if (verts != null) {
+        if (verts !== undefined) {
             verts[0] = this.a;
             verts[1] = this.b;
             verts[2] = this.c;

@@ -15,7 +15,7 @@ toxi.SphereFunction = function(sphere_or_radius) {
 	}
 	this.phiRange = toxi.MathUtils.PI;
 	this.thetaRange = toxi.MathUtils.TWO_PI;
-}
+};
 
 toxi.SphereFunction.prototype = {
 	

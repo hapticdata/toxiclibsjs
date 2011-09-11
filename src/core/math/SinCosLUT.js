@@ -12,11 +12,10 @@ toxi.SinCosLUT = function(precision) {
 	this.deg2rad = (Math.PI / 180.0) * this.precision;
 	this.rad2deg = (180.0 / Math.PI) / this.precision;
 	this.sinLUT = [];
-	for(var i=0;i< this.period;i++)
-	{
+	for(var i=0;i< this.period;i++){
 		this.sinLUT[i] = Math.sin(i*this.deg2rad);
 	}
-}
+};
 
 
 toxi.SinCosLUT.prototype = {
@@ -62,10 +61,10 @@ toxi.SinCosLUT.prototype = {
 
 
 toxi.SinCosLUT.DEFAULT_PRECISION = 0.25;
-toxi.SinCosLUT.DEFAULT_INSTANCE = null;
+toxi.SinCosLUT.DEFAULT_INSTANCE = undefined;
 toxi.SinCosLUT.getDefaultInstance = function(){
-	if(toxi.SinCosLUT.DEFAULT_INSTANCE == null){
+	if(toxi.SinCosLUT.DEFAULT_INSTANCE === undefined){
 		toxi.SinCosLUT.DEFAULT_INSTANCE = new toxi.SinCosLUT();
 	}
 	return toxi.SinCosLUT.DEFAULT_INSTANCE;
-}
+};

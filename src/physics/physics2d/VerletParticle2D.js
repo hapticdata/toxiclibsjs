@@ -22,9 +22,9 @@ toxi.physics2d.VerletParticle2D = function(x,y,w){
 	this.isLocked = false;
 	this.prev = new toxi.Vec2D(this);
 	this.temp = new toxi.Vec2D();
-	w = (w === undefined) ? 1 : w;
+	w = w || 1;
 	this.setWeight(w);
-}
+};
 
 toxi.extend(toxi.physics2d.VerletParticle2D,toxi.Vec2D);
 

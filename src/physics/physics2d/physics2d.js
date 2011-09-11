@@ -5,6 +5,5 @@ toxi.physics2d.removeItemFrom = function(item,array){
 	if(index > -1){
 		return array.splice(index,1);
 	}
-	console.log("undefined");
 	return undefined;
-}
+};

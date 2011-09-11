@@ -1,6 +1,6 @@
 //rawPoints should be Vec2D array
 toxi.Spline2D = function(rawPoints,bernsteinPoly){
-	if(arguments.length == 0){
+	if(arguments.length === 0){
 			this.setTightness(toxi.Spline2D.DEFAULT_TIGHTNESS);
 			this.pointList = [];
 		}
@@ -26,7 +26,7 @@ toxi.Spline2D = function(rawPoints,bernsteinPoly){
 		}
 		this.numP = this.pointList.length;
 		this.bi = [];
-}
+};
 
 
 toxi.Spline2D.prototype = {
@@ -38,7 +38,7 @@ toxi.Spline2D.prototype = {
 	
 	computeVertices: function(res){
 		this.updateCoefficients();
-        if (this.bernstein == undefined || this.bernstein.resolution != res) {
+        if (this.bernstein === undefined || this.bernstein.resolution != res) {
             this.bernstein = new toxi.BernsteinPolynomial(res);
         }
         var bst = this.bernstein;
@@ -65,15 +65,16 @@ toxi.Spline2D.prototype = {
     },
 
 	findCPoints: function(){
-        this.bi[1] = -.25;
+        this.bi[1] = -0.25;
+        var i;
         this.coeffA[1].set((this.points[2].x - this.points[0].x - this.delta[0].x) * this.tightness, (this.points[2].y - this.points[0].y - this.delta[0].y) * this.tightness);
-        for (var i = 2; i < this.numP - 1; i++) {
+        for (i = 2; i < this.numP - 1; i++) {
             this.bi[i] = -1 / (this.invTightness + this.bi[i - 1]);
             this.coeffA[i].set(-(this.points[i + 1].x - this.points[i - 1].x - this.coeffA[i - 1].x) *
             this.bi[i], -(this.points[i + 1].y - this.points[i - 1].y - this.coeffA[i - 1].y) *
             this.bi[i]);
         }
-        for (var i = this.numP - 2; i > 0; i--) {
+        for (i = this.numP - 2; i > 0; i--) {
             this.delta[i].set(this.coeffA[i].x + this.delta[i + 1].x * this.bi[i], this.coeffA[i].y +
             this.delta[i + 1].y * this.bi[i]);
         }
@@ -82,7 +83,7 @@ toxi.Spline2D.prototype = {
 	getDecimatedVertices: function(step,doAddFinalVertex){
 		if(doAddFinalVertex === undefined)doAddFinalVertex = true;
 		if(this.vertices === undefined || this.vertices.length < 2){
-			this.computeVertices(Spline2D.DEFAULT_RES);
+			this.computeVertices(toxi.Spline2D.DEFAULT_RES);
 		}
 		var arcLen = this.getEstimatedArcLength();
 		var uniform = [];
@@ -147,7 +148,7 @@ toxi.Spline2D.prototype = {
 	
 	updateCoefficients: function(){
 		this.numP = this.pointList.length;
-		if(this.points === undefined || (this.points != undefined && this.points.length != this.numP)) {
+		if(this.points === undefined || (this.points !== undefined && this.points.length != this.numP)) {
 			this.coeffA = [];
 			this.delta = [];
 			this.bi = [];
