@@ -26,14 +26,15 @@ toxi.Polygon2D.prototype = {
 	},
 	
 	containsPoint: function(p){
-		var num = this.vertices.length;
-		var i,j = num-1;
-		var oddNodes = false;
-		var px = p.x;
-		var py = p.y;
+		var num = this.vertices.length,
+			i = 0,
+			j = num-1,
+			oddNodes = false,
+			px = p.x,
+			py = p.y;
 		for(i=0;i<num;i++){
-			var vi = this.vertices[i];
-			var vj = this.vertices[j];
+			var vi = this.vertices[i],
+				vj = this.vertices[j];
 			if (vi.y < py && vj.y >= py || vj.y < py && vi.y >= py) {
 				if (vi.x + (py - vi.y) / (vj.y - vi.y) * (vj.x - vi.x) < px) {
 					oddNodes = !oddNodes;
@@ -59,11 +60,11 @@ toxi.Polygon2D.prototype = {
 	},
 	
 	getArea: function(){
-		var area = 0;
-		var numPoints = this.vertices.length;
+		var area = 0,
+			numPoints = this.vertices.length;
 		for(var i=0;i<numPoints;i++){
-			var a = this.vertices[i];
-			var b = this.vertices[(i+1) % numPoints];
+			var a = this.vertices[i],
+				b = this.vertices[(i+1) % numPoints];
 			area += a.x * b.y;
 			area -= a.y * b.x;
 		}
@@ -72,12 +73,12 @@ toxi.Polygon2D.prototype = {
 	},
 	
 	getCentroid: function(){
-		var res = new toxi.Vec2D();
-		var numPoints = this.vertices.length;
+		var res = new toxi.Vec2D(),
+			numPoints = this.vertices.length;
 		for(var i=0;i<numPoints;i++){
-			var a = this.vertices[i];
-			var b = this.vertices[(i+1) %numPoints];
-			var factor = a.x * b.y - b.x * a.y;
+			var a = this.vertices[i],
+				b = this.vertices[(i+1) %numPoints],
+				factor = a.x * b.y - b.x * a.y;
 			res.x += (a.x + b.x) * factor;
 			res.y += (a.y + b.y) * factor;
 		}
@@ -93,14 +94,14 @@ toxi.Polygon2D.prototype = {
 	},
 	
 	getEdges: function() {
-        var num = this.vertices.length;
-        var edges = new Array(num);
-        for (var i = 0; i < num; i++) {
-            edges[i]=new toxi.Line2D(this.vertices[i], this.vertices[(i + 1) % num]);
-        }
-        return edges;
-    },
-    
+		var num = this.vertices.length,
+			edges = [];
+		for (var i = 0; i < num; i++) {
+			edges[i]=new toxi.Line2D(this.vertices[i], this.vertices[(i + 1) % num]);
+		}
+		return edges;
+	},
+	
 	getNumPoints: function(){
 		return this.vertices.length;
 	},
@@ -113,32 +114,32 @@ toxi.Polygon2D.prototype = {
 	},
 	
 	intersectsPoly: function(poly) {
-        if (!this.containsPoly(poly)) {
-        	var edges=this.getEdges();
-        	var pedges=poly.getEdges();
-            for(var i=0, n=edges.length; i < n; i++) {
-                for(var j=0, m = pedges.length, e = edges[i]; j < m; j++) {
-                    if (e.intersectLine(pedges[j]).getType() == toxi.Line2D.LineIntersection.Type.INTERSECTING) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        } else {
-            return true;
-        }
-    },
+		if (!this.containsPoly(poly)) {
+			var edges=this.getEdges();
+			var pedges=poly.getEdges();
+			for(var i=0, n=edges.length; i < n; i++) {
+				for(var j=0, m = pedges.length, e = edges[i]; j < m; j++) {
+					if (e.intersectLine(pedges[j]).getType() == toxi.Line2D.LineIntersection.Type.INTERSECTING) {
+						return true;
+					}
+				}
+			}
+			return false;
+		} else {
+			return true;
+		}
+	},
     
     rotate: function(theta) {
-    	for (var i=0, num=this.vertices.length; i < num; i++) {
-            this.vertices[i].rotate(theta);
-        }
+		for (var i=0, num=this.vertices.length; i < num; i++) {
+			this.vertices[i].rotate(theta);
+		}
     },
     
     scale: function() {
-    	var x,y;
-    	if (arguments.length==1) {
-    		var arg = arguments[0];
+		var x,y;
+		if (arguments.length==1) {
+			var arg = arguments[0];
 			if(arg instanceof toxi.Vec2D){
 				x=arg.x;
 				y=arg.y;
@@ -147,29 +148,29 @@ toxi.Polygon2D.prototype = {
 				x=arg;
 				y=arg;
 			}
-    	} else if (arguments.length==2) {
-    		x=arguments[0];
-    		y=arguments[1];
-    	} else {
-    		throw "Invalid argument(s) passed.";
-    	}
-        for (var i=0, num=this.vertices.length; i < num; i++) {
-            this.vertices[i].scaleSelf(x, y);
-        }
-        return this;
+		} else if (arguments.length==2) {
+			x=arguments[0];
+			y=arguments[1];
+		} else {
+			throw "Invalid argument(s) passed.";
+		}
+		for (var i=0, num=this.vertices.length; i < num; i++) {
+			this.vertices[i].scaleSelf(x, y);
+		}
+		return this;
     },
     
-    translate: function() {
-    	var x,y;
-    	if (arguments.length==1 && arguments[0] instanceof toxi.Vec2D){
+	translate: function() {
+		var x,y;
+		if (arguments.length==1 && arguments[0] instanceof toxi.Vec2D){
 			x=arg.x;
 			y=arg.y;
-    	} else if (arguments.length==2) {
-    		x=arguments[0];
-    		y=arguments[1];
-    	} else {
-    		throw "Invalid argument(s) passed.";
-    	}
+		} else if (arguments.length==2) {
+			x=arguments[0];
+			y=arguments[1];
+		} else {
+			throw "Invalid argument(s) passed.";
+		}
         for (var i=0, num=this.vertices.length; i < num; i++) {
             this.vertices[i].addSelf(x, y);
         }
