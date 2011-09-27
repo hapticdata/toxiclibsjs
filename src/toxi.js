@@ -9,6 +9,17 @@
 */
 var toxi = toxi || {};
 
+(function(){
+	//anything messing with global at top:
+	if(window !== undefined){ //otherwise its not being used in a browser-context
+		if( ! window.Int32Array){
+			window.Int32Array = Array;
+			window.Float32Array = Array;
+		}		
+	}
+
+})();
+
 toxi.extend = function(childClass,superClass){
 	childClass.prototype = new superClass();
 	childClass.constructor = childClass;

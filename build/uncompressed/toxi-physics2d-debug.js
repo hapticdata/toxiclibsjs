@@ -1,4 +1,4 @@
-// uncompressed/toxi-physics2d-debug r40 - http://github.com/hapticdata/toxiclibsjs
+// uncompressed/toxi-physics2d-debug r41 - http://github.com/hapticdata/toxiclibsjs
 toxi.physics2d = toxi.physics2d || {};
 
 toxi.physics2d.removeItemFrom = function(item,array){
@@ -629,15 +629,44 @@ toxi.physics2d.VerletMinDistanceSpring2D.prototype.update = function(applyConstr
 		this.parent.update.call(this,applyConstraints);
 	}
 };toxi.physics2d.VerletPhysics2D = function(gravity, numIterations, drag, timeStep){
+	var opts = {
+			numIterations: 50,
+			drag: 0,
+			timeStep: 1
+		},
+		args;
+	if(arguments.length == 1 && (arguments[0].gravity || arguments[0].numIterations || arguments[0].timeStep || arguments[0].drag)){ //options object literal
+		args = arguments[0];
+		if(args.gravity !== undefined){
+			gravity = args.gravity;
+		}
+		if(args.numIterations !== undefined){
+			opts.numIterations = args.gravity;
+		}
+		if(args.drag !== undefined){
+			opts.drag = args.drag;
+		}
+		if(args.timeStep !== undefined){
+			opts.timeStep = args.timeStep;
+		}
+	}
 	this.behaviors = [];
 	this.particles = [];
 	this.springs = [];
-	this.numIterations = numIterations || 50;
-	this.timeStep = timeStep || 1;
-	this.setDrag(drag || 0);
+	this.numIterations = opts.numIterations;
+	this.timeStep = opts.timeStep;
+	this.setDrag(opts.drag);
 	
-	if(gravity !== undefined){
-		this.addBehavior(new toxi.physics2d.GravityBehavior(gravity));
+	if(gravity){
+		if(gravity instanceof toxi.physics2d.GravityBehavior){
+			this.addBehavior(gravity);
+		} else if(gravity instanceof Object && gravity.hasOwnProperty('x') && gravity.hasOwnProperty('y')){
+			this.addBehavior(
+				new toxi.physics2d.GravityBehavior(
+					new toxi.Vec2D(gravity)
+				)
+			);
+		}
 	}
 };
 

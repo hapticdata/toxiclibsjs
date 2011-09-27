@@ -1,4 +1,4 @@
-// uncompressed/toxiclibs-debug r40 - http://github.com/hapticdata/toxiclibsjs
+// uncompressed/toxiclibs-debug r41 - http://github.com/hapticdata/toxiclibsjs
 /**
 	T O X I C L I B S . JS 
 	http://haptic-data.com/toxiclibsjs
@@ -9,6 +9,17 @@
 	Java Version		: http://toxiclibs.org
 */
 var toxi = toxi || {};
+
+(function(){
+	//anything messing with global at top:
+	if(window !== undefined){ //otherwise its not being used in a browser-context
+		if( ! window.Int32Array){
+			window.Int32Array = Array;
+			window.Float32Array = Array;
+		}		
+	}
+
+})();
 
 toxi.extend = function(childClass,superClass){
 	childClass.prototype = new superClass();
@@ -514,7 +525,15 @@ toxi.Range.prototype.toString = function(){
  * @param minOut
  * @param maxOut
  */
+ 
 toxi.ScaleMap = function(minIn, maxIn, minOut, maxOut) {
+	if(arguments.length == 1 && arguments[0].input !== undefined && arguments[0].output !== undefined){ //opts object
+		var arg = arguments[0];
+		minOut = arg.output.min;
+		maxOut = arg.output.max;
+        maxIn = arg.input.max;
+        minIn = arg.input.min;
+	}
 	this.mapFunction = new toxi.LinearInterpolation();
 	this.setInputRange(minIn, maxIn);
 	this.setOutputRange(minOut, maxOut);
@@ -1087,6 +1106,9 @@ toxi.WaveState = function(phase,frequency,amp,offset){
  */
  
 toxi.SinCosLUT = function(precision) {
+    if(!precision){
+        precision = toxi.SinCosLUT.DEFAULT_PRECISION;
+    }
 	this.precision = precision;
 	this.period = 360/this.precision;
 	this.quadrant = this.period >> 2;
@@ -1148,7 +1170,800 @@ toxi.SinCosLUT.getDefaultInstance = function(){
 		toxi.SinCosLUT.DEFAULT_INSTANCE = new toxi.SinCosLUT();
 	}
 	return toxi.SinCosLUT.DEFAULT_INSTANCE;
-};toxi.Vec2D = function(a,b){
+};	
+	toxi.UnitTranslator = {
+		//Number of millimeters per inch
+		INCH_MM: 25.4,
+		//number of points per inch
+		POINT_POSTSCRIPT: 72.0,
+		/**
+		* Converts millimeters into pixels.
+		* @param {Number} mm millimeters
+		* @param {Number} dpi DPI resolution
+		* @return {Number} number of pixels
+		*/
+		millisToPixels: function(mm,dpi){
+			return Math.floor(mm / this.INCH_MM * dpi);
+		},
+		/**
+		* Converts millimeters into postscript points
+		* @param {Number} mm millimeters
+		* @return {Number} number of points
+		*/
+		millisToPoints: function(mm){
+			return mm / this.INCH_MM * this.POINT_POSTSCRIPT;
+		},
+		/**
+		* Converts pixels into inches
+		* @param {Nuumber} pix pixels
+		* @param {Number} dpi DPI resolution to use
+		* @return {Number} number of inches
+		*/
+		pixelsToInch: function(pix,dpi){
+			return pix / dpi;
+		},
+		/**
+		* Converts pixels into millimeters.
+		* @param {Number} pix pixels
+		* @param {Number} dpi DPI resolution
+		* @return {Number} number of millimeters
+		*/
+		pixelsToMillis: function(pix,dpi){
+			return this.pixelsToInch(pix,dpi) * this.INCH_MM;
+		},
+		/**
+		* Converts pixels into points.
+		* @param {Number} pix pixels
+		* @param {Number} dpi DPI resolution
+		* @return {Number} number of points
+		*/
+		pixelsToPoints: function(pix,dpi){
+			return this.pixelsToInch(pix,dpi) * this.POINT_POSTSCRIPT;
+		},
+		/**
+		* Converts points into millimeters.
+		* @param {Number} pt
+		* @return {Number} number of millimeters
+		*/
+		pointsToMillis: function(pt){
+			return pt / this.POINT_POSTSCRIPT * this.INCH_MM;
+		},
+		/**
+		* Converts points into pixels.
+		* 
+		* @param {Number} pt points
+		* @param {Number} dpi DPI resolution
+		* @return {Number} number of pixels
+		*/
+		pointsToPixels: function(pt, dpi){
+			return this.millisToPixels(this.pointsToMillis(pt), dpi);
+		},
+		/**
+		* Converts an area measure in square inch to square millimeters.
+		* @param {Number} area
+		* @return {Number} square mm
+		*/
+		squareInchToMillis: function(area){
+			return area * this.INCH_MM * this.INCH_MM;
+		},
+		/**
+		* Converts an area measure in points to square inch.
+		* @param {Number} area
+		* @return {Number} square inch
+		*/
+		squarePointsToInch: function(area){
+			return area / (this.POINT_POSTSCRIPT * this.POINTPOSCRIPT);
+		},
+		/**
+		* Converts an area measure in points to square millimeters.
+		* @param {Number} area
+		* @return {Number} square mm
+		*/
+		squarePointsToMillis: function(area){
+			return this.squareInchToMillis(this.squarePointsToInch(area));
+		}	
+	};	(function(){
+		// NOTE: Currently the random seed is javascript's default, which 
+		// means it is always based off the current time. This is a difference
+		// from Toxiclibs for java, where you can set your own seed
+
+		// ////////////////////////////////////////////////////////////
+		// PERLIN NOISE taken from the
+		// [toxi 040903]
+		// octaves and amplitude amount per octave are now user controlled
+		// via the noiseDetail() function.
+		// [toxi 030902]
+		// cleaned up code and now using bagel's cosine table to speed up
+		// [toxi 030901]
+		// implementation by the german demo group farbrausch
+		// as used in their demo "art": http://www.farb-rausch.de/fr010src.zip
+		var PERLIN_YWRAPB = 4,
+			PERLIN_YWRAP = 1 << PERLIN_YWRAPB,
+			PERLIN_ZWRAPB = 8,
+			PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB,
+			PERLIN_SIZE = 4095,
+			PERLIN_MIN_AMPLITUDE = 0.001,
+			_noise_fsc = function(self, i){
+				var index = ((i + 0.5) * self._perlin_PI) % self._perlin_TWOPI;
+				return 0.5 * (1.0 - self._perlin_cosTable[index]);
+			};
+
+			toxi.PerlinNoise = function(){
+				this._perlin_octaves = 4; // default to medium smooth
+				this._perlin_amp_falloff = 0.5; // 50% reduction/octave
+				this.noiseSeed();
+			};
+
+			toxi.PerlinNoise.prototype = {
+				noise: function(x,y,z){
+					var i = 0,
+						x = x || 0,
+						y = y || 0,
+						z = z || 0;
+
+					if(!this._perlin){
+						this._perlin = [];
+						var length = PERLIN_SIZE - 1;
+						for(i = 0;i < PERLIN_SIZE + 1; i++){
+							this._perlin[i] = Math.random();
+						}
+					}
+
+					this._perlin_cosTable = toxi.SinCosLUT.getDefaultInstance().getSinLUT();
+					this._perlin_TWOPI = this._perlin_PI = toxi.SinCosLUT.getDefaultInstance().getPeriod();
+					this._perlin_PI >>= 1;
+
+					if (x < 0) {
+						x = -x;
+					}
+					if (y < 0) {
+						y = -y;
+					}
+					if (z < 0) {
+						z = -z;
+					}
+					
+					var xi = x, 
+						yi = y,
+						zi = z,
+						xf = (x - xi),
+						yf = (y - yi),
+						zf = (z - zi),
+						rxf, 
+						ryf,
+						r = 0,
+						ampl = 0.5,
+						n1, 
+						n2, 
+						n3,
+						of;
+					for(i = 0; i < this._perlin_octaves; i++){
+						of = xi + (yi << PERLIN_YWRAPB) + (zi << PERLIN_ZWRAPB);
+						rxf = _noise_fsc(this,xf);
+						ryf = _noise_fsc(this,yf);
+
+						n1 = this._perlin[of & PERLIN_SIZE];
+						n1 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n1);
+						n2 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
+						n2 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n2);
+						n1 += ryf * (n2 - n1);
+
+						of += PERLIN_ZWRAP;
+						n2 = this._perlin[of & PERLIN_SIZE];
+						n2 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n2);
+						n3 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
+						n3 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n3);
+						n2 += ryf * (n3 - n2);
+
+						n1 += _noise_fsc(this,zf) * (n2 - n1);
+						
+						r += n1 * ampl;
+						ampl *= this._perlin_amp_falloff;
+
+						// break if amp has no more impact
+						if (ampl < PERLIN_MIN_AMPLITUDE) {
+							break;
+						}
+
+						xi <<= 1;
+						xf *= 2;
+						yi <<= 1;
+						yf *= 2;
+						zi <<= 1;
+						zf *= 2;
+
+						if (xf >= 1.0) {
+							xi++;
+							xf--;
+						}
+						if (yf >= 1.0) {
+							yi++;
+							yf--;
+						}
+						if (zf >= 1.0) {
+							zi++;
+							zf--;
+						}
+					}
+					return r;
+				},
+				noiseDetail: function(lod, falloff){
+					if(lod > 0){
+						this._perlin_octaves = lod;
+					}
+					if(falloff && falloff > 0){
+						this._perlin_amp_falloff = falloff;
+					}
+				},
+				noiseSeed: function(what){
+					//seed here
+				}
+			};
+	})();(function() {
+	/**
+	*Simplex Noise in 2D, 3D and 4D. Based on the example code of this paper:
+	*http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
+	* 
+	*@author Stefan Gustavson, Linkping University, Sweden (stegu at itn dot liu
+	*         dot se)
+	* 
+	*Slight optimizations & restructuring by
+	*@author Karsten Schmidt (info at toxi dot co dot uk)
+	* 
+	*ported to javascript by
+	*@author Kyle Phillips (kyle at haptic-data dot com)
+	*/
+	var numFrame = 0;
+
+	var _SQRT3 = Math.sqrt(3.0),
+		_SQRT5 = Math.sqrt(5.0),
+
+	/**
+	 * Skewing and unskewing factors for 2D, 3D and 4D, some of them
+	 * pre-multiplied.
+	 */
+		_F2 = 0.5 * (_SQRT3 - 1.0),
+		_G2 = (3.0 - _SQRT3) / 6.0,
+		_G22 = _G2 * 2.0 - 1,
+
+		_F3 = 1.0 / 3.0,
+		_G3 = 1.0 / 6.0,
+
+		_F4 = (_SQRT5 - 1.0) / 4.0,
+		_G4 = (5.0 - _SQRT5) / 20.0,
+		_G42 = _G4 * 2.0,
+		_G43 = _G4 * 3.0,
+		_G44 = _G4 * 4.0 - 1.0,
+
+
+		/**
+		 * Gradient vectors for 3D (pointing to mid points of all edges of a unit
+		 * cube)
+		 */
+		_grad3 = [
+			new Int32Array([1, 1, 0 ]), 
+			new Int32Array([ -1, 1, 0 ]),
+			new Int32Array([ 1, -1, 0 ]), 
+			new Int32Array([ -1, -1, 0 ]), 
+			new Int32Array([ 1, 0, 1 ]), 
+			new Int32Array([ -1, 0, 1 ]),
+			new Int32Array([ 1, 0, -1 ]), 
+			new Int32Array([ -1, 0, -1 ]), 
+			new Int32Array([0, 1, 1 ]), 
+			new Int32Array([0, -1, 1 ]),
+			new Int32Array([ 0, 1, -1 ]), 
+			new Int32Array([ 0, -1, -1 ])
+		],
+
+		/**
+		 * Gradient vectors for 4D (pointing to mid points of all edges of a unit 4D
+		 * hypercube)
+		 */
+		_grad4 = [
+			new Int32Array([ 0, 1, 1, 1 ]), 
+			new Int32Array([ 0, 1, 1, -1 ]),
+			new Int32Array([ 0, 1, -1, 1 ]), 
+			new Int32Array([ 0, 1, -1, -1 ]), 
+			new Int32Array([ 0, -1, 1, 1 ]),
+			new Int32Array([ 0, -1, 1, -1 ]), 
+			new Int32Array([ 0, -1, -1, 1 ]), 
+			new Int32Array([ 0, -1, -1, -1 ]),
+			new Int32Array([ 1, 0, 1, 1 ]), 
+			new Int32Array([ 1, 0, 1, -1 ]), 
+			new Int32Array([ 1, 0, -1, 1 ]), 
+			new Int32Array([ 1, 0, -1, -1 ]),
+			new Int32Array([ -1, 0, 1, 1 ]), 
+			new Int32Array([ -1, 0, 1, -1 ]), 
+			new Int32Array([ -1, 0, -1, 1 ]),
+			new Int32Array([ -1, 0, -1, -1 ]), 
+			new Int32Array([ 1, 1, 0, 1 ]), 
+			new Int32Array([ 1, 1, 0, -1 ]),
+			new Int32Array([ 1, -1, 0, 1 ]), 
+			new Int32Array([ 1, -1, 0, -1 ]), 
+			new Int32Array([ -1, 1, 0, 1 ]),
+			new Int32Array([ -1, 1, 0, -1 ]), 
+			new Int32Array([ -1, -1, 0, 1 ]), 
+			new Int32Array([ -1, -1, 0, -1 ]),
+			new Int32Array([ 1, 1, 1, 0 ]), 
+			new Int32Array([ 1, 1, -1, 0 ]), 
+			new Int32Array([ 1, -1, 1, 0 ]), 
+			new Int32Array([ 1, -1, -1, 0 ]),
+			new Int32Array([ -1, 1, 1, 0 ]), 
+			new Int32Array([ -1, 1, -1, 0 ]), 
+			new Int32Array([ -1, -1, 1, 0 ]),
+			new Int32Array([ -1, -1, -1, 0 ]) 
+		],
+
+		/**
+		 * Permutation table
+		 */
+		_p = new Int32Array([
+			151, 160, 137, 91, 90, 15, 131, 13, 201,
+			95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37,
+			240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62,
+			94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56,
+			87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139,
+			48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133,
+			230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25,
+			63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200,
+			196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3,
+			64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255,
+			82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
+			223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153,
+			101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79,
+			113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242,
+			193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249,
+			14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
+			176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222,
+			114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180 
+		]),
+
+		/**
+		 * To remove the need for index wrapping, double the permutation table
+		 * length
+		 */
+		_perm = (function(){
+			var _per = new Int32Array(0x200);
+			for (var i = 0; i < 0x200; i++) {
+				_per[i] = _p[i & 0xff];
+			}
+			return _per;
+		})(),
+
+
+		/**
+		 * A lookup table to traverse the simplex around a given point in 4D.
+		 * Details can be found where this table is used, in the 4D noise method.
+		 */
+		_simplex = [ 
+			new Int32Array([ 0, 1, 2, 3 ]), new Int32Array([ 0, 1, 3, 2 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 2, 3, 1 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 2, 3, 0 ]), new Int32Array([ 0, 2, 1, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 3, 1, 2 ]), new Int32Array([ 0, 3, 2, 1 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 3, 2, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 2, 0, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 1, 3, 0, 2 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 2, 3, 0, 1 ]), new Int32Array([ 2, 3, 1, 0 ]), new Int32Array([ 1, 0, 2, 3 ]), new Int32Array([ 1, 0, 3, 2 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 0, 3, 1 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 1, 3, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 0, 1, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 0, 1, 2 ]), new Int32Array([ 3, 0, 2, 1 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 2, 0 ]), new Int32Array([ 2, 1, 0, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 0, 2 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 3, 2, 0, 1 ]), new Int32Array([ 3, 2, 1, 0 ]) 
+		],
+
+		/**
+		* Computes dot product in 2D.
+		* @param g 2-vector (grid offset)
+		* @param {Number} x
+		* @param {Number} y
+		* @param {Number} z
+		* @param {Number} w
+		* @return {Number} dot product
+		*/
+		_dot = function(g, x, y, z, w) {
+			var n = g[0] * x + g[1] * y;
+			if(z){
+				n += g[2] * z;
+				if(w){
+					n += g[3] * w;
+				}
+			}
+			return n;
+		},
+
+		/**
+		*This method is a *lot* faster than using (int)Math.floor(x).
+		* 
+		*@param {Number} x value to be floored
+		*@return {Number}
+		*/
+		_fastfloor = function(x) {
+			return (x >= 0) ? Math.floor(x) : Math.floor(x - 1);
+		};
+
+
+		toxi.SimplexNoise = { //SimplexNoise only consists of static methods
+			/**
+			* Computes 4D Simplex Noise.
+			* 
+			* @param x coordinate
+			* @param y  coordinate
+			* @param z coordinate
+			* @param w coordinate
+			* @return noise value in range -1 ... +1
+			*/
+			noise: function(x, y, z, w) {
+				//Noise contributions from five corners, we may use as few as 3 of them (depending on arguments)
+				var numArgs = arguments.length,
+					n0 = 0,
+					n1 = 0,
+					n2 = 0,
+					n3 = 0,
+					n4 = 0,
+					//skew the input space to determin which simplex cell we're in
+					s = (function(){
+						switch(numArgs){
+							case 2:
+							return (x + y) * _F2; //Hairy factor for 2d
+							case 3:
+							return (x + y + z) * _F3; //Very nice and simple skew factor for 3d
+							case 4:
+							return (x + y + z + w) * _F4; //factor for 4d skewing
+							default:
+							throw new Error("Wrong arguments supplied to toxi.SimplexNoise.noise()");
+						}
+					})(),
+					i = _fastfloor(x + s),
+					j = _fastfloor(y + s),
+					k = (z !== undefined) ? _fastfloor(z + s) : undefined,
+					l = (w !== undefined) ? _fastfloor(w + s) : undefined,
+					//unskew
+					t = (function(){
+						switch(numArgs){
+							case 2:
+							return (i + j) * _G2;
+							case 3:
+							return (i + j + k) * _G3;
+							case 4: 
+							return (i + j + k + l) * _G4;
+						}
+					})(),
+					x0 = x - (i - t), //the x,y,z,w distance from the cell origin
+					y0 = y - (j - t),
+					z0 = (z !== undefined) ? z - (k - t) : undefined,
+					w0 = (w !== undefined) ? w - (l - t) : undefined;
+
+					//Determine which simplex we are in
+					if(numArgs == 2){
+						//for the 2d case, the simplex shape is an equilateral triangle.	
+						return (function(){
+							var i1, j1, //offsets for scond (middle) corner of simplex (i,j)
+								x1, y1,
+								x2, y2,
+								ii,
+								jj,
+								t0,
+								gi0,
+								gi1,
+								gi2,
+								t2;
+							if(x0 > y0){ // lower triangle, XY order
+								i1 = 1;
+								j1 = 0;
+							} else { //upper triangle, YX order
+								i1 = 0;
+								j1 = 1;
+							}
+
+							// A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
+							// a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
+							// c = (3-sqrt(3))/6
+							x1 = x0 - i1 + _G2; // Offsets for middle corner in (x,y) unskewed
+							y1 = y0 - j1 + _G2;
+							x2 = x0 + _G22; // Offsets for last corner in (x,y) unskewed
+							y2 = y0 + _G22;
+							// Work out the hashed gradient indices of the three simplex corners
+							ii = i & 0xff;
+							jj = j & 0xff;
+							// Calculate the contribution from the three corners
+							t0 = 0.5 - x0 * x0 - y0 * y0;
+
+							if (t0 > 0) {
+								t0 *= t0;
+								gi0 = _perm[ii + _perm[jj]] % 12;
+								n0 = t0 * t0 * _dot(_grad3[gi0], x0, y0); // (x,y) of grad3 used for
+								// 2D gradient
+							}
+							t1 = 0.5 - x1 * x1 - y1 * y1;
+							if (t1 > 0) {
+								t1 *= t1;
+								gi1 = _perm[ii + i1 + _perm[jj + j1]] % 12;
+								n1 = t1 * t1 * _dot(_grad3[gi1], x1, y1);
+							}
+							t2 = 0.5 - x2 * x2 - y2 * y2;
+							if (t2 > 0) {
+								t2 *= t2;
+								gi2 = _perm[ii + 1 + _perm[jj + 1]] % 12;
+								n2 = t2 * t2 * _dot(_grad3[gi2], x2, y2);
+							}
+							// Add contributions from each corner to get the final noise value.
+							// The result is scaled to return values in the interval [-1,1].
+							return 70.0 * (n0 + n1 + n2);
+						})();
+					} else if(numArgs == 3){
+						//for the 3d case, the simplex shape is a slightly irregular tetrahedron
+						return (function(){
+							var i1, j1, k1, // Offsets for second corner of simplex in (i,j,k)
+								// coords
+								i2, j2, k2, // Offsets for third corner of simplex in (i,j,k) coords
+								x1,y1,z1,
+								x2,y2,z2,
+								x3,y3,z3,
+								ii,jj,kk,
+								t0,
+								gi0,
+								t1,
+								gi1,
+								t2,
+								gi2,
+								t3,
+								gi3;
+							if (x0 >= y0) {
+								if (y0 >= z0) {
+									i1 = 1;
+									j1 = 0;
+									k1 = 0;
+									i2 = 1;
+									j2 = 1;
+									k2 = 0;
+								} // X Y Z order
+								else if (x0 >= z0) {
+									i1 = 1;
+									j1 = 0;
+									k1 = 0;
+									i2 = 1;
+									j2 = 0;
+									k2 = 1;
+								} // X Z Y order
+								else {
+									i1 = 0;
+									j1 = 0;
+									k1 = 1;
+									i2 = 1;
+									j2 = 0;
+									k2 = 1;
+								} // Z X Y order
+							} else { // x0<y0
+								if (y0 < z0) {
+									i1 = 0;
+									j1 = 0;
+									k1 = 1;
+									i2 = 0;
+									j2 = 1;
+									k2 = 1;
+								} // Z Y X order
+								else if (x0 < z0) {
+									i1 = 0;
+									j1 = 1;
+									k1 = 0;
+									i2 = 0;
+									j2 = 1;
+									k2 = 1;
+								} // Y Z X order
+								else {
+									i1 = 0;
+									j1 = 1;
+									k1 = 0;
+									i2 = 1;
+									j2 = 1;
+									k2 = 0;
+								} // Y X Z order
+							}
+							// A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
+							// a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z),
+							// and
+							// a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z),
+							// where
+							// c = 1/6.
+							x1 = x0 - i1 + _G3; // Offsets for second corner in (x,y,z) coords
+							y1 = y0 - j1 + _G3;
+							z1 = z0 - k1 + _G3;
+
+							x2 = x0 - i2 + _F3; // Offsets for third corner in (x,y,z)
+							y2 = y0 - j2 + _F3;
+							z2 = z0 - k2 + _F3;
+
+							x3 = x0 - 0.5; // Offsets for last corner in (x,y,z)
+							y3 = y0 - 0.5;
+							z3 = z0 - 0.5;
+							// Work out the hashed gradient indices of the four simplex corners
+							ii = i & 0xff;
+							jj = j & 0xff;
+							kk = k & 0xff;
+
+							// Calculate the contribution from the four corners
+							t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
+							if (t0 > 0) {
+								t0 *= t0;
+								gi0 = _perm[ii + _perm[jj + _perm[kk]]] % 12;
+								n0 = t0 * t0 * _dot(_grad3[gi0], x0, y0, z0);
+							}
+							t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
+							if (t1 > 0) {
+								t1 *= t1;
+								gi1 = _perm[ii + i1 + _perm[jj + j1 + _perm[kk + k1]]] % 12;
+								n1 = t1 * t1 * _dot(_grad3[gi1], x1, y1, z1);
+							}
+							t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
+							if (t2 > 0) {
+								t2 *= t2;
+								gi2 = _perm[ii + i2 + _perm[jj + j2 + _perm[kk + k2]]] % 12;
+								n2 = t2 * t2 * _dot(_grad3[gi2], x2, y2, z2);
+							}
+							t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
+							if (t3 > 0) {
+								t3 *= t3;
+								gi3 = _perm[ii + 1 + _perm[jj + 1 + _perm[kk + 1]]] % 12;
+								n3 = t3 * t3 * _dot(_grad3[gi3], x3, y3, z3);
+							}
+							// Add contributions from each corner to get the final noise value.
+							// The result is scaled to stay just inside [-1,1]
+							return 32.0 * (n0 + n1 + n2 + n3);
+						})();
+					} else {
+						// For the 4D case, the simplex is a 4D shape I won't even try to
+						// describe.
+						// To find out which of the 24 possible simplices we're in, we need to
+						// determine the magnitude ordering of x0, y0, z0 and w0.
+						// The method below is a good way of finding the ordering of x,y,z,w and
+						// then find the correct traversal order for the simplex were in.
+						// First, six pair-wise comparisons are performed between each possible
+						// pair of the four coordinates, and the results are used to add up
+						// binary bits for an integer index.
+						return (function(){
+							var i1,j1,k1,l1, // The integer offsets for the second simplex corner
+								i2,j2,k2,l2, // The integer offsets for the third simplex corner
+								i3,j3,k3,l3, // The integer offsets for the fourth simplex corner
+								// simplex[c] is a 4-vector with the numbers 0, 1, 2 and 3 in some
+								// order. Many values of c will never occur, since e.g. x>y>z>w makes
+								// x<z, y<w and x<w impossible. Only the 24 indices which have non-zero
+								// entries make any sense. We use a thresholding to set the coordinates
+								// in turn from the largest magnitude. The number 3 in the "simplex"
+								// array is at the position of the largest coordinate.
+								sc = _simplex[
+									(function(){
+										var c = 0;
+										if (x0 > y0) {
+											c = 0x20;
+										}
+										if (x0 > z0) {
+											c |= 0x10;
+										}
+										if (y0 > z0) {
+											c |= 0x08;
+										}
+										if (x0 > w0) {
+											c |= 0x04;
+										}
+										if (y0 > w0) {
+											c |= 0x02;
+										}
+										if (z0 > w0) {
+											c |= 0x01;
+										}
+										return c;
+									})()
+								],
+								x1, y1, z1, w1,
+								x2, y2, z2, w2,
+								x3, y3, z3, w3,
+								x4, y4, z4, w4,
+								ii, jj, kk, ll,
+								t0,
+								gi0,
+								t1,
+								gi1,
+								t2,
+								gi2,
+								t3,
+								gi3,
+								t4,
+								gi4;
+
+								
+								i1 = sc[0] >= 3 ? 1 : 0;
+								j1 = sc[1] >= 3 ? 1 : 0;
+								k1 = sc[2] >= 3 ? 1 : 0;
+								l1 = sc[3] >= 3 ? 1 : 0;
+								// The number 2 in the "simplex" array is at the second largest
+								// coordinate.
+								i2 = sc[0] >= 2 ? 1 : 0;
+								j2 = sc[1] >= 2 ? 1 : 0;
+								k2 = sc[2] >= 2 ? 1 : 0;
+								l2 = sc[3] >= 2 ? 1 : 0;
+								// The number 1 in the "simplex" array is at the second smallest
+								// coordinate.
+								i3 = sc[0] >= 1 ? 1 : 0;
+								j3 = sc[1] >= 1 ? 1 : 0;
+								k3 = sc[2] >= 1 ? 1 : 0;
+								l3 = sc[3] >= 1 ? 1 : 0;
+
+								// The fifth corner has all coordinate offsets = 1, so no need to look
+								// that up.
+								x1 = x0 - i1 + _G4; // Offsets for second corner in (x,y,z,w)
+								y1 = y0 - j1 + _G4;
+								z1 = z0 - k1 + _G4;
+								w1 = w0 - l1 + _G4;
+
+								x2 = x0 - i2 + _G42; // Offsets for third corner in (x,y,z,w)
+								y2 = y0 - j2 + _G42;
+								z2 = z0 - k2 + _G42;
+								w2 = w0 - l2 + _G42;
+
+								x3 = x0 - i3 + _G43; // Offsets for fourth corner in (x,y,z,w)
+								y3 = y0 - j3 + _G43;
+								z3 = z0 - k3 + _G43;
+								w3 = w0 - l3 + _G43;
+
+								x4 = x0 + _G44; // Offsets for last corner in (x,y,z,w)
+								y4 = y0 + _G44;
+								z4 = z0 + _G44;
+								w4 = w0 + _G44;
+
+								// Work out the hashed gradient indices of the five simplex corners
+								ii = i & 0xff;
+								jj = j & 0xff;
+								kk = k & 0xff;
+								ll = l & 0xff;
+
+								// Calculate the contribution from the five corners
+								t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
+								if (t0 > 0) {
+									t0 *= t0;
+									gi0 = _perm[ii + _perm[jj + _perm[kk + _perm[ll]]]] % 32;
+									n0 = t0 * t0 * _dot(_grad4[gi0], x0, y0, z0, w0);
+								}
+								t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1;
+								if (t1 > 0) {
+									t1 *= t1;
+									gi1 = _perm[ii + i1 + _perm[jj + j1 + _perm[kk + k1 + _perm[ll + l1]]]] % 32;
+									n1 = t1 * t1 * _dot(_grad4[gi1], x1, y1, z1, w1);
+								}
+								t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2;
+								if (t2 > 0) {
+									t2 *= t2;
+									gi2 = _perm[ii + i2 + _perm[jj + j2 + _perm[kk + k2 + _perm[ll + l2]]]] % 32;
+									n2 = t2 * t2 * _dot(_grad4[gi2], x2, y2, z2, w2);
+								}
+								t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3;
+								if (t3 > 0) {
+									t3 *= t3;
+									gi3 = _perm[ii + i3 + _perm[jj + j3 + _perm[kk + k3 + _perm[ll + l3]]]] % 32;
+									n3 = t3 * t3 * _dot(_grad4[gi3], x3, y3, z3, w3);
+								}
+								t4 = 0.6 - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4;
+								if (t4 > 0) {
+									t4 *= t4;
+									gi4 = _perm[ii + 1 + _perm[jj + 1 + _perm[kk + 1 + _perm[ll + 1]]]] % 32;
+									n4 = t4 * t4 * _dot(_grad4[gi4], x4, y4, z4, w4);
+								}
+
+								// Sum up and scale the result to cover the range [-1,1]
+								return 27.0 * (n0 + n1 + n2 + n3 + n4);
+						})();
+						
+					}
+
+			}
+		};
+})();
+
+
+toxi.Vec2D = function(a,b){
 	if(a instanceof Object && a.x !== undefined && a.y !== undefined){
 		b = a.y;
 		a = a.x;
@@ -2639,7 +3454,7 @@ toxi.Polygon2D = function(){
 	var i,l;
 	if(arguments.length > 1){ //comma-separated Vec2D's were passed in
 		for(i=0, l = arguments.length;i<l;i++){
-			this.add(p.copy());
+			this.add(arguments[i].copy());
 		}
 	} else if(arguments.length == 1){
 		var arg = arguments[0];
@@ -2662,14 +3477,15 @@ toxi.Polygon2D.prototype = {
 	},
 	
 	containsPoint: function(p){
-		var num = this.vertices.length;
-		var i,j = num-1;
-		var oddNodes = false;
-		var px = p.x;
-		var py = p.y;
+		var num = this.vertices.length,
+			i = 0,
+			j = num-1,
+			oddNodes = false,
+			px = p.x,
+			py = p.y;
 		for(i=0;i<num;i++){
-			var vi = this.vertices[i];
-			var vj = this.vertices[j];
+			var vi = this.vertices[i],
+				vj = this.vertices[j];
 			if (vi.y < py && vj.y >= py || vj.y < py && vi.y >= py) {
 				if (vi.x + (py - vi.y) / (vj.y - vi.y) * (vj.x - vi.x) < px) {
 					oddNodes = !oddNodes;
@@ -2680,17 +3496,26 @@ toxi.Polygon2D.prototype = {
 		return oddNodes;
 	},
 	
+	containsPoly: function(poly) {
+        for (var i=0,num=poly.vertices.length; i<num; i++) {
+            if (!this.containsPoint(poly.vertices[i])) {
+                return false;
+            }
+        }
+        return true;
+    },
+    
 	flipVertexOrder: function(){
 		this.vertices.reverse();
 		return this;
 	},
 	
 	getArea: function(){
-		var area = 0;
-		var numPoints = this.vertices.length;
+		var area = 0,
+			numPoints = this.vertices.length;
 		for(var i=0;i<numPoints;i++){
-			var a = this.vertices[i];
-			var b = this.vertices[(i+1) % numPoints];
+			var a = this.vertices[i],
+				b = this.vertices[(i+1) % numPoints];
 			area += a.x * b.y;
 			area -= a.y * b.x;
 		}
@@ -2699,12 +3524,12 @@ toxi.Polygon2D.prototype = {
 	},
 	
 	getCentroid: function(){
-		var res = new toxi.Vec2D();
-		var numPoints = this.vertices.length;
+		var res = new toxi.Vec2D(),
+			numPoints = this.vertices.length;
 		for(var i=0;i<numPoints;i++){
-			var a = this.vertices[i];
-			var b = this.vertices[(i+1) %numPoints];
-			var factor = a.x * b.y - b.x * a.y;
+			var a = this.vertices[i],
+				b = this.vertices[(i+1) %numPoints],
+				factor = a.x * b.y - b.x * a.y;
 			res.x += (a.x + b.x) * factor;
 			res.y += (a.y + b.y) * factor;
 		}
@@ -2719,6 +3544,15 @@ toxi.Polygon2D.prototype = {
 		return circ;
 	},
 	
+	getEdges: function() {
+		var num = this.vertices.length,
+			edges = [];
+		for (var i = 0; i < num; i++) {
+			edges[i]=new toxi.Line2D(this.vertices[i], this.vertices[(i + 1) % num]);
+		}
+		return edges;
+	},
+	
 	getNumPoints: function(){
 		return this.vertices.length;
 	},
@@ -2730,6 +3564,70 @@ toxi.Polygon2D.prototype = {
 		return false;
 	},
 	
+	intersectsPoly: function(poly) {
+		if (!this.containsPoly(poly)) {
+			var edges=this.getEdges();
+			var pedges=poly.getEdges();
+			for(var i=0, n=edges.length; i < n; i++) {
+				for(var j=0, m = pedges.length, e = edges[i]; j < m; j++) {
+					if (e.intersectLine(pedges[j]).getType() == toxi.Line2D.LineIntersection.Type.INTERSECTING) {
+						return true;
+					}
+				}
+			}
+			return false;
+		} else {
+			return true;
+		}
+	},
+    
+    rotate: function(theta) {
+		for (var i=0, num=this.vertices.length; i < num; i++) {
+			this.vertices[i].rotate(theta);
+		}
+    },
+    
+    scale: function() {
+		var x,y;
+		if (arguments.length==1) {
+			var arg = arguments[0];
+			if(arg instanceof toxi.Vec2D){
+				x=arg.x;
+				y=arg.y;
+			} else {
+				// uniform scale
+				x=arg;
+				y=arg;
+			}
+		} else if (arguments.length==2) {
+			x=arguments[0];
+			y=arguments[1];
+		} else {
+			throw "Invalid argument(s) passed.";
+		}
+		for (var i=0, num=this.vertices.length; i < num; i++) {
+			this.vertices[i].scaleSelf(x, y);
+		}
+		return this;
+    },
+    
+	translate: function() {
+		var x,y;
+		if (arguments.length==1 && arguments[0] instanceof toxi.Vec2D){
+			x=arg.x;
+			y=arg.y;
+		} else if (arguments.length==2) {
+			x=arguments[0];
+			y=arguments[1];
+		} else {
+			throw "Invalid argument(s) passed.";
+		}
+        for (var i=0, num=this.vertices.length; i < num; i++) {
+            this.vertices[i].addSelf(x, y);
+        }
+        return this;
+    },
+    
 	smooth: function(amount, baseWeight){
 		var centroid = this.getCentroid();
 		var num = this.vertices.length;
@@ -2975,7 +3873,7 @@ toxi.Ellipse = function(a,b,c,d) {
 		if(b instanceof toxi.Vec2D){
 			this.setRadii(b.x,b.y);
 		} else {
-			this.setRadii(b,b);
+			this.setRadii(b,c);
 		}
 	} else {
 		if(d === undefined) {
@@ -3492,9 +4390,11 @@ toxi.Cone.prototype.toMesh = function(args) {
 		if ( arguments[0] instanceof Object) {
 			//##then it was a javascript option-object
 			var optionsObject = arguments[0];
-			for(var prop in optionsObject){
-				opts[prop] = optionsObject[prop];
-			}
+			opts.mesh = optionsObject.mesh;
+			opts.steps = optionsObject.steps || optionsObject.resolution || optionsObject.res;
+			opts.thetaOffset = optiontsObject.thetaOffset || opts.thetaOffset;
+			opts.topClosed = optionsObject.topClosed || opts.topClosed;
+			opts.bottomClosed = optionsObject.bottomClosed || opts.bottomClosed;
 		} else {
 			opts.steps = arguments[0];
 		}
@@ -8882,15 +9782,44 @@ toxi.physics2d.VerletMinDistanceSpring2D.prototype.update = function(applyConstr
 		this.parent.update.call(this,applyConstraints);
 	}
 };toxi.physics2d.VerletPhysics2D = function(gravity, numIterations, drag, timeStep){
+	var opts = {
+			numIterations: 50,
+			drag: 0,
+			timeStep: 1
+		},
+		args;
+	if(arguments.length == 1 && (arguments[0].gravity || arguments[0].numIterations || arguments[0].timeStep || arguments[0].drag)){ //options object literal
+		args = arguments[0];
+		if(args.gravity !== undefined){
+			gravity = args.gravity;
+		}
+		if(args.numIterations !== undefined){
+			opts.numIterations = args.gravity;
+		}
+		if(args.drag !== undefined){
+			opts.drag = args.drag;
+		}
+		if(args.timeStep !== undefined){
+			opts.timeStep = args.timeStep;
+		}
+	}
 	this.behaviors = [];
 	this.particles = [];
 	this.springs = [];
-	this.numIterations = numIterations || 50;
-	this.timeStep = timeStep || 1;
-	this.setDrag(drag || 0);
+	this.numIterations = opts.numIterations;
+	this.timeStep = opts.timeStep;
+	this.setDrag(opts.drag);
 	
-	if(gravity !== undefined){
-		this.addBehavior(new toxi.physics2d.GravityBehavior(gravity));
+	if(gravity){
+		if(gravity instanceof toxi.physics2d.GravityBehavior){
+			this.addBehavior(gravity);
+		} else if(gravity instanceof Object && gravity.hasOwnProperty('x') && gravity.hasOwnProperty('y')){
+			this.addBehavior(
+				new toxi.physics2d.GravityBehavior(
+					new toxi.Vec2D(gravity)
+				)
+			);
+		}
 	}
 };
 

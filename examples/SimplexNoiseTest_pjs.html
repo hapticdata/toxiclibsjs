@@ -6,18 +6,26 @@
 	<meta name="author" content="Kyle Phillips">
 	<!-- Date: 2011-01-09 -->
 	<script type="text/javascript" src="../build/toxiclibs.js"></script>
+  <script type="text/javascript" src="../src/core/math/noise/SimplexNoise.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 	<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
 </head>
 <body class="container_12">
 	<header class="grid_12">
 		<hgroup>
-			<h1>Soft Body Square</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
+			<h1>Soft Body Sqaure</h1><h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
 		</hgroup>
 	</header>
 <script type="text/processing" data-processing-target="myCanvas">
+/**
+<p>SimplexNoise demo showing the noise space in 1-4 dimensions.</p>
+<p><strong>Key controls</strong><br/>
+1 - 4 : set new number of dimensions for the noise to be computed
+</p>
+*/
+
 /* 
- * Copyright (c) 2008-2009 Karsten Schmidt
+ * Copyright (c) 2009 Karsten Schmidt
  * 
  * This demo & library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,62 +43,50 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+ 
+import toxi.math.noise.*;
 
+int NOISE_DIMENSIONS=4; // increase upto 4
 
-int DIM=10;
-int REST_LENGTH=20;
-float STRENGTH=0.125;
-float INNER_STRENGTH = 0.13;
-
-VerletPhysics2D physics;
-VerletParticle2D head,tail;
+float NS = 0.05; // noise scale (try from 0.005 to 0.5)
+float noiseOffset = 100;
 
 void setup() {
-  size(960, 582);
-  smooth();
-  physics=new toxi.physics2d.VerletPhysics2D();
-  physics.addBehavior(new toxi.physics2d.GravityBehavior(new toxi.Vec2D(0,0.1)));
-  physics.setWorldBounds(new toxi.Rect(0,0,width,height));
-  for(int y=0,idx=0; y<DIM; y++) {
-    for(int x=0; x<DIM; x++) {
-      VerletParticle2D p = new toxi.physics2d.VerletParticle2D(x*REST_LENGTH,y*REST_LENGTH);
-      physics.addParticle(p);
-      if (x>0) {
-        VerletSpring2D s= new toxi.physics2d.VerletSpring2D(p,physics.particles[idx-1],REST_LENGTH,STRENGTH);
-        physics.addSpring(s);
-      }
-      if (y>0) {
-        VerletSpring2D s = new toxi.physics2d.VerletSpring2D(p,physics.particles[idx-DIM],REST_LENGTH,STRENGTH);
-        physics.addSpring(s);
-      }
-      idx++;
-    }
-  }
-  VerletParticle2D p=physics.particles[0];
-  VerletParticle2D q=physics.particles[physics.particles.length-1];
-  float len=sqrt(sq(REST_LENGTH*(DIM-1))*2);
-  VerletSpring2D s=new toxi.physics2d.VerletSpring2D(p,q,len,INNER_STRENGTH);
-  physics.addSpring(s);
-  p=physics.particles[DIM-1];
-  q=physics.particles[physics.particles.length-DIM];
-  s=new toxi.physics2d.VerletSpring2D(p,q,len,INNER_STRENGTH);
-  physics.addSpring(s);
-  var headIdx = (DIM-1)/2;
-  console.log(headIdx)
-  head=physics.particles[Math.floor(headIdx)];
-  head.lock();
+  size(200, 200);
 }
 
 void draw() {
   background(0);
-  stroke(255);
-  head.set(mouseX,mouseY);
-  physics.update();
-  for(int i =0; i< physics.springs.length; i++) {
-    VerletSpring2D s = physics.springs[i];
-    line(s.a.x,s.a.y,s.b.x,s.b.y);
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      float noiseVal=0;
+      switch(NOISE_DIMENSIONS) {
+      case 1:
+      default:
+        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, 0); 
+        break;
+      case 2:
+        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset); 
+        break;
+      case 3: 
+        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset , frameCount * 0.01); 
+        break;
+      case 4: 
+        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset, 0 , frameCount * 0.01); 
+        break;
+      }
+      int c = (int) (noiseVal * 127 + 128);
+      
+      set(i, j, c << 16 | c << 8 | c | 0xff000000);
+    }
   }
+  noiseOffset+=NS/2;
 }
+
+void keyPressed() {
+  if (key>'0' && key<'5') NOISE_DIMENSIONS=key-'0';
+}
+
 
 
 

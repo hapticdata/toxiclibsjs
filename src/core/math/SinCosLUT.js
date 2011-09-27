@@ -6,6 +6,9 @@
  */
  
 toxi.SinCosLUT = function(precision) {
+    if(!precision){
+        precision = toxi.SinCosLUT.DEFAULT_PRECISION;
+    }
 	this.precision = precision;
 	this.period = 360/this.precision;
 	this.quadrant = this.period >> 2;
