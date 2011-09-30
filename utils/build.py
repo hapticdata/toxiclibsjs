@@ -19,8 +19,6 @@ COMMON_FILES = [
 	'core/math/Waves.js',
 	'core/math/SinCosLUT.js',
 	'core/math/conversion/UnitTranslator.js',
-	'core/math/noise/PerlinNoise.js',
-	'core/math/noise/SimplexNoise.js',
 	'core/geom/Vec2D.js',
 	'core/geom/Vec3D.js',
 	'core/geom/Vec2D_post.js',

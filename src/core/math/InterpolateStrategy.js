@@ -260,8 +260,8 @@ toxi.ThresholdInterpolation.prototype = {
 toxi.ZoomLensInterpolation = function(lensPos, lensStrength) {
 	this.leftImpl = new toxi.CircularInterpolation();
 	this.rightImpl = new toxi.CircularInterpolation();
-	this.lensPos = (lenPos === undefined) ? 0.5 :lensPos;
-	this.lensStrength = (lenStrength===undefined) ? 1 :lensStrength;
+	this.lensPos = lensPos || 0.5;
+	this.lensStrength = lensStrength || 1;
 	this.absStrength = Math.abs(this.lensStrength);
 	this.leftImpl.setFlipped(this.lensStrength > 0);
 	this.rightImpl.setFlipped(this.lensStrength < 0);

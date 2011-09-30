@@ -1,4 +1,4 @@
-// toxi-color r41 - http://github.com/hapticdata/toxiclibsjs
+// toxi-color r42 - http://github.com/hapticdata/toxiclibsjs
 toxi.color=toxi.color||{};
 (function(){var h=function(a){var b="0000";if(a>=0&&a<=15)b="000"+a.toString(16);else if(a>=16&&a<=255)b="00"+a.toString(16);else if(a>=256&&a<=4095)b="0"+a.toString(16);else if(a>=4096&&a<=65535)b=a.toString(16);return b};toxi.color.TColor=function(a){this.rgb=Array(3);this.hsv=Array(3);this.cmyk=Array(4);this._alpha=1;if(a!==undefined){this.cmyk=a.toCMYKAArray().splice(0,4);this.hsv=a.toHSVAArray().splice(0,3);this.rgb=a.toRGBAArray().splice(0,3);this._alpha=a._alpha}};toxi.color.TColor.prototype=
 {add:function(a){return this.copy().addSelf(a)},addSelf:function(a){this.rgb[0]=toxi.MathUtils.min(this.rgb[0]+a.rgb[0],1);this.rgb[1]=toxi.MathUtils.min(this.rgb[1]+a.rgb[1],1);this.rgb[2]=toxi.MathUtils.min(this.rgb[2]+a.rgb[2],1);return this.setRGB(rgb)},adjustConstrast:function(a){return this.hsv[2]<0.5?this.darken(a):this.lighten(a)},adjustHSV:function(a,b,d){return this.setHSV([this.hsv[0]+a,this.hsv[1]+b,this.hsv[2]+d])},adjustRGB:function(a,b,d){return this.setRGB([this.rgb[0]+a,this.rgb[1]+
