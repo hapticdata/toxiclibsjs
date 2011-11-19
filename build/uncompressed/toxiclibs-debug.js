@@ -1,4 +1,4 @@
-// uncompressed/toxiclibs-debug r42 - http://github.com/hapticdata/toxiclibsjs
+// uncompressed/toxiclibs-debug r43 - http://github.com/hapticdata/toxiclibsjs
 /**
 	T O X I C L I B S . JS 
 	http://haptic-data.com/toxiclibsjs
@@ -12,11 +12,16 @@ var toxi = toxi || {};
 
 (function(){
 	//anything messing with global at top:
-	if(window !== undefined){ //otherwise its not being used in a browser-context
-		if( ! window.Int32Array){
+	if(typeof window !== "undefined"){ //otherwise its not being used in a browser-context
+		if( !window.Int32Array){
 			window.Int32Array = Array;
 			window.Float32Array = Array;
 		}		
+	}
+
+	//if this is being used with node/CommonJS
+	if(typeof module !== "undefined" && typeof module.exports !== "undefined"){
+		module.exports = toxi;
 	}
 
 })();
@@ -26,6 +31,7 @@ toxi.extend = function(childClass,superClass){
 	childClass.constructor = childClass;
 	childClass.prototype.parent = superClass.prototype;
 };
+
 toxi.MathUtils = {};
 toxi.MathUtils.SQRT2 = Math.sqrt(2);
 toxi.MathUtils.SQRT3 = Math.sqrt(3);
@@ -3284,7 +3290,7 @@ toxi.Ellipse.prototype.toPolygon2D = function(res) {
 };
 
 toxi.Rect = function(a,b,width,height){
-	if(arguments.length === 2){ //then it should've been 2 Vec2D's
+	if(arguments.length == 2){ //then it should've been 2 Vec2D's
 		if(!(a instanceof toxi.Vec2D)){
 			throw new Error("toxi.Rect received incorrect parameters");
 		} else {
@@ -3293,11 +3299,19 @@ toxi.Rect = function(a,b,width,height){
 			this.width = b.x - this.x;
 			this.height = b.y - this.y;
 		}
-	} else if(arguments.length === 4){
+	} else if(arguments.length == 4){
 		this.x = a;
 		this.y = b;
 		this.width = width;
 		this.height = height;
+	} else if(arguments.length == 1){ //object literal with x,y,width,height
+		var o = arguments[0];
+		if(o.x !== undefined && o.y !== undefined && o.width && o.height){
+			this.x = o.x;
+			this.y = o.y;
+			this.width = o.width;
+			this.height = o.height;
+		}
 	} else if(arguments.length > 0){
 		throw new Error("toxi.Rect received incorrect parameters");
 	}
@@ -5282,6 +5296,7 @@ toxi.TriangleMesh = function(name,numV,numF){
 	this.setName(name);
 	this.matrix = new toxi.Matrix4x4();
 	this.vertices = [];
+	this.__verticesObject = {};
 	this.faces = [];
 	this.numVertices = 0;
 	this.numFaces = 0;
@@ -5321,12 +5336,12 @@ toxi.TriangleMesh.prototype = {
 	        }
 	    }
 	    //7 param method
-	    var va = this.checkVertex(a);
-	    var vb = this.checkVertex(b);
-	    var vc = this.checkVertex(c);
+	    var va = this.__checkVertex(a);
+	    var vb = this.__checkVertex(b);
+	    var vc = this.__checkVertex(c);
 	
-	    if(va.id == vb.id || va.id == vc.id || vb.id == vc.id){
-	        console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
+	    if(va.id === vb.id || va.id === vc.id || vb.id === vc.id){
+	        //console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
 	    } else {
 	        if(n !== undefined){
 	            var nc = va.sub(vc).crossSelf(va.sub(vb));
@@ -5365,12 +5380,16 @@ toxi.TriangleMesh.prototype = {
 	    return this.bounds;
 	},
 	
-	checkVertex: function(v){
-	    var vertex = this.vertices[v];
+	__checkVertex: function(v){
+		var vString = v.toString();
+	    var vertex = this.__verticesObject[vString];
 	    if(vertex === undefined){
 	        vertex = this.createVertex(v,this.uniqueVertexID++);
+	        this.__verticesObject[vString] = vertex;
 	        this.vertices.push(vertex);
 	        this.numVertices++;
+	    } else {
+	    	window.numDupes++;
 	    }
 	    return vertex;
 	},

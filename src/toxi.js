@@ -11,11 +11,16 @@ var toxi = toxi || {};
 
 (function(){
 	//anything messing with global at top:
-	if(window !== undefined){ //otherwise its not being used in a browser-context
-		if( ! window.Int32Array){
+	if(typeof window !== "undefined"){ //otherwise its not being used in a browser-context
+		if( !window.Int32Array){
 			window.Int32Array = Array;
 			window.Float32Array = Array;
 		}		
+	}
+
+	//if this is being used with node/CommonJS
+	if(typeof module !== "undefined" && typeof module.exports !== "undefined"){
+		module.exports = toxi;
 	}
 
 })();
@@ -25,3 +30,4 @@ toxi.extend = function(childClass,superClass){
 	childClass.constructor = childClass;
 	childClass.prototype.parent = superClass.prototype;
 };
+

@@ -1,4 +1,4 @@
-// uncompressed/toxi-color-debug r42 - http://github.com/hapticdata/toxiclibsjs
+// uncompressed/toxi-color-debug r43 - http://github.com/hapticdata/toxiclibsjs
 toxi.color = toxi.color || {};
 (function(){
 

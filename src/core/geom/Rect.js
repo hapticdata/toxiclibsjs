@@ -1,5 +1,5 @@
 toxi.Rect = function(a,b,width,height){
-	if(arguments.length === 2){ //then it should've been 2 Vec2D's
+	if(arguments.length == 2){ //then it should've been 2 Vec2D's
 		if(!(a instanceof toxi.Vec2D)){
 			throw new Error("toxi.Rect received incorrect parameters");
 		} else {
@@ -8,11 +8,19 @@ toxi.Rect = function(a,b,width,height){
 			this.width = b.x - this.x;
 			this.height = b.y - this.y;
 		}
-	} else if(arguments.length === 4){
+	} else if(arguments.length == 4){
 		this.x = a;
 		this.y = b;
 		this.width = width;
 		this.height = height;
+	} else if(arguments.length == 1){ //object literal with x,y,width,height
+		var o = arguments[0];
+		if(o.x !== undefined && o.y !== undefined && o.width && o.height){
+			this.x = o.x;
+			this.y = o.y;
+			this.width = o.width;
+			this.height = o.height;
+		}
 	} else if(arguments.length > 0){
 		throw new Error("toxi.Rect received incorrect parameters");
 	}

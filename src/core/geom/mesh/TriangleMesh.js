@@ -6,6 +6,7 @@ toxi.TriangleMesh = function(name,numV,numF){
 	this.setName(name);
 	this.matrix = new toxi.Matrix4x4();
 	this.vertices = [];
+	this.__verticesObject = {};
 	this.faces = [];
 	this.numVertices = 0;
 	this.numFaces = 0;
@@ -45,12 +46,12 @@ toxi.TriangleMesh.prototype = {
 	        }
 	    }
 	    //7 param method
-	    var va = this.checkVertex(a);
-	    var vb = this.checkVertex(b);
-	    var vc = this.checkVertex(c);
+	    var va = this.__checkVertex(a);
+	    var vb = this.__checkVertex(b);
+	    var vc = this.__checkVertex(c);
 	
-	    if(va.id == vb.id || va.id == vc.id || vb.id == vc.id){
-	        console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
+	    if(va.id === vb.id || va.id === vc.id || vb.id === vc.id){
+	        //console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
 	    } else {
 	        if(n !== undefined){
 	            var nc = va.sub(vc).crossSelf(va.sub(vb));
@@ -89,12 +90,16 @@ toxi.TriangleMesh.prototype = {
 	    return this.bounds;
 	},
 	
-	checkVertex: function(v){
-	    var vertex = this.vertices[v];
+	__checkVertex: function(v){
+		var vString = v.toString();
+	    var vertex = this.__verticesObject[vString];
 	    if(vertex === undefined){
 	        vertex = this.createVertex(v,this.uniqueVertexID++);
+	        this.__verticesObject[vString] = vertex;
 	        this.vertices.push(vertex);
 	        this.numVertices++;
+	    } else {
+	    	window.numDupes++;
 	    }
 	    return vertex;
 	},
