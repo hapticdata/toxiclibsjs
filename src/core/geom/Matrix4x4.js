@@ -5,15 +5,19 @@
  */
 (function(){
 
+	//private temp matrix
+	var _TEMP = new toxi.Matrix4x4();
+
 	toxi.Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
 		this.temp = [];
+		this.matrix = [];
+		var self = this;
 		if(arguments.length === 0) { //if no variables were supplied
-			this.matrix = [];
 			this.matrix[0] = [1,0,0,0];
 			this.matrix[1] = [0,1,0,0];
 			this.matrix[2] = [0,0,1,0];
 			this.matrix[3] = [0,0,0,1];
-		} else if(V11 instanceof Number){ //if the variables were numbers
+		} else if(v11 instanceof Number){ //if the variables were numbers
 			var m1 = [v11,v12,v13,v14];
 			var m2 = [v21,v22,v23,v24];
 			var m3 = [v31,v32,v33,v34];
@@ -40,19 +44,35 @@
 				this.matrix[3] = [NaN,NaN,NaN,NaN];
 			}
 		} else if(v11 instanceof toxi.Matrix4x4){
+
 		//else it should've been a Matrix4x4 that was passed in
 			var m = v11,
-				i =0;
-			if(m.length == 16){
+				i = 0,
+				j = 0,
+				lenM,
+				lenMM;
+
+			if(m.matrix.length == 16){
 				for(i=0;i<4;i++){
 					this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],m.matrix[i][3]];
 				}
 			} else {
+				if(m.matrix.length == 4){
+					lenM = m.matrix.length;
+					for(i = 0; i < lenM; i++){
+						lenMM = m.matrix[i].length;
+						self.matrix[i] = [];
+						for(j = 0; j < lenMM; j++){
+							self.matrix[i][j] = m.matrix[i][j];
+						}
+					}
+				}
+				/*console.log("m.matrix.length: "+m.matrix.length);
 				//should be a length of 9
 				for(i=0;i<3;i++){
 					this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],NaN];
 				}
-				this.matrix[3] = [NaN,NaN,NaN,NaN];
+				this.matrix[3] = [NaN,NaN,NaN,NaN];*/
 			}
 		} else {
 			console.error("toxi.Matrix4x4: incorrect parameters used to construct new instance");
@@ -267,7 +287,7 @@
 				m;
 			if(typeof(a) == "number"){
 				for (i = 0; i < 4; i++) {
-					m = matrix[i];
+					m = this.matrix[i];
 					m[0] *= a;
 					m[1] *= a;
 					m[2] *= a;
@@ -326,7 +346,7 @@
 	     */
 	    rotateX: function(theta) {
 	        _TEMP.identity();
-	        _TEMP.matrix[1][1] = _TEMP[2][2] = Math.cos(theta);
+	        _TEMP.matrix[1][1] = _TEMP.matrix[2][2] = Math.cos(theta);
 	        _TEMP.matrix[2][1] = Math.sin(theta);
 	        _TEMP.matrix[1][2] = -_TEMP.matrix[2][1];
 	        return this.multiplySelf(_TEMP);
@@ -412,6 +432,75 @@
 			}
 			return this;
 	    },
+
+	    setFrustrum: function(left,right,top,bottom,near,far){
+	    	var rl = (right - left),
+	    		tb = (top - bottom),
+	    		fn = (far - near);
+	    	
+
+	    	return this.set(
+	    		(2.0 * near) / rl,
+	    		0,
+	    		(left + right) / rl,
+	    		0,
+	    		0,
+	    		(2.0 * near) / tb,
+	    		(top + bottom) / tb,
+	    		0,
+	    		0,
+	    		0,
+	    		-(near + far) / fn,
+	    		(-2 * near * far) / fn,
+	    		0,
+	    		0,
+	    		-1,
+	    		0
+	    	);	
+	    },
+
+	    setOrtho: function(left,right,top,bottom,near,far){
+	    	var mat = [
+	    		2.0 / (right - left),
+	    		0, 
+	    		0, 
+	    		(left + right) / (right - left),
+                0, 
+                2.0 / (top - bottom), 
+                0, 
+                (top + bottom) / (top - bottom), 
+                0,
+                0,
+                -2.0 / (far - near), 
+                (far + near) / (far - near), 
+                0, 
+                0, 
+                0, 
+                1
+	    	];
+
+	    	return this.set.apply(this,mat);
+	    },
+
+	    setPerspective: function(fov,aspect,near,far){
+	    	var y = near * Math.tan(0.5 * toxi.MathUtils.radians(fov)),
+	    		x = aspect * y;
+	    	return this.setFrustrum(-x,x,y,-y,near,far);	
+	    },
+
+	    setPosition: function(x,y,z){
+	    	this.matrix[0][3] = x;
+	    	this.matrix[1][3] = y;
+	    	this.matrix[2][3] = z;
+	    	return this;	
+	    },
+
+	    setScale: function(sX,sY,sZ){
+	    	this.matrix[0][0] = sX;
+	    	this.matrix[1][1] = sY;
+	    	this.matrix[2][2] = sZ;
+	    	return this;	
+	    },
 	
 	   
 	    sub: function(m) {
@@ -451,7 +540,7 @@
 	    },
 	
 	    toFloatArray:function(result) {
-	        return toArray(result);
+	        return new Float32Array(this.toArray(result));
 	    },
 	
 	    /*
@@ -486,9 +575,7 @@
 				dx = dx.x;
 			}
 			_TEMP.identity();
-			_TEMP.matrix[0][3] = dx;
-			_TEMP.matrix[1][3] = dy;
-			_TEMP.matrix[2][3] = dz;
+			_TEMP.setPosition(dx,dy,dz);
 			return this.multiplySelf(_TEMP);
 	    },
 	
@@ -508,7 +595,5 @@
 		}
 	};
 	
-	//private temp matrix
-	var _TEMP = new toxi.Matrix4x4();
 
 })();
