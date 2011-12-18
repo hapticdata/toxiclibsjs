@@ -1,11 +1,9 @@
 /**
+ * @class
  * Helper class for the spline3d classes in this package. Used to compute
  * subdivision points of the curve.
- */
-/**
- * @param res
- *            number of subdivision steps between each control point of the
- *            spline3d
+ * @member toxi
+ * @param {Number} res number of subdivision steps between each control point of the spline3d
  */
 toxi.BernsteinPolynomial = function(res) {
         this.resolution = res;

@@ -1,3 +1,8 @@
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.Vec3D
+ */
 toxi.Vertex = function(v,id) {
         toxi.Vec3D.apply(this,[v]);
         this.id = id;

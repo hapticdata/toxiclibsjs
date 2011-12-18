@@ -1,3 +1,7 @@
+/**
+ @class
+ @member toxi
+ */
 toxi.Line3D = function(vec_a, vec_b) {
     this.a = vec_a;
     this.b = vec_b;

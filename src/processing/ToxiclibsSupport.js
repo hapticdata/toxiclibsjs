@@ -1,12 +1,9 @@
+/** @namespace */
 toxi.processing = toxi.processing || {};
 
 (function(){
 	toxi.processing.ToxiclibsSupport = function(processing,optional_gfx){
 		this.sketch = processing;
-		console.log("sketch");
-		console.log(this.sketch);
-		console.log("p")
-		console.log(this.sketch.p);
 		this.app = processing;
 		if(optional_gfx !== undefined){
 			this.gfx = processing;
@@ -285,11 +282,17 @@ toxi.processing = toxi.processing || {};
 			}
 		},
 		
-		//TODO should be one for iterator?
+		/**
+		 * iterates and draws the provided 2D points
+		 * @param {Array} or {Processing#Iterator} points to iterate
+		 */
 		points2D: function(points){
 			this.processVertices2D(points,this.app.POINTS,false);
 		},
-		//TODO should be one for iterator?
+		/**
+		 * iterates and draws the provided 3D points
+		 * @param {Array} or {Processing#Iterator} points to iterate
+		 */
 		points3D: function(points){
 			this.processVertices3D(points,this.app.POINTS,false);
 		},
@@ -297,15 +300,27 @@ toxi.processing = toxi.processing || {};
 		polygon2D: function(poly){
 			this.processVertices2D(poly.vertices,this.app.POLYGON,false);
 		},
-		//TODO points should be iterator
-		processVertices2D: function(points, shapeID, closed){
+		/**
+		 * Processes the 2D vertices from a Processing.js Iterator object
+		 * @params {Iterator} iterator
+		 * @params {Number} shapeID
+		 * @params {Boolean} closed
+		 */
+		processVertices2D: function(iterator, shapeID, closed){
+			//if first param wasnt passed in as a pjs Iterator, make it one
+			if(iterator.hasNext === undefined || iterator.next === undefined){
+				iterator = new this.app.ObjectIterator( iterator );
+			}
 			this.gfx.beginShape(shapeID);
-			var i=0,
+			for(var v  = void(0); iterator.hasNext() && ((v  = iterator.next()) || true);){
+				this.gfx.vertex(v.x,v.y);
+			}
+			/*var i=0,
 				len = points.length;
 			for(i=0;i<len;i++){
 				var v = points[i];
 				this.gfx.vertex(v.x,v.y);
-			}
+			}*/
 			if(closed){
 				this.gfx.endShape(this.app.CLOSE);
 			} else {
@@ -313,15 +328,28 @@ toxi.processing = toxi.processing || {};
 			}
 		},
 		
-		//TODO points should be iterator
-		processVertices3D: function(points,shapeID,closed){
+		/**
+		 * Processes the 3D vertices from a Processing.js Iterator object
+		 * @params {Iterator} iterator
+		 * @params {Number} shapeID
+		 * @params {Boolean} closed
+		 */
+		processVertices3D: function(iterator,shapeID,closed){
+			//if first param wasnt passed in as a pjs Iterator, make it one
+			if(iterator.hasNext === undefined || iterator.next === undefined){
+				iterator = new this.app.ObjectIterator( iterator );
+			}
 			this.gfx.beginShape(shapeID);
-			var i=0,
+			for(var v  = void(0); iterator.hasNext() && ((v  = iterator.next()) || true);){
+				this.gfx.vertex(v.x,v.y,v.z);
+			}
+
+			/*var i=0,
 				len = points.length;
 			for(i=0;i<len;i++){
 				var v = points[i];
 				this.gfx.vertex(v.x,v.y,v.z);
-			}
+			}*/
 			if(closed){
 				this.gfx.endShape(this.app.CLOSE);
 			} else {

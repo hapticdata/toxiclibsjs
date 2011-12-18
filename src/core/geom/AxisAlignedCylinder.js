@@ -1,3 +1,8 @@
+/** 
+ @member toxi
+ @constructor
+ @description An Abstract (don't use this directly) Axis-aligned Cylinder class
+ */
 toxi.AxisAlignedCylinder = function(pos,radius,length) {
 	this.pos = (pos===undefined)? undefined: pos.copy();
 	this.setRadius(radius);

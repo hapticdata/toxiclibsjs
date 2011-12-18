@@ -1,4 +1,10 @@
-//rawPoints should be Vec2D array
+
+/**
+ * @class
+ * @member toxi
+ * @param {toxi.Vec2D[]} rawPoints array of toxi.Vec2D's
+ * @param {toxi.BernsteinPolynomial} [bernsteinPoly]
+ */
 toxi.Spline2D = function(rawPoints,bernsteinPoly){
 	if(arguments.length === 0){
 			this.setTightness(toxi.Spline2D.DEFAULT_TIGHTNESS);

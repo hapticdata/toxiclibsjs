@@ -1,8 +1,8 @@
 /**
- *  includes all classes extending VertexSelector
- * (BoxSelector, DefaultSelector, PlaneSelector)
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
  */
-
 toxi.BoxSelector = function(mesh,box) {
     toxi.VertexSelector.apply(this,[mesh]);
     this.box = box;
@@ -22,6 +22,11 @@ toxi.BoxSelector.prototype.selectVertices = function() {
     return this;
 };
 
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
+ */
 toxi.DefaultSelector = function(mesh){
 	toxi.VertexSelector.apply(this,[mesh]);
 };
@@ -33,9 +38,11 @@ toxi.DefaultSelector.prototype.selectVertices = function(){
 };
 
 
-
-
-
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
+ */
 toxi.PlaneSelector = function(mesh,plane,classifier, tolerance) {
     toxi.VertexSelector.apply(this,[mesh]);
     this.plane = plane;

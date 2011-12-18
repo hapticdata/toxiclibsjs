@@ -1,23 +1,21 @@
-/* A geometric definition of a cone (and cylinder as a special case) with
+/**
+ * @class A geometric definition of a cone (and cylinder as a special case) with
  * support for mesh creation/representation. The class is currently still
  * incomplete in that it doesn't provide any other features than the
  * construction of a cone shaped mesh.
+ * @augments toxi.Vec3D
+ * @member toxi
+ * @param pos
+ *            centre position
+ * @param dir
+ *            direction vector
+ * @param rNorth
+ *            radius on the side in the forward direction
+ * @param rSouth
+ *            radius on the side in the opposite direction
+ * @param len
+ *            length of the cone
  */
-
-    /**
-     * Constructs a new cone instance.
-     * 
-     * @param pos
-     *            centre position
-     * @param dir
-     *            direction vector
-     * @param rNorth
-     *            radius on the side in the forward direction
-     * @param rSouth
-     *            radius on the side in the opposite direction
-     * @param len
-     *            length of the cone
-     */
 toxi.Cone = function(pos,dir,rNorth, rSouth,len) {
 	toxi.Vec3D.apply(this,[pos]);
 	this.dir = dir.getNormalized();
@@ -39,12 +37,12 @@ toxi.Cone.prototype.toMesh = function(args) {
 	
 		
 	if ( arguments.length == 1) {
-		if ( arguments[0] instanceof Object) {
+		if (typeof arguments[0] == 'object') {
 			//##then it was a javascript option-object
 			var optionsObject = arguments[0];
 			opts.mesh = optionsObject.mesh;
 			opts.steps = optionsObject.steps || optionsObject.resolution || optionsObject.res;
-			opts.thetaOffset = optiontsObject.thetaOffset || opts.thetaOffset;
+			opts.thetaOffset = optionsObject.thetaOffset || opts.thetaOffset;
 			opts.topClosed = optionsObject.topClosed || opts.topClosed;
 			opts.bottomClosed = optionsObject.bottomClosed || opts.bottomClosed;
 		} else {

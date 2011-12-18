@@ -1,5 +1,7 @@
 /**
- * This class defines a 2D ellipse and provides several utility methods for it.
+ * @class defines a 2D ellipse and provides several utility methods for it.
+ * @member toxi
+ * @augments toxi.Vec2D
  */
 
 toxi.Ellipse = function(a,b,c,d) {

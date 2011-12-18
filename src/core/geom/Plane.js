@@ -1,3 +1,8 @@
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.Vec3D
+ */
 toxi.Plane = function(tri_or_origin,norm) {
 	var origin, normal;
 	if(arguments.length === 0){

@@ -1,3 +1,7 @@
+/**
+ @member toxi
+ @class a two-dimensional vector class
+ */
 toxi.Vec2D = function(a,b){
 	if(a instanceof Object && a.x !== undefined && a.y !== undefined){
 		b = a.y;

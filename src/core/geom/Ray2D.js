@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Ray2D = function(a,b,d){
 	var o, dir;
 	if(arguments.length == 3){

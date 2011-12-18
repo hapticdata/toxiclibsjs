@@ -1,6 +1,7 @@
 /**
- * Spherical harmonics surface evaluator based on code by Paul Bourke:
+ * @class Spherical harmonics surface evaluator based on code by Paul Bourke:
  * http://local.wasp.uwa.edu.au/~pbourke/geometry/sphericalh/
+ * @member toxi
  */
 toxi.SphericalHarmonics = function(m) {
     this.m = m;

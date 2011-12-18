@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Polygon2D = function(){
 	this.vertices = [];
 	var i,l;

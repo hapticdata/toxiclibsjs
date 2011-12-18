@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.SuperEllipsoid = function(n1,n2) {
 	this.p1 = n1;
 	this.p2 = n2;

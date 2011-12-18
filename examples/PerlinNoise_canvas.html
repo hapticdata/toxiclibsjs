@@ -1,0 +1,127 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Perlin Noise Fields - toxiclibs.js examples</title>
+	<meta name="author" content="Kyle Phillips">
+	<link href="css/style.css" rel="stylesheet" type="text/css">
+	<!-- Date: 2011-01-09 -->
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
+  <script type="text/javascript" src="js/DAT.GUI.min.js"></script>
+  <style>
+    body {
+      background-color: #000000;
+      color: #ffffff;
+    }
+    #details, header {
+      background-color: #000000 !important;
+    }
+  </style>
+</head>
+<body class="container_12">
+<header class="grid_12">
+	<hgroup>
+		<h1>Perlin Noise Fields</h1>
+		<h2>w/ Canvas Context 2D</h2>
+	</hgroup>
+</header>
+<div class="grid_12">
+<canvas id="myCanvas" width="960" height="600">
+	your browser doesnt support canvas
+</canvas>
+</div>
+<script type="text/javascript">
+
+  
+  var canvas = document.getElementById('myCanvas'),
+      ctx = canvas.getContext('2d'),
+      perlin = new toxi.PerlinNoise(),
+      offset = 0,
+      options = {
+        numStreams: 500,
+        distort: 0,
+        strength:  Math.PI,
+        scaler: 0.05,
+        step: 2
+      };
+      streams = [];
+
+  var gui = new DAT.GUI();
+  gui.add(options,'numStreams', 1, 2000, 1.0).name("# Streams");
+  gui.add(options,'step',0.25,10,0.25).name("Speed");
+  //var noiseFolder = gui.addFolder("Noise Space Progression");
+  gui.add(options,'distort',-0.5,0.5,0.001).name("Noise Progression");
+  gui.add(options,'strength',0.01,Math.PI*2,0.01).name("Directional Influence");
+  gui.add(options,'scaler',0.01,0.25,0.01).name("Scalar");
+
+  var getRandomVector = function(){
+    var vec = new toxi.Vec2D(Math.random()*canvas.width,Math.random()*canvas.height);
+    //since javascript is a loose-typed language, im just gonna through a color property on there
+    vec.color = toxi.color.TColor.newRandom();
+    return vec;
+  };
+
+
+  for(var i=0;i<options.numStreams;i++){
+    streams.push(getRandomVector());
+  }
+
+  ctx.fillStyle = "#000000";
+  ctx.strokeStyle = "#ff0000";
+  //ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  var draw = function(){
+    while(options.numStreams > streams.length){
+      streams.push(getRandomVector());
+    }
+    while(options.numStreams < streams.length){
+      streams.shift();
+    }
+    offset += options.distort;
+    ctx.fillStyle = "rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    var replaceIndices = [];
+    var lastPos = new toxi.Vec2D();
+    streams.forEach(function(stream,i){
+      window._col = stream.color;
+      ctx.strokeStyle = "rgba("+parseInt(stream.color.red()*255,10)+","+parseInt(stream.color.green()*255,10)+","+parseInt(stream.color.blue()*255,10)+",1.0)";
+      lastPos.set(stream);
+      var noise = perlin.noise(stream.x * options.scaler,offset + stream.y*options.scaler) - 0.5;
+      var angle = options.strength * noise;
+      var dir = toxi.Vec2D.fromTheta(angle);
+      
+      stream.addSelf(dir.normalizeTo(options.step * 3));
+      ctx.beginPath();
+      ctx.moveTo(lastPos.x,lastPos.y);
+      ctx.lineTo(stream.x,stream.y);
+      ctx.closePath();
+      ctx.stroke();
+      if(stream.x < 0 || stream.x > canvas.width || stream.y < 0 || stream.y > canvas.height){
+        replaceIndices.push(i);
+      }
+    });
+
+    replaceIndices.forEach(function(streamIndex){
+      streams[streamIndex] = getRandomVector();
+    });
+
+    setTimeout(draw, 1000 / 30);
+  }
+
+  setTimeout(draw, 1000 / 30);
+
+</script>
+<section id="details" class="grid_12">
+<aside id="authors" class="grid_6">
+<p>
+	Toxiclibs ported to js and example by <a href="http://workofkylephillips.com">Kyle Phillips</a>
+</p>
+</aside>
+<article id="description" class="grid_12">
+<p>PolarLines demo shows the difference between lines in normal cartesian and polar coordinate systems, where a line is actually a curve/spiral. Both "lines" are shown in parallel and the only difference is the order of the .toCartesian() conversion (either inside or outside the loop).</p>
+</article>
+</section>
+<footer class="grid_12"><a href="http://haptic-data.com">toxiclibs.js
+</a></footer>
+</body>
+</html>

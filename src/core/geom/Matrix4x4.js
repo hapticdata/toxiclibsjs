@@ -1,14 +1,12 @@
-/**
- * Implements a simple row-major 4x4 matrix class, all matrix operations are
- * applied to new instances. Use {@link #transpose()} to convert from
- * column-major formats...
- */
 (function(){
-
-	//private temp matrix
-	var _TEMP = new toxi.Matrix4x4();
-
-	toxi.Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
+	/**
+	 * @description Implements a simple row-major 4x4 matrix class, all matrix operations are
+	 * applied to new instances. Use {@link #transpose()} to convert from
+	 * column-major formats...
+	 * @exports Matrix4x4 as toxi.Matrix4x4
+	 * @constructor
+	 */
+	var Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
 		this.temp = [];
 		this.matrix = [];
 		var self = this;
@@ -26,7 +24,7 @@
 		} else if(v11 instanceof Array) { //if it was sent in as one array
 			var array = v11;
 			if (array.length != 9 && array.length != 16) {
-				throw new Error("toxi.Matrix4x4: Array length must == 9 or 16");
+				throw new Error("Matrix4x4: Array length must == 9 or 16");
 			}
 			if (array.length == 16) {
 				this.matrix = [];
@@ -43,7 +41,7 @@
 				this.matrix[2][3] = NaN;
 				this.matrix[3] = [NaN,NaN,NaN,NaN];
 			}
-		} else if(v11 instanceof toxi.Matrix4x4){
+		} else if(v11 instanceof Matrix4x4){
 
 		//else it should've been a Matrix4x4 that was passed in
 			var m = v11,
@@ -75,15 +73,13 @@
 				this.matrix[3] = [NaN,NaN,NaN,NaN];*/
 			}
 		} else {
-			console.error("toxi.Matrix4x4: incorrect parameters used to construct new instance");
+			console.error("Matrix4x4: incorrect parameters used to construct new instance");
 		}
 	};
 	
-	
-	toxi.Matrix4x4.prototype = {
-		
+	Matrix4x4.prototype = {
 		add: function(rhs) {
-	        var result = new toxi.Matrix4x4(this);
+	        var result = new Matrix4x4(this);
 	        return result.addSelf(rhs);
 	    },
 	
@@ -119,31 +115,31 @@
 	    },
 	
 	    copy: function() {
-	        return new toxi.Matrix4x4(this);
+	        return new Matrix4x4(this);
 	    },
 	
 	    getInverted: function() {
-	        return new toxi.Matrix4x4(this).invert();
+	        return new Matrix4x4(this).invert();
 	    },
 	
 	    getRotatedAroundAxis: function(axis,theta) {
-	        return new toxi.Matrix4x4(this).rotateAroundAxis(axis, theta);
+	        return new Matrix4x4(this).rotateAroundAxis(axis, theta);
 	    },
 	
 	    getRotatedX: function(theta) {
-	        return new toxi.Matrix4x4(this).rotateX(theta);
+	        return new Matrix4x4(this).rotateX(theta);
 	    },
 	
 	    getRotatedY: function(theta) {
-	        return new toxi.Matrix4x4(this).rotateY(theta);
+	        return new Matrix4x4(this).rotateY(theta);
 	    },
 	
 	    getRotatedZ: function(theta) {
-	        return new toxi.Matrix4x4(this).rotateZ(theta);
+	        return new Matrix4x4(this).rotateZ(theta);
 	    },
 	
 	    getTransposed: function() {
-	        return new toxi.Matrix4x4(this).transpose();
+	        return new Matrix4x4(this).transpose();
 	    },
 	
 	    identity: function() {
@@ -276,10 +272,10 @@
 	
 	    multiply: function(a) {
 			if(typeof(a) == "number"){
-				return new toxi.Matrix4x4(this).multiply(a);
+				return new Matrix4x4(this).multiply(a);
 			}
 			//otherwise it should be a Matrix4x4
-			return new toxi.Matrix4x4(this).multiplySelf(a);
+			return new Matrix4x4(this).multiplySelf(a);
 	    },
 	
 	    multiplySelf: function(a) {
@@ -377,7 +373,7 @@
 	    },
 	
 	    scale: function(a,b,c) {
-			return new toxi.Matrix4x4(this).scaleSelf(a,b,c);
+			return new Matrix4x4(this).scaleSelf(a,b,c);
 	    },
 	
 	    scaleSelf: function(a,b,c) {
@@ -504,7 +500,7 @@
 	
 	   
 	    sub: function(m) {
-			return new toxi.Matrix4x4(this).subSelf(m);
+			return new Matrix4x4(this).subSelf(m);
 	    },
 	
 	    subSelf: function(mat) {
@@ -565,7 +561,7 @@
 	    },
 	
 	    translate: function(dx,dy,dz) {
-			return new toxi.Matrix4x4(this).translateSelf(dx, dy, dz);
+			return new Matrix4x4(this).translateSelf(dx, dy, dz);
 	    },
 	
 	    translateSelf: function( dx, dy, dz) {
@@ -595,5 +591,8 @@
 		}
 	};
 	
+	//private temp matrix
+	var _TEMP = new Matrix4x4();
+	toxi.Matrix4x4 = Matrix4x4;
 
-})();
+}());

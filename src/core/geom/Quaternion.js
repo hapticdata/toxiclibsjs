@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Quaternion = function (qw,vx,y,z){
 	if(arguments.length == 4){
 		this.w = qw;

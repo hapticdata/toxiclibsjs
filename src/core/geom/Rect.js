@@ -1,3 +1,11 @@
+/**
+ * @class
+ * @member toxi
+ * @param {Number} [x]
+ * @param {Number} [y]
+ * @param {Number} [width]
+ * @param {Number} [height]
+ */
 toxi.Rect = function(a,b,width,height){
 	if(arguments.length == 2){ //then it should've been 2 Vec2D's
 		if(!(a instanceof toxi.Vec2D)){

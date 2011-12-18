@@ -1,3 +1,7 @@
+/**
+ @class
+ @member toxi
+ */
 toxi.Line2D = function( a, b) {
   this.a = a;
   this.b = b;

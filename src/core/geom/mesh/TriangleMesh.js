@@ -1,4 +1,7 @@
-//is there any reason for this to implement Mesh3D?
+/**
+ * @class
+ * @member toxi
+ */
 toxi.TriangleMesh = function(name,numV,numF){
 	if(name === undefined)name = "untitled";
 	if(numV === undefined)numV = toxi.TriangleMesh.DEFAULT_NUM_VERTICES;

@@ -19,8 +19,8 @@ COMMON_FILES = [
 	'core/math/Waves.js',
 	'core/math/SinCosLUT.js',
 	'core/math/conversion/UnitTranslator.js',
-	#'core/math/noise/PerlinNoise.js',
-	#'core/math/noise/SimplexNoise.js',
+	'core/math/noise/PerlinNoise.js',
+	'core/math/noise/SimplexNoise.js',
 	'core/geom/Vec2D.js',
 	'core/geom/Vec3D.js',
 	'core/geom/Vec2D_post.js',
@@ -41,7 +41,6 @@ COMMON_FILES = [
 	'core/geom/Quaternion.js',
 	'core/geom/mesh/Vertex.js',
 	'core/geom/mesh/Face.js',
-	'core/geom/mesh/Mesh3D.js',
 	'core/geom/mesh/TriangleMesh.js',
 	'core/geom/Sphere.js',
 	'core/geom/mesh/VertexSelector.js',
@@ -66,6 +65,9 @@ COLOR_FILES = [
 	'color/TColor.js'
 ]
 
+PROCESSING_FILES = [
+	'processing/ToxiclibsSupport.js'
+]
 
 PHYSICS2D_FILES = [
 	'physics/physics2d/physics2d.js',
@@ -177,6 +179,7 @@ def parse_args():
 		parser = argparse.ArgumentParser(description='Build and compress toxiclibs.js')
 		parser.add_argument('--includes', help='Build includes.js', action='store_true')
 		parser.add_argument('--physics2d', help='Build toxi-physics2d.js', action='store_true')
+		parser.add_argument('--processing', help='Build toxi-processing.js', action='store_true')
 		parser.add_argument('--core', help='Build toxi-core.js', action='store_true')
 		parser.add_argument('--color', help='Build toxi-color.js', action='store_true')
 		parser.add_argument('--common', help='Build toxiclibs.js', action='store_const', const=True)
@@ -189,6 +192,7 @@ def parse_args():
 		parser = optparse.OptionParser(description='Build and compress toxiclibs.js')
 		parser.add_option('--includes', dest='includes', help='Build includes.js', action='store_true')
 		parser.add_option('--physics2d', dest='physics2d', help='Build toxi-physics2d.js', action='store_true')
+		parser.add_option('--processing', dest='processing', help='Build toxi-processing.js', action='store_true')
 		parser.add_option('--core', dest='core', help='Build toxi-core.js', action='store_true')
 		parser.add_option('--color', dest='color', help='Build toxi-color.js', action='store_true')
 		parser.add_option('--common', dest='common', help='Build toxiclibs.js', action='store_const', const=True)
@@ -211,10 +215,11 @@ def main(argv=None):
 	debug = args.debug
 
 	config = [
-		['toxiclibs','common', COMMON_FILES + COLOR_FILES + PHYSICS2D_FILES, args.common],
+		['toxiclibs','common', COMMON_FILES + COLOR_FILES + PHYSICS2D_FILES + PROCESSING_FILES, args.common],
 		['toxi-core','core', COMMON_FILES, args.core],
 		['toxi-color','color', COLOR_FILES, args.color],
-		['toxi-physics2d','physics2d', PHYSICS2D_FILES, args.physics2d]
+		['toxi-physics2d','physics2d', PHYSICS2D_FILES, args.physics2d],
+		['toxi-processing','processing', PROCESSING_FILES, args.processing]
 	]
 
 	for fname_lib, fname_inc, files, enabled in config:

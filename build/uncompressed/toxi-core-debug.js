@@ -8,11 +8,19 @@
 	Developer		: Kyle Phillips: http://haptic-data.com
 	Java Version		: http://toxiclibs.org
 */
+/** @namespace */
 var toxi = toxi || {};
 
+
+//anything that is manipulating global is inside this function
 (function(){
+	//allow the library to assume Array.isArray has been implemented
+	Array.isArray = Array.isArray || function(a){
+		return a.toString() == '[object Array]';	
+	};
 	//anything messing with global at top:
 	if(typeof window !== "undefined"){ //otherwise its not being used in a browser-context
+
 		if( !window.Int32Array){
 			window.Int32Array = Array;
 			window.Float32Array = Array;
@@ -32,6 +40,12 @@ toxi.extend = function(childClass,superClass){
 	childClass.prototype.parent = superClass.prototype;
 };
 
+/**
+ * @class
+ * @static
+ * @member toxi
+ * @description math utilities
+ */
 toxi.MathUtils = {};
 toxi.MathUtils.SQRT2 = Math.sqrt(2);
 toxi.MathUtils.SQRT3 = Math.sqrt(3);
@@ -184,13 +198,18 @@ toxi.MathUtils.radians = function(degrees) {
   return degrees * toxi.MathUtils.DEG2RAD;
 };
 
-toxi.MathUtils.random = function(min,max) {
+toxi.MathUtils.random = function(rand,min,max) {
+  if(arguments.length == 2) {
+    max = min;
+    min = rand;
+    rand = Math.random;
+  }
 	if(!min && !max)return Math.random();
 	else if(!max){ //if only one is provided, then thats actually the max
 		max = min;
-		return Math.random()*max;
+		return rand()*max;
 	}
-    return Math.random() * (max - min) + min;
+    return rand() * (max - min) + min;
 };
 
 toxi.MathUtils.reduceAngle = function(theta) {
@@ -217,13 +236,15 @@ toxi.MathUtils.sin = function(theta) {
 };
 
 /**
- * Bezier curve interpolation with configurable coefficients. The curve
+ * @class Bezier curve interpolation with configurable coefficients. The curve
  * parameters need to be normalized offsets relative to the start and end values
  * passed to the {@link #interpolate(float, float, float)} method, but can
  * exceed the normal 0 .. 1.0 interval. Use symmetrical offsets to create a
  * symmetrical curve, e.g. this will create a curve with 2 dips reaching the
  * minimum and maximum values at 25% and 75% of the interval...
+ * @member toxi
  * 
+ * @example
  * <p>
  * <code>BezierInterpolation b=new BezierInterpolation(3,-3);</code>
  * </p>
@@ -255,15 +276,13 @@ toxi.BezierInterpolation.prototype = {
 };
 
 /**
- * Implementation of the circular interpolation function.
+ * @class Implementation of the circular interpolation function.
  * 
  * i = a-(b-a) * (sqrt(1 - (1 - f) * (1 - f) ))
- */
-
-/**
- * The interpolation slope can be flipped to have its steepest ascent
+ * @description The interpolation slope can be flipped to have its steepest ascent
  * towards the end value, rather than at the beginning in the default
  * configuration.
+ * @member toxi
  * 
  * @param isFlipped
  *            true, if slope is inverted
@@ -292,9 +311,9 @@ toxi.CircularInterpolation.prototype = {
 
 
 /**
- * Implementation of the cosine interpolation function:
- * 
+ * @class Implementation of the cosine interpolation function:
  * i = b+(a-b)*(0.5+0.5*cos(f*PI))
+ * @member toxi
  */
 toxi.CosineInterpolation = function(){};
 
@@ -307,10 +326,11 @@ toxi.CosineInterpolation.prototype = {
 
 
 /**
- * Delivers a number of decimated/stepped values for a given interval. E.g. by
+ * @class Delivers a number of decimated/stepped values for a given interval. E.g. by
  * using 5 steps the interpolation factor is decimated to: 0, 20, 40, 60, 80 and
  * 100%. By default {@link LinearInterpolation} is used, however any other
  * {@link InterpolateStrategy} can be specified via the constructor.
+ * @member toxi
  */
 toxi.DecimatedInterpolation = function(steps,strategy) {
  if(steps === undefined){
@@ -328,13 +348,14 @@ toxi.DecimatedInterpolation.prototype = {
 };
 
 /**
- * Exponential curve interpolation with adjustable exponent. Use exp in the
+ * @class Exponential curve interpolation with adjustable exponent. Use exp in the
  * following ranges to achieve these effects:
  * <ul>
  * <li>0.0 &lt; x &lt; 1.0 : ease in (steep changes towards b)</li>
  * <li>1.0 : same as {@link LinearInterpolation}</li>
  * <li>&gt; 1.0 : ease-out (steep changes from a)</li>
  * </ul>
+ * @member toxi
  */
 toxi.ExponentialInterpolation = function(exp) {
    this.exponent = (exp === undefined)?2 : exp;
@@ -347,33 +368,34 @@ toxi.ExponentialInterpolation.prototype = {
 };
 
 /**
- * Implementations of 2D interpolation functions (currently only bilinear).
- */
-
-/**
- * @param x
- *            x coord of point to filter (or Vec2D p)
- * @param y
- *            y coord of point to filter (or Vec2D p1)
- * @param x1
- *            x coord of top-left corner (or Vec2D p2)
- * @param y1
- *            y coord of top-left corner
- * @param x2
- *            x coord of bottom-right corner
- * @param y2
- *            y coord of bottom-right corner
- * @param tl
- *            top-left value
- * @param tr
- *            top-right value (do not use if first 3 are Vec2D)
- * @param bl
- *            bottom-left value (do not use if first 3 are Vec2D)
- * @param br
- *            bottom-right value (do not use if first 3 are Vec2D)
- * @return interpolated value
+ * @class Implementations of 2D interpolation functions (currently only bilinear).
+ * @member toxi
+ * @static
  */
 toxi.Interpolation2D = {};
+/**
+ * @param {Number} x
+ *            x coord of point to filter (or Vec2D p)
+ * @param {Number} y
+ *            y coord of point to filter (or Vec2D p1)
+ * @param {Number} x1
+ *            x coord of top-left corner (or Vec2D p2)
+ * @param {Number} y1
+ *            y coord of top-left corner
+ * @param {Number} x2
+ *            x coord of bottom-right corner
+ * @param {Number} y2
+ *            y coord of bottom-right corner
+ * @param {Number} tl
+ *            top-left value
+ * @param {Number} tr
+ *            top-right value (do not use if first 3 are Vec2D)
+ * @param {Number} bl
+ *            bottom-left value (do not use if first 3 are Vec2D)
+ * @param {Number} br
+ *            bottom-right value (do not use if first 3 are Vec2D)
+ * @return {Number} interpolated value
+ */
 toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
 	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
 	if(_x instanceof Object) //if the first 3 params are passed in as Vec2Ds
@@ -412,11 +434,11 @@ toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _b
 };
 
 /**
- * Implementation of the linear interpolation function
+ * @class Implementation of the linear interpolation function
  * 
  * i = a + ( b - a ) * f
+ * @member toxi
  */
-
 toxi.LinearInterpolation = function(){};
 
 toxi.LinearInterpolation.prototype = {
@@ -426,7 +448,8 @@ toxi.LinearInterpolation.prototype = {
 };
 
 /**
- * Initializes the s-curve with default sharpness = 2
+ * @class Initializes the s-curve with default sharpness = 2
+ * @member toxi
  */
 toxi.SigmoidInterpolation = function(s) {
 	if(s === undefined){
@@ -453,8 +476,9 @@ toxi.SigmoidInterpolation.prototype = {
 };
 
 /**
- * Defines a single step/threshold function which returns the min value for all
+ * @class Defines a single step/threshold function which returns the min value for all
  * factors &lt; threshold and the max value for all others.
+ * @member toxi
  */
 toxi.ThresholdInterpolation = function(threshold) {
 	this.threshold = threshold;
@@ -468,12 +492,11 @@ toxi.ThresholdInterpolation.prototype = {
     
     
 /**
- * This class provides an adjustable zoom lens to either bundle or dilate values
+ * @class This class provides an adjustable zoom lens to either bundle or dilate values
  * around a focal point within a given interval. For a example use cases, please
  * have a look at the provided ScaleMapDataViz and ZoomLens examples.
+ * @member toxi
  */
-
-
 toxi.ZoomLensInterpolation = function(lensPos, lensStrength) {
 	this.leftImpl = new toxi.CircularInterpolation();
 	this.rightImpl = new toxi.CircularInterpolation();
@@ -506,151 +529,153 @@ toxi.ZoomLensInterpolation.prototype = {
 	    this.rightImpl.setFlipped(this.lensStrength < 0);
 	}
 };
-toxi.Range = function(min,max){
-	this.min = min;
-	this.max = max;
-};
-toxi.Range.prototype.toString = function(){
-	return "{ min: "+this.min+ ", max: "+this.max+"}";
-};
+(function(){
 
+    var _Range = function(min,max){
+    	this.min = min;
+    	this.max = max;
+    };
+    _Range.prototype.toString = function(){
+    	return "{ min: "+this.min+ ", max: "+this.max+"}";
+    };
 
-/**
- * This class maps values from one interval into another. By default the mapping
- * is using linear projection, but can be changed by using alternative
- * {@link toxi.math.InterpolateStrategy} implementations to achieve a
- * non-regular mapping.
- */
- 
- /**
- * Creates a new instance to map values between the 2 number ranges
- * specified. By default linear projection is used.
- * 
- * @param minIn
- * @param maxIn
- * @param minOut
- * @param maxOut
- */
- 
-toxi.ScaleMap = function(minIn, maxIn, minOut, maxOut) {
-	if(arguments.length == 1 && arguments[0].input !== undefined && arguments[0].output !== undefined){ //opts object
-		var arg = arguments[0];
-		minOut = arg.output.min;
-		maxOut = arg.output.max;
-        maxIn = arg.input.max;
-        minIn = arg.input.min;
-	}
-	this.mapFunction = new toxi.LinearInterpolation();
-	this.setInputRange(minIn, maxIn);
-	this.setOutputRange(minOut, maxOut);
-};
-
-
-toxi.ScaleMap.prototype = {
-	
-    /**
-     * Computes mapped value in the target interval and ensures the input value
-     * is clipped to source interval.
-     * 
-     * @param val
-     * @return mapped value
-     */
-   getClippedValueFor: function(val) {
-        var t = toxi.MathUtils.clipNormalized( ((val - this._in.min) / this._interval));
-        return this.mapFunction.interpolate(0, this.mapRange, t) + this._out.min;
-    },
 
     /**
-     * @return the middle value of the input range.
-     */
-    getInputMedian: function() {
-        return (this._in.min + this._in.max) * 0.5;
-    },
+     * @class This class maps values from one interval into another. By default the mapping
+     * is using linear projection, but can be changed by using alternative
+     * {@link toxi.math.InterpolateStrategy} implementations to achieve a
+     * non-regular mapping.
+     *
+     * @member toxi
+     *
+     * @description Creates a new instance to map values between the 2 number ranges
+     * specified. By default linear projection is used.
+     * @param {Number} minIn
+     * @param {Number} maxIn
+     * @param {Number} minOut
+     * @param {Number} maxOut
+     */ 
+    toxi.ScaleMap = function(minIn, maxIn, minOut, maxOut) {
+    	if(arguments.length == 1 && arguments[0].input !== undefined && arguments[0].output !== undefined){ //opts object
+    		var arg = arguments[0];
+    		minOut = arg.output.min;
+    		maxOut = arg.output.max;
+            maxIn = arg.input.max;
+            minIn = arg.input.min;
+    	}
+    	this.mapFunction = new toxi.LinearInterpolation();
+    	this.setInputRange(minIn, maxIn);
+    	this.setOutputRange(minOut, maxOut);
+    };
 
-    /**
-     * @return the in
-     */
-    getInputRange: function() {
-        return this._in;
-    },
 
-    /**
-     * @return the mapped middle value of the output range. Depending on the
-     *         mapping function used, this value might be different to the one
-     *         returned by {@link #getOutputMedian()}.
-     */
-    getMappedMedian: function() {
-        return this.getMappedValueFor(0.5);
-    },
+    toxi.ScaleMap.prototype = {
+    	
+        /**
+         * Computes mapped value in the target interval and ensures the input value
+         * is clipped to source interval.
+         * 
+         * @param val
+         * @return mapped value
+         */
+       getClippedValueFor: function(val) {
+            var t = toxi.MathUtils.clipNormalized( ((val - this._in.min) / this._interval));
+            return this.mapFunction.interpolate(0, this.mapRange, t) + this._out.min;
+        },
 
-    /**
-     * Computes mapped value in the target interval. Does check if input value
-     * is outside the input range.
-     * 
-     * @param val
-     * @return mapped value
-     */
-    getMappedValueFor: function(val) {
-        var t = ((val - this._in.min) / this._interval);
-        return this.mapFunction.interpolate(0,  this.mapRange, t) + this._out.min;
-    },
+        /**
+         * @return the middle value of the input range.
+         */
+        getInputMedian: function() {
+            return (this._in.min + this._in.max) * 0.5;
+        },
 
-    /**
-     * @return the middle value of the output range
-     */
-    getOutputMedian:function() {
-        return (this._out.min + this._out.max) * 0.5;
-    },
+        /**
+         * @return the in
+         */
+        getInputRange: function() {
+            return this._in;
+        },
 
-    /**
-     * @return the output range
-     */
-    getOutputRange: function() {
-        return this._out;
-    },
+        /**
+         * @return the mapped middle value of the output range. Depending on the
+         *         mapping function used, this value might be different to the one
+         *         returned by {@link #getOutputMedian()}.
+         */
+        getMappedMedian: function() {
+            return this.getMappedValueFor(0.5);
+        },
 
-    /**
-     * Sets new minimum & maximum values for the input range
-     * 
-     * @param min
-     * @param max
-     */
-    setInputRange: function(min,max) {
-        this._in = new toxi.Range(min,max);
-        this._interval = max - min;
-    },
+        /**
+         * Computes mapped value in the target interval. Does check if input value
+         * is outside the input range.
+         * 
+         * @param val
+         * @return mapped value
+         */
+        getMappedValueFor: function(val) {
+            var t = ((val - this._in.min) / this._interval);
+            return this.mapFunction.interpolate(0,  this.mapRange, t) + this._out.min;
+        },
 
-    /**
-     * Overrides the mapping function used for the scale conversion.
-     * 
-     * @param func
-     *            interpolate strategy implementation
-     */
-    setMapFunction: function(func) {
-        this.mapFunction = func;
-    },
+        /**
+         * @return the middle value of the output range
+         */
+        getOutputMedian:function() {
+            return (this._out.min + this._out.max) * 0.5;
+        },
 
-    /**
-     * Sets new minimum & maximum values for the output/target range
-     * 
-     * @param min
-     *            new min output value
-     * @param max
-     *            new max output value
-     */
-    setOutputRange: function(min, max) {
-        this._out = new toxi.Range(min, max);
-        this.mapRange = max - min;
-    },
-    
-    toString: function(){
-		return "toxi.ScaleMap, inputRange: "+this._in.toString() + " outputRange: "+this._out.toString();
-    }
-};/**
- * Abstract wave oscillator type which needs to be subclassed to implement
+        /**
+         * @return the output range
+         */
+        getOutputRange: function() {
+            return this._out;
+        },
+
+        /**
+         * Sets new minimum & maximum values for the input range
+         * 
+         * @param min
+         * @param max
+         */
+        setInputRange: function(min,max) {
+            this._in = new _Range(min,max);
+            this._interval = max - min;
+        },
+
+        /**
+         * Overrides the mapping function used for the scale conversion.
+         * 
+         * @param func
+         *            interpolate strategy implementation
+         */
+        setMapFunction: function(func) {
+            this.mapFunction = func;
+        },
+
+        /**
+         * Sets new minimum & maximum values for the output/target range
+         * 
+         * @param min
+         *            new min output value
+         * @param max
+         *            new max output value
+         */
+        setOutputRange: function(min, max) {
+            this._out = new _Range(min, max);
+            this.mapRange = max - min;
+        },
+        
+        toString: function(){
+    		return "toxi.ScaleMap, inputRange: "+this._in.toString() + " outputRange: "+this._out.toString();
+        }
+    };
+}());/**
+ * @class Abstract wave oscillator type which needs to be subclassed to implement
  * different waveforms. Please note that the frequency unit is radians, but
  * conversion methods to & from Hertz ({@link #hertzToRadians(float, float)})
  * are included in this base class.
+ * @member toxi
  */
 toxi.AbstractWave = function(phase,freq,amp,offset){
 	if(phase !== undefined || freq !== undefined || amp !== undefined || offset !== undefined){
@@ -668,9 +693,9 @@ toxi.AbstractWave = function(phase,freq,amp,offset){
 toxi.AbstractWave.prototype = {
 	/**
      * Ensures phase remains in the 0...TWO_PI interval.
-     * @param freq
+     * @param {Number} freq
      *            normalized progress frequency
-     * @return current phase
+     * @return {Number} current phase
      */
 	cyclePhase: function(freq){
 		if(freq === undefined)freq = 0;
@@ -760,7 +785,11 @@ toxi.AbstractWave.radiansToHertz = function(f,sampleRate) {
 
 
 
-
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.AMFMSineWave = function(a,b,c,d,e){
 	if(typeof c == "number"){
 		toxi.AbstractWave.apply(this,[a,b,1,c]);
@@ -803,10 +832,11 @@ toxi.AMFMSineWave.prototype.reset = function(){
 };
 
 /**
- * Progresses the wave and updates the result value. You must NEVER call the
+ * @class Progresses the wave and updates the result value. You must NEVER call the
  * update() method on the 2 modulating wave since this is handled
  * automatically by this method.
- * 
+  * @augments toxi.AbstractWave
+ * @member toxi
  * @see toxi.math.waves.AbstractWave#update()
  */
 toxi.AMFMSineWave.prototype.update = function() {
@@ -817,7 +847,11 @@ toxi.AMFMSineWave.prototype.update = function() {
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.ConstantWave = function(value) {
 	 toxi.AbstractWave.apply(this);
 	 this.value = value;
@@ -839,6 +873,7 @@ toxi.ConstantWave.prototype.update = function() {
 
 
 /**
+ * @class
  * <p>
  * Frequency modulated <strong>bandwidth-limited</strong> square wave using a
  * fourier series of harmonics. Also uses a secondary wave to modulate the
@@ -849,8 +884,9 @@ toxi.ConstantWave.prototype.update = function() {
  * <strong>Note:</strong> You must NEVER call the update() method on the
  * modulating wave.
  * </p>
+ * @member toxi
+ * @augments toxi.AbstractWave
  */
-
 toxi.FMHarmonicSquareWave = function(a,b,c,d,e) {
 	this.maxHarmonics = 3;
 	if(typeof c == "number"){
@@ -887,11 +923,13 @@ toxi.FMHarmonicSquareWave.prototype.reset = function() {
 };
 
 /**
- * Progresses the wave and updates the result value. You must NEVER call the
+ * @class Progresses the wave and updates the result value. You must NEVER call the
  * update() method on the modulating wave since this is handled
  * automatically by this method.
  * 
  * @see toxi.math.waves.AbstractWave#update()
+ * @member toxi
+ * @augments toxi.AbstractWave
  */
 toxi.FMHarmonicSquareWave.prototype.update = function() {
     this.value = 0;
@@ -904,7 +942,11 @@ toxi.FMHarmonicSquareWave.prototype.update = function() {
     return this.value;
 };
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMSawtoothWave = function(a,b,c,d,e){
 	if(typeof c == "number") {
 		toxi.AbstractWave.apply(this,[a,b,c,d]);
@@ -947,7 +989,11 @@ toxi.FMSawtoothWave.prototype.update = function(){
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMSineWave = function(a,b,c,d,e){
 	if(typeof(c) == "number"){
 		toxi.AbstractWave.apply(this,[a,b,c,d]);
@@ -986,7 +1032,11 @@ toxi.FMSineWave.prototype.update = function(){
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMSquareWave = function(a,b,c,d,e)
 {
 	if(typeof c == "number"){
@@ -1030,7 +1080,11 @@ toxi.FMSquareWave.prototype.update = function(){
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMTriangleWave = function(a,b,c,d,e){
 	if(typeof c == "number"){
 		if(e !== undefined){
@@ -1071,7 +1125,15 @@ toxi.FMTriangleWave.prototype.update = function(){
 	return this.value;
 };
 
-//all parameters optional
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ * @param {Number} [phase] phase
+ * @param {Number} [freq] frequency
+ * @param {Number} [amp] amplitude
+ * @param {Number} [offset] offset
+ */
 toxi.SineWave = function(phase,freq,amp,offset) {
    toxi.AbstractWave.apply(this,[phase,freq,amp,offset]);
 };
@@ -1097,7 +1159,10 @@ toxi.SineWave.prototype.update = function() {
 };
 	
 
-
+/**
+ * @class
+ * member toxi
+ */
 toxi.WaveState = function(phase,frequency,amp,offset){
 	this.phase = phase;
 	this.frequency = frequency;
@@ -1105,12 +1170,12 @@ toxi.WaveState = function(phase,frequency,amp,offset){
 	this.offset = offset;
 };
 /**
- * Lookup table for fast sine & cosine computations. Tables with varying
+ * @class Lookup table for fast sine & cosine computations. Tables with varying
  * precisions can be created to which input angles will be rounded to. The
  * sin/cos methods can be used with both positive and negative input angles as
  * with the normal Math.sin()/Math.cos() versions.
+ * @member toxi
  */
- 
 toxi.SinCosLUT = function(precision) {
     if(!precision){
         precision = toxi.SinCosLUT.DEFAULT_PRECISION;
@@ -1176,99 +1241,1111 @@ toxi.SinCosLUT.getDefaultInstance = function(){
 		toxi.SinCosLUT.DEFAULT_INSTANCE = new toxi.SinCosLUT();
 	}
 	return toxi.SinCosLUT.DEFAULT_INSTANCE;
-};	
-	toxi.UnitTranslator = {
-		//Number of millimeters per inch
-		INCH_MM: 25.4,
-		//number of points per inch
-		POINT_POSTSCRIPT: 72.0,
+};/**
+ * @class
+ * @member toxi
+ */
+toxi.UnitTranslator = {
+	//Number of millimeters per inch
+	INCH_MM: 25.4,
+	//number of points per inch
+	POINT_POSTSCRIPT: 72.0,
+	/**
+	* Converts millimeters into pixels.
+	* @param {Number} mm millimeters
+	* @param {Number} dpi DPI resolution
+	* @return {Number} number of pixels
+	*/
+	millisToPixels: function(mm,dpi){
+		return Math.floor(mm / this.INCH_MM * dpi);
+	},
+	/**
+	* Converts millimeters into postscript points
+	* @param {Number} mm millimeters
+	* @return {Number} number of points
+	*/
+	millisToPoints: function(mm){
+		return mm / this.INCH_MM * this.POINT_POSTSCRIPT;
+	},
+	/**
+	* Converts pixels into inches
+	* @param {Nuumber} pix pixels
+	* @param {Number} dpi DPI resolution to use
+	* @return {Number} number of inches
+	*/
+	pixelsToInch: function(pix,dpi){
+		return pix / dpi;
+	},
+	/**
+	* Converts pixels into millimeters.
+	* @param {Number} pix pixels
+	* @param {Number} dpi DPI resolution
+	* @return {Number} number of millimeters
+	*/
+	pixelsToMillis: function(pix,dpi){
+		return this.pixelsToInch(pix,dpi) * this.INCH_MM;
+	},
+	/**
+	* Converts pixels into points.
+	* @param {Number} pix pixels
+	* @param {Number} dpi DPI resolution
+	* @return {Number} number of points
+	*/
+	pixelsToPoints: function(pix,dpi){
+		return this.pixelsToInch(pix,dpi) * this.POINT_POSTSCRIPT;
+	},
+	/**
+	* Converts points into millimeters.
+	* @param {Number} pt
+	* @return {Number} number of millimeters
+	*/
+	pointsToMillis: function(pt){
+		return pt / this.POINT_POSTSCRIPT * this.INCH_MM;
+	},
+	/**
+	* Converts points into pixels.
+	* 
+	* @param {Number} pt points
+	* @param {Number} dpi DPI resolution
+	* @return {Number} number of pixels
+	*/
+	pointsToPixels: function(pt, dpi){
+		return this.millisToPixels(this.pointsToMillis(pt), dpi);
+	},
+	/**
+	* Converts an area measure in square inch to square millimeters.
+	* @param {Number} area
+	* @return {Number} square mm
+	*/
+	squareInchToMillis: function(area){
+		return area * this.INCH_MM * this.INCH_MM;
+	},
+	/**
+	* Converts an area measure in points to square inch.
+	* @param {Number} area
+	* @return {Number} square inch
+	*/
+	squarePointsToInch: function(area){
+		return area / (this.POINT_POSTSCRIPT * this.POINTPOSCRIPT);
+	},
+	/**
+	* Converts an area measure in points to square millimeters.
+	* @param {Number} area
+	* @return {Number} square mm
+	*/
+	squarePointsToMillis: function(area){
+		return this.squareInchToMillis(this.squarePointsToInch(area));
+	}	
+};(function(){
+	
+
+	//Using David Bau's seedrandom.js for PerlinNoise#noiseSeed functionality
+
+	// seedrandom.js version 2.0.
+	// Author: David Bau 4/2/2011
+	//
+	// Defines a method Math.seedrandom() that, when called, substitutes
+	// an explicitly seeded RC4-based algorithm for Math.random().  Also
+	// supports automatic seeding from local or network sources of entropy.
+	//
+	// Usage:
+	//
+	//   <script src=http://davidbau.com/encode/seedrandom-min.js></script>
+	//
+	//   Math.seedrandom('yipee'); Sets Math.random to a function that is
+	//                             initialized using the given explicit seed.
+	//
+	//   Math.seedrandom();        Sets Math.random to a function that is
+	//                             seeded using the current time, dom state,
+	//                             and other accumulated local entropy.
+	//                             The generated seed string is returned.
+	//
+	//   Math.seedrandom('yowza', true);
+	//                             Seeds using the given explicit seed mixed
+	//                             together with accumulated entropy.
+	//
+	//   <script src="http://bit.ly/srandom-512"></script>
+	//                             Seeds using physical random bits downloaded
+	//                             from random.org.
+	//
+	//   <script src="https://jsonlib.appspot.com/urandom?callback=Math.seedrandom">
+	//   </script>                 Seeds using urandom bits from call.jsonlib.com,
+	//                             which is faster than random.org.
+	//
+	// Examples:
+	//
+	//   Math.seedrandom("hello");            // Use "hello" as the seed.
+	//   document.write(Math.random());       // Always 0.5463663768140734
+	//   document.write(Math.random());       // Always 0.43973793770592234
+	//   var rng1 = Math.random;              // Remember the current prng.
+	//
+	//   var autoseed = Math.seedrandom();    // New prng with an automatic seed.
+	//   document.write(Math.random());       // Pretty much unpredictable.
+	//
+	//   Math.random = rng1;                  // Continue "hello" prng sequence.
+	//   document.write(Math.random());       // Always 0.554769432473455
+	//
+	//   Math.seedrandom(autoseed);           // Restart at the previous seed.
+	//   document.write(Math.random());       // Repeat the 'unpredictable' value.
+	//
+	// Notes:
+	//
+	// Each time seedrandom('arg') is called, entropy from the passed seed
+	// is accumulated in a pool to help generate future seeds for the
+	// zero-argument form of Math.seedrandom, so entropy can be injected over
+	// time by calling seedrandom with explicit data repeatedly.
+	//
+	// On speed - This javascript implementation of Math.random() is about
+	// 3-10x slower than the built-in Math.random() because it is not native
+	// code, but this is typically fast enough anyway.  Seeding is more expensive,
+	// especially if you use auto-seeding.  Some details (timings on Chrome 4):
+	//
+	// Our Math.random()            - avg less than 0.002 milliseconds per call
+	// seedrandom('explicit')       - avg less than 0.5 milliseconds per call
+	// seedrandom('explicit', true) - avg less than 2 milliseconds per call
+	// seedrandom()                 - avg about 38 milliseconds per call
+	//
+	// LICENSE (BSD):
+	//
+	// Copyright 2010 David Bau, all rights reserved.
+	//
+	// Redistribution and use in source and binary forms, with or without
+	// modification, are permitted provided that the following conditions are met:
+	// 
+	//   1. Redistributions of source code must retain the above copyright
+	//      notice, this list of conditions and the following disclaimer.
+	//
+	//   2. Redistributions in binary form must reproduce the above copyright
+	//      notice, this list of conditions and the following disclaimer in the
+	//      documentation and/or other materials provided with the distribution.
+	// 
+	//   3. Neither the name of this module nor the names of its contributors may
+	//      be used to endorse or promote products derived from this software
+	//      without specific prior written permission.
+	// 
+	// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+	// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+	// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+	// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+	// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+	// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+	// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+	// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+	// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+	// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	//
+	/**
+	 * All code is in an anonymous closure to keep the global namespace clean.
+	 *
+	 * @param {number=} overflow 
+	 * @param {number=} startdenom
+	 */
+
+	 var internalMath = {};
+	 internalMath.pow = Math.pow; //used by seed generator
+	 internalMath.random = Math.random; //start with the default random generator
+	(function (pool, math, width, chunks, significance, overflow, startdenom) {
+
+
+	//
+	// seedrandom()
+	// This is the seedrandom function described above.
+	//
+	math['seedrandom'] = function seedrandom(seed, use_entropy) {
+	  var key = [];
+	  var arc4;
+
+	  // Flatten the seed string or build one from local entropy if needed.
+	  seed = mixkey(flatten(
+	    use_entropy ? [seed, pool] :
+	    arguments.length ? seed :
+	    [new Date().getTime(), pool, window], 3), key);
+
+	  // Use the seed to initialize an ARC4 generator.
+	  arc4 = new ARC4(key);
+
+	  // Mix the randomness into accumulated entropy.
+	  mixkey(arc4.S, pool);
+
+	  // Override Math.random
+
+	  // This function returns a random double in [0, 1) that contains
+	  // randomness in every bit of the mantissa of the IEEE 754 value.
+
+	  math['random'] = function random() {  // Closure to return a random double:
+	    var n = arc4.g(chunks);             // Start with a numerator n < 2 ^ 48
+	    var d = startdenom;                 //   and denominator d = 2 ^ 48.
+	    var x = 0;                          //   and no 'extra last byte'.
+	    while (n < significance) {          // Fill up all significant digits by
+	      n = (n + x) * width;              //   shifting numerator and
+	      d *= width;                       //   denominator and generating a
+	      x = arc4.g(1);                    //   new least-significant-byte.
+	    }
+	    while (n >= overflow) {             // To avoid rounding up, before adding
+	      n /= 2;                           //   last byte, shift everything
+	      d /= 2;                           //   right using integer math until
+	      x >>>= 1;                         //   we have exactly the desired bits.
+	    }
+	    return (n + x) / d;                 // Form the number within [0, 1).
+	  };
+
+	  // Return the seed that was used
+	  return seed;
+	};
+
+	//
+	// ARC4
+	//
+	// An ARC4 implementation.  The constructor takes a key in the form of
+	// an array of at most (width) integers that should be 0 <= x < (width).
+	//
+	// The g(count) method returns a pseudorandom integer that concatenates
+	// the next (count) outputs from ARC4.  Its return value is a number x
+	// that is in the range 0 <= x < (width ^ count).
+	//
+	/** @constructor */
+	function ARC4(key) {
+	  var t, u, me = this, keylen = key.length;
+	  var i = 0, j = me.i = me.j = me.m = 0;
+	  me.S = [];
+	  me.c = [];
+
+	  // The empty key [] is treated as [0].
+	  if (!keylen) { key = [keylen++]; }
+
+	  // Set up S using the standard key scheduling algorithm.
+	  while (i < width) { me.S[i] = i++; }
+	  for (i = 0; i < width; i++) {
+	    t = me.S[i];
+	    j = lowbits(j + t + key[i % keylen]);
+	    u = me.S[j];
+	    me.S[i] = u;
+	    me.S[j] = t;
+	  }
+
+	  // The "g" method returns the next (count) outputs as one number.
+	  me.g = function getnext(count) {
+	    var s = me.S;
+	    var i = lowbits(me.i + 1); var t = s[i];
+	    var j = lowbits(me.j + t); var u = s[j];
+	    s[i] = u;
+	    s[j] = t;
+	    var r = s[lowbits(t + u)];
+	    while (--count) {
+	      i = lowbits(i + 1); t = s[i];
+	      j = lowbits(j + t); u = s[j];
+	      s[i] = u;
+	      s[j] = t;
+	      r = r * width + s[lowbits(t + u)];
+	    }
+	    me.i = i;
+	    me.j = j;
+	    return r;
+	  };
+	  // For robust unpredictability discard an initial batch of values.
+	  // See http://www.rsa.com/rsalabs/node.asp?id=2009
+	  me.g(width);
+	}
+
+	//
+	// flatten()
+	// Converts an object tree to nested arrays of strings.
+	//
+	/** @param {Object=} result 
+	  * @param {string=} prop
+	  * @param {string=} typ 
+	*/
+	function flatten(obj, depth, result, prop, typ) {
+	  result = [];
+	  typ = typeof(obj);
+	  if (depth && typ == 'object') {
+	    for (prop in obj) {
+	      if (prop.indexOf('S') < 5) {    // Avoid FF3 bug (local/sessionStorage)
+	        try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
+	      }
+	    }
+	  }
+	  return (result.length ? result : obj + (typ != 'string' ? '\0' : ''));
+	}
+
+	//
+	// mixkey()
+	// Mixes a string seed into a key that is an array of integers, and
+	// returns a shortened string seed that is equivalent to the result key.
+	//
+	/** @param {number=} smear 
+	  * @param {number=} j */
+	function mixkey(seed, key, smear, j) {
+	  seed += '';                         // Ensure the seed is a string
+	  smear = 0;
+	  for (j = 0; j < seed.length; j++) {
+	    key[lowbits(j)] =
+	      lowbits((smear ^= key[lowbits(j)] * 19) + seed.charCodeAt(j));
+	  }
+	  seed = '';
+	  for (j in key) { seed += String.fromCharCode(key[j]); }
+	  return seed;
+	}
+
+	//
+	// lowbits()
+	// A quick "n mod width" for width a power of 2.
+	//
+	function lowbits(n) { return n & (width - 1); }
+
+	//
+	// The following constants are related to IEEE 754 limits.
+	//
+	startdenom = math.pow(width, chunks);
+	significance = math.pow(2, significance);
+	overflow = significance * 2;
+
+	//
+	// When seedrandom.js is loaded, we immediately mix a few bits
+	// from the built-in RNG into the entropy pool.  Because we do
+	// not want to intefere with determinstic PRNG state later,
+	// seedrandom will not call math.random on its own again after
+	// initialization.
+	//
+	mixkey(math.random(), pool);
+
+	// End anonymous scope, and pass initial values.
+	})(
+	  [],   // pool: entropy pool starts empty
+	  internalMath, // math: package containing random, pow, and seedrandom
+	  256,  // width: each RC4 output is 0 <= x < 256
+	  6,    // chunks: at least six RC4 outputs for each double
+	  52    // significance: there are 52 significant digits in a double
+	);
+	//end seed
+
+
+
+	// ////////////////////////////////////////////////////////////
+	// PERLIN NOISE taken from the
+	// [toxi 040903]
+	// octaves and amplitude amount per octave are now user controlled
+	// via the noiseDetail() function.
+	// [toxi 030902]
+	// cleaned up code and now using bagel's cosine table to speed up
+	// [toxi 030901]
+	// implementation by the german demo group farbrausch
+	// as used in their demo "art": http://www.farb-rausch.de/fr010src.zip
+	var PERLIN_YWRAPB = 4,
+		PERLIN_YWRAP = 1 << PERLIN_YWRAPB,
+		PERLIN_ZWRAPB = 8,
+		PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB,
+		PERLIN_SIZE = 4095,
+		PERLIN_MIN_AMPLITUDE = 0.001;
+	var	_noise_fsc = function(self, i){
+			var index = ((i + 0.5) * self._perlin_PI) % self._perlin_TWOPI;
+			return 0.5 * (1.0 - self._perlin_cosTable[index]);
+		};
+
+	/**
+	 * @class
+	 * @member toxi
+	 */
+	var	PerlinNoise = function(){
+		this._perlin_octaves = 4; // default to medium smooth
+		this._perlin_amp_falloff = 0.5; // 50% reduction/octave
+	};
+
+	PerlinNoise.prototype = {
 		/**
-		* Converts millimeters into pixels.
-		* @param {Number} mm millimeters
-		* @param {Number} dpi DPI resolution
-		* @return {Number} number of pixels
-		*/
-		millisToPixels: function(mm,dpi){
-			return Math.floor(mm / this.INCH_MM * dpi);
+		 noise
+		 @param [x=0] x is optional
+		 @param [y=0] y is optional
+		 @param [z=0] z is optional
+		 */
+		noise: function(x,y,z){
+			var i = 0,
+				x = x || 0,
+				y = y || 0,
+				z = z || 0;
+
+			if(!this._perlin){
+				this._perlin = [];
+				var length = PERLIN_SIZE - 1;
+				for(i = 0;i < PERLIN_SIZE + 1; i++){
+					this._perlin[i] = internalMath.random();
+				}
+			}
+
+			this._perlin_cosTable = toxi.SinCosLUT.getDefaultInstance().getSinLUT();
+			this._perlin_TWOPI = this._perlin_PI = toxi.SinCosLUT.getDefaultInstance().getPeriod();
+			this._perlin_PI >>= 1;
+
+			if (x < 0) {
+				x = -x;
+			}
+			if (y < 0) {
+				y = -y;
+			}
+			if (z < 0) {
+				z = -z;
+			}
+			
+			var xi = x, 
+				yi = y,
+				zi = z,
+				xf = (x - xi),
+				yf = (y - yi),
+				zf = (z - zi),
+				rxf, 
+				ryf,
+				r = 0,
+				ampl = 0.5,
+				n1, 
+				n2, 
+				n3,
+				of;
+			for(i = 0; i < this._perlin_octaves; i++){
+				of = xi + (yi << PERLIN_YWRAPB) + (zi << PERLIN_ZWRAPB);
+				rxf = _noise_fsc(this,xf);
+				ryf = _noise_fsc(this,yf);
+
+				n1 = this._perlin[of & PERLIN_SIZE];
+				n1 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n1);
+				n2 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
+				n2 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n2);
+				n1 += ryf * (n2 - n1);
+
+				of += PERLIN_ZWRAP;
+				n2 = this._perlin[of & PERLIN_SIZE];
+				n2 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n2);
+				n3 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
+				n3 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n3);
+				n2 += ryf * (n3 - n2);
+
+				n1 += _noise_fsc(this,zf) * (n2 - n1);
+				
+				r += n1 * ampl;
+				ampl *= this._perlin_amp_falloff;
+
+				// break if amp has no more impact
+				if (ampl < PERLIN_MIN_AMPLITUDE) {
+					break;
+				}
+
+				xi <<= 1;
+				xf *= 2;
+				yi <<= 1;
+				yf *= 2;
+				zi <<= 1;
+				zf *= 2;
+
+				if (xf >= 1.0) {
+					xi++;
+					xf--;
+				}
+				if (yf >= 1.0) {
+					yi++;
+					yf--;
+				}
+				if (zf >= 1.0) {
+					zi++;
+					zf--;
+				}
+			}
+			return r;
 		},
 		/**
-		* Converts millimeters into postscript points
-		* @param {Number} mm millimeters
-		* @return {Number} number of points
-		*/
-		millisToPoints: function(mm){
-			return mm / this.INCH_MM * this.POINT_POSTSCRIPT;
+		 @param {Number} lod
+		 @param {Number} falloff
+		 */
+		noiseDetail: function(lod, falloff){
+			if(lod > 0){
+				this._perlin_octaves = lod;
+			}
+			if(falloff && falloff > 0){
+				this._perlin_amp_falloff = falloff;
+			}
 		},
 		/**
-		* Converts pixels into inches
-		* @param {Nuumber} pix pixels
-		* @param {Number} dpi DPI resolution to use
-		* @return {Number} number of inches
-		*/
-		pixelsToInch: function(pix,dpi){
-			return pix / dpi;
-		},
+		 @param {Number} [what] the random seed
+		 */
+		noiseSeed: function(what){
+			internalMath.seedrandom(what);
+		}
+	};
+
+	toxi.PerlinNoise = PerlinNoise;
+})();(function() {
+	/**
+	*Simplex Noise in 2D, 3D and 4D. Based on the example code of this paper:
+	*http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
+	* 
+	*@author Stefan Gustavson, Linkping University, Sweden (stegu at itn dot liu
+	*         dot se)
+	* 
+	*Slight optimizations & restructuring by
+	*@author Karsten Schmidt (info at toxi dot co dot uk)
+	* 
+	*ported to javascript by
+	*@author Kyle Phillips (kyle at haptic-data dot com)
+	*/
+	var numFrame = 0;
+
+	var _SQRT3 = Math.sqrt(3.0),
+		_SQRT5 = Math.sqrt(5.0);
+
+	/**
+	 * Skewing and unskewing factors for 2D, 3D and 4D, some of them
+	 * pre-multiplied.
+	 */
+	var	_F2 = 0.5 * (_SQRT3 - 1.0),
+		_G2 = (3.0 - _SQRT3) / 6.0,
+		_G22 = _G2 * 2.0 - 1,
+
+		_F3 = 1.0 / 3.0,
+		_G3 = 1.0 / 6.0,
+
+		_F4 = (_SQRT5 - 1.0) / 4.0,
+		_G4 = (5.0 - _SQRT5) / 20.0,
+		_G42 = _G4 * 2.0,
+		_G43 = _G4 * 3.0,
+		_G44 = _G4 * 4.0 - 1.0;
+
+
 		/**
-		* Converts pixels into millimeters.
-		* @param {Number} pix pixels
-		* @param {Number} dpi DPI resolution
-		* @return {Number} number of millimeters
-		*/
-		pixelsToMillis: function(pix,dpi){
-			return this.pixelsToInch(pix,dpi) * this.INCH_MM;
-		},
+		 * Gradient vectors for 3D (pointing to mid points of all edges of a unit
+		 * cube)
+		 */
+	var	_grad3 = [
+			new Int32Array([1, 1, 0 ]), 
+			new Int32Array([ -1, 1, 0 ]),
+			new Int32Array([ 1, -1, 0 ]), 
+			new Int32Array([ -1, -1, 0 ]), 
+			new Int32Array([ 1, 0, 1 ]), 
+			new Int32Array([ -1, 0, 1 ]),
+			new Int32Array([ 1, 0, -1 ]), 
+			new Int32Array([ -1, 0, -1 ]), 
+			new Int32Array([0, 1, 1 ]), 
+			new Int32Array([0, -1, 1 ]),
+			new Int32Array([ 0, 1, -1 ]), 
+			new Int32Array([ 0, -1, -1 ])
+		];
+
 		/**
-		* Converts pixels into points.
-		* @param {Number} pix pixels
-		* @param {Number} dpi DPI resolution
-		* @return {Number} number of points
-		*/
-		pixelsToPoints: function(pix,dpi){
-			return this.pixelsToInch(pix,dpi) * this.POINT_POSTSCRIPT;
-		},
+		 * Gradient vectors for 4D (pointing to mid points of all edges of a unit 4D
+		 * hypercube)
+		 */
+	var	_grad4 = [
+			new Int32Array([ 0, 1, 1, 1 ]), 
+			new Int32Array([ 0, 1, 1, -1 ]),
+			new Int32Array([ 0, 1, -1, 1 ]), 
+			new Int32Array([ 0, 1, -1, -1 ]), 
+			new Int32Array([ 0, -1, 1, 1 ]),
+			new Int32Array([ 0, -1, 1, -1 ]), 
+			new Int32Array([ 0, -1, -1, 1 ]), 
+			new Int32Array([ 0, -1, -1, -1 ]),
+			new Int32Array([ 1, 0, 1, 1 ]), 
+			new Int32Array([ 1, 0, 1, -1 ]), 
+			new Int32Array([ 1, 0, -1, 1 ]), 
+			new Int32Array([ 1, 0, -1, -1 ]),
+			new Int32Array([ -1, 0, 1, 1 ]), 
+			new Int32Array([ -1, 0, 1, -1 ]), 
+			new Int32Array([ -1, 0, -1, 1 ]),
+			new Int32Array([ -1, 0, -1, -1 ]), 
+			new Int32Array([ 1, 1, 0, 1 ]), 
+			new Int32Array([ 1, 1, 0, -1 ]),
+			new Int32Array([ 1, -1, 0, 1 ]), 
+			new Int32Array([ 1, -1, 0, -1 ]), 
+			new Int32Array([ -1, 1, 0, 1 ]),
+			new Int32Array([ -1, 1, 0, -1 ]), 
+			new Int32Array([ -1, -1, 0, 1 ]), 
+			new Int32Array([ -1, -1, 0, -1 ]),
+			new Int32Array([ 1, 1, 1, 0 ]), 
+			new Int32Array([ 1, 1, -1, 0 ]), 
+			new Int32Array([ 1, -1, 1, 0 ]), 
+			new Int32Array([ 1, -1, -1, 0 ]),
+			new Int32Array([ -1, 1, 1, 0 ]), 
+			new Int32Array([ -1, 1, -1, 0 ]), 
+			new Int32Array([ -1, -1, 1, 0 ]),
+			new Int32Array([ -1, -1, -1, 0 ]) 
+		];
+
 		/**
-		* Converts points into millimeters.
-		* @param {Number} pt
-		* @return {Number} number of millimeters
-		*/
-		pointsToMillis: function(pt){
-			return pt / this.POINT_POSTSCRIPT * this.INCH_MM;
-		},
+		 * Permutation table
+		 */
+	var	_p = new Int32Array([
+			151, 160, 137, 91, 90, 15, 131, 13, 201,
+			95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37,
+			240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62,
+			94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56,
+			87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139,
+			48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133,
+			230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25,
+			63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200,
+			196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3,
+			64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255,
+			82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
+			223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153,
+			101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79,
+			113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242,
+			193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249,
+			14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
+			176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222,
+			114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180 
+		]);
+
 		/**
-		* Converts points into pixels.
+		 * To remove the need for index wrapping, double the permutation table
+		 * length
+		 */
+	var	_perm = (function(){
+			var _per = new Int32Array(0x200);
+			for (var i = 0; i < 0x200; i++) {
+				_per[i] = _p[i & 0xff];
+			}
+			return _per;
+		})();
+
+
+		/**
+		 * A lookup table to traverse the simplex around a given point in 4D.
+		 * Details can be found where this table is used, in the 4D noise method.
+		 */
+	var	_simplex = [ 
+			new Int32Array([ 0, 1, 2, 3 ]), new Int32Array([ 0, 1, 3, 2 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 2, 3, 1 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 2, 3, 0 ]), new Int32Array([ 0, 2, 1, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 3, 1, 2 ]), new Int32Array([ 0, 3, 2, 1 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 3, 2, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 2, 0, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 1, 3, 0, 2 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 2, 3, 0, 1 ]), new Int32Array([ 2, 3, 1, 0 ]), new Int32Array([ 1, 0, 2, 3 ]), new Int32Array([ 1, 0, 3, 2 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 0, 3, 1 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 1, 3, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 0, 1, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 0, 1, 2 ]), new Int32Array([ 3, 0, 2, 1 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 2, 0 ]), new Int32Array([ 2, 1, 0, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 0, 2 ]), new Int32Array([ 0, 0, 0, 0 ]),
+			new Int32Array([ 3, 2, 0, 1 ]), new Int32Array([ 3, 2, 1, 0 ]) 
+		];
+
+		/**
+		* Computes dot product in 2D.
+		* @param g 2-vector (grid offset)
+		* @param {Number} x
+		* @param {Number} y
+		* @param {Number} z
+		* @param {Number} w
+		* @return {Number} dot product
+		*/
+	var	_dot = function(g, x, y, z, w) {
+			var n = g[0] * x + g[1] * y;
+			if(z){
+				n += g[2] * z;
+				if(w){
+					n += g[3] * w;
+				}
+			}
+			return n;
+		};
+
+		/**
+		*This method is a *lot* faster than using (int)Math.floor(x).
 		* 
-		* @param {Number} pt points
-		* @param {Number} dpi DPI resolution
-		* @return {Number} number of pixels
+		*@param {Number} x value to be floored
+		*@return {Number}
 		*/
-		pointsToPixels: function(pt, dpi){
-			return this.millisToPixels(this.pointsToMillis(pt), dpi);
-		},
+	var	_fastfloor = function(x) {
+			return (x >= 0) ? Math.floor(x) : Math.floor(x - 1);
+		};
+
+
 		/**
-		* Converts an area measure in square inch to square millimeters.
-		* @param {Number} area
-		* @return {Number} square mm
-		*/
-		squareInchToMillis: function(area){
-			return area * this.INCH_MM * this.INCH_MM;
-		},
+		 * @class A static Simplex noise class
+		 * @static
+		 * @member toxi
+		 */
+	toxi.SimplexNoise = { //SimplexNoise only consists of static methods
 		/**
-		* Converts an area measure in points to square inch.
-		* @param {Number} area
-		* @return {Number} square inch
+		* Computes 4D Simplex Noise.
+		* 
+		* @param x coordinate
+		* @param y  coordinate
+		* @param z coordinate
+		* @param w coordinate
+		* @return noise value in range -1 ... +1
 		*/
-		squarePointsToInch: function(area){
-			return area / (this.POINT_POSTSCRIPT * this.POINTPOSCRIPT);
-		},
-		/**
-		* Converts an area measure in points to square millimeters.
-		* @param {Number} area
-		* @return {Number} square mm
-		*/
-		squarePointsToMillis: function(area){
-			return this.squareInchToMillis(this.squarePointsToInch(area));
-		}	
-	};toxi.Vec2D = function(a,b){
+		noise: function(x, y, z, w) {
+			//Noise contributions from five corners, we may use as few as 3 of them (depending on arguments)
+			var numArgs = arguments.length,
+				n0 = 0,
+				n1 = 0,
+				n2 = 0,
+				n3 = 0,
+				n4 = 0;
+				//skew the input space to determin which simplex cell we're in
+			var	s = (function(){
+					switch(numArgs){
+						case 2:
+						return (x + y) * _F2; //Hairy factor for 2d
+						case 3:
+						return (x + y + z) * _F3; //Very nice and simple skew factor for 3d
+						case 4:
+						return (x + y + z + w) * _F4; //factor for 4d skewing
+						default:
+						throw new Error("Wrong arguments supplied to toxi.SimplexNoise.noise()");
+					}
+				})(),
+				i = _fastfloor(x + s),
+				j = _fastfloor(y + s),
+				k = (z !== undefined) ? _fastfloor(z + s) : undefined,
+				l = (w !== undefined) ? _fastfloor(w + s) : undefined;
+				//unskew
+			var	t = (function(){
+					switch(numArgs){
+						case 2:
+						return (i + j) * _G2;
+						case 3:
+						return (i + j + k) * _G3;
+						case 4: 
+						return (i + j + k + l) * _G4;
+					}
+				})(),
+				x0 = x - (i - t), //the x,y,z,w distance from the cell origin
+				y0 = y - (j - t),
+				z0 = (z !== undefined) ? z - (k - t) : undefined,
+				w0 = (w !== undefined) ? w - (l - t) : undefined;
+
+				//Determine which simplex we are in
+				if(numArgs == 2){
+					//for the 2d case, the simplex shape is an equilateral triangle.	
+					return (function(){
+						var i1, j1, //offsets for scond (middle) corner of simplex (i,j)
+							x1, y1,
+							x2, y2,
+							ii,
+							jj,
+							t0,
+							gi0,
+							gi1,
+							gi2,
+							t2;
+						if(x0 > y0){ // lower triangle, XY order
+							i1 = 1;
+							j1 = 0;
+						} else { //upper triangle, YX order
+							i1 = 0;
+							j1 = 1;
+						}
+
+						// A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
+						// a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
+						// c = (3-sqrt(3))/6
+						x1 = x0 - i1 + _G2; // Offsets for middle corner in (x,y) unskewed
+						y1 = y0 - j1 + _G2;
+						x2 = x0 + _G22; // Offsets for last corner in (x,y) unskewed
+						y2 = y0 + _G22;
+						// Work out the hashed gradient indices of the three simplex corners
+						ii = i & 0xff;
+						jj = j & 0xff;
+						// Calculate the contribution from the three corners
+						t0 = 0.5 - x0 * x0 - y0 * y0;
+
+						if (t0 > 0) {
+							t0 *= t0;
+							gi0 = _perm[ii + _perm[jj]] % 12;
+							n0 = t0 * t0 * _dot(_grad3[gi0], x0, y0); // (x,y) of grad3 used for
+							// 2D gradient
+						}
+						t1 = 0.5 - x1 * x1 - y1 * y1;
+						if (t1 > 0) {
+							t1 *= t1;
+							gi1 = _perm[ii + i1 + _perm[jj + j1]] % 12;
+							n1 = t1 * t1 * _dot(_grad3[gi1], x1, y1);
+						}
+						t2 = 0.5 - x2 * x2 - y2 * y2;
+						if (t2 > 0) {
+							t2 *= t2;
+							gi2 = _perm[ii + 1 + _perm[jj + 1]] % 12;
+							n2 = t2 * t2 * _dot(_grad3[gi2], x2, y2);
+						}
+						// Add contributions from each corner to get the final noise value.
+						// The result is scaled to return values in the interval [-1,1].
+						return 70.0 * (n0 + n1 + n2);
+					})();
+				} else if(numArgs == 3){
+					//for the 3d case, the simplex shape is a slightly irregular tetrahedron
+					return (function(){
+						var i1, j1, k1, // Offsets for second corner of simplex in (i,j,k)
+							// coords
+							i2, j2, k2, // Offsets for third corner of simplex in (i,j,k) coords
+							x1,y1,z1,
+							x2,y2,z2,
+							x3,y3,z3,
+							ii,jj,kk,
+							t0,
+							gi0,
+							t1,
+							gi1,
+							t2,
+							gi2,
+							t3,
+							gi3;
+						if (x0 >= y0) {
+							if (y0 >= z0) {
+								i1 = 1;
+								j1 = 0;
+								k1 = 0;
+								i2 = 1;
+								j2 = 1;
+								k2 = 0;
+							} // X Y Z order
+							else if (x0 >= z0) {
+								i1 = 1;
+								j1 = 0;
+								k1 = 0;
+								i2 = 1;
+								j2 = 0;
+								k2 = 1;
+							} // X Z Y order
+							else {
+								i1 = 0;
+								j1 = 0;
+								k1 = 1;
+								i2 = 1;
+								j2 = 0;
+								k2 = 1;
+							} // Z X Y order
+						} else { // x0<y0
+							if (y0 < z0) {
+								i1 = 0;
+								j1 = 0;
+								k1 = 1;
+								i2 = 0;
+								j2 = 1;
+								k2 = 1;
+							} // Z Y X order
+							else if (x0 < z0) {
+								i1 = 0;
+								j1 = 1;
+								k1 = 0;
+								i2 = 0;
+								j2 = 1;
+								k2 = 1;
+							} // Y Z X order
+							else {
+								i1 = 0;
+								j1 = 1;
+								k1 = 0;
+								i2 = 1;
+								j2 = 1;
+								k2 = 0;
+							} // Y X Z order
+						}
+						// A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
+						// a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z),
+						// and
+						// a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z),
+						// where
+						// c = 1/6.
+						x1 = x0 - i1 + _G3; // Offsets for second corner in (x,y,z) coords
+						y1 = y0 - j1 + _G3;
+						z1 = z0 - k1 + _G3;
+
+						x2 = x0 - i2 + _F3; // Offsets for third corner in (x,y,z)
+						y2 = y0 - j2 + _F3;
+						z2 = z0 - k2 + _F3;
+
+						x3 = x0 - 0.5; // Offsets for last corner in (x,y,z)
+						y3 = y0 - 0.5;
+						z3 = z0 - 0.5;
+						// Work out the hashed gradient indices of the four simplex corners
+						ii = i & 0xff;
+						jj = j & 0xff;
+						kk = k & 0xff;
+
+						// Calculate the contribution from the four corners
+						t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
+						if (t0 > 0) {
+							t0 *= t0;
+							gi0 = _perm[ii + _perm[jj + _perm[kk]]] % 12;
+							n0 = t0 * t0 * _dot(_grad3[gi0], x0, y0, z0);
+						}
+						t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
+						if (t1 > 0) {
+							t1 *= t1;
+							gi1 = _perm[ii + i1 + _perm[jj + j1 + _perm[kk + k1]]] % 12;
+							n1 = t1 * t1 * _dot(_grad3[gi1], x1, y1, z1);
+						}
+						t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
+						if (t2 > 0) {
+							t2 *= t2;
+							gi2 = _perm[ii + i2 + _perm[jj + j2 + _perm[kk + k2]]] % 12;
+							n2 = t2 * t2 * _dot(_grad3[gi2], x2, y2, z2);
+						}
+						t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
+						if (t3 > 0) {
+							t3 *= t3;
+							gi3 = _perm[ii + 1 + _perm[jj + 1 + _perm[kk + 1]]] % 12;
+							n3 = t3 * t3 * _dot(_grad3[gi3], x3, y3, z3);
+						}
+						// Add contributions from each corner to get the final noise value.
+						// The result is scaled to stay just inside [-1,1]
+						return 32.0 * (n0 + n1 + n2 + n3);
+					})();
+				} else {
+					// For the 4D case, the simplex is a 4D shape I won't even try to
+					// describe.
+					// To find out which of the 24 possible simplices we're in, we need to
+					// determine the magnitude ordering of x0, y0, z0 and w0.
+					// The method below is a good way of finding the ordering of x,y,z,w and
+					// then find the correct traversal order for the simplex were in.
+					// First, six pair-wise comparisons are performed between each possible
+					// pair of the four coordinates, and the results are used to add up
+					// binary bits for an integer index.
+					return (function(){
+						var i1,j1,k1,l1, // The integer offsets for the second simplex corner
+							i2,j2,k2,l2, // The integer offsets for the third simplex corner
+							i3,j3,k3,l3, // The integer offsets for the fourth simplex corner
+							// simplex[c] is a 4-vector with the numbers 0, 1, 2 and 3 in some
+							// order. Many values of c will never occur, since e.g. x>y>z>w makes
+							// x<z, y<w and x<w impossible. Only the 24 indices which have non-zero
+							// entries make any sense. We use a thresholding to set the coordinates
+							// in turn from the largest magnitude. The number 3 in the "simplex"
+							// array is at the position of the largest coordinate.
+							sc = _simplex[
+								(function(){
+									var c = 0;
+									if (x0 > y0) {
+										c = 0x20;
+									}
+									if (x0 > z0) {
+										c |= 0x10;
+									}
+									if (y0 > z0) {
+										c |= 0x08;
+									}
+									if (x0 > w0) {
+										c |= 0x04;
+									}
+									if (y0 > w0) {
+										c |= 0x02;
+									}
+									if (z0 > w0) {
+										c |= 0x01;
+									}
+									return c;
+								})()
+							],
+							x1, y1, z1, w1,
+							x2, y2, z2, w2,
+							x3, y3, z3, w3,
+							x4, y4, z4, w4,
+							ii, jj, kk, ll,
+							t0,
+							gi0,
+							t1,
+							gi1,
+							t2,
+							gi2,
+							t3,
+							gi3,
+							t4,
+							gi4;
+
+							
+							i1 = sc[0] >= 3 ? 1 : 0;
+							j1 = sc[1] >= 3 ? 1 : 0;
+							k1 = sc[2] >= 3 ? 1 : 0;
+							l1 = sc[3] >= 3 ? 1 : 0;
+							// The number 2 in the "simplex" array is at the second largest
+							// coordinate.
+							i2 = sc[0] >= 2 ? 1 : 0;
+							j2 = sc[1] >= 2 ? 1 : 0;
+							k2 = sc[2] >= 2 ? 1 : 0;
+							l2 = sc[3] >= 2 ? 1 : 0;
+							// The number 1 in the "simplex" array is at the second smallest
+							// coordinate.
+							i3 = sc[0] >= 1 ? 1 : 0;
+							j3 = sc[1] >= 1 ? 1 : 0;
+							k3 = sc[2] >= 1 ? 1 : 0;
+							l3 = sc[3] >= 1 ? 1 : 0;
+
+							// The fifth corner has all coordinate offsets = 1, so no need to look
+							// that up.
+							x1 = x0 - i1 + _G4; // Offsets for second corner in (x,y,z,w)
+							y1 = y0 - j1 + _G4;
+							z1 = z0 - k1 + _G4;
+							w1 = w0 - l1 + _G4;
+
+							x2 = x0 - i2 + _G42; // Offsets for third corner in (x,y,z,w)
+							y2 = y0 - j2 + _G42;
+							z2 = z0 - k2 + _G42;
+							w2 = w0 - l2 + _G42;
+
+							x3 = x0 - i3 + _G43; // Offsets for fourth corner in (x,y,z,w)
+							y3 = y0 - j3 + _G43;
+							z3 = z0 - k3 + _G43;
+							w3 = w0 - l3 + _G43;
+
+							x4 = x0 + _G44; // Offsets for last corner in (x,y,z,w)
+							y4 = y0 + _G44;
+							z4 = z0 + _G44;
+							w4 = w0 + _G44;
+
+							// Work out the hashed gradient indices of the five simplex corners
+							ii = i & 0xff;
+							jj = j & 0xff;
+							kk = k & 0xff;
+							ll = l & 0xff;
+
+							// Calculate the contribution from the five corners
+							t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
+							if (t0 > 0) {
+								t0 *= t0;
+								gi0 = _perm[ii + _perm[jj + _perm[kk + _perm[ll]]]] % 32;
+								n0 = t0 * t0 * _dot(_grad4[gi0], x0, y0, z0, w0);
+							}
+							t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1;
+							if (t1 > 0) {
+								t1 *= t1;
+								gi1 = _perm[ii + i1 + _perm[jj + j1 + _perm[kk + k1 + _perm[ll + l1]]]] % 32;
+								n1 = t1 * t1 * _dot(_grad4[gi1], x1, y1, z1, w1);
+							}
+							t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2;
+							if (t2 > 0) {
+								t2 *= t2;
+								gi2 = _perm[ii + i2 + _perm[jj + j2 + _perm[kk + k2 + _perm[ll + l2]]]] % 32;
+								n2 = t2 * t2 * _dot(_grad4[gi2], x2, y2, z2, w2);
+							}
+							t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3;
+							if (t3 > 0) {
+								t3 *= t3;
+								gi3 = _perm[ii + i3 + _perm[jj + j3 + _perm[kk + k3 + _perm[ll + l3]]]] % 32;
+								n3 = t3 * t3 * _dot(_grad4[gi3], x3, y3, z3, w3);
+							}
+							t4 = 0.6 - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4;
+							if (t4 > 0) {
+								t4 *= t4;
+								gi4 = _perm[ii + 1 + _perm[jj + 1 + _perm[kk + 1 + _perm[ll + 1]]]] % 32;
+								n4 = t4 * t4 * _dot(_grad4[gi4], x4, y4, z4, w4);
+							}
+
+							// Sum up and scale the result to cover the range [-1,1]
+							return 27.0 * (n0 + n1 + n2 + n3 + n4);
+					})();
+					
+				}
+
+		}
+	};
+})();
+
+
+/**
+ @member toxi
+ @class a two-dimensional vector class
+ */
+toxi.Vec2D = function(a,b){
 	if(a instanceof Object && a.x !== undefined && a.y !== undefined){
 		b = a.y;
 		a = a.x;
@@ -1870,17 +2947,14 @@ toxi.Vec2D.Axis = {
 	
 })();
 /**
- * Creates a new vector with the given coordinates. Coordinates will default to zero
- * 
- * @param x
- *            the x
- * @param y
- *            the y
- * @param z
- *            the z
+ * @member toxi
+ * @class Creates a new vector with the given coordinates. Coordinates will default to zero
+ * @param {Number} x the x
+ * @param {Number} y the y
+ * @param {Number} z the z
  */
 toxi.Vec3D = function(x, y, z){
-	if(x instanceof Object && x.x !== undefined && x.y !== undefined && x.z !== undefined){
+	if(typeof x == 'object' && x.x !== undefined && x.y !== undefined && x.z !== undefined){
 		this.x = x.x;
 		this.y = x.y;
 		this.z = x.z;
@@ -2754,6 +3828,10 @@ toxi.Vec2D.prototype.to3DXZ = function() {
 toxi.Vec2D.prototype.to3DYZ = function() {
     return new toxi.Vec3D(0, this.x, this.y);
 };
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Polygon2D = function(){
 	this.vertices = [];
 	var i,l;
@@ -2967,13 +4045,11 @@ toxi.Polygon2D.prototype = {
 	}
 	
 };/**
+ * @class
  * Helper class for the spline3d classes in this package. Used to compute
  * subdivision points of the curve.
- */
-/**
- * @param res
- *            number of subdivision steps between each control point of the
- *            spline3d
+ * @member toxi
+ * @param {Number} res number of subdivision steps between each control point of the spline3d
  */
 toxi.BernsteinPolynomial = function(res) {
         this.resolution = res;
@@ -2998,7 +4074,13 @@ toxi.BernsteinPolynomial = function(res) {
 		this.b2 = b2;
 		this.b3 = b3;
 };
-//rawPoints should be Vec2D array
+
+/**
+ * @class
+ * @member toxi
+ * @param {toxi.Vec2D[]} rawPoints array of toxi.Vec2D's
+ * @param {toxi.BernsteinPolynomial} [bernsteinPoly]
+ */
 toxi.Spline2D = function(rawPoints,bernsteinPoly){
 	if(arguments.length === 0){
 			this.setTightness(toxi.Spline2D.DEFAULT_TIGHTNESS);
@@ -3165,7 +4247,9 @@ toxi.Spline2D.prototype = {
 
 toxi.Spline2D.DEFAULT_TIGHTNESS = 0.25;
 toxi.Spline2D.DEFAULT_RES = 16;/**
- * This class defines a 2D ellipse and provides several utility methods for it.
+ * @class defines a 2D ellipse and provides several utility methods for it.
+ * @member toxi
+ * @augments toxi.Vec2D
  */
 
 toxi.Ellipse = function(a,b,c,d) {
@@ -3289,6 +4373,14 @@ toxi.Ellipse.prototype.toPolygon2D = function(res) {
     return poly;
 };
 
+/**
+ * @class
+ * @member toxi
+ * @param {Number} [x]
+ * @param {Number} [y]
+ * @param {Number} [width]
+ * @param {Number} [height]
+ */
 toxi.Rect = function(a,b,width,height){
 	if(arguments.length == 2){ //then it should've been 2 Vec2D's
 		if(!(a instanceof toxi.Vec2D)){
@@ -3510,11 +4602,12 @@ toxi.Rect.prototype = {
 
 
 /**
- * This class overrides {@link Ellipse} to define a 2D circle and provides
+ * @class This class overrides {@link Ellipse} to define a 2D circle and provides
  * several utility methods for it, including factory methods to construct
  * circles from points.
+ * @member toxi
+ * @augments toxi.Ellipse
  */
- 
 toxi.Circle = function(a,b,c) {
 	if(arguments.length == 1){
 		if(a instanceof toxi.Circle){
@@ -3633,6 +4726,10 @@ toxi.Circle.prototype.setRadius = function(r) {
     return this;
 };
 
+/**
+ @class CircleIntersector
+ @member toxi
+ */
 toxi.CircleIntersector = function(circle) {
     this.circle = circle;
     this.isec = undefined;
@@ -3659,26 +4756,24 @@ toxi.CircleIntersector.prototype = {
         }
         return this.isec.isIntersection;
     }
-};/* A geometric definition of a cone (and cylinder as a special case) with
+};/**
+ * @class A geometric definition of a cone (and cylinder as a special case) with
  * support for mesh creation/representation. The class is currently still
  * incomplete in that it doesn't provide any other features than the
  * construction of a cone shaped mesh.
+ * @augments toxi.Vec3D
+ * @member toxi
+ * @param pos
+ *            centre position
+ * @param dir
+ *            direction vector
+ * @param rNorth
+ *            radius on the side in the forward direction
+ * @param rSouth
+ *            radius on the side in the opposite direction
+ * @param len
+ *            length of the cone
  */
-
-    /**
-     * Constructs a new cone instance.
-     * 
-     * @param pos
-     *            centre position
-     * @param dir
-     *            direction vector
-     * @param rNorth
-     *            radius on the side in the forward direction
-     * @param rSouth
-     *            radius on the side in the opposite direction
-     * @param len
-     *            length of the cone
-     */
 toxi.Cone = function(pos,dir,rNorth, rSouth,len) {
 	toxi.Vec3D.apply(this,[pos]);
 	this.dir = dir.getNormalized();
@@ -3700,12 +4795,12 @@ toxi.Cone.prototype.toMesh = function(args) {
 	
 		
 	if ( arguments.length == 1) {
-		if ( arguments[0] instanceof Object) {
+		if (typeof arguments[0] == 'object') {
 			//##then it was a javascript option-object
 			var optionsObject = arguments[0];
 			opts.mesh = optionsObject.mesh;
 			opts.steps = optionsObject.steps || optionsObject.resolution || optionsObject.res;
-			opts.thetaOffset = optiontsObject.thetaOffset || opts.thetaOffset;
+			opts.thetaOffset = optionsObject.thetaOffset || opts.thetaOffset;
 			opts.topClosed = optionsObject.topClosed || opts.topClosed;
 			opts.bottomClosed = optionsObject.bottomClosed || opts.bottomClosed;
 		} else {
@@ -3764,6 +4859,10 @@ toxi.Cone.prototype.toMesh = function(args) {
 	
 	return mesh;
 };
+/**
+ @class
+ @member toxi
+ */
 toxi.Line2D = function( a, b) {
   this.a = a;
   this.b = b;
@@ -3973,6 +5072,13 @@ toxi.Line2D.LineIntersection.prototype = {
 };
 
 toxi.Line2D.LineIntersection.Type = { COINCIDENT: 0, PARALLEL: 1, NON_INTERSECTING: 2, INTERSECTING: 3};
+/**
+ * @class
+ * @member toxi
+ * @param {toxi.Vec3D} a
+ * @param {toxi.Vec3D} b
+ * @param {toxi.Vec3D} c
+ */
 toxi.Triangle = function(a,b,c){
 	if(arguments.length == 3){
 		this.a = a;
@@ -4191,7 +5297,14 @@ toxi.Triangle.prototype = {
         return "Triangle: " + this.a + "," + this.b + "," + this.c;
     }
 
-};toxi.Triangle2D = function(_a,_b,_c){
+};/**
+ * @class
+ * @member toxi
+ * @param {toxi.Vec2D} a
+ * @param {toxi.Vec2D} b
+ * @param {toxi.Vec2D} c
+ */
+toxi.Triangle2D = function(_a,_b,_c){
 	if(arguments.length === 3){
 		this.a = _a.copy();
 		this.b = _b.copy();
@@ -4360,7 +5473,11 @@ toxi.Triangle2D.prototype = {
 		return "Triangle2D: "+this.a+ ","+this.b+","+this.c;
 	}
 
-};toxi.IsectData2D = function(isec){
+};/**
+ * @class
+ * @member toxi
+ */
+toxi.IsectData2D = function(isec){
 	if(isec !== undefined){
 		this.isIntersection = isec.isIntersection;
 		this.dist = isec.dist;
@@ -4389,7 +5506,11 @@ toxi.IsectData2D.prototype = {
 		}
 		return s;
 	}
-};toxi.IsectData3D = function(isec){
+};/**
+ * @class
+ * @member toxi
+ */
+toxi.IsectData3D = function(isec){
 	if(isec !== undefined){
 		this.isIntersection = isec.isIntersection;
 		this.dist = isec.dist;
@@ -4418,22 +5539,24 @@ toxi.IsectData3D.prototype = {
 		}
 		return s;
 	}
-};/**
- * Implements a simple row-major 4x4 matrix class, all matrix operations are
- * applied to new instances. Use {@link #transpose()} to convert from
- * column-major formats...
- */
-(function(){
-
-	toxi.Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
+};(function(){
+	/**
+	 * @description Implements a simple row-major 4x4 matrix class, all matrix operations are
+	 * applied to new instances. Use {@link #transpose()} to convert from
+	 * column-major formats...
+	 * @exports Matrix4x4 as toxi.Matrix4x4
+	 * @constructor
+	 */
+	var Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42,v43,v44){
 		this.temp = [];
+		this.matrix = [];
+		var self = this;
 		if(arguments.length === 0) { //if no variables were supplied
-			this.matrix = [];
 			this.matrix[0] = [1,0,0,0];
 			this.matrix[1] = [0,1,0,0];
 			this.matrix[2] = [0,0,1,0];
 			this.matrix[3] = [0,0,0,1];
-		} else if(V11 instanceof Number){ //if the variables were numbers
+		} else if(v11 instanceof Number){ //if the variables were numbers
 			var m1 = [v11,v12,v13,v14];
 			var m2 = [v21,v22,v23,v24];
 			var m3 = [v31,v32,v33,v34];
@@ -4442,7 +5565,7 @@ toxi.IsectData3D.prototype = {
 		} else if(v11 instanceof Array) { //if it was sent in as one array
 			var array = v11;
 			if (array.length != 9 && array.length != 16) {
-				throw new Error("toxi.Matrix4x4: Array length must == 9 or 16");
+				throw new Error("Matrix4x4: Array length must == 9 or 16");
 			}
 			if (array.length == 16) {
 				this.matrix = [];
@@ -4459,31 +5582,45 @@ toxi.IsectData3D.prototype = {
 				this.matrix[2][3] = NaN;
 				this.matrix[3] = [NaN,NaN,NaN,NaN];
 			}
-		} else if(v11 instanceof toxi.Matrix4x4){
+		} else if(v11 instanceof Matrix4x4){
+
 		//else it should've been a Matrix4x4 that was passed in
 			var m = v11,
-				i =0;
-			if(m.length == 16){
+				i = 0,
+				j = 0,
+				lenM,
+				lenMM;
+
+			if(m.matrix.length == 16){
 				for(i=0;i<4;i++){
 					this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],m.matrix[i][3]];
 				}
 			} else {
+				if(m.matrix.length == 4){
+					lenM = m.matrix.length;
+					for(i = 0; i < lenM; i++){
+						lenMM = m.matrix[i].length;
+						self.matrix[i] = [];
+						for(j = 0; j < lenMM; j++){
+							self.matrix[i][j] = m.matrix[i][j];
+						}
+					}
+				}
+				/*console.log("m.matrix.length: "+m.matrix.length);
 				//should be a length of 9
 				for(i=0;i<3;i++){
 					this.matrix[i] = [m.matrix[i][0], m.matrix[i][1],m.matrix[i][2],NaN];
 				}
-				this.matrix[3] = [NaN,NaN,NaN,NaN];
+				this.matrix[3] = [NaN,NaN,NaN,NaN];*/
 			}
 		} else {
-			console.error("toxi.Matrix4x4: incorrect parameters used to construct new instance");
+			console.error("Matrix4x4: incorrect parameters used to construct new instance");
 		}
 	};
 	
-	
-	toxi.Matrix4x4.prototype = {
-		
+	Matrix4x4.prototype = {
 		add: function(rhs) {
-	        var result = new toxi.Matrix4x4(this);
+	        var result = new Matrix4x4(this);
 	        return result.addSelf(rhs);
 	    },
 	
@@ -4519,31 +5656,31 @@ toxi.IsectData3D.prototype = {
 	    },
 	
 	    copy: function() {
-	        return new toxi.Matrix4x4(this);
+	        return new Matrix4x4(this);
 	    },
 	
 	    getInverted: function() {
-	        return new toxi.Matrix4x4(this).invert();
+	        return new Matrix4x4(this).invert();
 	    },
 	
 	    getRotatedAroundAxis: function(axis,theta) {
-	        return new toxi.Matrix4x4(this).rotateAroundAxis(axis, theta);
+	        return new Matrix4x4(this).rotateAroundAxis(axis, theta);
 	    },
 	
 	    getRotatedX: function(theta) {
-	        return new toxi.Matrix4x4(this).rotateX(theta);
+	        return new Matrix4x4(this).rotateX(theta);
 	    },
 	
 	    getRotatedY: function(theta) {
-	        return new toxi.Matrix4x4(this).rotateY(theta);
+	        return new Matrix4x4(this).rotateY(theta);
 	    },
 	
 	    getRotatedZ: function(theta) {
-	        return new toxi.Matrix4x4(this).rotateZ(theta);
+	        return new Matrix4x4(this).rotateZ(theta);
 	    },
 	
 	    getTransposed: function() {
-	        return new toxi.Matrix4x4(this).transpose();
+	        return new Matrix4x4(this).transpose();
 	    },
 	
 	    identity: function() {
@@ -4676,10 +5813,10 @@ toxi.IsectData3D.prototype = {
 	
 	    multiply: function(a) {
 			if(typeof(a) == "number"){
-				return new toxi.Matrix4x4(this).multiply(a);
+				return new Matrix4x4(this).multiply(a);
 			}
 			//otherwise it should be a Matrix4x4
-			return new toxi.Matrix4x4(this).multiplySelf(a);
+			return new Matrix4x4(this).multiplySelf(a);
 	    },
 	
 	    multiplySelf: function(a) {
@@ -4687,7 +5824,7 @@ toxi.IsectData3D.prototype = {
 				m;
 			if(typeof(a) == "number"){
 				for (i = 0; i < 4; i++) {
-					m = matrix[i];
+					m = this.matrix[i];
 					m[0] *= a;
 					m[1] *= a;
 					m[2] *= a;
@@ -4746,7 +5883,7 @@ toxi.IsectData3D.prototype = {
 	     */
 	    rotateX: function(theta) {
 	        _TEMP.identity();
-	        _TEMP.matrix[1][1] = _TEMP[2][2] = Math.cos(theta);
+	        _TEMP.matrix[1][1] = _TEMP.matrix[2][2] = Math.cos(theta);
 	        _TEMP.matrix[2][1] = Math.sin(theta);
 	        _TEMP.matrix[1][2] = -_TEMP.matrix[2][1];
 	        return this.multiplySelf(_TEMP);
@@ -4777,7 +5914,7 @@ toxi.IsectData3D.prototype = {
 	    },
 	
 	    scale: function(a,b,c) {
-			return new toxi.Matrix4x4(this).scaleSelf(a,b,c);
+			return new Matrix4x4(this).scaleSelf(a,b,c);
 	    },
 	
 	    scaleSelf: function(a,b,c) {
@@ -4832,10 +5969,79 @@ toxi.IsectData3D.prototype = {
 			}
 			return this;
 	    },
+
+	    setFrustrum: function(left,right,top,bottom,near,far){
+	    	var rl = (right - left),
+	    		tb = (top - bottom),
+	    		fn = (far - near);
+	    	
+
+	    	return this.set(
+	    		(2.0 * near) / rl,
+	    		0,
+	    		(left + right) / rl,
+	    		0,
+	    		0,
+	    		(2.0 * near) / tb,
+	    		(top + bottom) / tb,
+	    		0,
+	    		0,
+	    		0,
+	    		-(near + far) / fn,
+	    		(-2 * near * far) / fn,
+	    		0,
+	    		0,
+	    		-1,
+	    		0
+	    	);	
+	    },
+
+	    setOrtho: function(left,right,top,bottom,near,far){
+	    	var mat = [
+	    		2.0 / (right - left),
+	    		0, 
+	    		0, 
+	    		(left + right) / (right - left),
+                0, 
+                2.0 / (top - bottom), 
+                0, 
+                (top + bottom) / (top - bottom), 
+                0,
+                0,
+                -2.0 / (far - near), 
+                (far + near) / (far - near), 
+                0, 
+                0, 
+                0, 
+                1
+	    	];
+
+	    	return this.set.apply(this,mat);
+	    },
+
+	    setPerspective: function(fov,aspect,near,far){
+	    	var y = near * Math.tan(0.5 * toxi.MathUtils.radians(fov)),
+	    		x = aspect * y;
+	    	return this.setFrustrum(-x,x,y,-y,near,far);	
+	    },
+
+	    setPosition: function(x,y,z){
+	    	this.matrix[0][3] = x;
+	    	this.matrix[1][3] = y;
+	    	this.matrix[2][3] = z;
+	    	return this;	
+	    },
+
+	    setScale: function(sX,sY,sZ){
+	    	this.matrix[0][0] = sX;
+	    	this.matrix[1][1] = sY;
+	    	this.matrix[2][2] = sZ;
+	    	return this;	
+	    },
 	
 	   
 	    sub: function(m) {
-			return new toxi.Matrix4x4(this).subSelf(m);
+			return new Matrix4x4(this).subSelf(m);
 	    },
 	
 	    subSelf: function(mat) {
@@ -4871,7 +6077,7 @@ toxi.IsectData3D.prototype = {
 	    },
 	
 	    toFloatArray:function(result) {
-	        return toArray(result);
+	        return new Float32Array(this.toArray(result));
 	    },
 	
 	    /*
@@ -4896,7 +6102,7 @@ toxi.IsectData3D.prototype = {
 	    },
 	
 	    translate: function(dx,dy,dz) {
-			return new toxi.Matrix4x4(this).translateSelf(dx, dy, dz);
+			return new Matrix4x4(this).translateSelf(dx, dy, dz);
 	    },
 	
 	    translateSelf: function( dx, dy, dz) {
@@ -4906,9 +6112,7 @@ toxi.IsectData3D.prototype = {
 				dx = dx.x;
 			}
 			_TEMP.identity();
-			_TEMP.matrix[0][3] = dx;
-			_TEMP.matrix[1][3] = dy;
-			_TEMP.matrix[2][3] = dz;
+			_TEMP.setPosition(dx,dy,dz);
 			return this.multiplySelf(_TEMP);
 	    },
 	
@@ -4929,9 +6133,14 @@ toxi.IsectData3D.prototype = {
 	};
 	
 	//private temp matrix
-	var _TEMP = new toxi.Matrix4x4();
+	var _TEMP = new Matrix4x4();
+	toxi.Matrix4x4 = Matrix4x4;
 
-})();
+}());
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Quaternion = function (qw,vx,y,z){
 	if(arguments.length == 4){
 		this.w = qw;
@@ -5204,7 +6413,12 @@ toxi.Quaternion.createFromMatrix = function(m){
 			length = axis.magnitude() + 0.0001,
 			angle = Math.atan2(length, forward.dot(target));
         return this.createFromAxisAngle(axis, angle);
- };toxi.Vertex = function(v,id) {
+ };/**
+ * @class
+ * @member toxi
+ * @augments toxi.Vec3D
+ */
+toxi.Vertex = function(v,id) {
         toxi.Vec3D.apply(this,[v]);
         this.id = id;
         this.normal = new toxi.Vec3D();
@@ -5227,6 +6441,10 @@ toxi.Vertex.prototype.toString = function() {
     return this.id + ": p: " + this.parent.toString.call(this) + " n:" + this.normal.toString();
 };
 
+/** 
+ * @class
+ * @member toxi
+ */
 toxi.Face = function(a,b,c,uvA,uvB,uvC) {
     this.a = a;
     this.b = b;
@@ -5288,7 +6506,10 @@ toxi.Face.prototype = {
     toTriangle: function() {
         return new toxi.Triangle3D(this.a.copy(), this.b.copy(), this.c.copy());
     }
-};toxi.Mesh3D = function(){};//is there any reason for this to implement Mesh3D?
+};/**
+ * @class
+ * @member toxi
+ */
 toxi.TriangleMesh = function(name,numV,numF){
 	if(name === undefined)name = "untitled";
 	if(numV === undefined)numV = toxi.TriangleMesh.DEFAULT_NUM_VERTICES;
@@ -5973,7 +7194,12 @@ toxi.TriangleMesh.prototype = {
 	    }
 	    return this;
 	}
-};toxi.Sphere = function(a,b){
+};/**
+ * @class
+ * @member toxi
+ * @augments toxi.Vec3D
+ */
+toxi.Sphere = function(a,b){
 	if(a === undefined){
 		toxi.Vec3D.apply(this,[new toxi.Vec3D()]);
 		this.radius = 1;
@@ -6103,6 +7329,10 @@ toxi.Sphere.prototype.toMesh = function() {
 	var builder = new toxi.SurfaceMeshBuilder(new toxi.SphereFunction(this));
 	return builder.createMesh(opts.mesh, opts.resolution, 1);
 };
+/**
+ * @class
+ * @member toxi
+ */
 toxi.VertexSelector = function(mesh){
 	this.mesh = mesh;
 	this.selection = [];
@@ -6220,10 +7450,10 @@ toxi.VertexSelector.prototype = {
 
    
   /**
- *  includes all classes extending VertexSelector
- * (BoxSelector, DefaultSelector, PlaneSelector)
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
  */
-
 toxi.BoxSelector = function(mesh,box) {
     toxi.VertexSelector.apply(this,[mesh]);
     this.box = box;
@@ -6243,6 +7473,11 @@ toxi.BoxSelector.prototype.selectVertices = function() {
     return this;
 };
 
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
+ */
 toxi.DefaultSelector = function(mesh){
 	toxi.VertexSelector.apply(this,[mesh]);
 };
@@ -6254,9 +7489,11 @@ toxi.DefaultSelector.prototype.selectVertices = function(){
 };
 
 
-
-
-
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
+ */
 toxi.PlaneSelector = function(mesh,plane,classifier, tolerance) {
     toxi.VertexSelector.apply(this,[mesh]);
     this.plane = plane;
@@ -6277,10 +7514,10 @@ toxi.PlaneSelector.prototype.selectVertices = function() {
     return this;
 };
 /**
- * This implementation of a {@link SurfaceFunction} samples a given
+ * @class This implementation of a {@link SurfaceFunction} samples a given
  * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
+ * @member toxi
  */
-
 toxi.SphereFunction = function(sphere_or_radius) {
 	if(sphere_or_radius === undefined){
 		this.sphere = new toxi.Sphere(new toxi.Vec3D(),1);
@@ -6334,8 +7571,9 @@ toxi.SphereFunction.prototype = {
 	    this.thetaRange = toxi.MathUtils.min(max, toxi.MathUtils.TWO_PI);
 	}
 };/**
- * Spherical harmonics surface evaluator based on code by Paul Bourke:
+ * @class Spherical harmonics surface evaluator based on code by Paul Bourke:
  * http://local.wasp.uwa.edu.au/~pbourke/geometry/sphericalh/
+ * @member toxi
  */
 toxi.SphericalHarmonics = function(m) {
     this.m = m;
@@ -6373,7 +7611,11 @@ toxi.SphericalHarmonics.prototype = {
 	getThetaResolutionLimit: function(res) {
         return res;
     }
-};toxi.SuperEllipsoid = function(n1,n2) {
+};/**
+ * @class
+ * @member toxi
+ */
+toxi.SuperEllipsoid = function(n1,n2) {
 	this.p1 = n1;
 	this.p2 = n2;
 };
@@ -6409,11 +7651,11 @@ toxi.SuperEllipsoid.prototype = {
 		return res;
 	}
 };/**
- * An extensible builder class for {@link TriangleMesh}es based on 3D surface
+ * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface
  * functions using spherical coordinates. In order to create mesh, you'll need
  * to supply a {@link SurfaceFunction} implementation to the builder.
+ * @member toxi
  */
-
 toxi.SurfaceMeshBuilder = function(func) {
 	this.func = func;
 };
@@ -6512,7 +7754,12 @@ toxi.SurfaceMeshBuilder.prototype = {
 	setFunction: function(func) {
 		this.func = func;
 	}
-};toxi.AxisAlignedCylinder = function(pos,radius,length) {
+};/** 
+ @member toxi
+ @class
+ An Abstract (don't use this directly) Axis-aligned Cylinder class
+ */
+toxi.AxisAlignedCylinder = function(pos,radius,length) {
 	this.pos = (pos===undefined)? undefined: pos.copy();
 	this.setRadius(radius);
 	this.setLength(length);
@@ -6598,7 +7845,11 @@ toxi.AxisAlignedCylinder.prototype = {
 		var cone = new toxi.Cone(this.pos,this.getMajorAxis().getVector(), this.radius, this.radius, this.length);
 		return cone.toMesh(opts.mesh,opts.steps,opts.thetaOffset,true,true);
 	}
-};toxi.AABB = function(a,b){
+};/**
+ @class Axis-aligned Bounding Box
+ @member toxi
+ */
+toxi.AABB = function(a,b){
 	var vec,
 		extent;
 	if(a === undefined){
@@ -7036,8 +8287,9 @@ toxi.AABB.prototype.updateBounds = function() {
 };
 
 /**
-4x4 bezier patch implementation with tesselation support (dynamic resolution)
-for generating triangle mesh representations.
+ * @class 4x4 bezier patch implementation with tesselation support (dynamic resolution)
+ * for generating triangle mesh representations.
+ * @member toxi
  */
 toxi.BezierPatch = function(points){
 	this.points = (points === undefined)?[] : points;
@@ -7131,7 +8383,13 @@ toxi.BezierPatch.computePointAt = function(u,v,points){
 
 		return new toxi.Vec3D(x, y, z);
 
-};toxi.XAxisCylinder = function(pos,radius,length){
+};/**
+ @class 
+ X-axis aligned Cylinder
+ @member toxi
+ @author Kyle Phillips
+ */
+toxi.XAxisCylinder = function(pos,radius,length){
 	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };
 
@@ -7150,6 +8408,10 @@ toxi.XAxisCylinder.prototype.containsPoint = function(p){
 toxi.XAxisCylinder.prototype.getMajorAxis = function(){
 	return toxi.Vec3D.Axis.X;
 };
+/**
+ @member toxi
+ @class Y-axis aligned Cylinder
+ */
 toxi.YAxisCylinder = function(pos,radius,length){
 	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };
@@ -7168,6 +8430,10 @@ toxi.YAxisCylinder.prototype.containsPoint = function(p){
 toxi.YAxisCylinder.prototype.getMajorAxis = function(){
 	return toxi.Vec3D.Axis.Y;
 };
+/**
+ @member toxi
+ @class Z-axis aligned Cylinder
+ */
 toxi.ZAxisCylinder = function(pos,radius,length){
 	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };
@@ -7184,7 +8450,11 @@ toxi.ZAxisCylinder.prototype.containsPoint = function(p){
 };
 toxi.ZAxisCylinder.prototype.getMajorAxis = function(){
 	return toxi.Vec3D.Axis.Z;
-};toxi.Line3D = function(vec_a, vec_b) {
+};/**
+ @class
+ @member toxi
+ */
+toxi.Line3D = function(vec_a, vec_b) {
     this.a = vec_a;
     this.b = vec_b;
 };
@@ -7399,6 +8669,10 @@ toxi.Line3D.LineIntersection.Type = {
 	INTERSECTING: 1
 };
 
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Ray2D = function(a,b,d){
 	var o, dir;
 	if(arguments.length == 3){
@@ -7458,6 +8732,10 @@ toxi.Ray2D.prototype.toLine2DWithPointAtDistance = function(dist) {
 toxi.Ray2D.prototype.toString = function() {
     return "origin: " + toxi.Vec2D.prototype.toString.apply(this) + " dir: " + this.dir;
 };
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Ray3D = function(a,b,c,d){
 	var o, dir;
 	if(arguments.length == 4){

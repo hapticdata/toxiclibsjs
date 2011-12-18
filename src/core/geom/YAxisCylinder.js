@@ -1,3 +1,7 @@
+/**
+ @member toxi
+ @class Y-axis aligned Cylinder
+ */
 toxi.YAxisCylinder = function(pos,radius,length){
 	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };

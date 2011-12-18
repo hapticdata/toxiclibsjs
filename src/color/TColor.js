@@ -1,17 +1,18 @@
 (function(){
 
 	//private
-	//http://stackoverflow.com/questions/57803/how-to-convert-decimal-to-hex-in-javascript
-	//TLDR: not as straightforward as i.toString(16)
-	var dec2hex = function(i) {
-	  var result = "0000";
-	  if      (i >= 0    && i <= 15)    { result = "000" + i.toString(16); }
-	  else if (i >= 16   && i <= 255)   { result = "00"  + i.toString(16); }
-	  else if (i >= 256  && i <= 4095)  { result = "0"   + i.toString(16); }
-	  else if (i >= 4096 && i <= 65535) { result =         i.toString(16); }
-	  return result;
+	var dec2hex = function decimalToHexString(number){
+	    if (number < 0){
+	        number = 0xFFFFFFFF + number + 1;
+	    }
+
+	    return number.toString(16);
 	};
-	
+
+	/**
+	 @class Creates a new TColor instance
+	 @memberOf toxi.color
+	 */
 	toxi.color.TColor = function(tcolor){
 		this.rgb = new Array(3);
 		this.hsv = new Array(3);
@@ -44,7 +45,7 @@
 		 * towards either the black or white point (depending on if current
 		 * brightness >= 50%)
 		 * 
-		 * @param amount
+		 * @param {Number} amount
 		 * @return itself
 		 */
 		adjustConstrast: function(amount) {
@@ -500,7 +501,8 @@
 		    cmyka[0] = this.cmyk[0];
 		    cmyka[1] = this.cmyk[1];
 		    cmyka[2] = this.cmyk[2];
-		    cmyka[3] = this._alpha;
+		    cmyka[3] = this.cmyk[3];
+		    cmyka[4] = this._alpha;
 		    return cmyka;
 		},
 		
@@ -522,6 +524,21 @@
 		    hsva[3] = this._alpha;
 		    return hsva;
 		},
+
+		/**
+		 * to CSS's hsla() string
+		 */
+		toHSLACSS: function(){
+			var hsva = this.toHSVAArray();
+			//hue is 0 - 360
+			hsva[0] = Math.floor(hsva[0] * 360);
+			//saturation & value/luminosity is 0-100 (%)
+			hsva[1] = Math.floor(hsva[1] * 100);
+			hsva[2] = Math.floor(hsva[2] * 100);
+			//alpha stays in range 0 - 1	
+
+			return "hsla("+hsva[0]+","+hsva[1]+"%,"+hsva[2]+"%,"+hsva[3]+")";
+		},
 		
 		/**
 		 * to an Array of RGBA values
@@ -532,13 +549,35 @@
 		toRGBAArray: function(rgba, offset) {
 		    if (rgba === undefined) {
 		        rgba = [];
-		        offset = 0;
+		    }
+		    if(offset == undefined){
+		    	offset = 0;
 		    }
 		    rgba[offset++] = this.rgb[0];
 		    rgba[offset++] = this.rgb[1];
 		    rgba[offset++] = this.rgb[2];
 		    rgba[offset] = this._alpha;
 		    return rgba;
+		},
+
+		/**
+		 * to an rgba string valid for CSS Color Module's rgba()
+		 * @param asPercents if true creates string based on percents rather than 0-255
+		 */
+		toRGBACSS: function(asPercents){
+			asPercents == asPercents || false;
+			var rgba = this.toRGBAArray();
+			if(asPercents) {
+				rgba[0] = Math.floor(rgba[0] * 100);
+				rgba[1] = Math.floor(rgba[1] * 100);
+				rgba[2] = Math.floor(rgba[2] * 100);
+				return "rgba("+rgba[0]+"%,"+rgba[1]+"%,"+rgba[2]+"%,"+rgba[3]+")";
+			}
+			//as 0 - 255
+			rgba[0] = Math.floor(rgba[0] * 255);
+			rgba[1] = Math.floor(rgba[1] * 255);
+			rgba[2] = Math.floor(rgba[2] * 255);
+			return "rgba("+rgba[0]+","+rgba[1]+","+rgba[2]+","+rgba[3]+")";
 		},
 		
 		toString: function(){

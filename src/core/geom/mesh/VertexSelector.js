@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.VertexSelector = function(mesh){
 	this.mesh = mesh;
 	this.selection = [];

@@ -1,3 +1,7 @@
+/** 
+ * @class
+ * @member toxi
+ */
 toxi.Face = function(a,b,c,uvA,uvB,uvC) {
     this.a = a;
     this.b = b;

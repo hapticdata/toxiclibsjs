@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Ray3DIntersector = function(ray){
 	this.ray = ray;
 	this.isec = new toxi.IsectData3D();

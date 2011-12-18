@@ -1,3 +1,4 @@
+/** @namespace */
 toxi.physics2d = toxi.physics2d || {};
 
 toxi.physics2d.removeItemFrom = function(item,array){

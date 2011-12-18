@@ -1,3 +1,4 @@
+/** @namespace */
 toxi.THREE = toxi.THREE || {};
 
 /**

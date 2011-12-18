@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.IsectData2D = function(isec){
 	if(isec !== undefined){
 		this.isIntersection = isec.isIntersection;

@@ -1,3 +1,8 @@
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.Vec3D
+ */
 toxi.Sphere = function(a,b){
 	if(a === undefined){
 		toxi.Vec3D.apply(this,[new toxi.Vec3D()]);

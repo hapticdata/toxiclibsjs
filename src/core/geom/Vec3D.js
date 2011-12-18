@@ -1,15 +1,12 @@
 /**
- * Creates a new vector with the given coordinates. Coordinates will default to zero
- * 
- * @param x
- *            the x
- * @param y
- *            the y
- * @param z
- *            the z
+ * @member toxi
+ * @class Creates a new vector with the given coordinates. Coordinates will default to zero
+ * @param {Number} x the x
+ * @param {Number} y the y
+ * @param {Number} z the z
  */
 toxi.Vec3D = function(x, y, z){
-	if(x instanceof Object && x.x !== undefined && x.y !== undefined && x.z !== undefined){
+	if(typeof x == 'object' && x.x !== undefined && x.y !== undefined && x.z !== undefined){
 		this.x = x.x;
 		this.y = x.y;
 		this.z = x.z;

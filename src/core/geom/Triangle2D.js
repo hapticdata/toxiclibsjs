@@ -1,3 +1,10 @@
+/**
+ * @class
+ * @member toxi
+ * @param {toxi.Vec2D} a
+ * @param {toxi.Vec2D} b
+ * @param {toxi.Vec2D} c
+ */
 toxi.Triangle2D = function(_a,_b,_c){
 	if(arguments.length === 3){
 		this.a = _a.copy();

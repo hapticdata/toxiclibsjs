@@ -1,4 +1,5 @@
 // uncompressed/toxi-physics2d-debug r43 - http://github.com/hapticdata/toxiclibsjs
+/** @namespace */
 toxi.physics2d = toxi.physics2d || {};
 
 toxi.physics2d.removeItemFrom = function(item,array){

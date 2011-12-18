@@ -1,10 +1,10 @@
 /**
- * Lookup table for fast sine & cosine computations. Tables with varying
+ * @class Lookup table for fast sine & cosine computations. Tables with varying
  * precisions can be created to which input angles will be rounded to. The
  * sin/cos methods can be used with both positive and negative input angles as
  * with the normal Math.sin()/Math.cos() versions.
+ * @member toxi
  */
- 
 toxi.SinCosLUT = function(precision) {
     if(!precision){
         precision = toxi.SinCosLUT.DEFAULT_PRECISION;

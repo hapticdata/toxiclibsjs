@@ -7,6 +7,7 @@
 	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
 	<script type="text/javascript" src="../build/toxiclibs.js"></script>
+  <script type="text/javascript" src="../src/processing/ToxiclibsSupport.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 </head>
 <body class="container_12">
@@ -40,6 +41,7 @@
 toxi.TriangleMesh mesh = new toxi.TriangleMesh();
 
 toxi.AbstractWave modX, modY;
+toxi.processing.ToxiclibsSupport gfx;
 
 boolean isWireFrame;
 boolean showNormals;
@@ -47,6 +49,7 @@ boolean showNormals;
 
 void setup() {
   size(800,480, OPENGL);
+  gfx = new toxi.processing.ToxiclibsSupport(this);
   isWireFrame = true;
   modX = new toxi.SineWave(0, 0.01f, 2.5f, 2.5f);
   modY = new toxi.SineWave(PI, 0.017f, 2.5f, 2.5f);
@@ -59,6 +62,7 @@ void draw() {
   mesh.computeVertexNormals();
   background(0);
   lights();
+
   translate(width / 2, height / 2, 0);
   rotateX(mouseY * 0.01f);
   rotateY(mouseX * 0.01f);
@@ -85,13 +89,26 @@ void draw() {
     fill(255);
     noStroke();
   }
+
+    gfx.origin(300);
+  if (isWireFrame) {
+    noFill();
+    stroke(255);
+  } 
+  else {
+    fill(255);
+    noStroke();
+  }
   scale(2);
-  int i;
-  int normalLength = (showNormals) ? 10 : 0;
-  beginShape(TRIANGLES);
-  Face[] faces = mesh.getFaces();
-  int numFaces = faces.length;
-  if(!isWireFrame)
+  gfx.mesh(mesh, !isWireFrame, showNormals ? 10 : 0);
+
+  //scale(2);
+  //int i;
+  //int normalLength = (showNormals) ? 10 : 0;
+  //beginShape(TRIANGLES);
+ // Face[] faces = mesh.getFaces();
+ // int numFaces = faces.length;
+  /*if(!isWireFrame)
   {
 	  for(i=0;i<numFaces;i++)
 	  {
@@ -122,7 +139,7 @@ void draw() {
 			vertex(c.x,c.y,c.z);
 		}
 	}
-	endShape();
+	//endShape();
 	
 	if(len>0){
 		int strokeCol = 0;
@@ -150,7 +167,7 @@ void draw() {
                     line(c.x, c.y, c.z, d.x, d.y, d.z);
                 }
             }
-        }
+        }*/
 }
 
 

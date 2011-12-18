@@ -1,3 +1,9 @@
+/**
+ * @class
+ * @static
+ * @member toxi
+ * @description math utilities
+ */
 toxi.MathUtils = {};
 toxi.MathUtils.SQRT2 = Math.sqrt(2);
 toxi.MathUtils.SQRT3 = Math.sqrt(3);
@@ -150,13 +156,18 @@ toxi.MathUtils.radians = function(degrees) {
   return degrees * toxi.MathUtils.DEG2RAD;
 };
 
-toxi.MathUtils.random = function(min,max) {
+toxi.MathUtils.random = function(rand,min,max) {
+  if(arguments.length == 2) {
+    max = min;
+    min = rand;
+    rand = Math.random;
+  }
 	if(!min && !max)return Math.random();
 	else if(!max){ //if only one is provided, then thats actually the max
 		max = min;
-		return Math.random()*max;
+		return rand()*max;
 	}
-    return Math.random() * (max - min) + min;
+    return rand() * (max - min) + min;
 };
 
 toxi.MathUtils.reduceAngle = function(theta) {

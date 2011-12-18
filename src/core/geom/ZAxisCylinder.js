@@ -1,3 +1,7 @@
+/**
+ @member toxi
+ @constructor Z-axis aligned Cylinder
+ */
 toxi.ZAxisCylinder = function(pos,radius,length){
 	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };

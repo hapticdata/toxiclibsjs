@@ -1,3 +1,11 @@
+/**
+ @module toxi/XAxisCylinder
+ @constructor 
+ X-axis aligned Cylinder
+ @member toxi
+ @author Kyle Phillips
+ @augments toxi.AxisAlignedCylinder
+ */
 toxi.XAxisCylinder = function(pos,radius,length){
 	toxi.AxisAlignedCylinder.apply(this,[pos,radius,length]);
 };

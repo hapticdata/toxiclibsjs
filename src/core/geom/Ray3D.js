@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @member toxi
+ */
 toxi.Ray3D = function(a,b,c,d){
 	var o, dir;
 	if(arguments.length == 4){

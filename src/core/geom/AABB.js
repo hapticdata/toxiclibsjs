@@ -1,3 +1,7 @@
+/**
+ @class Axis-aligned Bounding Box
+ @member toxi
+ */
 toxi.AABB = function(a,b){
 	var vec,
 		extent;

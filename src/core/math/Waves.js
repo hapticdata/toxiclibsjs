@@ -1,8 +1,9 @@
 /**
- * Abstract wave oscillator type which needs to be subclassed to implement
+ * @class Abstract wave oscillator type which needs to be subclassed to implement
  * different waveforms. Please note that the frequency unit is radians, but
  * conversion methods to & from Hertz ({@link #hertzToRadians(float, float)})
  * are included in this base class.
+ * @member toxi
  */
 toxi.AbstractWave = function(phase,freq,amp,offset){
 	if(phase !== undefined || freq !== undefined || amp !== undefined || offset !== undefined){
@@ -20,9 +21,9 @@ toxi.AbstractWave = function(phase,freq,amp,offset){
 toxi.AbstractWave.prototype = {
 	/**
      * Ensures phase remains in the 0...TWO_PI interval.
-     * @param freq
+     * @param {Number} freq
      *            normalized progress frequency
-     * @return current phase
+     * @return {Number} current phase
      */
 	cyclePhase: function(freq){
 		if(freq === undefined)freq = 0;
@@ -112,7 +113,11 @@ toxi.AbstractWave.radiansToHertz = function(f,sampleRate) {
 
 
 
-
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.AMFMSineWave = function(a,b,c,d,e){
 	if(typeof c == "number"){
 		toxi.AbstractWave.apply(this,[a,b,1,c]);
@@ -155,10 +160,11 @@ toxi.AMFMSineWave.prototype.reset = function(){
 };
 
 /**
- * Progresses the wave and updates the result value. You must NEVER call the
+ * @class Progresses the wave and updates the result value. You must NEVER call the
  * update() method on the 2 modulating wave since this is handled
  * automatically by this method.
- * 
+  * @augments toxi.AbstractWave
+ * @member toxi
  * @see toxi.math.waves.AbstractWave#update()
  */
 toxi.AMFMSineWave.prototype.update = function() {
@@ -169,7 +175,11 @@ toxi.AMFMSineWave.prototype.update = function() {
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.ConstantWave = function(value) {
 	 toxi.AbstractWave.apply(this);
 	 this.value = value;
@@ -191,6 +201,7 @@ toxi.ConstantWave.prototype.update = function() {
 
 
 /**
+ * @class
  * <p>
  * Frequency modulated <strong>bandwidth-limited</strong> square wave using a
  * fourier series of harmonics. Also uses a secondary wave to modulate the
@@ -201,8 +212,9 @@ toxi.ConstantWave.prototype.update = function() {
  * <strong>Note:</strong> You must NEVER call the update() method on the
  * modulating wave.
  * </p>
+ * @member toxi
+ * @augments toxi.AbstractWave
  */
-
 toxi.FMHarmonicSquareWave = function(a,b,c,d,e) {
 	this.maxHarmonics = 3;
 	if(typeof c == "number"){
@@ -239,11 +251,13 @@ toxi.FMHarmonicSquareWave.prototype.reset = function() {
 };
 
 /**
- * Progresses the wave and updates the result value. You must NEVER call the
+ * @class Progresses the wave and updates the result value. You must NEVER call the
  * update() method on the modulating wave since this is handled
  * automatically by this method.
  * 
  * @see toxi.math.waves.AbstractWave#update()
+ * @member toxi
+ * @augments toxi.AbstractWave
  */
 toxi.FMHarmonicSquareWave.prototype.update = function() {
     this.value = 0;
@@ -256,7 +270,11 @@ toxi.FMHarmonicSquareWave.prototype.update = function() {
     return this.value;
 };
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMSawtoothWave = function(a,b,c,d,e){
 	if(typeof c == "number") {
 		toxi.AbstractWave.apply(this,[a,b,c,d]);
@@ -299,7 +317,11 @@ toxi.FMSawtoothWave.prototype.update = function(){
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMSineWave = function(a,b,c,d,e){
 	if(typeof(c) == "number"){
 		toxi.AbstractWave.apply(this,[a,b,c,d]);
@@ -338,7 +360,11 @@ toxi.FMSineWave.prototype.update = function(){
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMSquareWave = function(a,b,c,d,e)
 {
 	if(typeof c == "number"){
@@ -382,7 +408,11 @@ toxi.FMSquareWave.prototype.update = function(){
 };
 
 
-
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ */
 toxi.FMTriangleWave = function(a,b,c,d,e){
 	if(typeof c == "number"){
 		if(e !== undefined){
@@ -423,7 +453,15 @@ toxi.FMTriangleWave.prototype.update = function(){
 	return this.value;
 };
 
-//all parameters optional
+/**
+ * @class
+ * member toxi
+ * @augments toxi.AbstractWave
+ * @param {Number} [phase] phase
+ * @param {Number} [freq] frequency
+ * @param {Number} [amp] amplitude
+ * @param {Number} [offset] offset
+ */
 toxi.SineWave = function(phase,freq,amp,offset) {
    toxi.AbstractWave.apply(this,[phase,freq,amp,offset]);
 };
@@ -449,7 +487,10 @@ toxi.SineWave.prototype.update = function() {
 };
 	
 
-
+/**
+ * @class
+ * member toxi
+ */
 toxi.WaveState = function(phase,frequency,amp,offset){
 	this.phase = phase;
 	this.frequency = frequency;

@@ -1,9 +1,9 @@
 /**
- * An extensible builder class for {@link TriangleMesh}es based on 3D surface
+ * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface
  * functions using spherical coordinates. In order to create mesh, you'll need
  * to supply a {@link SurfaceFunction} implementation to the builder.
+ * @member toxi
  */
-
 toxi.SurfaceMeshBuilder = function(func) {
 	this.func = func;
 };

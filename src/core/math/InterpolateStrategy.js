@@ -1,12 +1,14 @@
 
 /**
- * Bezier curve interpolation with configurable coefficients. The curve
+ * @class Bezier curve interpolation with configurable coefficients. The curve
  * parameters need to be normalized offsets relative to the start and end values
  * passed to the {@link #interpolate(float, float, float)} method, but can
  * exceed the normal 0 .. 1.0 interval. Use symmetrical offsets to create a
  * symmetrical curve, e.g. this will create a curve with 2 dips reaching the
  * minimum and maximum values at 25% and 75% of the interval...
+ * @member toxi
  * 
+ * @example
  * <p>
  * <code>BezierInterpolation b=new BezierInterpolation(3,-3);</code>
  * </p>
@@ -38,15 +40,13 @@ toxi.BezierInterpolation.prototype = {
 };
 
 /**
- * Implementation of the circular interpolation function.
+ * @class Implementation of the circular interpolation function.
  * 
  * i = a-(b-a) * (sqrt(1 - (1 - f) * (1 - f) ))
- */
-
-/**
- * The interpolation slope can be flipped to have its steepest ascent
+ * @description The interpolation slope can be flipped to have its steepest ascent
  * towards the end value, rather than at the beginning in the default
  * configuration.
+ * @member toxi
  * 
  * @param isFlipped
  *            true, if slope is inverted
@@ -75,9 +75,9 @@ toxi.CircularInterpolation.prototype = {
 
 
 /**
- * Implementation of the cosine interpolation function:
- * 
+ * @class Implementation of the cosine interpolation function:
  * i = b+(a-b)*(0.5+0.5*cos(f*PI))
+ * @member toxi
  */
 toxi.CosineInterpolation = function(){};
 
@@ -90,10 +90,11 @@ toxi.CosineInterpolation.prototype = {
 
 
 /**
- * Delivers a number of decimated/stepped values for a given interval. E.g. by
+ * @class Delivers a number of decimated/stepped values for a given interval. E.g. by
  * using 5 steps the interpolation factor is decimated to: 0, 20, 40, 60, 80 and
  * 100%. By default {@link LinearInterpolation} is used, however any other
  * {@link InterpolateStrategy} can be specified via the constructor.
+ * @member toxi
  */
 toxi.DecimatedInterpolation = function(steps,strategy) {
  if(steps === undefined){
@@ -111,13 +112,14 @@ toxi.DecimatedInterpolation.prototype = {
 };
 
 /**
- * Exponential curve interpolation with adjustable exponent. Use exp in the
+ * @class Exponential curve interpolation with adjustable exponent. Use exp in the
  * following ranges to achieve these effects:
  * <ul>
  * <li>0.0 &lt; x &lt; 1.0 : ease in (steep changes towards b)</li>
  * <li>1.0 : same as {@link LinearInterpolation}</li>
  * <li>&gt; 1.0 : ease-out (steep changes from a)</li>
  * </ul>
+ * @member toxi
  */
 toxi.ExponentialInterpolation = function(exp) {
    this.exponent = (exp === undefined)?2 : exp;
@@ -130,33 +132,34 @@ toxi.ExponentialInterpolation.prototype = {
 };
 
 /**
- * Implementations of 2D interpolation functions (currently only bilinear).
- */
-
-/**
- * @param x
- *            x coord of point to filter (or Vec2D p)
- * @param y
- *            y coord of point to filter (or Vec2D p1)
- * @param x1
- *            x coord of top-left corner (or Vec2D p2)
- * @param y1
- *            y coord of top-left corner
- * @param x2
- *            x coord of bottom-right corner
- * @param y2
- *            y coord of bottom-right corner
- * @param tl
- *            top-left value
- * @param tr
- *            top-right value (do not use if first 3 are Vec2D)
- * @param bl
- *            bottom-left value (do not use if first 3 are Vec2D)
- * @param br
- *            bottom-right value (do not use if first 3 are Vec2D)
- * @return interpolated value
+ * @class Implementations of 2D interpolation functions (currently only bilinear).
+ * @member toxi
+ * @static
  */
 toxi.Interpolation2D = {};
+/**
+ * @param {Number} x
+ *            x coord of point to filter (or Vec2D p)
+ * @param {Number} y
+ *            y coord of point to filter (or Vec2D p1)
+ * @param {Number} x1
+ *            x coord of top-left corner (or Vec2D p2)
+ * @param {Number} y1
+ *            y coord of top-left corner
+ * @param {Number} x2
+ *            x coord of bottom-right corner
+ * @param {Number} y2
+ *            y coord of bottom-right corner
+ * @param {Number} tl
+ *            top-left value
+ * @param {Number} tr
+ *            top-right value (do not use if first 3 are Vec2D)
+ * @param {Number} bl
+ *            bottom-left value (do not use if first 3 are Vec2D)
+ * @param {Number} br
+ *            bottom-right value (do not use if first 3 are Vec2D)
+ * @return {Number} interpolated value
+ */
 toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
 	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
 	if(_x instanceof Object) //if the first 3 params are passed in as Vec2Ds
@@ -195,11 +198,11 @@ toxi.Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _b
 };
 
 /**
- * Implementation of the linear interpolation function
+ * @class Implementation of the linear interpolation function
  * 
  * i = a + ( b - a ) * f
+ * @member toxi
  */
-
 toxi.LinearInterpolation = function(){};
 
 toxi.LinearInterpolation.prototype = {
@@ -209,7 +212,8 @@ toxi.LinearInterpolation.prototype = {
 };
 
 /**
- * Initializes the s-curve with default sharpness = 2
+ * @class Initializes the s-curve with default sharpness = 2
+ * @member toxi
  */
 toxi.SigmoidInterpolation = function(s) {
 	if(s === undefined){
@@ -236,8 +240,9 @@ toxi.SigmoidInterpolation.prototype = {
 };
 
 /**
- * Defines a single step/threshold function which returns the min value for all
+ * @class Defines a single step/threshold function which returns the min value for all
  * factors &lt; threshold and the max value for all others.
+ * @member toxi
  */
 toxi.ThresholdInterpolation = function(threshold) {
 	this.threshold = threshold;
@@ -251,12 +256,11 @@ toxi.ThresholdInterpolation.prototype = {
     
     
 /**
- * This class provides an adjustable zoom lens to either bundle or dilate values
+ * @class This class provides an adjustable zoom lens to either bundle or dilate values
  * around a focal point within a given interval. For a example use cases, please
  * have a look at the provided ScaleMapDataViz and ZoomLens examples.
+ * @member toxi
  */
-
-
 toxi.ZoomLensInterpolation = function(lensPos, lensStrength) {
 	this.leftImpl = new toxi.CircularInterpolation();
 	this.rightImpl = new toxi.CircularInterpolation();

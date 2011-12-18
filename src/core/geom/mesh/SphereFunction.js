@@ -1,8 +1,8 @@
 /**
- * This implementation of a {@link SurfaceFunction} samples a given
+ * @class This implementation of a {@link SurfaceFunction} samples a given
  * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
+ * @member toxi
  */
-
 toxi.SphereFunction = function(sphere_or_radius) {
 	if(sphere_or_radius === undefined){
 		this.sphere = new toxi.Sphere(new toxi.Vec3D(),1);

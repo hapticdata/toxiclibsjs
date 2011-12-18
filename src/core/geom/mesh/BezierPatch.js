@@ -1,6 +1,7 @@
 /**
-4x4 bezier patch implementation with tesselation support (dynamic resolution)
-for generating triangle mesh representations.
+ * @class 4x4 bezier patch implementation with tesselation support (dynamic resolution)
+ * for generating triangle mesh representations.
+ * @member toxi
  */
 toxi.BezierPatch = function(points){
 	this.points = (points === undefined)?[] : points;

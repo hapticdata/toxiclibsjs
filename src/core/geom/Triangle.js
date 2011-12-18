@@ -1,3 +1,10 @@
+/**
+ * @class
+ * @member toxi
+ * @param {toxi.Vec3D} a
+ * @param {toxi.Vec3D} b
+ * @param {toxi.Vec3D} c
+ */
 toxi.Triangle = function(a,b,c){
 	if(arguments.length == 3){
 		this.a = a;

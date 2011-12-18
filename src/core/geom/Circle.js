@@ -1,9 +1,10 @@
 /**
- * This class overrides {@link Ellipse} to define a 2D circle and provides
+ * @class This class overrides {@link Ellipse} to define a 2D circle and provides
  * several utility methods for it, including factory methods to construct
  * circles from points.
+ * @member toxi
+ * @augments toxi.Ellipse
  */
- 
 toxi.Circle = function(a,b,c) {
 	if(arguments.length == 1){
 		if(a instanceof toxi.Circle){

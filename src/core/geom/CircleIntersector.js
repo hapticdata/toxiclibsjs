@@ -1,3 +1,7 @@
+/**
+ @class CircleIntersector
+ @member toxi
+ */
 toxi.CircleIntersector = function(circle) {
     this.circle = circle;
     this.isec = undefined;

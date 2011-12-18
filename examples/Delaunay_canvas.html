@@ -1,0 +1,158 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Soft Body Square - toxiclibs.js examples</title>
+	<meta name="author" content="Kyle Phillips">
+	<!-- Date: 2011-01-09 -->
+  <script type="text/javascript" src="../build/toxiclibs.js"></script>
+  <script src="../src/_.js"></script>
+  <script src="../src/core/utils/datatypes/FloatRange.js"></script>
+  <script src="../src/core/utils/datatypes/UndirectedGraph.js"></script>
+  <script src="../src/core/utils/datatypes/ArraySet.js"></script>
+  <script src="../src/core/geom/mesh2d/DelaunayVertex.js"></script>
+  <script src="../src/core/geom/mesh2d/DelaunayTriangle.js"></script>
+  <script src="../src/core/geom/mesh2d/DelaunayTriangulation.js"></script>
+  <script src="../src/core/geom/mesh2d/Voronoi.js"></script>
+  <script src="../src/processing/ToxiclibsSupport.js"></script>
+  <script src="js/processing.js"></script>
+
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
+</head>
+<body class="container_12">
+<canvas id="myCanvas" width="800" height="800">
+no canvas support
+</canvas>
+<script>
+
+  
+  var Vec2D = toxi.Vec2D;
+  var testPoints = [
+    new toxi.Vec2D(697.95703,289.80762),
+    new toxi.Vec2D(97.99485,447.40286),
+    new toxi.Vec2D(606.4321,340.3783),
+    new toxi.Vec2D(285.58044,279.95786)
+  ];/*,
+    new toxi.Vec2D(317.81573,136.78961),
+    new toxi.Vec2D(477.54016,544.8813),
+    new toxi.Vec2D(497.46365,226.07718),
+    new toxi.Vec2D(645.47626,563.5718),
+    new toxi.Vec2D(735.4716,239.50758),
+    new toxi.Vec2D(561.1603,480.5694),
+    new toxi.Vec2D(650.021,165.03444),
+  ];*/
+
+console.log(testPoints);
+
+  var canvas = document.getElementById('myCanvas'),
+      ctx = canvas.getContext('2d'),
+      // empty voronoi mesh container
+      voronoi = new toxi.Voronoi(),
+      showPoints = true,
+      showDelaunay = true;
+
+      //ctx.translate(canvas.width/2,canvas.height/2);
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 1;
+
+
+  var drawRegions = function(){
+    var regions = voronoi.getRegions();
+    console.log("regions",regions);
+    regions.forEach(function(poly,i){
+      ctx.beginPath();
+      poly.vertices.forEach(function(vert,i){
+        if(i==0){
+          ctx.moveTo(vert.x,vert.y);
+        } else {
+          ctx.lineTo(vert.x,vert.y);
+        }
+      });
+    });
+    ctx.closePath();
+    ctx.stroke();
+  };
+
+  var drawSites = function(){
+    var sites = voronoi.getSites();
+    sites.forEach(function(vec,i){
+      ctx.fillRect(vec.x,vec.y,2,2);
+    });
+  };
+
+  voronoi.addPoints(testPoints);
+  ctx.strokeStyle = "#000000";
+  ctx.fillStyle = "#ff00ff";
+  drawRegions();
+  drawSites();
+
+    
+
+
+  document.onmousedown = function(e){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    //voronoi.addPoint(testPoints.shift());
+  };
+  
+
+</script>  
+<script>
+
+/*
+void setup() {
+  size(600, 600);
+  smooth();
+  
+  gfx = new toxi.processing.ToxiclibsSupport(this);
+  textFont(createFont("SansSerif", 10));
+}
+
+void draw() {
+  background(255);
+  stroke(0);
+  noFill();
+  // draw all voronoi polygons, clip them if needed...
+  for (toxi.Polygon2D poly : voronoi.getRegions()) {
+    if (doClip) {
+      gfx.polygon2D(clip.clipPolygon(poly));
+    } else {
+      gfx.polygon2D(poly);
+    }
+  }
+
+  // draw delaunay triangulation
+  if (doShowDelaunay) {
+    stroke(0, 0, 255, 50);
+    beginShape(TRIANGLES);
+    for (toxi.Triangle2D t : voronoi.getTriangles()) {
+      gfx.triangle(t, false);
+    }
+    endShape();
+  }
+  // draw original points added to voronoi
+  if (doShowPoints) {
+    fill(255, 0, 255);
+    noStroke();
+    for (toxi.Vec2D c : voronoi.getSites()) {
+      ellipse(c.x, c.y, 5, 5);
+    }
+  }
+  if (doSave) {
+    //saveFrame("voronoi-" + DateUtils.timeStamp() + ".png");
+    doSave = false;
+  }
+  if (doShowHelp) {
+    fill(255, 0, 0);
+    text("p: toggle points", 20, 20);
+    text("t: toggle triangles", 20, 40);
+    text("x: clear all", 20, 60);
+    text("r: add random", 20, 80);
+    text("c: toggle clipping", 20, 100);
+    text("h: toggle help display", 20, 120);
+    text("space: save frame", 20, 140);
+  }*/
+
+
+</script>
+</body>
+</html>
