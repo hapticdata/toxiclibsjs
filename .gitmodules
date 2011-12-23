@@ -1,3 +1,6 @@
 [submodule "tests/lib/qunit"]
 	path = tests/lib/qunit
 	url = https://github.com/jquery/qunit.git
+[submodule "utils/r.js"]
+	path = utils/r.js
+	url = https://github.com/jrburke/r.js.git

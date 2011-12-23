@@ -1,0 +1,17 @@
+{
+	"name" : "toxiclibs",
+	"version" : "0.0.1",
+	"description" : "computational design library",
+	"keywords" : [ "design", "geometry", "mesh", "math", "graphics" ],
+	"main" : "./lib/toxi",
+	"engines" : { "node" : ">=0.4" },
+	"contributors" : [
+		{ "name" : "Kyle Phillips", "email" : "kyle@haptic-data.com" }
+	],
+	"licenses" : [
+		{ "type" : "GNU", "url" : "http://www.gnu.org/licenses/lgpl-2.1.html" }
+	],
+	"repositories" : [
+		{ "type" : "git", "url" : "http://github.com/hapticdata/toxiclibsjs" }
+	]
+}
