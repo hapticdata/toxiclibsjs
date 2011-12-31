@@ -4,3 +4,6 @@
 [submodule "utils/r.js"]
 	path = utils/r.js
 	url = https://github.com/jrburke/r.js.git
+[submodule "tests/lib/requirejs"]
+	path = tests/lib/requirejs
+	url = https://github.com/jrburke/requirejs.git
