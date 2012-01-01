@@ -6,7 +6,7 @@
 	<meta name="author" content="Kyle Phillips">
 	<link rel="stylesheet" href="css/style.css" type="text/css">
 	<!-- Date: 2011-01-09 -->
-	<script type="text/javascript" src="../build/uncompressed/toxiclibs-debug.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 </head>
 <body class="container_12">
@@ -38,10 +38,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-import processing.opengl.*;
-import toxi.math.waves.*;
 
-toxi.AbstractWave waveX,waveY;
+ var  AbstractWave = toxi.math.waves.AbstractWave,
+      SineWave = toxi.math.waves.SineWave,
+      FMTriangleWave = toxi.math.waves.FMTriangleWave,
+      FMSawtoothWave = toxi.math.waves.FMSawtoothWave,
+      FMSquareWave = toxi.math.waves.FMSquareWave,
+      FMHarmonicSquareWave = toxi.math.waves.FMHarmonicSquareWave,
+      FMSineWave = toxi.math.waves.FMSineWave,
+      AMFMSineWave = toxi.math.waves.AMFMSineWave,
+      ConstantWave = toxi.math.waves.ConstantWave;
+
+
+console.log("FMHarmonicSquareWave",FMHarmonicSquareWave);
+ 
+//the below sketch will work in Processing as well
+     
+import toxi.math.waves.*;
+import processing.opengl.*;
+
+AbstractWave waveX,waveY;
 
 int STEP = 25;
 int DIM = 800;
@@ -99,32 +115,34 @@ void mousePressed() {
   waveY=createRandomWave();
 }
 
-toxi.AbstractWave createRandomWave() {
-  toxi.AbstractWave w=null;
-  toxi.AbstractWave fmod=new toxi.SineWave(0, random(0.005, 0.02), random(0.1, 0.5), 0);
+AbstractWave createRandomWave() {
+  AbstractWave w=null;
+  AbstractWave fmod = new SineWave(0, random(0.005, 0.02), random(0.1, 0.5), 0);
   float freq=random(0.005, 0.05);
-  switch((int)random(7)) {
+  var r =(int)random(7);
+  console.log(r);
+  switch(r) {
   case 0:
-    w = new toxi.FMTriangleWave(0, freq, 1, 0, fmod);
+    w = new FMTriangleWave(0, freq, 1, 0, fmod);
     break;
   case 1:
-    w = new toxi.FMSawtoothWave(0, freq, 1, 0, fmod);
+    w = new FMSawtoothWave(0, freq, 1, 0, fmod);
     break;
   case 2:
-    w = new toxi.FMSquareWave(0, freq, 1, 0, fmod);
+    w = new FMSquareWave(0, freq, 1, 0, fmod);
     break;
   case 3:
-    w = new toxi.FMHarmonicSquareWave(0, freq, 1, 0, fmod);
-    ((toxi.FMHarmonicSquareWave)w).maxHarmonics=(int)random(3,30);
+    w = new FMHarmonicSquareWave(0, freq, 1, 0, fmod);
+    ((FMHarmonicSquareWave)w).maxHarmonics=(int)random(3,30);
     break;
   case 4:
-    w = new toxi.FMSineWave(0, freq, 1, 0, fmod);
+    w = new FMSineWave(0, freq, 1, 0, fmod);
     break;
   case 5:
-    w = new toxi.AMFMSineWave(0, freq, 0, fmod, new toxi.SineWave(0, random(0.01,0.2), random(2, 3), 0));
+    w = new AMFMSineWave(0, freq, 0, fmod, new SineWave(0, random(0.01,0.2), random(2, 3), 0));
     break;
   case 6:
-    w = new toxi.ConstantWave(random(-1,1));
+    w = new ConstantWave(random(-1,1));
     break;
   }
   return w;

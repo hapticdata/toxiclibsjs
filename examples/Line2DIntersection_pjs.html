@@ -36,6 +36,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+
+var Vec2D = toxi.geom.Vec2D,
+    Line2D = toxi.geom.Line2D;
  
 void setup() {
   size(700,382);
@@ -46,11 +49,11 @@ void setup() {
  
 void draw() {
   background(240);
-  toxi.Line2D l=new toxi.Line2D(new toxi.Vec2D(250,50), new toxi.Vec2D(450,350));
-  toxi.Line2D m=new toxi.Line2D(new toxi.Vec2D(450,200), new toxi.Vec2D(mouseX,mouseY));
-  toxi.Line2D.LineIntersection isec=l.intersectLine(m);
-  if (isec.getType()==toxi.Line2D.LineIntersection.Type.INTERSECTING) {
-    toxi.Vec2D pos=isec.getPos();
+  Line2D l=new Line2D(new Vec2D(250,50), new Vec2D(450,350));
+  Line2D m=new Line2D(new Vec2D(450,200), new Vec2D(mouseX,mouseY));
+  Line2D.LineIntersection isec=l.intersectLine(m);
+  if (isec.getType()== Line2D.LineIntersection.Type.INTERSECTING) {
+    Vec2D pos=isec.getPos();
     stroke(255,0,192);
     fill(255,0,192);
     ellipse(pos.x,pos.y,5,5);

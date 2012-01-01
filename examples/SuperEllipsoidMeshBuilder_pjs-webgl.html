@@ -7,7 +7,6 @@
 	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
 	<script type="text/javascript" src="../build/toxiclibs.js"></script>
-  <script type="text/javascript" src="../src/processing/ToxiclibsSupport.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 </head>
 <body class="container_12">
@@ -38,10 +37,18 @@
  */
 
 
-toxi.TriangleMesh mesh = new toxi.TriangleMesh();
+var TriangleMesh = toxi.geom.mesh.TriangleMesh,
+    ToxiclibsSupport = toxi.processing.ToxiclibsSupport,
+    SurfaceMeshBuilder = toxi.geom.mesh.SurfaceMeshBuilder,
+    SuperEllipsoid = toxi.geom.mesh.SuperEllipsoid,
+    SineWave = toxi.math.waves.SineWave,
+    Vec3D = toxi.geom.Vec3D;
 
-toxi.AbstractWave modX, modY;
-toxi.processing.ToxiclibsSupport gfx;
+
+TriangleMesh mesh = new TriangleMesh();
+
+AbstractWave modX, modY;
+ToxiclibsSupport gfx;
 
 boolean isWireFrame;
 boolean showNormals;
@@ -49,19 +56,24 @@ boolean showNormals;
 
 void setup() {
   size(800,480, OPENGL);
-  gfx = new toxi.processing.ToxiclibsSupport(this);
+  gfx = new ToxiclibsSupport(this);
   isWireFrame = true;
-  modX = new toxi.SineWave(0, 0.01f, 2.5f, 2.5f);
-  modY = new toxi.SineWave(PI, 0.017f, 2.5f, 2.5f);
+  modX = new SineWave(0, 0.01f, 2.5f, 2.5f);
+  modY = new SineWave(PI, 0.017f, 2.5f, 2.5f);
 }
 
 void draw() {
-  toxi.SurfaceFunction functor=new toxi.SuperEllipsoid(modX.update(), modY.update());
-  toxi.SurfaceMeshBuilder b = new toxi.SurfaceMeshBuilder(functor);
-  mesh = (toxi.TriangleMesh)b.createMesh(undefined,20, 80);
+  SurfaceFunction functor=new SuperEllipsoid(modX.update(), modY.update());
+  console.log("1");
+  SurfaceMeshBuilder b = new SurfaceMeshBuilder(functor);
+  console.log("2");
+  mesh = (TriangleMesh)b.createMesh(undefined,20, 80);
+  console.log("3");
   mesh.computeVertexNormals();
   background(0);
   lights();
+
+  console.log("look wht i can do");
 
   translate(width / 2, height / 2, 0);
   rotateX(mouseY * 0.01f);
@@ -70,7 +82,7 @@ void draw() {
   
   //origin implementation
   
-  toxi.Vec3D o = new toxi.Vec3D();
+  Vec3D o = new Vec3D();
   float len = 300;
   float x = o.x;
   float y = o.y;

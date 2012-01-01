@@ -28,6 +28,8 @@
   </div>
 <script type="text/javascript">
 
+var simplexNoise = toxi.math.noise.simplexNoise;
+
 $("#dimensions").change(function(e){
     NOISE_DIMENSIONS = Number($(this).find(":selected").val());
 });
@@ -61,16 +63,16 @@ var draw = function() {
       switch(NOISE_DIMENSIONS) {
       case 1:
       default:
-        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, 0); 
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, 0); 
         break;
       case 2:
-        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset); 
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset); 
         break;
       case 3: 
-        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset , frameCount * 0.01); 
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset , frameCount * 0.01); 
         break;
       case 4: 
-        noiseVal = toxi.SimplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset, 0 , frameCount * 0.01); 
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset, 0 , frameCount * 0.01); 
         break;
       }
 

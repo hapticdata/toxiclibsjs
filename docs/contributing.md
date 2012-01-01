@@ -9,3 +9,4 @@ Contributions to toxiclibsjs are appreciated, users who would like to contribute
 * Extend classes using the [internals module](http://github.com/hapticdata/toxiclibsjs/lib/internals.js)
 * Do not use methods such as \__defineGetter__\, or other methods that were not supported by older browsers. [forEach](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach) can be used through the [internals module](http://github.com/hapticdata/toxiclibsjs/lib/internals.js) if desired.
 * Do not write code that is tied to a specific environment, if possible *(i.e. dont use 'window' or 'document' variables as those will not be available in a Node.js environment)*
+* Protected variables should begin with a single underscore *_myVar*, private variables should begin with two underscores *__myVar*. If the variable is private or protected but has a getter and setter, the variable should be public.

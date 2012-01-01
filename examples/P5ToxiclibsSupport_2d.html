@@ -47,6 +47,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+
+var Vec2D = toxi.geom.Vec2D,
+    ToxiclibsSupport = toxi.processing.ToxiclibsSupport,
+    Ellipse = toxi.geom.Ellipse,
+    Circle = toxi.geom.Circle,
+    Polygon2D = toxi.geom.Polygon2D,
+    Rect = toxi.geom.Rect,
+    Triangle2D = toxi.geom.Triangle2D,
+    Line2D = toxi.geom.Line2D;
+
 import toxi.geom.*;
 
 
@@ -62,27 +72,27 @@ Triangle2D tri;
 void setup() {
   size(640,560,OPENGL);
   
-  Vec2D center = new toxi.Vec2D(width/2,height/2);
+  Vec2D center = new Vec2D(width/2,height/2);
   frameRate(15);
-  gfx = new toxi.processing.ToxiclibsSupport(this);
-  circ = new toxi.Circle(center,100);
-  ellipse = new toxi.Ellipse(center,new toxi.Vec2D(100,50));
-  line = new toxi.Line2D(toxi.Vec2D.randomVector().scaleSelf(width),toxi.Vec2D.randomVector().scaleSelf(height));
-  lineStrip2d = new toxi.Vec2D[25];
+  gfx = new ToxiclibsSupport(this);
+  circ = new Circle(center,100);
+  ellipse = new Ellipse(center,new Vec2D(100,50));
+  line = new Line2D(Vec2D.randomVector().scaleSelf(width),Vec2D.randomVector().scaleSelf(height));
+  lineStrip2d = new Vec2D[25];
   for(int i =0;i<25;i++){
-  	lineStrip2d[i] = toxi.Vec2D.randomVector().scaleSelf(width,height);
+  	lineStrip2d[i] = Vec2D.randomVector().scaleSelf(width,height);
   }
   
   Vec2D[] vertices = new Vec2D[8];
   float angleStep = (TWO_PI/8);
   float rad = 75;
   for(int j=0;j<8;j++){
-  	vertices[j] = new toxi.Vec2D(cos(angleStep*j)*rad,sin(angleStep*j)*rad).addSelf(center);
+  	vertices[j] = new Vec2D(cos(angleStep*j)*rad,sin(angleStep*j)*rad).addSelf(center);
   }
-  poly = new toxi.Polygon2D(vertices);
-  toxiRect = new toxi.Rect(width/2,height/2,100,100);
+  poly = new Polygon2D(vertices);
+  toxiRect = new Rect(width/2,height/2,100,100);
   
-  tri = new toxi.Triangle2D(new toxi.Vec2D(-100,-100).addSelf(center), new toxi.Vec2D(0,0).addSelf(center), new toxi.Vec2D(100,-100).addSelf(center));
+  tri = new Triangle2D(new Vec2D(-100,-100).addSelf(center), new Vec2D(0,0).addSelf(center), new Vec2D(100,-100).addSelf(center));
 }
 
 void draw() {

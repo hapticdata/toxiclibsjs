@@ -43,6 +43,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+var Vec2D = toxi.geom.Vec2D;
 
 float theta=0;
 float innerRadius=150;
@@ -60,7 +61,7 @@ void draw() {
   // in the polar space the vector components are interpreted as:
   // x = radius
   // y = angle
-  toxi.Vec2D mousePos=new toxi.Vec2D(mouseX,mouseY).sub(width/2,height/2).toPolar();
+  Vec2D mousePos=new Vec2D(mouseX,mouseY).sub(width/2,height/2).toPolar();
   // ensure we always interpolate the angle over the smaller difference
   if (abs(theta-mousePos.y)>PI) {
     if (theta>mousePos.y) {
@@ -77,7 +78,7 @@ void draw() {
   // create the arc as tri strip
   noStroke();
   beginShape(TRIANGLE_STRIP);
-  toxi.Vec2D p=new toxi.Vec2D();
+  Vec2D p=new Vec2D();
   for(float i=0,t=theta-PI*0.25; i<numSteps; i++) {
     // convert theta back into cartesian coordinate space
     // the radius of 1 means the resulting vector will be normalized
@@ -92,7 +93,7 @@ void draw() {
   mousePos.toCartesian();
   stroke(255,0,0);
   line(0,0,mousePos.x,mousePos.y);
-  toxi.Vec2D arcPos=new toxi.Vec2D(innerRadius,theta).toCartesian();
+  Vec2D arcPos=new Vec2D(innerRadius,theta).toCartesian();
   stroke(0,0,255);
   line(0,0,arcPos.x,arcPos.y);
 }

@@ -6,8 +6,6 @@
 	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
 	<script type="text/javascript" src="../build/toxiclibs.js"></script>
-	<script src="../src/core/geom/Ellipse.js"></script>
-	<script src="../src/core/geom/Circle.js"></script>
 	<script type="text/javascript" src="js/processing.js"></script>
 </head>
 <body class="container_12">
@@ -17,8 +15,13 @@
 		</hgroup>
 	</header>
 <script type="text/processing" data-processing-target="myCanvas">
-AbstractWave wave1=new toxi.SineWave(0,0.02,100,200);
-AbstractWave wave2=new toxi.SineWave(0,0.023,100,200);
+
+var SineWave = toxi.math.waves.SineWave,
+	Vec2D = toxi.geom.Vec2D,
+	Circle = toxi.geom.Circle;
+
+AbstractWave wave1=new SineWave(0,0.02,100,200);
+AbstractWave wave2=new SineWave(0,0.023,100,200);
 
 void setup() {
   size(940, 382);
@@ -30,10 +33,10 @@ void setup() {
 
 void draw() {
   background(#cceeff);
-  toxi.Vec2D p1 = new toxi.Vec2D(200, wave1.update());
-  toxi.Vec2D p2 = new toxi.Vec2D(400, wave2.update());
-  toxi.Vec2D p3 = new toxi.Vec2D(mouseX, mouseY);
- toxi.Circle circle = toxi.Circle.from3Points(p1, p2, p3);
+  Vec2D p1 = new Vec2D(200, wave1.update());
+  Vec2D p2 = new Vec2D(400, wave2.update());
+  Vec2D p3 = new Vec2D(mouseX, mouseY);
+ Circle circle = Circle.from3Points(p1, p2, p3);
   if (circle != undefined) {
   	ellipse(circle.x,circle.y,circle.getRadius(),circle.getRadius());
   	ellipse(p1.x,p1.y,3,3);

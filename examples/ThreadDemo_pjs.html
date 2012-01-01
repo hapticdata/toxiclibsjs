@@ -42,6 +42,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+
+ var  VerletPhysics2D = toxi.physics2d.VerletPhysics2D,
+      VerletParticle2D = toxi.physics2d.VerletParticle2D,
+      Vec2D = toxi.geom.Vec2D,
+      ParticleString2D = toxi.physics2d.ParticleString2D;
+
 import processing.opengl.*;
 
 import toxi.physics2d.constraints.*;
@@ -61,9 +67,9 @@ boolean isTailLocked;
 void setup() {
   size(960,720);
   smooth();
-  physics=new toxi.physics2d.VerletPhysics2D();
-  Vec2D stepDir=new toxi.Vec2D(1,1).normalizeTo(REST_LENGTH);
-  ParticleString2D s=new toxi.physics2d.ParticleString2D(physics, new toxi.Vec2D(), stepDir, NUM_PARTICLES, 1, 0.1);
+  physics=new VerletPhysics2D();
+  Vec2D stepDir=new Vec2D(1,1).normalizeTo(REST_LENGTH);
+  ParticleString2D s=new ParticleString2D(physics, new Vec2D(), stepDir, NUM_PARTICLES, 1, 0.1);
   head=s.getHead();
   head.lock();
   tail=s.getTail();

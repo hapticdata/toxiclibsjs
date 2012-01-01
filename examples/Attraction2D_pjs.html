@@ -49,7 +49,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
- 
+
+ var  VerletPhysics2D = toxi.physics2d.VerletPhysics2D,
+      VerletParticle2D = toxi.physics2d.VerletParticle2D,
+      AttractionBehavior = toxi.physics2d.behaviors.AttractionBehavior,
+      GravityBehavior = toxi.physics2d.behaviors.GravityBehavior,
+      Vec2D = toxi.geom.Vec2D,
+      Rect = toxi.geom.Rect;
+
+
+
 import toxi.geom.*;
 import toxi.physics2d.*;
 import toxi.physics2d.behaviors.*;
@@ -64,19 +73,19 @@ Vec2D mousePos;
 void setup() {
   size(680, 382);
   // setup physics with 10% drag
-  physics = new toxi.physics2d.VerletPhysics2D();
+  physics = new VerletPhysics2D();
   physics.setDrag(0.05);
-  physics.setWorldBounds(new toxi.Rect(0, 0, width, height));
+  physics.setWorldBounds(new Rect(0, 0, width, height));
   // the NEW way to add gravity to the simulation, using behaviors
-  physics.addBehavior(new toxi.physics2d.GravityBehavior(new toxi.Vec2D(0, 0.15)));
+  physics.addBehavior(new GravityBehavior(new Vec2D(0, 0.15)));
 }
 
 void addParticle() {
- Vec2D randLoc = toxi.Vec2D.randomVector().scale(5).addSelf(width / 2, 0);
-  VerletParticle2D p = new toxi.physics2d.VerletParticle2D(randLoc);
+ Vec2D randLoc = Vec2D.randomVector().scale(5).addSelf(width / 2, 0);
+  VerletParticle2D p = new VerletParticle2D(randLoc);
   physics.addParticle(p);
   // add a negative attraction force field around the new particle
-  physics.addBehavior(new toxi.physics2d.AttractionBehavior(p, 20, -1.2, 0.01));
+  physics.addBehavior(new AttractionBehavior(p, 20, -1.2, 0.01));
 }
 
 void draw() {
@@ -97,9 +106,9 @@ void draw() {
 
 void mousePressed() {
   addParticle();
-  mousePos = new toxi.Vec2D(mouseX, mouseY);
+  mousePos = new Vec2D(mouseX, mouseY);
   // create a new positive attraction force field around the mouse position (radius=250px)
-  mouseAttractor = new toxi.physics2d.AttractionBehavior(mousePos, 250, 0.9);
+  mouseAttractor = new AttractionBehavior(mousePos, 250, 0.9);
   physics.addBehavior(mouseAttractor);
 }
 

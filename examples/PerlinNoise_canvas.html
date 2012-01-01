@@ -35,7 +35,7 @@
   
   var canvas = document.getElementById('myCanvas'),
       ctx = canvas.getContext('2d'),
-      perlin = new toxi.PerlinNoise(),
+      perlin = new toxi.math.noise.PerlinNoise(),
       offset = 0,
       options = {
         numStreams: 500,
@@ -55,7 +55,7 @@
   gui.add(options,'scaler',0.01,0.25,0.01).name("Scalar");
 
   var getRandomVector = function(){
-    var vec = new toxi.Vec2D(Math.random()*canvas.width,Math.random()*canvas.height);
+    var vec = new toxi.geom.Vec2D(Math.random()*canvas.width,Math.random()*canvas.height);
     //since javascript is a loose-typed language, im just gonna through a color property on there
     vec.color = toxi.color.TColor.newRandom();
     return vec;
@@ -81,14 +81,14 @@
     ctx.fillStyle = "rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     var replaceIndices = [];
-    var lastPos = new toxi.Vec2D();
+    var lastPos = new toxi.geom.Vec2D();
     streams.forEach(function(stream,i){
       window._col = stream.color;
       ctx.strokeStyle = "rgba("+parseInt(stream.color.red()*255,10)+","+parseInt(stream.color.green()*255,10)+","+parseInt(stream.color.blue()*255,10)+",1.0)";
       lastPos.set(stream);
       var noise = perlin.noise(stream.x * options.scaler,offset + stream.y*options.scaler) - 0.5;
       var angle = options.strength * noise;
-      var dir = toxi.Vec2D.fromTheta(angle);
+      var dir = toxi.geom.Vec2D.fromTheta(angle);
       
       stream.addSelf(dir.normalizeTo(options.step * 3));
       ctx.beginPath();
