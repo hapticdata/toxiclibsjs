@@ -282,7 +282,7 @@ var requirejs, require, define;
 define("almond", function(){});
 
 define.unordered = true;
-define("pre", function(){});
+define("almondSettings", function(){});
 
 define('toxi/math/mathUtils',["require", "exports", "module"], function(require, exports, module) {
 /**
@@ -957,76 +957,6 @@ module.exports = VertexSelector;
   
 });
 
-define('toxi/math/Interpolation2D',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Implementations of 2D interpolation functions (currently only bilinear).
- * @member toxi
- * @static
- */
-var Interpolation2D = {};
-/**
- * @param {Number} x
- *            x coord of point to filter (or Vec2D p)
- * @param {Number} y
- *            y coord of point to filter (or Vec2D p1)
- * @param {Number} x1
- *            x coord of top-left corner (or Vec2D p2)
- * @param {Number} y1
- *            y coord of top-left corner
- * @param {Number} x2
- *            x coord of bottom-right corner
- * @param {Number} y2
- *            y coord of bottom-right corner
- * @param {Number} tl
- *            top-left value
- * @param {Number} tr
- *            top-right value (do not use if first 3 are Vec2D)
- * @param {Number} bl
- *            bottom-left value (do not use if first 3 are Vec2D)
- * @param {Number} br
- *            bottom-right value (do not use if first 3 are Vec2D)
- * @return {Number} interpolated value
- */
-Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
-	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if(_x instanceof Object) //if the first 3 params are passed in as Vec2Ds
-	{
-		x = _x.x;
-		y = _x.y;
-		
-		x1 = _y.x;
-		y1 = _y.y;
-		
-		x2 = _x1.x;
-		y2 = _x1.y;
-		
-		tl = _y1;
-		tr = _x2;
-		bl = _y2;
-		br = _tl;
-	} else {
-		x = _x;
-		y = _y;
-		x1 = _x1;
-		y1 = _y1;
-		x2 = _x2;
-		y2 = _y2;
-		tl = _tl;
-		tr = _tr;
-		bl = _bl;
-		br = _br;
-	}
-    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
-    var dx1 = (x - x1) * denom;
-    var dx2 = (x2 - x) * denom;
-    var dy1 = y - y1;
-    var dy2 = y2 - y;
-    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
-};
-
-module.exports = Interpolation2D;
-});
-
 define('toxi/internals',["require", "exports", "module"], function(require, exports, module) {
 /**
  * @module toxi/libUtils
@@ -1240,507 +1170,6 @@ PlaneSelector.prototype.selectVertices = function() {
 module.exports = PlaneSelector;
 });
 
-define('toxi/utils/datatypes/ArraySet',["require", "exports", "module", "../../internals"], function(require, exports, module) {
-
-var internals = require('../../internals');
-
-/**
- * ArraySet
- * toxi/core/utils/datatypes/ArraySet
- * implements relevant portions of the java version as well as those from java's AbstractSet
- */
-
-/**
- * @class
- * @member toxi
- */
-var ArraySet = function(collection){
- 	Array.apply(this);
- 	if(arguments.length >= 1){
- 		for(var i=0,len = collection.length;i<len;i++){
- 			var item = collection[i];
- 			if(this.indexOf(item) < 0){
- 				this.push(item);
- 			}
- 		}
- 	}
- };
-
- internals.extend(ArraySet,Array);
-
-
- internals.mixin(ArraySet.prototype,{
- 	add: function(item){
- 		if(this.contains(item)){
- 			return false;
- 		}
- 		this.push(item);
- 		return true;
- 	},
- 	addAll: function(collection){
- 		var self = this;
- 		for(var i=0,len = collection.length;i<len;i++){
- 			this.push(collection[i]);
- 		}
-
- 	},
- 	clear: function(){
- 		this.retainAll([]);	
- 	},
- 	clone: function(){
- 		return new ArraySet(this);
- 	},
- 	contains: function(item){
- 		return this.indexOf(item) >= 0;
- 	},
- 	containsAll: function(collection){
- 		for(var i=0,len=collection.length;i<len;i++){
- 			var val = collection[i];
- 			if(!this.contains(val)){
- 				return false;
- 			}
- 		}
- 		return true;
- 	},
- 	containsAny: function(collection){
- 		for(var i=0,len = collection.length;i<len;i++){
- 			if(this.contains(collection[i])){
- 				return true;
- 			}
- 		}
- 		return false;
- 	},
- 	equals: function(object){
- 		return this === object;	
- 	},
- 	get: function(index){
- 		return this[index];
- 	},
- 	iterator: function(){
- 		return new internals.Iterator(this);
- 	},
- 	isEmpty: function(){
- 		return this.length < 1;	
- 	},
- 	remove: function(o){
- 		var i = this.indexOf(o);
- 		if(i >= 0){
-	 		this.splice(i,1);
-	 		return true;
-		}
-		return false;
- 	},
- 	removeAll: function(){
- 		this.retainAll([]);
- 	},
- 	retainAll: function(collection){
- 		var self = this,
- 			changed = false;
-
- 		for(var i=0;i<this.length;i++){
- 			var val = this[i];
- 			if(collection.indexOf(val) < 0){
- 				this.splice(i,1);
- 				changed = true;
- 				i--;
- 			}
- 		}
- 		return changed;
- 	},
- 	size: function(){
- 		return this.length;
- 	},
- 	toArray: function(arr){
- 		arr = arr || [];
- 		for(var i=0;i<this.length;i++){
- 			if(this.hasOwnProperty())
- 			arr[i] = this[i];
- 		}
- 		return arr;
- 	}
-});
-
-module.exports = ArraySet;
-});
-
-define('toxi/geom/mesh2d/DelaunayTriangle',["require", "exports", "module", "../../internals","../../utils/datatypes/ArraySet"], function(require, exports, module) {
-
-var internals = require('../../internals'),
-	ArraySet = require('../../utils/datatypes/ArraySet');
-
-//statics
-var __idGenerator = 0,
-	moreInfo = false;
-
-
-var DelaunayTriangle = function(collection){
-	if(arguments.length > 1){
-		Array.prototype.push.apply(this,arguments);
-	} else if(arguments.length == 1){
-		Array.prototype.push.apply(this,collection);
-	}
-	this.__circumcenter = undefined;
-	this.__idNumber = __idGenerator++;
-	if(this.length != 3){
-		throw new Error("DelaunayTriangle must have 3 vertices");
-	}
-};
-
-internals.extend(DelaunayTriangle,ArraySet);
-
-
-
-internals.mixin(DelaunayTriangle.prototype,{
-	facetOpposite: function(vertex){
-		var facet = this.slice(0);
-		var i = facet.indexOf(vertex);
-		if( i < 0 ){
-			throw new Error("Vertex not in triangle");
-		}
-		facet.splice(i,1);
-		return facet;
-	},
-	getCircumcenter: function(){
-		if(this.__circumcenter === undefined){
-			this.__circumcenter = DelaunayVertex.circumcenter(this);
-		}
-		return this.__circumcenter;
-	},
-	getVertexButNot: function(badVertices){
-		if(arguments.length == 1 && internals.isArray(badVertices)){
-			return this.getVertexButNot.apply(this,badVertices);
-		}
-		badVertices = [];
-		for(var i=0,len = arguments.length;i<len;i++){
-			badVertices.push(arguments[i]);
-		}
-		for(var i=0,len=this.length;i<len;i++){
-			if(badVertices.indexOf(this[i]) < 0){
-				return this[i];
-			}
-		}
-		throw new Error("No vertex found");
-		return undefined;
-	},
-	isNeighbor: function(triangle){
-		var	count = 0,
-			vertex;
-		for(var i = 0,len = this.length; i < len; i++){
-			vertex = this[i];
-			if(triangle.indexOf(vertex) < 0){
-				count++;
-			}
-		}
-		return count == 1;
-	},
-	iterator: function(){
-		return new internals.Iterator(this);
-	},
-	toString: function(){
-		if(!moreInfo){
-			return "DelaunayTriangle" + this.__idNumber;
-		}
-		return "DelaunayTriangle" + this.__idNumber + Array.prototype.toString.apply(this,[]);
-	}
-});
-
-module.exports = DelaunayTriangle;
-});
-
-define('toxi/utils/datatypes/UndirectedGraph',["require", "exports", "module", "./ArraySet"], function(require, exports, module) {
-
-var ArraySet = require('./ArraySet');
-
-
-//wrap connections in this before passing them out
-//this way the rest of the lib can treat it like a Java Collection
-/*var __NodeCollection = function(nodes){
-	var self = this;
-	for(var i=0,len = nodes.length;i<len;i++){
-		this[i] = nodes[i];
-	}
-};
-__NodeCollection.prototype = {
-	contains: function(el){
-		return this[el] !== undefined;
-	},
-	size: function(){
-		var i = 0;
-		for(var prop in this){
-			if(this.hasOwnProperty(prop)){
-				i++;
-			}
-		}
-		return i;
-	}
-};*/
-
-
-/**
- * @exports UndirectedGraph as toxi.UndirectedGraph
- */
-var UndirectedGraph = function(){
-	this._nodeLinks = {};
-	this._nodeIDs = [];
-};
-
-
-UndirectedGraph.prototype = {
-	add: function(node){
-		if(this._nodeLinks[node] !== undefined){
-			return;
-		}
-		this._nodeLinks[node] = new ArraySet();
-		this._nodeIDs.push(node);
-	},
-	connect: function(nodeA,nodeB){
-		if(this._nodeLinks[nodeA] === undefined){
-			throw new Error("nodeA has not been added");
-		}
-		if(this._nodeLinks[nodeB] === undefined){
-			throw new Error("nodeB has not been added");
-		}
-		this._nodeLinks[nodeA].push(nodeB);
-		this._nodeLinks[nodeB].push(nodeA);
-	},
-	disconnect: function(nodeA,nodeB){
-		if(this._nodeLinks[nodeA] === undefined){
-			throw new Error("nodeA has not been added");
-		}
-		if(this._nodeLinks[nodeB] === undefined){
-			throw new Error("nodeB has not been added");
-		}
-		this._nodeLinks[nodeA].splice(this._nodeLinks[nodeA].indexOf(nodeB),1);
-		this._nodeLinks[nodeB].splice(this._nodeLinks[nodeB].indexOf(nodeA),1);
-	},
-	getConnectedNodesFor: function(node){
-		if(this._nodeLinks[node] === undefined){
-			throw new Error("node has not been added");
-		}
-		return this._nodeLinks[node];
-	},
-	getNodes: function(){
-		return this._nodeIDs;
-	},
-	remove: function(node){
-		var connections = this._nodeLinks[node];
-		if(connections === undefined){
-			return;
-		}
-
-		for(var i = 0,len = connections.length;i<len;i++){
-			var neighbor = connections[i];
-			var	nodeI = neighbor.indexOf(node);
-			neighbor.splice(nodeI,1);
-		}
-		delete this._nodeLinks[node];
-		var i = this._nodeIDs.indexOf(node);
-		this._nodeIDs.splice(node,1);
-	}
-};
-
-module.exports = UndirectedGraph;
-});
-
-define('toxi/geom/mesh2d/DelaunayTriangulation',["require", "exports", "module", "../../internals","../../utils/datatypes/ArraySet","../../utils/datatypes/UndirectedGraph"], function(require, exports, module) {
-
-var internals = require('../../internals'),
-	ArraySet = require('../../utils/datatypes/ArraySet'),
-	UndirectedGraph = require('../../utils/datatypes/UndirectedGraph');
-
-var DelaunayTriangulation = function(triangle){
-	this.__triGraph = new UndirectedGraph();
-	this.__triGraph.add(triangle);
-	this.__mostRecent = triangle;
-};
-
-internals.extend(DelaunayTriangulation,ArraySet);
-
-internals.mixin(DelaunayTriangulation.prototype,{
-	contains: function(triangle){
-		return this.__triGraph.getNodes().indexOf(triangle) >= 0;
-	},
-	delaunayPlace: function(site){
-		// Uses straightforward scheme rather than best asymptotic time
-        // Locate containing trianglevar triangle = this.locate(site);
-		var triangle = this.locate(site);
-		// Give up if no containing triangle or if site is already in DT
-		if(triangle === undefined){
-			throw new Error("No containing triangle");
-		}
-		if(triangle.contains(site)) {
-			return;
-		}
-		var cavity = this.__getCavity(site,triangle);
-		this.__mostRecent = this.__update(site,cavity);
-	},
-	__getCavity: function(site,triangle){
-		var	encroached = [],
-			toBeChecked = [],
-			marked = [];
-		
-		toBeChecked.push(triangle);
-		marked.push(triangle);
-		while(toBeChecked.length > 0){
-			triangle = toBeChecked.shift();
-			if(site.vsCircumcircle(triangle) == 1){
-				continue;
-			}
-			encroached.push(triangle);
-			var nodes = this.__triGraph.getConnectedNodesFor(triangle),
-				i = 0,
-				len = nodes.size(),
-				neighbor;
-			for(i = 0; i < len; i++){
-				neighbor = nodes[i];
-				if(marked.indexOf(neighbor) >= 0){
-					continue;
-				}
-				marked.push(neighbor);
-				toBeChecked.push(neighbor);
-			}
-		}
-		return encroached;
-	},
-	iterator: function(){
-		return new internals.Iterator(this.__triGraph.getNodes());
-	},
-	locate: function(point){
-		var triangle = this.__mostRecent;
-		if(!this.contains(triangle)){
-			triangle = undefined;
-		}
-		// Try a directed walk (this works fine in 2D, but can fail in 3D)
-		var visited = new ArraySet();
-		while(triangle !== undefined){
-			if(visited.contains(triangle)){
-				throw new Error("Caught in a locate loop");
-			}
-			visited.add(triangle);
-			//Corner opposite point
-			var corner = point.isOutside(triangle);
-			if(corner === undefined){
-				return triangle;
-			}
-			triangle = this.neighborOpposite(corner, triangle);
-		}
-		// No luck, try brute force
-		console.warn("Warning: Checking all triangles for " +point);
-		for(var i =0,len = this.length;i<len;i++){
-			var tri = this[i];
-			if(point.isOutside(tri) === undefined){
-				return tri;
-			}
-		}
-		// No such triangle
-		return undefined;
-	},
-	neighborOpposite: function(site, triangle){
-		if(triangle.indexOf(site) < 0){
-			console.warn("Bad vertex; not in triangle");
-		}
-		var nodes = this.__triGraph.getConnectedNodesFor(triangle),
-			i = 0,
-			len = nodes.length,
-			neighbor;
-
-		for(i = 0; i < len; i++){
-			neighbor = nodes[i];
-			if(neighbor.indexOf(site) < 0){
-				return neighbor;
-			}
-		}
-		return undefined;
-	},
-	neighbors: function(triangle){
-		return this.__triGraph.getConnectedNodesFor(triangle);
-	},
-	//override ArraySet
-	size: function(){
-		return this.__triGraph.getNodes().length;
-	},
-	surroundingTriangles: function(site, triangle){
-		if(!triangle.contains(site)){
-			console.warn("Site not in triangle");
-		}
-
-		var list = [],
-			start = triangle,
-			guide = triangle.getVertexButNot(site),
-			previous;
-		
-		while(true){
-			list.push(triangle);
-			previous = triangle;
-			triangle = this.neighborOpposite(guide, triangle); //Next triangle
-			guide = previous.getVertexButNot(site, guide); //Update guide
-			if(triangle == start){
-				return list;
-			}
-		}
-		return list;
-	},
-	toString: function(){
-		return "DelaunayTriangulation with "+ this.length + " triangles";
-	},
-	__update: function(site, cavity){
-		var self = this,
-			boundary = new ArraySet(),
-			theTriangles = new ArraySet(),
-			triangle;
-		// Find boundary facets and adjacent triangles
-		for(var c=0,clen = cavity.length;c<clen;c++){
-			var	triangle = cavity[c],
-				neighbors = self.neighbors(triangle);
-			theTriangles.addAll(neighbors);
-			for(var t=0,tlen = triangle.length;t<tlen;t++){
-				var	vertex = triangle[t],
-					facet = triangle.facetOpposite(vertex);
-				if(boundary.contains(facet)){
-					boundary.remove(facet);
-				} else {
-					boundary.add(facet);
-				}
-			}
-		}
-		theTriangles.removeAll(cavity); //Adj triangles only
-		// Remove the cavity triangles from the triangulation
-		for(var i=0,len = cavity.length;i<len;i++){
-			triangle = cavity[i];
-			self.__triGraph.remove(triangle);
-		}
-
-		// Build each new triangle and add it to the triangulation
-		var newTriangles = new ArraySet();
-		for(var b=0,blen = boundary.length;b<blen;b++){
-			var vertices = boundary[b];
-			vertices.push(site);
-			var tri = new DelaunayTriangle(vertices);
-			self.__triGraph.add(tri);
-			newTriangles.add(tri);
-		}
-
-		// Update the graph links for each new triangle
-    	theTriangles.addAll(newTriangles); // Adj triangle + new triangles
-    	for(var nt=0,ntlen = newTriangles.length;nt<ntlen;nt++){
-    		triangle = newTriangles[nt];
-    		for(var tt = 0,ttlen = theTriangles.length;tt<ttlen;tt++){
-    			var other = theTriangles[tt];
-    			if(triangle.isNeighbor(other)){
-    				self.__triGraph.connect(triangle,other);
-    			}
-    		}
-    	}
-
-    	//Return one of the new triangles
-    	var oneNewTriangle = newTriangles.iterator().next();
-    	return oneNewTriangle;
-	}
-});
-
-module.exports = DelaunayTriangulation;
-});
-
 define('toxi/math/BezierInterpolation',["require", "exports", "module"], function(require, exports, module) {
 /**
  * @class Bezier curve interpolation with configurable coefficients. The curve
@@ -1862,6 +1291,76 @@ ExponentialInterpolation.prototype = {
 };
 
 module.exports = ExponentialInterpolation;
+});
+
+define('toxi/math/Interpolation2D',["require", "exports", "module"], function(require, exports, module) {
+/**
+ * @class Implementations of 2D interpolation functions (currently only bilinear).
+ * @member toxi
+ * @static
+ */
+var Interpolation2D = {};
+/**
+ * @param {Number} x
+ *            x coord of point to filter (or Vec2D p)
+ * @param {Number} y
+ *            y coord of point to filter (or Vec2D p1)
+ * @param {Number} x1
+ *            x coord of top-left corner (or Vec2D p2)
+ * @param {Number} y1
+ *            y coord of top-left corner
+ * @param {Number} x2
+ *            x coord of bottom-right corner
+ * @param {Number} y2
+ *            y coord of bottom-right corner
+ * @param {Number} tl
+ *            top-left value
+ * @param {Number} tr
+ *            top-right value (do not use if first 3 are Vec2D)
+ * @param {Number} bl
+ *            bottom-left value (do not use if first 3 are Vec2D)
+ * @param {Number} br
+ *            bottom-right value (do not use if first 3 are Vec2D)
+ * @return {Number} interpolated value
+ */
+Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
+	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
+	if(_x instanceof Object) //if the first 3 params are passed in as Vec2Ds
+	{
+		x = _x.x;
+		y = _x.y;
+		
+		x1 = _y.x;
+		y1 = _y.y;
+		
+		x2 = _x1.x;
+		y2 = _x1.y;
+		
+		tl = _y1;
+		tr = _x2;
+		bl = _y2;
+		br = _tl;
+	} else {
+		x = _x;
+		y = _y;
+		x1 = _x1;
+		y1 = _y1;
+		x2 = _x2;
+		y2 = _y2;
+		tl = _tl;
+		tr = _tr;
+		bl = _bl;
+		br = _br;
+	}
+    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
+    var dx1 = (x - x1) * denom;
+    var dx2 = (x2 - x) * denom;
+    var dy1 = y - y1;
+    var dy2 = y2 - y;
+    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
+};
+
+module.exports = Interpolation2D;
 });
 
 define('toxi/math/LinearInterpolation',["require", "exports", "module"], function(require, exports, module) {
@@ -4330,6 +3829,129 @@ module.exports = {
 };
 });
 
+define('toxi/utils/datatypes/ArraySet',["require", "exports", "module", "../../internals"], function(require, exports, module) {
+
+var internals = require('../../internals');
+
+/**
+ * ArraySet
+ * toxi/core/utils/datatypes/ArraySet
+ * implements relevant portions of the java version as well as those from java's AbstractSet
+ */
+
+/**
+ * @class
+ * @member toxi
+ */
+var ArraySet = function(collection){
+ 	Array.apply(this);
+ 	if(arguments.length >= 1){
+ 		for(var i=0,len = collection.length;i<len;i++){
+ 			var item = collection[i];
+ 			if(this.indexOf(item) < 0){
+ 				this.push(item);
+ 			}
+ 		}
+ 	}
+ };
+
+ internals.extend(ArraySet,Array);
+
+
+ internals.mixin(ArraySet.prototype,{
+ 	add: function(item){
+ 		if(this.contains(item)){
+ 			return false;
+ 		}
+ 		this.push(item);
+ 		return true;
+ 	},
+ 	addAll: function(collection){
+ 		var self = this;
+ 		for(var i=0,len = collection.length;i<len;i++){
+ 			this.push(collection[i]);
+ 		}
+
+ 	},
+ 	clear: function(){
+ 		this.retainAll([]);	
+ 	},
+ 	clone: function(){
+ 		return new ArraySet(this);
+ 	},
+ 	contains: function(item){
+ 		return this.indexOf(item) >= 0;
+ 	},
+ 	containsAll: function(collection){
+ 		for(var i=0,len=collection.length;i<len;i++){
+ 			var val = collection[i];
+ 			if(!this.contains(val)){
+ 				return false;
+ 			}
+ 		}
+ 		return true;
+ 	},
+ 	containsAny: function(collection){
+ 		for(var i=0,len = collection.length;i<len;i++){
+ 			if(this.contains(collection[i])){
+ 				return true;
+ 			}
+ 		}
+ 		return false;
+ 	},
+ 	equals: function(object){
+ 		return this === object;	
+ 	},
+ 	get: function(index){
+ 		return this[index];
+ 	},
+ 	iterator: function(){
+ 		return new internals.Iterator(this);
+ 	},
+ 	isEmpty: function(){
+ 		return this.length < 1;	
+ 	},
+ 	remove: function(o){
+ 		var i = this.indexOf(o);
+ 		if(i >= 0){
+	 		this.splice(i,1);
+	 		return true;
+		}
+		return false;
+ 	},
+ 	removeAll: function(){
+ 		this.retainAll([]);
+ 	},
+ 	retainAll: function(collection){
+ 		var self = this,
+ 			changed = false;
+
+ 		for(var i=0;i<this.length;i++){
+ 			var val = this[i];
+ 			if(collection.indexOf(val) < 0){
+ 				this.splice(i,1);
+ 				changed = true;
+ 				i--;
+ 			}
+ 		}
+ 		return changed;
+ 	},
+ 	size: function(){
+ 		return this.length;
+ 	},
+ 	toArray: function(arr){
+ 		arr = arr || [];
+ 		for(var i=0;i<this.length;i++){
+ 			if(this.hasOwnProperty())
+ 			arr[i] = this[i];
+ 		}
+ 		return arr;
+ 	}
+});
+
+module.exports = ArraySet;
+});
+
 define('toxi/utils/datatypes/FloatRange',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
 
 var mathUtils = require('../../math/mathUtils');
@@ -4403,6 +4025,101 @@ FloatRange.prototype = {
 };
 
 module.exports = FloatRange;
+});
+
+define('toxi/utils/datatypes/UndirectedGraph',["require", "exports", "module", "./ArraySet"], function(require, exports, module) {
+
+var ArraySet = require('./ArraySet');
+
+
+//wrap connections in this before passing them out
+//this way the rest of the lib can treat it like a Java Collection
+/*var __NodeCollection = function(nodes){
+	var self = this;
+	for(var i=0,len = nodes.length;i<len;i++){
+		this[i] = nodes[i];
+	}
+};
+__NodeCollection.prototype = {
+	contains: function(el){
+		return this[el] !== undefined;
+	},
+	size: function(){
+		var i = 0;
+		for(var prop in this){
+			if(this.hasOwnProperty(prop)){
+				i++;
+			}
+		}
+		return i;
+	}
+};*/
+
+
+/**
+ * @exports UndirectedGraph as toxi.UndirectedGraph
+ */
+var UndirectedGraph = function(){
+	this._nodeLinks = {};
+	this._nodeIDs = [];
+};
+
+
+UndirectedGraph.prototype = {
+	add: function(node){
+		if(this._nodeLinks[node] !== undefined){
+			return;
+		}
+		this._nodeLinks[node] = new ArraySet();
+		this._nodeIDs.push(node);
+	},
+	connect: function(nodeA,nodeB){
+		if(this._nodeLinks[nodeA] === undefined){
+			throw new Error("nodeA has not been added");
+		}
+		if(this._nodeLinks[nodeB] === undefined){
+			throw new Error("nodeB has not been added");
+		}
+		this._nodeLinks[nodeA].push(nodeB);
+		this._nodeLinks[nodeB].push(nodeA);
+	},
+	disconnect: function(nodeA,nodeB){
+		if(this._nodeLinks[nodeA] === undefined){
+			throw new Error("nodeA has not been added");
+		}
+		if(this._nodeLinks[nodeB] === undefined){
+			throw new Error("nodeB has not been added");
+		}
+		this._nodeLinks[nodeA].splice(this._nodeLinks[nodeA].indexOf(nodeB),1);
+		this._nodeLinks[nodeB].splice(this._nodeLinks[nodeB].indexOf(nodeA),1);
+	},
+	getConnectedNodesFor: function(node){
+		if(this._nodeLinks[node] === undefined){
+			throw new Error("node has not been added");
+		}
+		return this._nodeLinks[node];
+	},
+	getNodes: function(){
+		return this._nodeIDs;
+	},
+	remove: function(node){
+		var connections = this._nodeLinks[node];
+		if(connections === undefined){
+			return;
+		}
+
+		for(var i = 0,len = connections.length;i<len;i++){
+			var neighbor = connections[i];
+			var	nodeI = neighbor.indexOf(node);
+			neighbor.splice(nodeI,1);
+		}
+		delete this._nodeLinks[node];
+		var i = this._nodeIDs.indexOf(node);
+		this._nodeIDs.splice(node,1);
+	}
+};
+
+module.exports = UndirectedGraph;
 });
 
 define('toxi/utils/datatypes',["require", "exports", "module", "./datatypes/ArraySet","./datatypes/FloatRange","./datatypes/UndirectedGraph"], function(require, exports, module) {
@@ -10524,66 +10241,6 @@ Ray3D.prototype.toString = function() {
 module.exports = Ray3D;
 });
 
-define('toxi/geom/TriangleIntersector',[
-	"../math/mathUtils",
-	"./Triangle3D",
-	"./Vec3D",
-	"./IsectData3D"
-], function(mathUtils, Triangle3D, Vec3D, IsectData3D) {
-
-	/**
-	 * @param {Triangle3D} [t]
-	 */
-	var TriangleIntersector = function(t){
-		this.triangle = t || new Triangle3D();
-		this.isectData = new IsectData3D();
-	};
-
-	TriangleIntersector.prototype = {
-		getIntersectionData: function(){
-			return this.isectData;
-		},
-		getTriangle: function(){
-			return this.triangle;
-		},
-		/**
-		 * @param {Ray3D} ray
-		 * @returns {Boolean}
-		 */
-		intersectsRay: function(ray){
-			this.isectData.isIntersection = false;
-			var n = this.triangle.computeNormal(),
-				dotprod = n.dot(ray.dir);
-			if(dotprod < 0){
-				var rt = ray.sub(this.triangle.a),
-					t = -(n.x + rt.x + n.y * rt.y + n.z * rt.z) / (n.x * ray.dir.x + n.y * ray.dir.y + n.z * ray.dir.z);
-				if(t >= mathUtils.EPS){
-					var pos = ray.getPointAtDistance(t);
-					//check if pos is inside triangle
-					if(this.triangle.containsPoint(pos)){
-						this.isectData.isIntersection = true;
-						this.isectData.pos = pos;
-						this.isectData.normal = n;
-						this.isectData.dist = t;
-						this.isectData.dir = this.isectData.pos.sub(ray).normalize();
-					}
-				}
-			}
-			return this.isectData.isIntersection;
-		},
-		/**
-		 * @param {Triangle3D} tri
-		 * @returns {TriangleIntersector}
-		 */
-		setTriangle: function(tri){
-			this.triangle = tri;
-			return this;
-		}
-	};
-
-	return TriangleIntersector;
-});
-
 define('toxi/geom/Cone',["require", "exports", "module", "../internals","./Vec3D","./mesh/TriangleMesh"], function(require, exports, module) {
 
 var extend = require('../internals').extend,
@@ -11193,259 +10850,7 @@ SuperEllipsoid.prototype = {
 module.exports = SuperEllipsoid;
 });
 
-/**
- * Implementation of a 2D grid based heightfield with basic intersection
- * features and conversion to {@link TriangleMesh}. The terrain is always
- * located in the XZ plane with the positive Y axis as up vector.
- */
-define('toxi/geom/mesh/Terrain',[
-	'../../internals',
-	'../../math/mathUtils',
-	'../../math/Interpolation2D',
-	'../Ray3D',
-	'../TriangleIntersector',
-	'../Triangle3D',
-	'../IsectData3D',
-	'../../geom/Vec2D',
-	'../../geom/Vec3D',
-	'./TriangleMesh'
-], function(internals, mathUtils, Interpolation2D, Ray3D, TriangleIntersector, Triangle3D, IsectData3D, Vec2D, Vec3D, TriangleMesh){
-
-	/**
-	* Constructs a new and initially flat terrain of the given size in the XZ
-	* plane, centred around the world origin.
-	* 
-	* @param {Number} width
-	* @param {Number} depth
-	* @param {toxi.geom.Vec2D | Number} scale
-	*/
-	var Terrain = function(width, depth, scale){
-		this.width = width;
-		this._depth = depth;
-		if(!internals.hasProperties(scale,['x','y'])){
-			this.scale = new Vec2D(scale,scale);
-		} else {
-			this.scale = scale;
-		}
-		this.elevation = [];
-		this.__elevationLength = this.width * this._depth;
-		this.vertices = [];
-		var offset = new Vec3D(this.width / 2, 0, this._depth / 2),
-			scaleXZ = this.scale.to3DXZ();
-		for(var z = 0; z < this._depth; z++){
-			for(var x = 0; x < this.width; x++){
-				var vert = new Vec3D(x,0,z).subSelf(offset).scaleSelf(scaleXZ);
-				this.vertices.push(vert);
-			}
-		}
-	};
-
-	Terrain.prototype = {
-		/**
-		* @return number of grid cells along the Z axis.
-		*/
-		getDepth: function(){
-			return this._depth;
-		},
-		getElevation: function(){
-			return this.elevation;
-		},
-		/**
-		* @param {Number} x
-		* @param {Number} z
-		* @return the elevation at grid point
-		*/
-		getHeightAtCell: function(x,z){
-			return this.elevation[this.getIndex(x,z)];
-		},
-		/**
-		* Computes the elevation of the terrain at the given 2D world coordinate
-		* (based on current terrain scale).
-		* 
-		* @param {Number} x scaled world coord x
-		* @param {Number} z scaled world coord z
-		* @return {Number} interpolated elevation
-		*/
-		getHeightAtPoint: function(x,z){
-			var xx = x / this.scale.x + this.width * 0.5,
-				zz = z / this.scale.y + this._depth * 0.5,
-				y = 0,
-				fl = {
-					xx: Math.floor(xx),
-					zz: Math.floor(zz)
-				};
-			if(xx >= 0 & xx < this.width && zz >= 0 && zz < this._depth){
-				
-				var x2 = Math.floor(mathUtils.min(xx + 1, this.width - 1)),
-					z2 = Math.floor(mathUtils.min(zz + 1, this._depth - 1));
-				fl.x2 = Math.floor(x2);
-				fl.z2 = Math.floor(z2);
-				var	a = this.getHeightAtCell(fl.xx, fl.zz),
-					b = this.getHeightAtCell(fl.x2, fl.zz),
-					c = this.getHeightAtCell(fl.xx, fl.z2),
-					d = this.getHeightAtCell(fl.x2, fl.z2);
-				
-				y = Interpolation2D.bilinear(xx,zz, fl.xx, fl.zz, x2, z2, a, b, c, d);
-			}
-			return y;
-		},
-		/**
-		* Computes the array index for the given cell coords & checks if they're in
-		* bounds. If not an {@link IndexOutOfBoundsException} is thrown.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @return {Number} array index
-		*/
-		getIndex: function(x,z){
-			var idx = z * this.width + x;
-			if(idx < 0 || idx > this.__elevationLength){
-				throw new Error("the given terrain cell is invalid: "+x+ ";"+z);
-			}
-			return idx;
-		},
-		/**
-		 * @return {Vec2D} the scale
-		 */
-		getScale: function(){
-			return this.scale;
-		},
-
-		getVertexAtCell: function(x,z){
-			return this.vertices[this.getIndex(x,z)];
-		},
-		/**
-		 * @return {Number} number of grid cells along X axis
-		 */
-		getWidth: function(){
-			return this.width;
-		},
-		/**
-		* Computes the 3D position (with elevation) and normal vector at the given
-		* 2D location in the terrain. The position is in scaled world coordinates
-		* based on the given terrain scale. The returned data is encapsulated in a
-		* {@link toxi.geom.IsectData3D} instance.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @return {IsectData3D} intersection data parcel
-		*/
-		intersectAtPoint: function(x,z){
-			var xx = x / this.scale.x + this.width * 0.5,
-				zz = z / this.scale.y + this._depth * 0.5,
-				isec = new IsectData3D();
-			if(xx >= 0 && xx < this.width && zz >= 0 && zz < this._depth){
-				var x2 = Math.floor(mathUtils.min(xx + 1, this.width - 1)),
-					z2 = Math.floor(mathUtils.min(zz + 1, this._depth - 1)),
-					fl = {
-						xx: Math.floor(xx),
-						zz: Math.floor(zz)
-					},
-					a = this.getVertexAtCell(fl.xx,fl.zz),
-					b = this.getVertexAtCell(x2, fl.zz),
-					c = this.getVertexAtCell(x2,z2),
-					d = this.getVertexAtCell(fl.xx,z2),
-					r = new Ray3D(new Vec3D(x, 10000, z), new Vec3D(0, -1, 0)),
-					i = new TriangleIntersector(new Triangle3D(a, b, d));
-				
-				if(i.intersectsRay(r)){
-					isec = i.getIntersectionData();
-				} else {
-					i.setTriangle(new Triangle3D(b, c, d));
-					i.intersectsRay(r);
-					isec = i.getIntersectionData();
-				}
-			}
-			return isec;
-		},
-		/**
-		* Sets the elevation of all cells to those of the given array values.
-		* 
-		* @param {Array} elevation array of height values
-		* @return itself
-		*/
-		setElevation: function(elevation){
-			if(this.__elevationLength == elevation.length){
-				for(var i = 0, len = elevation.length; i<len; i++){
-					this.vertices[i].y = this.elevation[i] = elevation[i];
-				}
-			} else {
-				throw new Error("the given elevation array size does not match terrain");
-			}
-			return this;
-		},
-		/**
-		* Sets the elevation for a single given grid cell.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @param {Number} h new elevation value
-		* @return itself
-		*/
-		setHeightAtCell: function(x,z,h){
-			var index = this.getIndex(x,z);
-			this.elevation[index] = h;
-			this.vertices[index].y = h;
-			return this;
-		},
-		setScale: function(scale){
-			if(!internals.hasProperties(scale,['x','y'])){
-				this.scale = new Vec2D(scale,scale);
-			} else {
-				this.scale = scale;
-			}
-		},
-		toMesh: function(){
-			var opts = {
-				mesh: undefined,
-				minX: 0,
-				minZ: 0,
-				maxX: this.width,
-				maxZ: this._depth
-			};
-
-			var v = this.vertices,
-				w = this.width,
-				d = this._depth;
-
-			if(arguments.length == 1 && typeof arguments[0] == 'object'){
-				//options object
-				var args = arguments[0];
-				opts.mesh = args.mesh || new TriangleMesh("terrain");
-				opts.minX = args.minX || opts.minX;
-				opts.minZ = args.minZ || opts.minZ;
-				opts.maxX = args.maxX || opts.maxX;
-				opts.maxZ = args.maxZ || opts.maxZ;
-			} else if(arguments.length >= 5){
-				opts.mesh = arguments[0];
-				opts.minX = arguments[1];
-				opts.minZ = arguments[2];
-				opts.maxX  = arguments[3];
-				opts.maxZ = arguments[4];
-			}
-
-			opts.mesh = opts.mesh || new TriangleMesh("terrain");
-			opts.minX = mathUtils.clip(opts.minX, 0, w - 1);
-			opts.maxX = mathUtils.clip(opts.maxX, 0, w);
-			opts.minZ = mathUtils.clip(opts.minZ, 0, d-1);
-			opts.maxZ = mathUtils.clip(opts.maxZ, 0, d);
-			opts.minX++;
-			opts.minZ++;
-
-
-			for(var z = opts.minZ, idx = opts.minX * w; z < opts.maxZ; z++, idx += w){
-				for(var x = opts.minX; x < opts.maxX; x++){
-					opts.mesh.addFace(v[idx - w + x - 1], v[idx - w + x], v[idx + x - 1]);
-					opts.mesh.addFace(v[idx - w + x], v[idx + x], v[idx + x - 1]);
-				}
-			}
-			return opts.mesh;
-		}
-	};
-
-	return	Terrain;
-});
-define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector","./mesh/Terrain"], function(require, exports, module) {
+define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector"], function(require, exports, module) {
 module.exports = {
 	BezierPatch: require('./mesh/BezierPatch'),
 	BoxSelector: require('./mesh/BoxSelector'),
@@ -11456,7 +10861,7 @@ module.exports = {
 	SphericalHarmonics: require('./mesh/SphericalHarmonics'),
 	SurfaceMeshBuilder: require('./mesh/SurfaceMeshBuilder'),
 	SuperEllipsoid: require('./mesh/SuperEllipsoid'),
-	Terrain: require('./mesh/Terrain'),
+	//Terrain: require('./mesh/Terrain'),
 	TriangleMesh: require('./mesh/TriangleMesh'),
 	Vertex: require('./mesh/Vertex'),
 	VertexSelector: require('./mesh/VertexSelector')
@@ -13424,459 +12829,7 @@ module.exports = Circle;
 
 });
 
-define('toxi/geom/mesh2d/DelaunayVertex',["require", "exports", "module", "../../internals","../Vec2D","./DelaunayVertex"], function(require, exports, module) {
-
-var internals = require('../../internals'),
-	Vec2D = require('../Vec2D'),
-	DelaunayVertex = require('./DelaunayVertex');
-
-var DelaunayVertex = function(){
-	var a;
-	this.coordinates = [];
-	if(arguments.length == 1 && internals.isArray(arguments[0])){
-		a = arguments[0];
-	} else {
-		a = arguments;
-	}
-	for(var i =0;i<a.length;i++){
-		this.coordinates[i] = a[i];
-	}
-};
-
-DelaunayVertex.prototype = {
-	add: function(p){
-		var len = this.dimCheck(p);
-		var coords = [];
-		for(var i=0;i<len;i++){
-			coords[i] = this.coordinates[i] + p.coordinates[i];
-		}
-		return new DelaunayVertex(coords);
-	},
-	
-	angle: function(p){
-		return Math.acos(this.dot(p) / (this.magnitud() * p.magnitude()));
-	},
-	
-	bisector: function(point){
-		this.dimCheck(point);
-		var diff = this.subtract(point),
-			sum = this.add(point),
-			dot = diff.dot(sum);
-		return diff.extend(-dot/2);
-	},
-	
-	coord: function(i){
-		return this.coordinates[i];
-	},
-	
-	dimCheck: function(p){
-		var len = this.coordinates.length;
-		if(len != p.coordinates.length){
-			throw new Error("IllegalArgumentException Dimension Mismatch");
-		}
-		return len;
-	},
-	
-	dimension: function(){
-		return this.coordinates.length;
-	},
-	
-	dot: function(p){
-		var len = this.dimCheck(p),
-			sum = 0;
-		for(var i=0;i<len;i++){
-			sum += this.coordinates[i] * p.coordinates[i];
-		}
-		return sum;
-	},
-	
-	equals: function(other){
-		if(!(other instanceof DelaunayVertex)){
-			return false;
-		}
-		if(this.coordinates.length != other.coordinates.length){
-			return false;
-		}
-		for(var i=0;i<this.coordinates.length;i++){
-			if(this.coorindates[i] != other.coordinates[i]){
-				return false;
-			}
-		}
-		return true;
-	},
-	
-	extend: function(){
-		if(arguments.length == 1 && internals.isArray(arguments)){
-			return this.extend.apply(this,arguments);
-		}
-		var result = this.coordinates.slice(0);
-		for(var i=0,len = arguments.length;i<len;i++){
-			result.push(arguments[i]);
-		}
-		return new DelaunayVertex(result);
-	},
-	
-	hashCode: function(){
-		console.log("DelaunayVertex.hasCode() not implemented");
-	},
-	
-	isInside: function(simplex){
-		var result = this.relation(simplex);
-		for(var i=0;i<result.length;i++){
-			if(result[i] >= 0){
-				return false;
-			}
-		}
-		return true;
-	},
-	
-	isOn: function(simplex){
-		var result = this.relation(simplex),
-			witness = undefined;
-		for(var i=0;i<result.length;i++){
-			if(result[i] === 0){
-				witness = simplex[i];
-			} else if(result[i] > 0){
-				return undefined;
-			}
-		}
-		return witness;
-	},
-	
-	isOutside: function(simplex){
-		var result = this.relation(simplex);
-		for(var i=0;i<result.length;i++){
-			if(result[i] > 0){
-				return simplex[i];
-			}
-		}
-		return undefined;
-	},
-	
-	magnitude: function(){
-		return Math.sqrt(this.dot(this));
-	},
-	
-	/**
-	* Relation between this DelaunayVertex and a simplex (represented as an
-	* array of Pnts). Result is an array of signs, one for each vertex of the
-	* simplex, indicating the relation between the vertex, the vertex's
-	* opposite facet, and this DelaunayVertex.
-	* 
-	* <pre>
-	*   -1 means DelaunayVertex is on same side of facet
-	*    0 means DelaunayVertex is on the facet
-	*   +1 means DelaunayVertex is on opposite side of facet
-	* </pre>
-	* 
-	* @param simplex an array of Pnts representing a simplex
-	* @return an array of signs showing relation between this DelaunayVertex and simplex
-	* @throws IllegalArgumentExcpetion if the simplex is degenerate
-	*/
-	
-	relation: function(simplex){
-	
-		var dim = simplex.length -1,
-			matrix = [],
-			coords = [],
-			i = 0;
-		/*
-		* In 2D, we compute the cross of this matrix: 1 1 1 1 p0 a0 b0 c0 p1 a1
-		* b1 c1 where (a, b, c) is the simplex and p is this DelaunayVertex.
-		* The result is a vector in which the first coordinate is the signed
-		* area (all signed areas are off by the same constant factor) of the
-		* simplex and the remaining coordinates are the *negated* signed areas
-		* for the simplices in which p is substituted for each of the vertices.
-		* Analogous results occur in higher dimensions.
-		*/
-		if(this.dimension() != dim){
-			throw new Error("IllegalArgumentException Dimension Mismatch");
-		}
-		
-		//first row
-		for(i = 0;i<(dim+2);i++){
-			coords[i] = 1;
-		}
-		
-		matrix[0] = new DelaunayVertex(coords);
-		//other rows
-		for(i = 0;i<dim;i++){
-			coords[0] = this.coordinates[i];
-			for(var j=0;j<simplex.length;j++){
-				coords[j + 1] = simplex[j].coordinates[i];
-			}
-			matrix[i + 1] = new DelaunayVertex(coords);
-		}
-		
-		//Compute and analyze the vector of areas/volumes/contents
-		var vector = DelaunayVertex.cross(matrix),
-			content = vector.coordinates[0],
-			result = [],
-			value;
-		for(i=0;i<result.length;i++){
-			value = vector.coordinates[i + 1];
-			if(Math.abs(value) <= 1.0e-6 * Math.abs(content)){
-				result[i] = 0;
-			} else if(value < 0){
-				result[i] = -1;
-			} else {
-				result[i] = 1;
-			}
-		}
-		if(content < 0){
-			for(i=0;i<result.length;i++){
-				result[i] = -result[i];
-			}
-		}
-		if(content === 0){
-			for(i=0;i<result.length;i++){
-				result[i] = Math.abs(result[i]);
-			}
-		}
-		return result;
-	},
-	
-	subtract: function(p){
-		var len = this.dimCheck(p),
-			coords = [];
-		for(var i=0;i<len;i++){
-			coords[i] = this.coordinates[i] - p.coordinates[i];
-		}
-		return new DelaunayVertex(coords);
-	},
-	
-	toString: function(){
-		if(this.coordinates.length === 0){
-			return "DelaunayVertex()";
-		}
-		
-		var result = "DelaunayVertex("+this.coordinates[0];
-		for(var i = 1, len = this.coordinates.length; i<len; i++){
-			result += "," + this.coordinates[i];
-		};
-
-		result += ")";
-		return result;
-	},
-	
-	toVec2D: function(){
-		return new Vec2D(this.coordinates[0],this.coordinates[1]);
-	},
-	
-	vsCircumcircle: function(simplex){
-		var matrix = [];
-		for(var i=0;i<simplex.length;i++){
-			matrix[i] = simplex[i].extend(1, simplex[i].dot(simplex[i]));
-		}
-		matrix[simplex.length] = this.extend(1,this.dot(this));
-		var d = DelaunayVertex.determinant(matrix),
-			result = (d < 0) ? -1 : ((d > 0) ? +1 : 0);
-		if(DelaunayVertex.content(simplex) < 0){
-			result = -result;
-		}
-		return result;
-	}
-};
-
-DelaunayVertex.circumcenter = function(simplex){
-	var dim = simplex[0].dimension(),
-		matrix = [],
-		i = 0;
-	if(simplex.length - 1 != dim) { 
-		throw new Error("IllegalArgumentException Dimension Mismatch");
-	}
-	for(i=0;i<dim;i++){
-		matrix[i] = simplex[i].bisector(simplex[i + 1]);
-	}
-	var hCenter = DelaunayVertex.cross(matrix),
-		last = hCenter.coordinates[dim],
-		result = [];
-	for(i=0;i<dim;i++){
-		result[i] = hCenter.coordinates[i] / last;
-	}
-	return new DelaunayVertex(result);
-};
-
-DelaunayVertex.content = function(simplex){
-	var matrix = [],
-		i = 0,
-		fact =1;
-	for(i =0;i<simplex.length;i++){
-		matrix[i] = simplex[i].extend(1);
-	}
-	for(i=1;i<matrix.length;i++){
-		fact = fact * i;
-	}
-	return DelaunayVertex.determinant(matrix) / fact;
-};
-
-DelaunayVertex.cross = function(matrix){
-	var len = matrix.length + 1,
-		columns = [],
-		result = [],
-		sign = 1,
-		i = 0;
-	if(len != matrix[0].dimension()) {
-		throw new Error("IllegalArgumentException Dimension mismatch");
-	}
-	for(i=0;i<len;i++){
-		columns[i] = true;
-	}
-	try {
-		for(i=0;i<len;i++){
-			columns[i] = false;
-			result[i] = sign * DelaunayVertex.determinant(matrix,0,columns);
-			columns[i] = true;
-			sign = -sign;
-		}
-	} catch(e){
-		throw new Error("IllegalArgument Exception Matrix is wrong shape: "+e);
-	}
-	return new DelaunayVertex(result);
-};
-
-DelaunayVertex.determinant = function(matrix, row, columns){
-	if(arguments.length == 1){
-		if(matrix.length != matrix[0].dimension()) {
-			throw new Error("IllegalArgumentException Matrix is not square");
-		}
-		columns = [];
-		for(var i=0;i<matrix.length;i++){
-			columns[i] = true;
-		}
-		
-		try {
-			return new DelaunayVertex.determinant(matrix,0,columns);
-		} catch(e){
-			throw new Error("IllegalArgumentException Matrix is wrong shape: "+e);
-		}
-	} else { //all 3 provided
-		if(row == matrix.length){
-			return 1;
-		}
-		var sum = 0,
-			sign = 1;
-		for(var col = 0; col<columns.length; col++){
-			if(!columns[col]){
-				continue;
-			}
-			columns[col] = false;
-			sum += sign * matrix[row].coordinates[col] * DelaunayVertex.determinant(matrix,row+1,columns);
-			columns[col] = true;
-			sign = -sign;
-		}
-		return sum;
-	}
-};
-
-/**
- * @param {DelauanayVertex[]} matrix
- */
-DelaunayVertex.toString = function(matrix){
-	if(typeof matrix === 'undefined') {
-		return "";
-	}
-	var buf = "";
-	for(var i=0;i<matrix.length;i++){
-		buf += " " + matrix[i].toString();
-	}
-	buf += " }";
-	return buf;
-};
-
-module.exports = DelaunayVertex;
-});
-
-define('toxi/geom/mesh2d/Voronoi',["require", "exports", "module", "./DelaunayTriangle","./DelaunayTriangulation","./DelaunayVertex","../Vec2D","../Polygon2D","../Triangle2D"], function(require, exports, module) {
-
-var DelaunayTriangle = require('./DelaunayTriangle'),
-	DelauanayTriangulation = require('./DelaunayTriangulation'),
-	DelaunayVertex = require('./DelaunayVertex'),
-	Vec2D = require('../Vec2D'),
-	Polygon2D = require('../Polygon2D'),
-	Triangle2D = require('../Triangle2D');
-
-var Voronoi = function(size){
-	size = size || Voronoi.DEFAULT_SIZE;
-	this._initialTriangle = new DelaunayTriangle(new DelaunayVertex(-size,-size), new DelaunayVertex(size,-size), new DelaunayVertex(0,size));
-	this._delaunay = new DelaunayTriangulation(this._initialTriangle);
-	this._sites = [];	
-};
-
-Voronoi.DEFAULT_SIZE = 10000;
-
-Voronoi.prototype = {
-	addPoint: function(p){
-		this._sites.push(p.copy());
-		this._delaunay.delaunayPlace(new DelaunayVertex(p.x,p.y));
-	},
-	
-	addPoints: function(points){
-		for(var i=0,len = points.length;i<len;i++){
-			this.addPoint(points[i]);
-		}
-	},
-	
-	getRegions: function(){
-		var regions = [],
-			done = this._initialTriangle.slice(0),
-			triangle,
-			site,
-			list,
-			poly,
-			tri,
-			circumeter;
-
-		var iterator = this._delaunay.iterator();
-		while(iterator.hasNext()){
-			triangle = iterator.next();
-			if(typeof triangle !== 'function'){
-				for(var j=0,vlen = triangle.size();j<vlen;j++){
-					site = triangle[j];
-					if(done.indexOf(site) >= 0){
-						continue;
-					}
-					done.push(site);
-					list = this._delaunay.surroundingTriangles(site,triangle);
-					poly = new Polygon2D();
-					for(var k=0,klen = list.length;k<klen;k++){
-						tri = list[k];
-						circumeter = tri.getCircumcenter();
-						poly.add(new Vec2D(circumeter.coord(0),circumeter.coord(1)));
-					}
-					regions.push(poly);
-				}
-			}
-		}
-		return regions;
-	},
-
-	getSites: function(){
-		return this._sites;	
-	},
-
-	getTriangles: function(){
-		var tris = [];
-		for(var i = 0,len = this._delaunay.length;i<len;i++){
-			tris.push(new Triangle2D(t.get(0).toVec2D(),t.get(1).toVec2D(),t.get(2).toVec2D()));
-		}
-		return tris;
-	}
-};
-
-module.exports = Voronoi;
-});
-
-define('toxi/geom/mesh2d',["require", "exports", "module", "./mesh2d/DelaunayTriangle","./mesh2d/DelaunayTriangulation","./mesh2d/DelaunayVertex","./mesh2d/Voronoi"], function(require, exports, module) {
-module.exports = {
-	DelaunayTriangle: require('./mesh2d/DelaunayTriangle'),
-	DelaunayTriangulation: require('./mesh2d/DelaunayTriangulation'),
-	DelaunayVertex: require('./mesh2d/DelaunayVertex'),
-	Voronoi: require('./mesh2d/Voronoi')
-};
-});
-
-define('toxi/geom',["require", "exports", "module", "./geom/AABB","./geom/BernsteinPolynomial","./geom/Circle","./geom/CircleIntersector","./geom/Cone","./geom/Ellipse","./geom/IsectData2D","./geom/IsectData3D","./geom/Line2D","./geom/Line3D","./geom/Matrix4x4","./geom/Plane","./geom/Polygon2D","./geom/Quaternion","./geom/Ray2D","./geom/Ray3D","./geom/Ray3DIntersector","./geom/Rect","./geom/Sphere","./geom/Spline2D","./geom/Triangle2D","./geom/Triangle3D","./geom/Vec2D","./geom/Vec3D","./geom/XAxisCylinder","./geom/YAxisCylinder","./geom/ZAxisCylinder","./geom/mesh","./geom/mesh2d"], function(require, exports, module) {
+define('toxi/geom',["require", "exports", "module", "./geom/AABB","./geom/BernsteinPolynomial","./geom/Circle","./geom/CircleIntersector","./geom/Cone","./geom/Ellipse","./geom/IsectData2D","./geom/IsectData3D","./geom/Line2D","./geom/Line3D","./geom/Matrix4x4","./geom/Plane","./geom/Polygon2D","./geom/Quaternion","./geom/Ray2D","./geom/Ray3D","./geom/Ray3DIntersector","./geom/Rect","./geom/Sphere","./geom/Spline2D","./geom/Triangle2D","./geom/Triangle3D","./geom/Vec2D","./geom/Vec3D","./geom/XAxisCylinder","./geom/YAxisCylinder","./geom/ZAxisCylinder","./geom/mesh"], function(require, exports, module) {
 module.exports = {
 	AABB: require('./geom/AABB'),
 	BernsteinPolynomial: require('./geom/BernsteinPolynomial'),
@@ -13908,7 +12861,7 @@ module.exports = {
 };
 
 module.exports.mesh = require('./geom/mesh');
-module.exports.mesh2d = require('./geom/mesh2d');
+//module.exports.mesh2d = require('./geom/mesh2d');
 });
 
 define('toxi/main',[
@@ -13935,7 +12888,7 @@ define('toxi/main',[
 
 });
 
-define('toxi',["require", "exports", "module", "./toxi/main"], function(require, exports, module) {
-module.exports = require('./toxi/main');
+define('toxi',["./toxi/main"], function(toxi) {
+	return toxi;
 });
 toxi = require('toxi'); }())
