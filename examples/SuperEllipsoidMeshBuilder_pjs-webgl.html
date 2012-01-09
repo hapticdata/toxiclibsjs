@@ -64,35 +64,19 @@ void setup() {
 
 void draw() {
   SurfaceFunction functor=new SuperEllipsoid(modX.update(), modY.update());
-  console.log("1");
   SurfaceMeshBuilder b = new SurfaceMeshBuilder(functor);
-  console.log("2");
-  mesh = (TriangleMesh)b.createMesh(undefined,20, 80);
-  console.log("3");
+  mesh = (TriangleMesh)b.createMesh(new TriangleMesh("se"+frameCount),20, 80);
   mesh.computeVertexNormals();
   background(0);
+
   lights();
 
-  console.log("look wht i can do");
-
   translate(width / 2, height / 2, 0);
-  rotateX(mouseY * 0.01f);
-  rotateY(mouseX * 0.01f);
-  //gfx.origin(300);
+  rotateX(mouseY * 0.01);
+  rotateY(mouseX * 0.01);
   
-  //origin implementation
+  gfx.origin(300);
   
-  Vec3D o = new Vec3D();
-  float len = 300;
-  float x = o.x;
-  float y = o.y;
-  float z = o.z;
-  stroke(255, 0, 0);
-  line(x, y, z, x + len, y, z);
-  stroke(0, 255, 0);
-  line(x, y, z, x, y + len, z);
-  stroke(0, 0, 255);
-  line(x, y, z, x, y, z + len);
   if (isWireFrame) {
     noFill();
     stroke(255);
@@ -111,75 +95,9 @@ void draw() {
     fill(255);
     noStroke();
   }
-  scale(2);
+  //scale(2);
   gfx.mesh(mesh, !isWireFrame, showNormals ? 10 : 0);
 
-  //scale(2);
-  //int i;
-  //int normalLength = (showNormals) ? 10 : 0;
-  //beginShape(TRIANGLES);
- // Face[] faces = mesh.getFaces();
- // int numFaces = faces.length;
-  /*if(!isWireFrame)
-  {
-	  for(i=0;i<numFaces;i++)
-	  {
-	  	Face f = faces[i];
-	  	toxi.Vec3D a = f.a;
-	  	toxi.Vec3D b = f.b;
-	  	toxi.Vec3D c = f.c;
-	  	normal(a.normal.x,a.normal.y,a.normal.z);
-	  	vertex(a.x,a.y,a.z);
-	  	normal(b.normal.x,b.normal.y,b.normal.z);
-	  	vertex(b.x,b.y,b.z);
-	  	normal(c.normal.x,c.normal.y,c.normal.z);
-	  	vertex(c.x,c.y,c.z);
-	  }
-	}
-	else
-	{
-		for(i=0;i<numFaces;i++)
-		{
-			toxi.Face f = faces[i];
-			toxi.Vec3D n = f.normal;
-			toxi.Vec3D a = f.a;
-			toxi.Vec3D b = f.b;
-			toxi.Vec3D c = f.c;
-			normal(n.x,n.y,n.z);
-			vertex(a.x,a.y,a.z);
-			vertex(b.x,b.y,b.z);
-			vertex(c.x,c.y,c.z);
-		}
-	}
-	//endShape();
-	
-	if(len>0){
-		int strokeCol = 0;
-
-		int j;
-		if (!isWireFrame) {
-				toxi.Vertex[] vertices = mesh.getVertices();
-				int numVertices = vertices.length;
-			for (j=0;j<numVertices;j++) {
-                	toxi.Vertex v = vertices[j];
-                    toxi.Vec3D w = v.add(v.normal.scale(normalLength));
-                    toxi.Vec3D n = v.normal.scale(127);
-                    stroke(n.x + 128, n.y + 128, n.z + 128);
-                    line(v.x, v.y, v.z, w.x, w.y, w.z);
-                }
-            } else {
-                float third = 1.0 / 3;
-                
-                for (j=0;j<numFaces;j++) {
-                	toxi.Face f = faces[j];
-                    toxi.Vec3D c = f.a.add(f.b).addSelf(f.c).scaleSelf(third);
-                    toxi.Vec3D d = c.add(f.normal.scale(normalLength));
-                    toxi.Vec3D n = f.normal.scale(127);
-                    stroke(n.x + 128, n.y + 128, n.z + 128);
-                    line(c.x, c.y, c.z, d.x, d.y, d.z);
-                }
-            }
-        }*/
 }
 
 
