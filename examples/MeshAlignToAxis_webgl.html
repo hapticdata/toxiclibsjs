@@ -8,7 +8,6 @@
     <!-- Date: 2011-01-09 -->
     <script type="text/javascript" src="js/webgl-utils.js"></script>
     <script type="text/javascript" src="../build/toxiclibs.js"></script>
-    <script src="../src/core/geom/Matrix4x4.js"></script>
 </head>
 <body class="container_12">
     <header class="grid_12">
@@ -67,17 +66,17 @@
         gl;
 
     var TWO_PI = Math.PI * 2;
-    var BOX_SIZE = new toxi.Vec3D(0.05,0.05,0.5),
+    var BOX_SIZE = new toxi.geom.Vec3D(0.05,0.05,0.5),
         NUM_BOXES = 300,
         N_PER_BOX = 6 * 6 * 3; //(6 sides * 6 vertices * 3 floats)
         SCALE=2;
     
     var shaderProgram;
     //our Model-view matrix
-    var mvMatrix = new toxi.Matrix4x4(),
+    var mvMatrix = new toxi.geom.Matrix4x4(),
         mvMatrixStack = [],
         //our projection matrix
-        pMatrix = new toxi.Matrix4x4(),
+        pMatrix = new toxi.geom.Matrix4x4(),
         //holders for the applied matrice array's
         pM = new Float32Array(16),
         mv = new Float32Array(16);
@@ -85,7 +84,7 @@
     var boxesVertexPositionBuffer;
     var boxesVertexColorBuffer;
     var isOver = false;
-    var rotation = new toxi.Vec3D();
+    var rotation = new toxi.geom.Vec3D();
     
     
     function mouseOver(e){
@@ -235,14 +234,14 @@
         var vertIndex = 0;
         
         for(var i=0;i<NUM_BOXES;i++){
-            var dir= new toxi.Vec3D(Math.cos(i*TWO_PI/125),Math.sin(i*TWO_PI/50),Math.sin(i*TWO_PI/25)).normalize();
+            var dir= new toxi.geom.Vec3D(Math.cos(i*TWO_PI/125),Math.sin(i*TWO_PI/50),Math.sin(i*TWO_PI/25)).normalize();
             // create a position on a sphere, using the direction vector
             var pos = dir.scale(SCALE);
             // create a box mesh at the origin
-            var b = new toxi.AABB(new toxi.Vec3D(), BOX_SIZE).toMesh();
+            var b = new toxi.geom.AABB(new toxi.geom.Vec3D(), BOX_SIZE).toMesh();
             // align the Z axis of the box with the direction vector
             b.pointTowards(dir);
-            b.transform(new toxi.Matrix4x4().translateSelf(pos.x,pos.y,pos.z));
+            b.transform(new toxi.geom.Matrix4x4().translateSelf(pos.x,pos.y,pos.z));
             var v = new Float32Array(N_PER_BOX);
             b.getMeshAsVertexArray(v,0,3);
             window.b = b;
@@ -303,8 +302,8 @@
 
         mvPushMatrix();
 
-        var rot = new toxi.Vec3D(0.45,1,0.125)
-            .scaleSelf(toxi.MathUtils.radians(rBoxes))
+        var rot = new toxi.geom.Vec3D(0.45,1,0.125)
+            .scaleSelf(toxi.math.MathUtils.radians(rBoxes))
             .addSelf(rotation);
         
         

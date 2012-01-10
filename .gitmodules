@@ -1,0 +1,12 @@
+[submodule "tests/lib/qunit"]
+	path = tests/lib/qunit
+	url = https://github.com/jquery/qunit.git
+[submodule "utils/r.js"]
+	path = utils/r.js
+	url = https://github.com/jrburke/r.js.git
+[submodule "tests/lib/requirejs"]
+	path = tests/lib/requirejs
+	url = https://github.com/jrburke/requirejs.git
+[submodule "utils/almond"]
+	path = utils/almond
+	url = https://github.com/jrburke/almond.git

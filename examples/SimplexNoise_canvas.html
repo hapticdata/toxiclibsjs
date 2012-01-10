@@ -1,0 +1,118 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Simplex Noise - toxiclibs.js examples</title>
+	<meta name="author" content="Kyle Phillips">
+	<!-- Date: 2011-01-09 -->
+  <script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
+	<script type="text/javascript" src="../build/toxiclibs.js"></script>
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
+</head>
+<body class="container_12">
+	<header class="grid_12">
+		<hgroup>
+			<h1>Simplex Noise</h1><h2>w/ the Canvas 2D context</h2>
+		</hgroup>
+	</header>
+  <div style="width:800px;">
+    <canvas style="float:left;" id="mySketch" width="224" height="224">
+    your browser doesnt support canvas
+    </canvas>
+    <select id="dimensions" style="position:relative;left:50px;">
+      <option value="1">1 dimension</option>
+      <option value="2">2 dimensions</option>
+      <option value="3">3 dimensions</option>
+      <option value="4" selected>4 dimensions</option>
+    </select>
+  </div>
+<script type="text/javascript">
+
+var simplexNoise = toxi.math.noise.simplexNoise;
+
+$("#dimensions").change(function(e){
+    NOISE_DIMENSIONS = Number($(this).find(":selected").val());
+});
+
+var canvas = document.getElementById('mySketch'),
+    ctx = canvas.getContext('2d'),
+    imageData = ctx.createImageData(canvas.width,canvas.height),
+    setPixel = function(x, y, r, g, b, a) {
+        index = (x + y * imageData.width) * 4;
+        imageData.data[index+0] = r;
+        imageData.data[index+1] = g;
+        imageData.data[index+2] = b;
+        imageData.data[index+3] = a;
+    },
+    NOISE_DIMENSIONS=4, // increase upto 4
+    noiseOffest = 100,
+    NS = 0.05, // noise scale (try from 0.005 to 0.5)
+    noiseOffset = 100,
+    frameCount = 1;
+
+
+
+var draw = function() {
+  
+  var i = 0,
+      j = 0,
+      noiseVal = 0;
+
+  for (i = 0; i < canvas.width; i++) {
+    for (j = 0; j < canvas.height; j++) {
+      switch(NOISE_DIMENSIONS) {
+      case 1:
+      default:
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, 0); 
+        break;
+      case 2:
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset); 
+        break;
+      case 3: 
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset , frameCount * 0.01); 
+        break;
+      case 4: 
+        noiseVal = simplexNoise.noise(i * NS + noiseOffset, j * NS + noiseOffset, 0 , frameCount * 0.01); 
+        break;
+      }
+
+      var c = Math.floor(noiseVal * 127 + 128);
+      
+      setPixel(i, j, c, c, c, 255);
+    }
+  }
+
+  ctx.putImageData(imageData,0,0);
+  noiseOffset+=NS/2;
+
+  frameCount++;
+
+  setTimeout(draw, 1000 / 30);
+};
+
+
+
+setTimeout(draw,1000/30);
+
+
+
+
+</script>
+
+<section class="grid_12" id="details">
+<aside id="authors" class="grid_6">
+<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
+	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a></p>
+</aside>
+<aside id="usage" class="grid_6">
+	 <p><strong>Usage:</strong><br><ul>
+	 <li>use drop-down to change number of dimensions</li>
+	</ul></p><br>
+</aside>
+<article id="description" class="grid_12">
+<p>SimplexNoise demo showing the noise space in 1-4 dimensions.</p>
+
+ </article>
+</section>
+</body>
+</html>

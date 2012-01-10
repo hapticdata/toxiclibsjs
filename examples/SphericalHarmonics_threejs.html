@@ -60,9 +60,9 @@
 			
 			var container = document.getElementById('threejs_container'),
 				$m = $("#m"),
-				mouse = new toxi.Vec2D(),
+				mouse = new toxi.geom.Vec2D(),
 				cameraSensitivity = 1.2,
-				stage = new toxi.Vec2D(window.innerWidth,window.innerHeight),
+				stage = new toxi.geom.Vec2D(window.innerWidth,window.innerHeight),
 				canRotateWorld = true,
 				camera = new THREE.TrackballCamera({
 					fov: 45, 
@@ -149,9 +149,9 @@
 				if(changeHarmonics) {
 					randomizeHarmonics();
 				}
-				var sh = new toxi.SphericalHarmonics(m);
-				var mesh = new toxi.SurfaceMeshBuilder( sh ); 
-				var toxiMesh = mesh.createMesh(new toxi.TriangleMesh(),res,1,true);
+				var sh = new toxi.geom.mesh.SphericalHarmonics(m);
+				var mesh = new toxi.geom.mesh.SurfaceMeshBuilder( sh ); 
+				var toxiMesh = mesh.createMesh(new toxi.geom.mesh.TriangleMesh(),res,1,true);
 				threeMesh = toxiToThreeSupport.addMesh(toxiMesh,material);
 				//threeMesh = new THREE.Mesh(toxiToThreeSupport.createGeometry(toxiMesh),material);
 				threeMesh.scale = new THREE.Vector3(objectRadius,objectRadius,objectRadius);
@@ -173,7 +173,7 @@
 			changeMesh(meshResolution);
 			var positions = [];
 			for(var k=0;k<500;k++){
-				var p = positions.push(toxi.Vec3D.randomVector().scale(200+Math.random()*300));
+				var p = positions.push(toxi.geom.Vec3D.randomVector().scale(200+Math.random()*300));
 			}
 			toxiToThreeSupport.addParticles(positions, new THREE.ParticleBasicMaterial({
 				color: 0xffff00,

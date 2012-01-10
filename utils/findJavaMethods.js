@@ -1,11 +1,20 @@
 
 var fs = require('fs'),
-	util = require('util');
+	util = require('util'),
+	pkg = "geom",
+	name = "Matrix4x4";
 
 
+if(process.argv.length > 2){
+	pkg = process.argv[2];
+	name = process.argv[3];
+	console.log("pkg: "+pkg + ", name: "+name);
+}
+
+var file = 	file = '/Users/kphillips/Sites/libs/toxiclibs/src.core/toxi/'+pkg+'/'+name+'.java';
 
 	fs.readFile(
-		'/Users/kphillips/Sites/libs/toxiclibs/src.core/toxi/geom/Matrix4x4.java',
+		file,
 		'utf8',
 		function(err,data){
 			var classOpener = 'public class';
@@ -31,9 +40,22 @@ var fs = require('fs'),
 				}
 			});
 			console.log(fnDefs);
+
+			fs.writeFile(name+'.txt',toMarkdown(fnDefs), function(err){
+				console.log(name+'.txt written');
+			});
+
 			console.log("length: "+fnDefs.length);
 		}
 	);
 
+
+	var toMarkdown = function(defs){
+		var md = '';
+		defs.forEach(function(d,key){
+			md += '**'+d.name+'(** *'+d.parameters+'* **)**\nreturns *'+d.returns+'*\n\n';
+		});
+		return md;
+	};
 
 	//(?:(?:public)|(?:private)|(?:static)|(?:protected)\s+)*

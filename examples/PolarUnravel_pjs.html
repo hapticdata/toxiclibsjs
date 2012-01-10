@@ -41,11 +41,17 @@
  */
 
 
+var InterpolateStrategy = toxi.math.InterpolateStrategy,
+    SigmoidInterpolation = toxi.math.SigmoidInterpolation,
+    MathUtils = toxi.math.MathUtils,
+    Vec2D = toxi.geom.Vec2D,
+    TColor = toxi.color.TColor;
+
 // keepers of transition state & target
 float transition, transTarget;
 
 // use a S-Curve to achieve an ease in/out effect
-toxi.InterpolateStrategy is=new toxi.SigmoidInterpolation(3);
+InterpolateStrategy is=new SigmoidInterpolation(3);
 
 
 void setup() {
@@ -59,23 +65,23 @@ void draw() {
   translate(w2, h2);
   // update transition
   transition += (transTarget - transition) * 0.01;
-  toxi.Vec2D normUp = new toxi.Vec2D(0, -1);
+  Vec2D normUp = new Vec2D(0, -1);
   // define a color container using HSV
-  toxi.color.TColor col = toxi.color.TColor.newHSV(0, 1, 1);
+  TColor col = TColor.newHSV(0, 1, 1);
   for(int i = 270; i < 360 + 270; i += 2) {
     float theta = radians(i);
     // create a polar coordinate
-    toxi.Vec2D polar = new toxi.Vec2D(100,theta);
+    Vec2D polar = new Vec2D(100,theta);
     // use theta as color hue (ensure theta is properly wrapped)
     col.setHue((polar.y / TWO_PI) % 1);
     // also use theta to manipulate line length
     float len = noise(polar.y * 4) * 100;
     // convert polar coord into cartesian space (to obtain position on a circle)
-    toxi.Vec2D circ = polar.copy().toCartesian();
+    Vec2D circ = polar.copy().toCartesian();
     // create another coord splicing the circle at the top and using theta difference as position on a line
-    toxi.Vec2D linear = new toxi.Vec2D((toxi.MathUtils.THREE_HALVES_PI - polar.y) * w2 / PI + w2, 0);
+    Vec2D linear = new Vec2D((MathUtils.THREE_HALVES_PI - polar.y) * w2 / PI + w2, 0);
     // interprete circular position as normal/direction vector 
-    toxi.Vec2D dir = circ.getNormalized();
+    Vec2D dir = circ.getNormalized();
     // interpolate both position & normal based on current transition state
     circ.interpolateToSelf(linear, transition,is);
     dir.interpolateToSelf(normUp, transition,is).normalizeTo(len);

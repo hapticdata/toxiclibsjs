@@ -48,6 +48,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+var Vec2D = toxi.geom.Vec2D;
 
 int NUM_CUTOUTS=18;
 int NUM_ARCSEG=8;
@@ -68,7 +69,7 @@ void setup() {
     float alpha=i*TWO_PI/NUM_CUTOUTS;
     float beta=(i+1)*TWO_PI/NUM_CUTOUTS;
     // cutout
-    toxi.Vec2D[] insets=computePoints(alpha,INSET,SIZE);
+    Vec2D[] insets=computePoints(alpha,INSET,SIZE);
     _vertex(insets[1]);
     _vertex(insets[0]);
     float gamma=computeAngles(alpha,RADIUS,SIZE)[0];
@@ -76,21 +77,21 @@ void setup() {
     // arc between cutouts
     for(int j=0; j<=NUM_ARCSEG; j++) {
       float theta=lerp(gamma,delta,j/(float)NUM_ARCSEG);
-      _vertex(toxi.Vec2D.fromTheta(theta).scaleSelf(RADIUS));
+      _vertex(Vec2D.fromTheta(theta).scaleSelf(RADIUS));
     }
   }
   endShape(CLOSE);
 }
 
 //can't override methods the same way as in java, so I added the _
-void _vertex(toxi.Vec2D v) {
+void _vertex(Vec2D v) {
   vertex(v.x,v.y);
 }
 
 float[] computeAngles(float theta, float radius, float dist) {
-  toxi.Vec2D[] points=computePoints(theta,radius,dist);
-  toxi.Vec2D a=points[0].toPolar();
-  toxi.Vec2D b=points[1].toPolar();
+  Vec2D[] points=computePoints(theta,radius,dist);
+  Vec2D a=points[0].toPolar();
+  Vec2D b=points[1].toPolar();
   float alpha=a.y<0 ? TWO_PI+a.y : a.y;
   float beta=b.y<0 ? TWO_PI+b.y : b.y;
   return new float[]{
@@ -98,11 +99,11 @@ float[] computeAngles(float theta, float radius, float dist) {
 }
 
 Vec2D[] computePoints(float theta, float radius, float dist) {
-  toxi.Vec2D p=toxi.Vec2D.fromTheta(theta).scaleSelf(radius);
-  toxi.Vec2D n=p.getPerpendicular().normalizeTo(dist/2);
-  toxi.Vec2D a=p.add(n);
-  toxi.Vec2D b=p.sub(n);
-  return new toxi.Vec2D[]{
+  Vec2D p=Vec2D.fromTheta(theta).scaleSelf(radius);
+  Vec2D n=p.getPerpendicular().normalizeTo(dist/2);
+  Vec2D a=p.add(n);
+  Vec2D b=p.sub(n);
+  return new Vec2D[]{
     a,b };
 }
 </script>

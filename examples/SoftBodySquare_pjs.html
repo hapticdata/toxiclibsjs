@@ -37,6 +37,13 @@
  */
 
 
+var VerletPhysics2D = toxi.physics2d.VerletPhysics2D,
+    GravityBehavior = toxi.physics2d.behaviors.GravityBehavior,
+    VerletParticle2D = toxi.physics2d.VerletParticle2D,
+    VerletSpring2D = toxi.physics2d.VerletSpring2D,
+    Vec2D = toxi.geom.Vec2D,
+    Rect =toxi.geom.Rect;
+
 int DIM=10;
 int REST_LENGTH=20;
 float STRENGTH=0.125;
@@ -48,19 +55,19 @@ VerletParticle2D head,tail;
 void setup() {
   size(960, 582);
   smooth();
-  physics=new toxi.physics2d.VerletPhysics2D();
-  physics.addBehavior(new toxi.physics2d.GravityBehavior(new toxi.Vec2D(0,0.1)));
-  physics.setWorldBounds(new toxi.Rect(0,0,width,height));
+  physics=new VerletPhysics2D();
+  physics.addBehavior(new GravityBehavior(new Vec2D(0,0.1)));
+  physics.setWorldBounds(new Rect(0,0,width,height));
   for(int y=0,idx=0; y<DIM; y++) {
     for(int x=0; x<DIM; x++) {
-      VerletParticle2D p = new toxi.physics2d.VerletParticle2D(x*REST_LENGTH,y*REST_LENGTH);
+      VerletParticle2D p = new VerletParticle2D(x*REST_LENGTH,y*REST_LENGTH);
       physics.addParticle(p);
       if (x>0) {
-        VerletSpring2D s= new toxi.physics2d.VerletSpring2D(p,physics.particles[idx-1],REST_LENGTH,STRENGTH);
+        VerletSpring2D s= new VerletSpring2D(p,physics.particles[idx-1],REST_LENGTH,STRENGTH);
         physics.addSpring(s);
       }
       if (y>0) {
-        VerletSpring2D s = new toxi.physics2d.VerletSpring2D(p,physics.particles[idx-DIM],REST_LENGTH,STRENGTH);
+        VerletSpring2D s = new VerletSpring2D(p,physics.particles[idx-DIM],REST_LENGTH,STRENGTH);
         physics.addSpring(s);
       }
       idx++;
@@ -69,11 +76,11 @@ void setup() {
   VerletParticle2D p=physics.particles[0];
   VerletParticle2D q=physics.particles[physics.particles.length-1];
   float len=sqrt(sq(REST_LENGTH*(DIM-1))*2);
-  VerletSpring2D s=new toxi.physics2d.VerletSpring2D(p,q,len,INNER_STRENGTH);
+  VerletSpring2D s=new VerletSpring2D(p,q,len,INNER_STRENGTH);
   physics.addSpring(s);
   p=physics.particles[DIM-1];
   q=physics.particles[physics.particles.length-DIM];
-  s=new toxi.physics2d.VerletSpring2D(p,q,len,INNER_STRENGTH);
+  s=new VerletSpring2D(p,q,len,INNER_STRENGTH);
   physics.addSpring(s);
   var headIdx = (DIM-1)/2;
   console.log(headIdx)

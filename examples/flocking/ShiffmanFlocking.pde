@@ -36,11 +36,11 @@ import toxi.math.*;
 Flock flock;
 
 void setup() {
-  size(600,200);
+  size(600,300);
   flock = new Flock();
   // Add an initial set of boids into the system
   for (int i = 0; i < 70; i++) {
-    flock.addBoid(new Boid(new toxi.Vec2D(width/2,height/2),3.0,0.05));
+    flock.addBoid(new Boid(new Vec2D(width/2,height/2),3.0,0.05));
   }
   smooth();
 }
@@ -52,6 +52,6 @@ void draw() {
 
 // Add a new boid into the System
 void mousePressed() {
-  flock.addBoid(new Boid(new toxi.Vec2D(mouseX,mouseY),2.0,0.05f));
+  flock.addBoid(new Boid(new Vec2D(mouseX,mouseY),2.0,0.05f));
 }
 

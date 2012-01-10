@@ -24,12 +24,12 @@
 		ctx = canvas.getContext('2d');
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight;
-		spline = new toxi.Spline2D();
+		spline = new toxi.geom.Spline2D();
 		points = [];
 		
 		
+		//controls
 		$("#distance").change(function(){
-			console.log($(this));
 			sampleDistance = $(this).val();
 			updateLabels();
 		});
@@ -42,6 +42,7 @@
 		$("#clear").click(function(){
 			ctx.clearRect(0,0,canvas.width,canvas.height);
 		});
+		//
 		
 		window.onmousemove = function(e){
 			update(e.pageX,e.pageY);
@@ -59,7 +60,7 @@
 	
 	function update(mouseX,mouseY){
 		 var numP=points.length;
-  		 var currP=new toxi.Vec2D(mouseX,mouseY);
+  		 var currP=new toxi.geom.Vec2D(mouseX,mouseY);
   		 
   		 if (numP>0) {
   		 

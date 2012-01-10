@@ -36,6 +36,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+ var  VerletPhysics2D = toxi.physics2d.VerletPhysics2D,
+      VerletParticle2D = toxi.physics2d.VerletParticle2D,
+      ParticleString2D = toxi.physics2d.ParticleString2D,
+      Rect = toxi.geom.Rect,
+      Vec2D = toxi.geom.Vec2D;
+
 import toxi.geom.*;
 import toxi.physics2d.*;
 
@@ -47,11 +53,11 @@ float snapDist=10*10;
 
 void setup() {
   size(600,600);
-  physics=new toxi.physics2d.VerletPhysics2D();
-  physics.setWorldBounds(new toxi.Rect(0,0,width,height));
+  physics=new VerletPhysics2D();
+  physics.setWorldBounds(new Rect(0,0,width,height));
   // create 10 particle strings of 20 particles each
   for(int i=0; i<10; i++) {
-    ParticleString2D s = new toxi.physics2d.ParticleString2D(physics,new toxi.Vec2D(width/2,height/2),toxi.Vec2D.fromTheta(i*0.1*TWO_PI).scaleSelf(10),20,1,0.5);
+    ParticleString2D s = new ParticleString2D(physics,new Vec2D(width/2,height/2),Vec2D.fromTheta(i*0.1*TWO_PI).scaleSelf(10),20,1,0.5);
   }
 }
 
@@ -78,7 +84,7 @@ void draw() {
 // check all particles if mouse pos is less than snap distance
 void mousePressed() {
   selected=null;
-  Vec2D mousePos=new toxi.Vec2D(mouseX,mouseY);
+  Vec2D mousePos=new Vec2D(mouseX,mouseY);
   int partLen = physics.particles.length;
   for(int i = 0;i<partLen;i++) {
     VerletParticle2D p= physics.particles[i];
