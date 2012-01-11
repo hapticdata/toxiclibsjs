@@ -1,3 +1,4 @@
+//v0.1.0 toxiclibs.js (http://haptic-data.com/toxiclibsjs)
 var toxi = {};
 (function(){
 
@@ -5410,9 +5411,6 @@ define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./T
 
 var TriangleMesh = require('./TriangleMesh');
 var Vec3D = require('../Vec3D');
-	
-
-console.log("T",TriangleMesh);
 
 /**
  * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface

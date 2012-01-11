@@ -24,7 +24,7 @@
 		'toxi'
 	],
 	wrap: {
-		start: "var toxi = {};\n(function(){\n",
+		start: "//v0.1.0 toxiclibs.js (http://haptic-data.com/toxiclibsjs)\nvar toxi = {};\n(function(){\n",
 		end: "toxi = require('toxi'); }())\n"
 	}
 })

@@ -4,7 +4,7 @@ Contributions to toxiclibsjs are appreciated, users who would like to contribute
 
 #Contribution rules
 
-* All code must be written to the [CommonJS](http://commonjs.org) module specification. These modules are then converted for use with [RequireJS](http://requirejs.org) or as a single js global.
+* All code must be written to the [Asynchronous Module Definition](https://github.com/amdjs/amdjs-api/wiki/AMD) specification.
 * The top priority of all code is to follow the functionality and public API of [the original toxiclibs](http://toxiclibs.org). The aim is for there to be no exceptions, if for some reason there is, it must be clearly commented and mentioned in the pull request.
 * Extend classes using the [internals module](http://github.com/hapticdata/toxiclibsjs/lib/internals.js)
 * Do not use methods such as \__defineGetter__\, or other methods that were not supported by older browsers. [forEach](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach) can be used through the [internals module](http://github.com/hapticdata/toxiclibsjs/lib/internals.js) if desired.
