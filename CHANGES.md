@@ -7,7 +7,7 @@
 *	 published to [NPM](http://npmjs.org/)
 *	 new classes
 	*		 ``toxi.math.noise.PerlinNoise``
-	*		 ``toxi.math.noise.simpleNoise``
+	*		 ``toxi.math.noise.simplexNoise``
 	*		 ``toxi.math.conversion.unitTranslator``
 	*		 ``toxi.processing.ToxiclibsSupport``
 	*		 ``toxi.THREE.ToxiclibsSupport``
