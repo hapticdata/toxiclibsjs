@@ -27,7 +27,7 @@
 		<aside id="authors" class="grid_6">created by <a href="http://haptic-data.com">Kyle Phillips</a></aside>
 		<aside id="usage" class="grid_6"><strong>Usage:</strong><br>move your mouse around rotate and zoom the spherical points</aside>
 		<article id="description" class="grid_12">
-			<p>Quick example showing the use of toxi.Sphere within Three.js</p>
+			<p>Quick example showing the use of toxi.geom.Sphere within Three.js</p>
 		</article>
 		</section>
 		<footer class="grid_12"><a href="http://haptic-data.com/toxiclibsjs/">toxiclibs.js</a></footer>
@@ -74,7 +74,7 @@
 				var geometry = new THREE.Geometry();
 				
 				
-				var mesh = new toxi.Sphere(100).toMesh(null,20);
+				var mesh = new toxi.geom.Sphere(100).toMesh(null,20);
 				var vertices = mesh.getVertices();
 				var numVertices = vertices.length;
 				
