@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+<title>test</title>
+<script data-main="scripts/main" src="scripts/require.js"></script>
+<script src="../../../build/toxiclibs.js"></script>
+<script type="text/javascript">
+require.config({
+	paths: {
+		toxi: "../../../../lib/toxi"
+	}
+});
+
+console.log("using build/toxiclibs.js, with almond");
+console.log(new toxi.geom.Sphere(200).toMesh(undefined,20));
+</script>
+</head>
+<body>
+    <h1>Toxiclibs.js <a href="https://github.com/hapticdata/toxiclibsjs/issues/18">issue #18</a></h1>
+    <h2>toxi/geom/Sphere -> toxi/geom/mesh/SurfaceMeshBuilder -> toxi/geom/mesh/TriangleMesh</h2>
+    <p>"undefined is not a function" when used in a "built" file, works as separately-loaded modules. check console for messages</p>
+</body>
+</html>

@@ -14,17 +14,15 @@
 	findNestedDependencies: true,
 	optimize: 'none',
 	out: "../../build/toxiclibs.js",
-	paths: {
-		almond: '../utils/almond/almond',
-		almondSettings: '../utils/almond.settings'
-	},
+	modules: [
+	],
 	include: [
-		'almond',
-		'almondSettings',
+		'../utils/almond/almond',
+		'../utils/almond.settings',
 		'toxi'
 	],
 	wrap: {
-		start: "var toxi = {};\n(function(){\n",
+		start: "//v0.1.0 toxiclibs.js (http://haptic-data.com/toxiclibsjs)\nvar toxi = {};\n(function(){\n",
 		end: "toxi = require('toxi'); }())\n"
 	}
 })

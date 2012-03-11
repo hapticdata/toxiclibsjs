@@ -1,3 +1,9 @@
 .gitignore
 src
-node_modules
+*node_modules
+build/
+utils/almond
+utils/r.js
+utils/
+tests/qunit
+tests/requirejs

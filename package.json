@@ -1,7 +1,7 @@
 {
 	"name" : "toxiclibsjs",
 	"version" : "0.1.0",
-	"description" : "toxiclibsjs is an independent, open source library collection for computational design tasks with JavaScript.",
+	"description" : "toxiclibsjs is an open source library for computational design tasks with JavaScript.",
 	"keywords" : [ "design", "geometry", "mesh", "math", "graphics" ],
 	"main" : "../index",
 	"engines" : { "node" : ">=0.4" },
@@ -18,7 +18,7 @@
 	"repositories" : [
 		{ "type" : "git", "url" : "http://github.com/hapticdata/toxiclibsjs" }
 	],
-	"directories" : {
-		"lib" : "toxi/"
+	"dependencies" : {
+		"requirejs" : ">=1.0.0"
 	}
 }
