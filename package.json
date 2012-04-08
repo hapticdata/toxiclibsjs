@@ -1,6 +1,6 @@
 {
 	"name" : "toxiclibsjs",
-	"version" : "0.1.0",
+	"version" : "0.1.1",
 	"description" : "toxiclibsjs is an open source library for computational design tasks with JavaScript.",
 	"keywords" : [ "design", "geometry", "mesh", "math", "graphics" ],
 	"main" : "../index",

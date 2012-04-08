@@ -2,7 +2,7 @@
 
 <html lang="en">
 <head>
-	<title>Polar Lines  - toxiclibs.js examples</title>
+	<title>Toxiclibs.js toxi.processing.ToxiclibsSupport demo + Processing.js - WebGL</title>
 	<meta name="author" content="Kyle Phillips">
 	<link href="css/style.css" rel="stylesheet" type="text/css">
 	<!-- Date: 2011-01-09 -->
@@ -12,40 +12,13 @@
 <body class="container_12">
 <header class="grid_12">
 	<hgroup>
-		<h1>Polar Lines</h1>
+		<h1>toxi.processing.ToxiclibsSupport</h1>
 		<h2>w/ <a href="http://processingjs.org">Processing.js</a></h2>
 	</hgroup>
 </header>
 
 <script id="code" type="text/processing" data-processing-target="myCanvas">
-/**
- * PolarLines demo shows the difference between lines in normal cartesian
- * and polar coordinate systems, where a line is actually a curve/spiral.
- * Both "lines" are shown in parallel and the only difference is the order
- * of the .toCartesian() conversion (either inside or outside the loop).
- *
- * Usage: move mouse to adjust line endpoint
- */
 
-/* 
- * Copyright (c) 2006-2008 Karsten Schmidt
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * http://creativecommons.org/licenses/LGPL/2.1/
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
 
 import toxi.geom.*;
 
@@ -63,17 +36,17 @@ Vec3D[] lineStrip;
 void setup() {
   size(640,560,OPENGL);
   gfx = new toxi.processing.ToxiclibsSupport(this);
-  box = new toxi.AABB(new toxi.Vec3D(), new toxi.Vec3D(100,100,100));
-  cone = new toxi.Cone(toxi.Vec3D.randomVector(),new toxi.Vec3D(10,10,10),50,4,300);
+  box = new toxi.geom.AABB(new toxi.geom.Vec3D(), new toxi.geom.Vec3D(100,100,100));
+  cone = new toxi.geom.Cone(toxi.geom.Vec3D.randomVector(),new toxi.geom.Vec3D(10,10,10),50,4,300);
   //console.log(cone);
-  cylinder = new toxi.YAxisCylinder(new toxi.Vec3D(),50,100);
-  sphere = new toxi.Sphere(80);
-  line =  new toxi.Line3D(new toxi.Vec3D(-500,-500,-50), new toxi.Vec3D(500,500,50));
-  ray = new toxi.Ray3D(new toxi.Vec3D(), new toxi.Vec3D(-25,-25,25));
+  cylinder = new toxi.geom.YAxisCylinder(new toxi.geom.Vec3D(),50,100);
+  sphere = new toxi.geom.Sphere(80);
+  line =  new toxi.geom.Line3D(new toxi.geom.Vec3D(-500,-500,-50), new toxi.geom.Vec3D(500,500,50));
+  ray = new toxi.geom.Ray3D(new toxi.geom.Vec3D(), new toxi.geom.Vec3D(-25,-25,25));
   
-  lineStrip = new toxi.Vec3D[numLines];
+  lineStrip = new toxi.geom.Vec3D[numLines];
   for(int i=0;i<numLines;i++){
-  	lineStrip[i] = new toxi.Vec3D(toxi.Vec3D.randomVector().scaleSelf(height*0.5));
+  	lineStrip[i] = new toxi.geom.Vec3D(toxi.geom.Vec3D.randomVector().scaleSelf(height*0.5));
   }
   console.log(lineStrip);
 }
@@ -114,12 +87,11 @@ void draw() {
 </div>
 <section id="details" class="grid_12">
 <aside id="authors" class="grid_6">
-<p>original example by <a href="http://postspectacular.com">Karsten Schmidt</a><br/>
-	Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a>
+<p>Toxiclibs ported to js by <a href="http://workofkylephillips.com">Kyle Phillips</a>
 </p>
 </aside>
 <article id="description" class="grid_12">
-<p>PolarLines demo shows the difference between lines in normal cartesian and polar coordinate systems, where a line is actually a curve/spiral. Both "lines" are shown in parallel and the only difference is the order of the .toCartesian() conversion (either inside or outside the loop).</p>
+<p>This demonstration shows the ease of using Toxiclibs.js with Processing.js in WebGL mode.</p>
 </article>
 </section>
 <footer class="grid_12"><a href="http://haptic-data.com">toxiclibs.js

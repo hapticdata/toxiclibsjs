@@ -1,5 +1,12 @@
 #CHANGES
 
+##v0.1.1
+*	ParticleString2D.clear() bugfix
+*	removed all uses of 'instanceof' test, replaced with property testing
+*	toxi/THREE/ToxiclibsSupport updated for latest revision of Three.js and now usable as an AMD module
+*	Rect#setDimensions bugfix
+*	Line2D#scale bugfix
+*	Triangle2D#getCircumCircle bugfix
 
 ##v0.1.0
 *	 released as [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) modules,for use with [RequireJS](http://requirejs.org) or [Node.js](http://nodejs.org)

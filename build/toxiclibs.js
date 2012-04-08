@@ -1,4 +1,4 @@
-//v0.1.0 toxiclibs.js (http://haptic-data.com/toxiclibsjs)
+//v0.1.1 toxiclibs.js (http://haptic-data.com/toxiclibsjs)
 var toxi = {};
 (function(){
 
@@ -967,6 +967,7 @@ define('toxi/internals',["require", "exports", "module"], function(require, expo
  */
 
 
+
 var ifUndefinedElse = function(_if,_else){
 	return (typeof _if !== 'undefined') ? _if : _else;
 };
@@ -977,7 +978,14 @@ module.exports.extend = function(childClass,superClass){
 	childClass.prototype.parent = superClass.prototype;
 };
 
-module.exports.hasProperties = function(subject,properties){
+
+ //allow the library to assume Array.isArray has been implemented
+var isArray = Array.isArray || function(a){
+	return a.toString() == '[object Array]';	
+};
+module.exports.isArray = isArray;
+
+var hasProperties = function(subject,properties){
 	if(subject === undefined || typeof subject != 'object'){
 		return false;
 	}
@@ -992,10 +1000,47 @@ module.exports.hasProperties = function(subject,properties){
 	}
 	return true;
 };
- //allow the library to assume Array.isArray has been implemented
-module.exports.isArray = Array.isArray || function(a){
-	return a.toString() == '[object Array]';	
+
+module.exports.tests = {
+	hasXY: function( o ){
+		return hasProperties(o, ['x','y']);
+	},
+	hasXYZ: function( o ){
+		return hasProperties(o, ['x','y','z']);
+	},
+	hasXYWidthHeight: function( o ){
+		return hasProperties( o, ['x','y','width','height']);
+	},
+	isArray: isArray,
+	isAABB: function ( o ){
+		return hasProperties(o, ['setExtent','getNormalForPoint']);
+	},
+	isCircle: function( o ){
+		return hasProperties( o, ['getCircumference','getRadius','intersectsCircle']);
+	},
+	isLine2D: function( o ){
+		return hasProperties(o, ['closestPointTo','intersectLine','getLength']);
+	},
+	isMatrix4x4: function( o ){
+    	return hasProperties( o, ['identity', 'invert', 'setFrustrum']);
+	},
+	isRect: function( o ){
+		return hasProperties(o, ['x','y','width','height','getArea','getCentroid','getDimensions']);
+	},
+	isSphere: function( o ){
+		return hasProperties(o, ['x','y','z','radius','toMesh']);
+	},
+	isTColor: function( o ){
+		return hasProperties(o, ['rgb','cmyk','hsv']);
+	},
+	isParticleBehavior: function( o ){
+		return hasProperties(o, ['applyBehavior','configure']);
+	},
+	isVerletParticle2D: function( o ){
+		return hasProperties(o, ['x','y','weight']);
+	}
 };
+
 //basic forEach, use native implementation is available
 //from Underscore.js
 var breaker = {};
@@ -1326,7 +1371,7 @@ var Interpolation2D = {};
  */
 Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
 	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if(_x instanceof Object) //if the first 3 params are passed in as Vec2Ds
+	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
 	{
 		x = _x.x;
 		y = _x.y;
@@ -3673,7 +3718,7 @@ RectConstraint.prototype = {
 module.exports = RectConstraint;
 });
 
-define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module"], function(require, exports, module) {
+define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module", "../internals"], function(require, exports, module) {
 /**
  * @author Kyle Phillips  / haptic-data.com<
  * Intended to be a bridge between Toxiclibs.js and Three.js
@@ -3681,6 +3726,8 @@ define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module"], function(
  * Three.js does type-checking to ensure that vectors, vertices and faces are of THREE's types
  * this helps to do that conversion process.
  */
+
+var internals = require('../internals');
 
 var	ToxiclibsSupport = function(scene){
 	if(THREE === undefined){
@@ -3744,7 +3791,7 @@ ToxiclibsSupport.createMesh = function(triangleMesh,material){
 	if(material === undefined){
 		material = new THREE.MeshBasicMaterial();
 	}
-	var geometry = toxi.THREE.ToxiclibsSupport.createMeshGeometry(triangleMesh);
+	var geometry = ToxiclibsSupport.createMeshGeometry(triangleMesh);
 	return new THREE.Mesh(geometry,material);
 };
 
@@ -3764,12 +3811,12 @@ ToxiclibsSupport.prototype = {
 		if(holdInDictionary === undefined){
 			holdInDictionary = true;
 		}
-		var geom = toxi.THREE.ToxiclibsSupport.createLineGeometry(line3d);
+		var geom = ToxiclibsSupport.createLineGeometry(line3d);
 		var line = new THREE.Line(geom,material);
 		if(holdInDictionary){
 			this.objectDictionary[line3d] = line;
 		}
-		this.scene.addObject(line);
+		this.scene.add(line);
 		return line;
 	},
 	addMesh: function(obj_or_toxiTriangleMesh,threeMaterials,holdInDictionary){
@@ -3788,14 +3835,14 @@ ToxiclibsSupport.prototype = {
 		if(holdInDictionary){
 			this.objectDictionary[toxiTriangleMesh] = threeMesh;
 		}
-		this.scene.addObject(threeMesh);
+		this.scene.add(threeMesh);
 		return threeMesh;
 	},
 	addParticles: function(positions, material, holdInDictionary){
 		if(material === undefined){
 			material = new THREE.ParticleBasicMaterial();
 		}
-		positions = positions instanceof Array ? positions : [ positions ];
+		positions =  internals.tests.isArray( positions ) ? positions : [ positions ];
 		var particle = new THREE.Geometry();
 		for(var i=0,len = positions.length;i<len;i++){
 			v3(particle,positions[i]);
@@ -3804,14 +3851,14 @@ ToxiclibsSupport.prototype = {
 			this.objectDictionary[position] = particle;
 		}
 		var particleSystem = new THREE.ParticleSystem(particle,material);
-		this.scene.addObject(particleSystem);
+		this.scene.add(particleSystem);
 		return particle;
 	},
 	createMeshGeometry: function(triangleMesh){
-		return toxi.THREE.ToxiclibsSupport.createMeshGeometry(triangleMesh);
+		return ToxiclibsSupport.createMeshGeometry(triangleMesh);
 	},
 	createMesh: function(triangleMesh,material){
-		return toxi.THREE.ToxiclibsSupport.createMesh(triangleMesh,material);
+		return ToxiclibsSupport.createMesh(triangleMesh,material);
 	},
 	removeObject: function(toxiObject){
 		var threeMesh = this.objectDictionary[toxiObject];
@@ -4136,10 +4183,12 @@ module.exports = {};
 module.exports.datatypes = require('./utils/datatypes');
 });
 
-define('toxi/geom/Matrix4x4',["require", "exports", "module", "../math/mathUtils","./Vec3D"], function(require, exports, module) {
+define('toxi/geom/Matrix4x4',["require", "exports", "module", "../math/mathUtils","./Vec3D","../internals"], function(require, exports, module) {
 
 var mathUtils = require('../math/mathUtils'),
+    internals = require('../internals'),
 	Vec3D = require('./Vec3D');
+
 
 /**
  * @description Implements a simple row-major 4x4 matrix class, all matrix operations are
@@ -4157,13 +4206,13 @@ var Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42
 		this.matrix[1] = [0,1,0,0];
 		this.matrix[2] = [0,0,1,0];
 		this.matrix[3] = [0,0,0,1];
-	} else if(v11 instanceof Number){ //if the variables were numbers
+	} else if(typeof(v11) == 'number'){ //if the variables were numbers
 		var m1 = [v11,v12,v13,v14];
 		var m2 = [v21,v22,v23,v24];
 		var m3 = [v31,v32,v33,v34];
 		var m4 = [v41,v42,v43,v44];
 		this.matrix = [m1,m2,m3,m4];
-	} else if(v11 instanceof Array) { //if it was sent in as one array
+	} else if( internals.tests.isArray( v11 ) ){ //if it was sent in as one array
 		var array = v11;
 		if (array.length != 9 && array.length != 16) {
 			throw new Error("Matrix4x4: Array length must == 9 or 16");
@@ -4183,7 +4232,7 @@ var Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42
 			this.matrix[2][3] = NaN;
 			this.matrix[3] = [NaN,NaN,NaN,NaN];
 		}
-	} else if(v11 instanceof Matrix4x4){
+	} else if( internals.tests.isMatrix4x4( v11 ) ){
 
 	//else it should've been a Matrix4x4 that was passed in
 		var m = v11,
@@ -4519,7 +4568,7 @@ Matrix4x4.prototype = {
     },
 
     scaleSelf: function(a,b,c) {
-		if(a instanceof Object){
+		if( internals.tests.hasXYZ( a ) ){
 			b = a.y;
 			c = a.z;
 			a = a.x;
@@ -4707,7 +4756,7 @@ Matrix4x4.prototype = {
     },
 
     translateSelf: function( dx, dy, dz) {
-		if(dx instanceof Object){
+		if( internals.tests.hasXYZ( dx ) ){
 			dy = dx.y;
 			dz = dx.z;
 			dx = dx.x;
@@ -5354,7 +5403,7 @@ var	SphereFunction = function(sphere_or_radius) {
 		this.sphere = new Sphere(new Vec3D(),1);
 	}
 	
-	if(internals.hasProperties(sphere_or_radius,['x','y','z','radius'])){
+	if(internals.tests.isSphere( sphere_or_radius )){
 		this.sphere = sphere_or_radius;
 	}
 	else{
@@ -5524,7 +5573,7 @@ module.exports = SurfaceMeshBuilder;
 
 define('toxi/geom/Sphere',["require", "exports", "module", "../internals","./Vec3D","./mesh/SphereFunction"], function(require, exports, module) {
 
-var	extend = require('../internals').extend,
+var	internals = require('../internals'),
 	Vec3D = require('./Vec3D'),
 	SphereFunction = require('./mesh/SphereFunction');
 	
@@ -5532,6 +5581,9 @@ var	SurfaceMeshBuilder;
 	require(['./mesh/SurfaceMeshBuilder'],function(SMB){
 		SurfaceMeshBuilder = SMB;
 	});
+
+
+
 
 /**
  * @module toxi.geom.Sphere
@@ -5542,9 +5594,9 @@ var	Sphere = function(a,b){
 		Vec3D.apply(this,[new Vec3D()]);
 		this.radius = 1;
 	}
-	else if(a instanceof Vec3D){
+	else if( internals.tests.hasXYZ( a ) ){
 		Vec3D.apply(this,[a]);
-		if(a instanceof Sphere){
+		if( internals.tests.isSphere( a ) ){
 			this.radius = a.radius;
 		}
 		else {
@@ -5557,7 +5609,7 @@ var	Sphere = function(a,b){
 	}
 };
 
-extend(Sphere,Vec3D);
+internals.extend(Sphere,Vec3D);
 
 
 Sphere.prototype.containsPoint = function(p) {
@@ -5658,7 +5710,7 @@ Sphere.prototype.toMesh = function() {
 		resolution: 0
 	};
 	if(arguments.length === 1){
-		if(arguments[0] instanceof Object){ //options object
+		if(typeof(arguments[0]) == 'object'){ //options object
 			opts.mesh = arguments[0].mesh;
 			opts.resolution = arguments[0].res || arguments[0].resolution;
 		} else { //it was just the resolution Number
@@ -5989,7 +6041,7 @@ TriangleMesh.prototype = {
 	        normals = undefined;
 	        offset = 0;
 	        stride = TriangleMesh.DEFAULT_STRIDE;
-	    } else if(arguments.length == 1 && arguments[0] instanceof Object){ //options object
+	    } else if(arguments.length == 1 && typeof(arguments[0]) == 'object'){ //options object
 	        var opts = arguments[0];
 	        normals = opts.normals;
 	        offset = opts.offset;
@@ -6434,10 +6486,13 @@ module.exports = TriangleMesh;
 
 define('toxi/geom/AABB',["require", "exports", "module", "../internals","./Vec3D","./mesh/TriangleMesh","../math/mathUtils"], function(require, exports, module) {
 
-var	extend = require('../internals').extend,
+var	internals = require('../internals'),
 	Vec3D = require('./Vec3D'),
 	TriangleMesh = require('./mesh/TriangleMesh'),
 	mathUtils = require('../math/mathUtils');
+
+
+
 
 /**
  @class Axis-aligned Bounding Box
@@ -6452,9 +6507,9 @@ var AABB = function(a,b){
 	} else if(typeof(a) == "number") {
 		Vec3D.apply(this,[new Vec3D()]);
 		this.setExtent(a);
-	} else if(a instanceof Vec3D) {
+	} else if( internals.tests.hasXYZ( a ) ) {
 		Vec3D.apply(this,[a]);
-		if(b === undefined && a instanceof AABB) {
+		if(b === undefined && internals.tests.isAABB( a )) {
 			this.setExtent(a.getExtent());
 		} else {
 			if(typeof b == "number"){
@@ -6468,7 +6523,7 @@ var AABB = function(a,b){
 	
 };
 
-extend(AABB,Vec3D);
+internals.extend(AABB,Vec3D);
 
 AABB.fromMinMax = function(min,max){
 	var a = Vec3D.min(min, max);
@@ -6787,11 +6842,11 @@ AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
  */
 
 AABB.prototype.set = function(a,b,c) {
-		if(a  instanceof AABB) {
+		if(internals.tests.isAABB( a )) {
 			this.extent.set(a.extent);
 			return Vec3D.set.apply(this,[a]);
 		}
-		if(a instanceof Vec3D){
+		if( internals.tests.hasXYZ( a )){
 			b = a.y;
 			c = a.z;
 			a = a.a;
@@ -6884,14 +6939,16 @@ module.exports = AABB;
 
 });
 
-define('toxi/geom/Vec3D',["require", "exports", "module", "./Vec2D","../math/mathUtils"], function(require, exports, module) {
+define('toxi/geom/Vec3D',["require", "exports", "module", "./Vec2D","../math/mathUtils", "../internals"], function(require, exports, module) {
 
+var internals = require('../internals');
 var	Vec2D, AABB;
 require(['./Vec2D','./AABB'],function(v2,AB){
 	Vec2D = v2;
 	AABB = AB;
 });
 var	mathUtils = require('../math/mathUtils');
+
 
 /**
  * @member toxi
@@ -6901,7 +6958,7 @@ var	mathUtils = require('../math/mathUtils');
  * @param {Number} z the z
  */
 var Vec3D = function(x, y, z){
-	if(typeof x == 'object' && x.x !== undefined && x.y !== undefined && x.z !== undefined){
+	if( internals.tests.hasXYZ( x ) ){
 		this.x = x.x;
 		this.y = x.y;
 		this.z = x.z;
@@ -6926,7 +6983,7 @@ Vec3D.prototype = {
 	},
 	
 	add: function(a,b,c){
-		if(a instanceof Object){
+		if( internals.tests.hasXYZ( a ) ){
 			return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
 		}
 		return new Vec3D(this.x+a,this.y+b,this.z+c);
@@ -6989,7 +7046,7 @@ Vec3D.prototype = {
 	 */
 	constrain: function(box_or_min, max){
 		var min;
-		if(box_or_min instanceof AABB){
+		if( internals.tests.isAABB( box_or_min ) ){
 			max = box_or_min.getMax();
 			min = box_or_min.getMin();
 		} else {
@@ -7062,7 +7119,7 @@ Vec3D.prototype = {
 	},
 	
 	equals: function(vec){
-		if(vec instanceof Object){
+		if( internals.tests.hasXYZ( vec ) ){
 			return this.x == vec.x && this.y == vec.y && this.z == vec.z;
 		}
 		return false;
@@ -7103,7 +7160,7 @@ Vec3D.prototype = {
 	},
 	
 	getComponent: function(id){
-		if(id instanceof Number){
+		if(typeof(id) == 'number'){
 			if(id === Vec3D.Axis.X){
 				id = 0; 
 			} else if(id === Vec3D.Axis.Y){
@@ -7473,7 +7530,7 @@ Vec3D.prototype = {
 	},
 
 	scale:function(a,b,c) {
-		if(a instanceof Vec3D) { //if it was a vec3d that was passed
+		if( internals.tests.hasXYZ( a ) ) { //if it was a vec3d that was passed
 			return new Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
 		}
 		else if(b === undefined || c === undefined) { //if only one float was passed
@@ -7483,7 +7540,7 @@ Vec3D.prototype = {
 	},
 	
 	scaleSelf: function(a,b,c) {
-		if(a instanceof Object){
+		if( internals.tests.hasXYZ( a ) ){
 			this.x *= a.x;
 			this.y *= a.y;
 			this.z *= a.z;
@@ -7498,7 +7555,7 @@ Vec3D.prototype = {
 	},
 	
 	set: function(a,b,c){
-		if(a instanceof Object)
+		if( internals.tests.hasXYZ( a ) )
 		{
 			this.x = a.x;
 			this.y = a.y;
@@ -7559,7 +7616,7 @@ Vec3D.prototype = {
 	},
 	
 	sub: function(a,b,c){
-		if(a instanceof Object){
+		if( internals.tests.hasXYZ( a ) ){
 			return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 		} else if(b === undefined || c === undefined) {
 			b = c = a;
@@ -7568,7 +7625,7 @@ Vec3D.prototype = {
 	},
 	
 	subSelf: function(a,b,c){
-		if(a instanceof Object){
+		if( internals.tests.hasXYZ( a ) ){
 			this.x -= a.x;
 			this.y -= a.y;
 			this.z -= a.z;
@@ -7764,13 +7821,17 @@ module.exports = Vec3D;
 
 define('toxi/geom/Vec2D',["require", "exports", "module", "../math/mathUtils","./Vec3D","./Vec3D","./Vec3D","./Vec3D", '../internals'], function(require, exports, module) {
 var	mathUtils = require('../math/mathUtils');
-var hasProperties = require('../internals').hasProperties;
+var internals = require('../internals');
+
+var hasXY = internals.tests.hasXY;
+var isRect = internals.tests.isRect;
+
 /**
  @member toxi
  @class a two-dimensional vector class
  */
 var	Vec2D = function(a,b){
-	if(a instanceof Object && a.x !== undefined && a.y !== undefined){
+	if( hasXY( a ) ){
 		b = a.y;
 		a = a.x;
 	} else {
@@ -7794,7 +7855,7 @@ Vec2D.Axis = {
 
 //private, 
 var _getXY = function(a,b) {
-	if(a instanceof Object){
+	if( hasXY( a ) ){
 		b = a.y;
 		a = a.x;
 	}
@@ -7877,10 +7938,10 @@ Vec2D.prototype = {
      * @return itself
      */
     constrain: function(a,b) {
-		if(hasProperties(a,['x','y']) && hasProperties(b,['x','y'])){
+		if( hasXY( a ) && hasXY( b ) ){
 			this.x = mathUtils.clip(this.x, a.x, b.x);
 	        this.y = mathUtils.clip(this.y, a.y, b.y);
-		} else if(hasProperties(a,['x','y','width','height'])){
+		} else if( isRect( a ) ){
             this.x = mathUtils.clip(this.x, a.x, a.x + a.width);
 			this.y = mathUtils.clip(this.y, a.y, a.y + a.height);
 		}
@@ -7920,7 +7981,7 @@ Vec2D.prototype = {
     },
 
 	equals: function(obj) {
-        if (obj instanceof Object) {
+        if ( hasXY( obj ) ) {
             return this.x == obj.x && this.y == obj.y;
         }
         return false;
@@ -8397,9 +8458,10 @@ module.exports = Vec2D;
 
 });
 
-define('toxi/color/TColor',["require", "exports", "module", "../math/mathUtils","../geom/Vec2D","../geom/Vec3D"], function(require, exports, module) {
+define('toxi/color/TColor',["require", "exports", "module", "../math/mathUtils","../geom/Vec2D","../geom/Vec3D", "../internals"], function(require, exports, module) {
 
-var mathUtils = require('../math/mathUtils'),
+var	internals = require('../internals'),
+	mathUtils = require('../math/mathUtils'),
 	Vec2D = require('../geom/Vec2D'),
 	Vec3D = require('../geom/Vec3D');
 
@@ -8418,9 +8480,9 @@ var dec2hex = function decimalToHexString(number){
  @memberOf toxi.color
  */
 var	TColor = function(tcolor){
-	this.rgb = new Array(3);
-	this.hsv = new Array(3);
-	this.cmyk = new Array(4);
+	this.rgb = [];
+	this.hsv = [];
+	this.cmyk = [];
 	this._alpha = 1.0;
 	if(tcolor !== undefined){
 		var buffer = tcolor.toCMYKAArray();
@@ -8599,7 +8661,7 @@ TColor.prototype = {
 	},
 	
 	equals: function(o) {
-	    if (o !== undefined && o instanceof TColor) {
+	    if ( internals.tests.isTColor( o ) ) {
 	        var c =  o;
 	        var dr = c.rgb[0] - this.rgb[0];
 	        var dg = c.rgb[1] - this.rgb[1];
@@ -8787,7 +8849,7 @@ TColor.prototype = {
 	
 	setCMYK: function(c,m,y,k) {
 		//if it was passed in as an array instead of separate values
-		if(c instanceof Array){
+		if( internals.tests.isArray( c ) ){
 			m = c[1];
 			y = c[2];
 			k = c[3];
@@ -8818,7 +8880,7 @@ TColor.prototype = {
 	},
 
 	setHSV: function(h,s,v) {
-		if(h instanceof Array){
+		if( internals.tests.isArray( h ) ){
 			s = h[1];
 			v = h[2];
 			h = h[0];
@@ -8855,8 +8917,7 @@ TColor.prototype = {
 	},
 
 	setRGB: function(r,g,b) {
-		if(r instanceof Array)
-		{
+		if( internals.tests.isArray( r ) ){
 			g = r[1];
 			b = r[2];
 			r = r[0];
@@ -9654,8 +9715,8 @@ var internals = require('../internals'),
 
 var	VerletParticle2D = function(x,y,w){
 	this.force = new Vec2D();
-	if(x instanceof Vec2D){
-		if(x instanceof VerletParticle2D){
+	if( internals.tests.hasXY( x ) ){
+		if( internals.tests.isVerletParticle2D( x ) ){
 			
 			y = x.y;
 			w = x.weight;
@@ -9931,10 +9992,10 @@ var	ParticleString2D = function(){
 ParticleString2D.prototype = {
 	clear: function(){
 		for(var i = 0, len = this.links.length; i < len; i++){
-			this.physics.removeSpringElements(s);
+			this.physics.removeSpringElements(this.links[i]);
 		}
-		this.particles.clear();
-		this.links.clear();
+		this.particles = [];
+		this.links = [];
 	},
 	createSpring: function(a,b,len,strength){
 		return new VerletSpring2D(a,b,len,strength);
@@ -11433,97 +11494,99 @@ Ray2D.prototype.toString = function() {
 module.exports = Ray2D;
 });
 
-define('toxi/geom/Line2D',["require", "exports", "module", "./Ray2D"], function(require, exports, module) {
+define('toxi/geom/Line2D',["require", "exports", "module", "./Ray2D", "../internals"], function(require, exports, module) {
 
-var Ray2D = require('./Ray2D');
+var	Ray2D = require('./Ray2D'),
+	internals = require('../internals');
+
 
 /**
  @class
  @member toxi
  */
 var Line2D = function( a, b) {
-  this.a = a;
-  this.b = b;
+	this.a = a;
+	this.b = b;
 };
 
 
 Line2D.prototype = {
-    /**
-     * Computes the closest point on this line to the point given.
-     * 
-     * @param p
-     *            point to check against
-     * @return closest point on the line
-     */
-    closestPointTo: function(p) {
-        var v = this.b.sub(this.a);
-        var t = p.sub(this.a).dot(v) / v.magSquared();
-        // Check to see if t is beyond the extents of the line segment
-        if (t < 0.0) {
-            return this.a.copy();
-        } else if (t > 1.0) {
-            return this.b.copy();
-        }
-        // Return the point between 'a' and 'b'
-        return this.a.add(v.scaleSelf(t));
-    },
+	/**
+	 * Computes the closest point on this line to the point given.
+	 * 
+	 * @param p
+	 *            point to check against
+	 * @return closest point on the line
+	 */
+	closestPointTo: function(p) {
+		var v = this.b.sub(this.a);
+		var t = p.sub(this.a).dot(v) / v.magSquared();
+		// Check to see if t is beyond the extents of the line segment
+		if (t < 0.0) {
+			return this.a.copy();
+		} else if (t > 1.0) {
+			return this.b.copy();
+		}
+		// Return the point between 'a' and 'b'
+		return this.a.add(v.scaleSelf(t));
+	},
 
-    copy: function() {
-        return new Line2D(this.a.copy(), this.b.copy());
-    },
+	copy: function() {
+		return new Line2D(this.a.copy(), this.b.copy());
+	},
 
-   equals: function(obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof Line2D)) {
-            return false;
-        }
-        var l = obj;
-        return (this.a.equals(l.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
-    },
+	equals: function(obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!( internals.tests.isLine2D( obj ) ) ) {
+			return false;
+		}
+		var l = obj;
+		return (this.a.equals(l.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
+	},
 
-    getDirection: function() {
-        return this.b.sub(this.a).normalize();
-    },
+	getDirection: function() {
+		return this.b.sub(this.a).normalize();
+	},
 
-    getLength: function() {
-        return this.a.distanceTo(this.b);
-    },
+	getLength: function() {
+		return this.a.distanceTo(this.b);
+	},
 
-    getLengthSquared: function() {
-        return this.a.distanceToSquared(this.b);
-    },
+	getLengthSquared: function() {
+		return this.a.distanceToSquared(this.b);
+	},
 
-    getMidPoint: function() {
-        return this.a.add(this.b).scaleSelf(0.5);
-    },
+	getMidPoint: function() {
+		return this.a.add(this.b).scaleSelf(0.5);
+	},
 
-    getNormal: function() {
-        return this.b.sub(this.a).perpendicular();
-    },
+	getNormal: function() {
+		return this.b.sub(this.a).perpendicular();
+	},
 
-    getTheta: function() {
-        return this.a.angleBetween(this.b, true);
-    },
+	getTheta: function() {
+		return this.a.angleBetween(this.b, true);
+	},
 
-    hasEndPoint: function(p) {
-        return this.a.equals(p) || this.b.equals(p);
-    },
+	hasEndPoint: function(p) {
+		return this.a.equals(p) || this.b.equals(p);
+	},
 
 
-    /**
-     * Computes intersection between this and the given line. The returned value
-     * is a {@link LineIntersection} instance and contains both the type of
-     * intersection as well as the intersection point (if existing).
-     * 
-     * Based on: http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline2d/
-     * 
-     * @param l
-     *            line to intersect with
-     * @return intersection result
-     */
-    intersectLine: function(l) {
+	/**
+	 * Computes intersection between this and the given line. The returned value
+	 * is a {@link LineIntersection} instance and contains both the type of
+	 * intersection as well as the intersection point (if existing).
+	 * 
+	 * Based on: http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline2d/
+	 * 
+	 * @param l
+	 *            line to intersect with
+	 * @return intersection result
+	 */
+	intersectLine: function(l) {
 		var isec,
 			denom = (l.b.y - l.a.y) * (this.b.x - this.a.x) - (l.b.x - l.a.x) * (this.b.y - this.a.y),
 			na = (l.b.x - l.a.x) * (this.a.y - l.a.y) - (l.b.y - l.a.y) * (this.a.x - l.a.x),
@@ -11531,22 +11594,22 @@ Line2D.prototype = {
 		if (denom !== 0) {
 			var ua = na / denom,
 				ub = nb / denom;
-            if (ua >= 0.0 && ua <= 1.0 && ub >= 0.0 && ub <= 1.0) {
-                isec =new Line2D.LineIntersection(Line2D.LineIntersection.Type.INTERSECTING,this.a.interpolateTo(this.b, ua));
-            } else {
-                isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.NON_INTERSECTING, undefined);
-            }
-        } else {
-            if (na === 0 && nb === 0) {
-                isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.COINCIDENT, undefined);
-            } else {
-                isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.COINCIDENT, undefined);
-            }
-        }
-        return isec;
-    },
+			if (ua >= 0.0 && ua <= 1.0 && ub >= 0.0 && ub <= 1.0) {
+				isec =new Line2D.LineIntersection(Line2D.LineIntersection.Type.INTERSECTING,this.a.interpolateTo(this.b, ua));
+			} else {
+				isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.NON_INTERSECTING, undefined);
+			}
+		} else {
+			if (na === 0 && nb === 0) {
+				isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.COINCIDENT, undefined);
+			} else {
+				isec = new Line2D.LineIntersection(Line2D.LineIntersection.Type.COINCIDENT, undefined);
+			}
+		}
+		return isec;
+	},
 
-    offsetAndGrowBy: function(offset,scale, ref) {
+	offsetAndGrowBy: function(offset,scale, ref) {
 		var m = this.getMidPoint();
 		var d = this.getDirection();
 		var n = d.getPerpendicular();
@@ -11560,29 +11623,29 @@ Line2D.prototype = {
 		this.a.subSelf(d);
 		this.b.addSelf(d);
 		return this;
-    },
+	},
 
-    scale: function(scale) {
-        var delta = (1 - scale) * 0.5;
-        var newA = a.interpolateTo(this.b, delta);
-        this.b.interpolateToSelf(this.a, delta);
-        this.a.set(newA);
-        return this;
-    },
+	scale: function(scale) {
+		var delta = (1 - scale) * 0.5;
+		var newA = this.a.interpolateTo(this.b, delta);
+		this.b.interpolateToSelf(this.a, delta);
+		this.a.set(newA);
+		return this;
+	},
 
-    set: function(a, b) {
-        this.a = a;
-        this.b = b;
-        return this;
-    },
+	set: function(a, b) {
+		this.a = a;
+		this.b = b;
+		return this;
+	},
 
-    splitIntoSegments: function(segments,stepLength,addFirst) {
-        return Line2D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
-    },
+	splitIntoSegments: function(segments,stepLength,addFirst) {
+		return Line2D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
+	},
 
-    toRay2D: function() {
-        return new Ray2D(this.a.copy(), this.b.sub(this.a).normalize());
-    }
+	toRay2D: function() {
+		return new Ray2D(this.a.copy(), this.b.sub(this.a).normalize());
+	}
 };
 
 
@@ -11608,24 +11671,24 @@ Line2D.prototype = {
  * @return list of result vectors
  */
 Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
-    if (segments === undefined) {
-        segments = [];
-    }
-    if (addFirst) {
-        segments.push(a.copy());
-    }
-    var dist = a.distanceTo(b);
-    if (dist > stepLength) {
-        var pos = a.copy();
-        var step = b.sub(a).limit(stepLength);
-        while (dist > stepLength) {
-            pos.addSelf(step);
-            segments.push(pos.copy());
-            dist -= stepLength;
-        }
-    }
-    segments.push(b.copy());
-    return segments;
+	if (segments === undefined) {
+		segments = [];
+	}
+	if (addFirst) {
+		segments.push(a.copy());
+	}
+	var dist = a.distanceTo(b);
+	if (dist > stepLength) {
+		var pos = a.copy();
+		var step = b.sub(a).limit(stepLength);
+		while (dist > stepLength) {
+			pos.addSelf(step);
+			segments.push(pos.copy());
+			dist -= stepLength;
+		}
+	}
+	segments.push(b.copy());
+	return segments;
 };
 
 
@@ -11655,9 +11718,10 @@ Line2D.LineIntersection.Type = { COINCIDENT: 0, PARALLEL: 1, NON_INTERSECTING: 2
 module.exports = Line2D;
 });
 
-define('toxi/geom/Rect',["require", "exports", "module", "../math/mathUtils","./Vec2D","./Line2D","./Polygon2D"], function(require, exports, module) {
+define('toxi/geom/Rect',["require", "exports", "module", "../math/mathUtils","./Vec2D","./Line2D","./Polygon2D","../internals"], function(require, exports, module) {
 
-var mathUtils = require('../math/mathUtils'),
+var	internals = require('../internals'),
+	mathUtils = require('../math/mathUtils'),
 	Vec2D = require('./Vec2D'),
 	Line2D = require('./Line2D'),
 	Polygon2D = require('./Polygon2D');
@@ -11672,7 +11736,7 @@ var mathUtils = require('../math/mathUtils'),
  */
 var	Rect = function(a,b,width,height){
 	if(arguments.length == 2){ //then it should've been 2 Vec2D's
-		if(!(a instanceof Vec2D)){
+		if( !( internals.tests.hasXY( a ) ) ){
 			throw new Error("Rect received incorrect parameters");
 		} else {
 			this.x = a.x;
@@ -11687,7 +11751,7 @@ var	Rect = function(a,b,width,height){
 		this.height = height;
 	} else if(arguments.length == 1){ //object literal with x,y,width,height
 		var o = arguments[0];
-		if(o.x !== undefined && o.y !== undefined && o.width && o.height){
+		if( internals.tests.hasXYWidthHeight( o ) ){
 			this.x = o.x;
 			this.y = o.y;
 			this.width = o.width;
@@ -11851,7 +11915,7 @@ Rect.prototype = {
 		}
 	},
 	
-	setDimenions: function(dim){
+	setDimensions: function(dim){
 		this.width = dim.x;
 		this.height = dim.y;
 		return this;
@@ -11931,9 +11995,9 @@ var	VerletPhysics2D = function(gravity, numIterations, drag, timeStep){
 	this.setDrag(opts.drag);
 	
 	if(gravity){
-		if(gravity instanceof GravityBehavior){
+		if( internals.tests.isParticleBehavior( gravity ) ){
 			this.addBehavior(gravity);
-		} else if(gravity instanceof Object && gravity.hasOwnProperty('x') && gravity.hasOwnProperty('y')){
+		} else if( internals.tests.hasXY( gravity ) ){
 			this.addBehavior(
 				new GravityBehavior(
 					new Vec2D(gravity)
@@ -12234,7 +12298,7 @@ Triangle2D.prototype = {
      },
      
      getCircumCircle: function(){
-		var cr = a.bisect(this.b).cross(this.b.bisect(this.c)),
+		var cr = this.a.bisect(this.b).cross(this.b.bisect(this.c)),
 			circa = new Vec2D(cr.x/cr.z, cr.y / cr.z),
 			sa = this.a.distanceTo(this.b),
 			sb = this.b.distanceTo(this.c),
@@ -12325,11 +12389,14 @@ Triangle2D.prototype = {
 module.exports = Triangle2D;
 });
 
-define('toxi/geom/Polygon2D',["require", "exports", "module", "./Vec2D","./Line2D","./Triangle2D"], function(require, exports, module) {
+define('toxi/geom/Polygon2D',["require", "exports", "module", "./Vec2D","./Line2D","./Triangle2D","../internals"], function(require, exports, module) {
 
-var Vec2D = require('./Vec2D'),
+var	internals = require('../internals'),
+	Vec2D = require('./Vec2D'),
 	Line2D = require('./Line2D'),
 	Triangle2D = require('./Triangle2D');
+
+
 
 /**
  * @class
@@ -12344,7 +12411,7 @@ var Polygon2D = function(){
 		}
 	} else if(arguments.length == 1){
 		var arg = arguments[0];
-		if(arg instanceof Array){ // if it was an array of points
+		if( internals.tests.isArray( arg ) ){ // if it was an array of points
 			for(i=0,l = arg.length;i<l;i++){
 				this.add(arg[i].copy());
 			}
@@ -12477,7 +12544,7 @@ Polygon2D.prototype = {
 		var x,y;
 		if (arguments.length==1) {
 			var arg = arguments[0];
-			if(arg instanceof Vec2D){
+			if( internals.tests.hasXY( arg ) ){
 				x=arg.x;
 				y=arg.y;
 			} else {
@@ -12499,7 +12566,7 @@ Polygon2D.prototype = {
     
 	translate: function() {
 		var x,y;
-		if (arguments.length==1 && arguments[0] instanceof Vec2D){
+		if (arguments.length==1 && internals.tests.hasXY( arguments[0] ) ){
 			x=arg.x;
 			y=arg.y;
 		} else if (arguments.length==2) {
@@ -12553,10 +12620,11 @@ module.exports = Polygon2D;
 });
 
 define('toxi/geom/Ellipse',["require", "exports", "module", "../internals","../math/mathUtils","./Vec2D","./Polygon2D"], function(require, exports, module) {
-var extend = require('../internals').extend,
+var	internals = require('../internals'),
 	mathUtils = require('../math/mathUtils'),
 	Vec2D = require('./Vec2D'),
 	Polygon2D = require('./Polygon2D');
+
 
 /**
  * @class defines a 2D ellipse and provides several utility methods for it.
@@ -12569,9 +12637,9 @@ var	Ellipse = function(a,b,c,d) {
 	if(arguments.length === 0){
 		Vec2D.apply(this,[0,0]);
 		this.setRadii(1,1);
-	} else if(a instanceof Vec2D) {
+	} else if( internals.tests.hasXY( a ) ) {
 		Vec2D.apply(this,[a.x,a.y]);
-		if(b instanceof Vec2D){
+		if( internals.tests.hasXY( b ) ){
 			this.setRadii(b.x,b.y);
 		} else {
 			this.setRadii(b,c);
@@ -12593,7 +12661,7 @@ var	Ellipse = function(a,b,c,d) {
 	}
 };
 
-extend(Ellipse,Vec2D);
+internals.extend(Ellipse,Vec2D);
 
 Ellipse.prototype.containsPoint = function(p) {
     var foci = this.getFoci();
@@ -12658,7 +12726,7 @@ Ellipse.prototype.getRadii = function() {
  * @return itself
  */
 Ellipse.prototype.setRadii = function(rx,ry) {
-	if(rx instanceof Vec2D){
+	if( internals.tests.hasXY( rx ) ){
 		ry = rx.y;
 		rx = rx.x;
 	}
@@ -12691,10 +12759,12 @@ module.exports = Ellipse;
 });
 
 define('toxi/geom/Circle',["require", "exports", "module", "../internals","../math/mathUtils","./Vec2D","./Ellipse"], function(require, exports, module) {
-var	extend = require('../internals').extend,
+var	internals = require('../internals'),
 	mathUtils = require('../math/mathUtils'),
 	Vec2D = require('./Vec2D'),
 	Ellipse = require('./Ellipse');
+
+
 
 /**
  * @class This class overrides {@link Ellipse} to define a 2D circle and provides
@@ -12705,7 +12775,7 @@ var	extend = require('../internals').extend,
  */
 var	Circle = function(a,b,c) {
 	if(arguments.length == 1){
-		if(a instanceof Circle){
+		if( internals.tests.isCircle( a ) ){
 			Ellipse.apply(this,[a,a.radius.x]);
 		} else {
 			Ellipse.apply(this,[0,0,a]);
@@ -12713,12 +12783,11 @@ var	Circle = function(a,b,c) {
 	} else if(arguments.length == 2){
 		Ellipse.apply(this,[a,b]);
 	} else {
-		console.log("hit");
 		Ellipse.apply(this,[a,b,c,c]);
 	}
 };
 
-extend(Circle,Ellipse);
+internals.extend(Circle,Ellipse);
 
 
 

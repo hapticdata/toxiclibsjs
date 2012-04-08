@@ -58,7 +58,7 @@ void draw() {
     fill(255,0,192);
     ellipse(pos.x,pos.y,5,5);
     textAlign(pos.x>width/2 ? RIGHT : LEFT);
-    text(pos.toString(),pos.x,pos.y-10);
+    text("{x: "+pos.x.toFixed(2)+", y: "+pos.y.toFixed(2)+" }",pos.x,pos.y-10);
   } else {
     stroke(0);
   }
