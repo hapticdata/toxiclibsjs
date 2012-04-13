@@ -5386,6 +5386,42 @@ Face.prototype = {
 module.exports = Face;
 });
 
+define('toxi/geom/mesh/Vertex',["require", "exports", "module", "../../internals","../Vec3D"], function(require, exports, module) {
+
+var extend = require('../../internals').extend,
+	Vec3D = require('../Vec3D');
+
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.Vec3D
+ */
+var	Vertex = function(v,id) {
+        Vec3D.apply(this,[v]);
+        this.id = id;
+        this.normal = new Vec3D();
+};
+extend(Vertex,Vec3D);
+
+Vertex.prototype.addFaceNormal = function(n) {
+    this.normal.addSelf(n);
+};
+
+Vertex.prototype.clearNormal = function() {
+    this.normal.clear();
+};
+
+Vertex.prototype.computeNormal = function() {
+    this.normal.normalize();
+};
+
+Vertex.prototype.toString = function() {
+    return this.id + ": p: " + this.parent.toString.call(this) + " n:" + this.normal.toString();
+};
+
+module.exports = Vertex;
+});
+
 define('toxi/geom/mesh/SphereFunction',["require", "exports", "module", "../../math/mathUtils","../Vec3D","../Sphere"], function(require, exports, module) {
 
 var mathUtils = require('../../math/mathUtils'),
@@ -5458,8 +5494,8 @@ module.exports = SphereFunction;
 
 define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./TriangleMesh","../Vec3D"], function(require, exports, module) {
 
-var TriangleMesh = require('./TriangleMesh');
-var Vec3D = require('../Vec3D');
+var Vec3D = require('../Vec3D'),
+	TriangleMesh = require('./TriangleMesh');
 
 /**
  * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface
@@ -5571,17 +5607,12 @@ exports.SurfaceMeshBuilder = SurfaceMeshBuilder;
 module.exports = SurfaceMeshBuilder;
 });
 
-define('toxi/geom/Sphere',["require", "exports", "module", "../internals","./Vec3D","./mesh/SphereFunction"], function(require, exports, module) {
+define('toxi/geom/Sphere',["require", "exports", "module", "../internals","./Vec3D","./mesh/SphereFunction", './mesh/SurfaceMeshBuilder'], function(require, exports, module) {
 
 var	internals = require('../internals'),
-	Vec3D = require('./Vec3D'),
-	SphereFunction = require('./mesh/SphereFunction');
-	
-var	SurfaceMeshBuilder;
-	require(['./mesh/SurfaceMeshBuilder'],function(SMB){
-		SurfaceMeshBuilder = SMB;
-	});
-
+	SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder'),
+	SphereFunction = require('./mesh/SphereFunction'),
+	Vec3D = require('./Vec3D');
 
 
 
@@ -5727,49 +5758,12 @@ Sphere.prototype.toMesh = function() {
 module.exports = Sphere;
 });
 
-define('toxi/geom/mesh/Vertex',["require", "exports", "module", "../../internals","../Vec3D"], function(require, exports, module) {
-
-var extend = require('../../internals').extend,
-	Vec3D = require('../Vec3D');
-
-/**
- * @class
- * @member toxi
- * @augments toxi.Vec3D
- */
-var	Vertex = function(v,id) {
-        Vec3D.apply(this,[v]);
-        this.id = id;
-        this.normal = new Vec3D();
-};
-extend(Vertex,Vec3D);
-
-Vertex.prototype.addFaceNormal = function(n) {
-    this.normal.addSelf(n);
-};
-
-Vertex.prototype.clearNormal = function() {
-    this.normal.clear();
-};
-
-Vertex.prototype.computeNormal = function() {
-    this.normal.normalize();
-};
-
-Vertex.prototype.toString = function() {
-    return this.id + ": p: " + this.parent.toString.call(this) + " n:" + this.normal.toString();
-};
-
-module.exports = Vertex;
-});
-
-define('toxi/geom/mesh/TriangleMesh',["require", "exports", "module", "../../math/mathUtils","../Matrix4x4","./Face","../Vec3D","../AABB","../Sphere","../Triangle3D","../Quaternion","./Vertex"], function(require, exports, module) {
+define('toxi/geom/mesh/TriangleMesh',["require", "exports", "module", "../../math/mathUtils","../Matrix4x4","./Face","../Vec3D","../AABB","../Triangle3D","../Quaternion","./Vertex"], function(require, exports, module) {
 
 var	mathUtils = require('../../math/mathUtils'),
 	Matrix4x4 = require('../Matrix4x4'),
 	Face = require('./Face'),
 	Vec3D = require('../Vec3D'),
-	Sphere = require('../Sphere'),
 	Triangle3D = require('../Triangle3D'),
 	Quaternion = require('../Quaternion'),
 	Vertex = require('./Vertex');
@@ -5790,6 +5784,7 @@ var	TriangleMesh = function(name,numV,numF){
 	if(numF === undefined)numF = TriangleMesh.DEFAULT_NUM_FACES;
 	this.setName(name);
 	this.matrix = new Matrix4x4();
+	this.centroid = new Vec3D();
 	this.vertices = [];
 	this.__verticesObject = {};
 	this.faces = [];
@@ -5992,15 +5987,23 @@ TriangleMesh.prototype = {
 	    return this.bounds;
 	},
 	
-	getBoundingSphere:function(){
-	    var radius = 0;
-	    this.computeCentroid();
-	    var l = this.vertices.length;
-	    for(var i=0;i<l;i++){
-	        var v = this.vertices[i];
-	        radius = mathUtils.max(radius,v.distanceToSquared(this.centroid));
-	    }
-	    return new Sphere(this.centroid,Math.sqrt(radius));
+	getBoundingSphere:function( fn ){
+		if( fn === undefined ){
+			console.error("getBoundingSphere must be an asynchronous call, provide a callback and the Sphere will be the first parameter");
+			return;
+		}
+		var self = this;
+		require(['../Sphere'], function(Sphere){
+			var radius = 0;
+			self.computeCentroid();
+			var l = self.vertices.length;
+			for(var i=0;i<l;i++){
+				var v = self.vertices[i];
+				radius = mathUtils.max(radius,v.distanceToSquared(self.centroid));
+			}
+			var sph = new Sphere(self.centroid,Math.sqrt(radius));
+			fn( sph );
+		});
 	},
 	
 	getClosestVertexToPoint: function(p){
@@ -10909,24 +10912,6 @@ SuperEllipsoid.prototype = {
 module.exports = SuperEllipsoid;
 });
 
-define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector"], function(require, exports, module) {
-module.exports = {
-	BezierPatch: require('./mesh/BezierPatch'),
-	BoxSelector: require('./mesh/BoxSelector'),
-	DefaultSelector: require('./mesh/DefaultSelector'),
-	Face: require('./mesh/Face'),
-	PlaneSelector: require('./mesh/PlaneSelector'),
-	SphereFunction: require('./mesh/SphereFunction'),
-	SphericalHarmonics: require('./mesh/SphericalHarmonics'),
-	SurfaceMeshBuilder: require('./mesh/SurfaceMeshBuilder'),
-	SuperEllipsoid: require('./mesh/SuperEllipsoid'),
-	//Terrain: require('./mesh/Terrain'),
-	TriangleMesh: require('./mesh/TriangleMesh'),
-	Vertex: require('./mesh/Vertex'),
-	VertexSelector: require('./mesh/VertexSelector')
-};
-});
-
 define('toxi/processing/ToxiclibsSupport',["require", "exports", "module", "../geom/Matrix4x4","../geom/Vec3D","../geom/mesh/TriangleMesh"], function(require, exports, module) {
 
 var Matrix4x4 = require('../geom/Matrix4x4'),
@@ -11418,6 +11403,24 @@ define('toxi/processing',["require", "exports", "module", "./processing/Toxiclib
 
 module.exports = {
 	ToxiclibsSupport: require('./processing/ToxiclibsSupport')
+};
+});
+
+define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector"], function(require, exports, module) {
+module.exports = {
+	BezierPatch: require('./mesh/BezierPatch'),
+	BoxSelector: require('./mesh/BoxSelector'),
+	DefaultSelector: require('./mesh/DefaultSelector'),
+	Face: require('./mesh/Face'),
+	PlaneSelector: require('./mesh/PlaneSelector'),
+	SphereFunction: require('./mesh/SphereFunction'),
+	SphericalHarmonics: require('./mesh/SphericalHarmonics'),
+	SurfaceMeshBuilder: require('./mesh/SurfaceMeshBuilder'),
+	SuperEllipsoid: require('./mesh/SuperEllipsoid'),
+	//Terrain: require('./mesh/Terrain'),
+	TriangleMesh: require('./mesh/TriangleMesh'),
+	Vertex: require('./mesh/Vertex'),
+	VertexSelector: require('./mesh/VertexSelector')
 };
 });
 
