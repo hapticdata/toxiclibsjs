@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Toxiclibs.js -- Cellular Automata</title>
+	<script type="text/javascript" src="js/processing.js"></script>
+	<script src="js/require.js"></script>
+	<script>
+	var CAMatrix, CAWolfram1D;
+	require.config({
+		paths: {
+			domReady: 'js/domReady',
+			toxi: '../lib/toxi'
+		}
+	});
+	require([
+		'domReady',
+		'toxi/sim/automata/CAMatrix',
+		'toxi/sim/automata/CAWolfram1D'
+	], function( domReady, _CAMatrix, _CAWolfram1D ){
+
+		domReady(function(){
+			CAMatrix = _CAMatrix;
+			CAWolfram1D = _CAWolfram1D;
+			var scripts = document.getElementsByTagName("script");
+			var canvasArray = Array.prototype.slice.call(document.getElementsByTagName("canvas"));
+			var canvas;
+			for (var i = 0, j = 0; i < scripts.length; i++) {
+				if (scripts[i].type == "application/processing") {
+					var src = scripts[i].getAttribute("target");
+					if (src && src.indexOf("#") > -1) {
+				  		canvas = document.getElementById(src.substr(src.indexOf("#") + 1));
+				  		if (canvas) {
+							new Processing(canvas, scripts[i].text);
+							for (var k = 0; k< canvasArray.length; k++)
+							{
+								if (canvasArray[k] === canvas) {
+									// remove the canvas from the array so we dont override it in the else
+									canvasArray.splice(k,1);
+								}
+							}
+						}
+					} else {    
+						if (canvasArray.length >= j) {
+							new Processing(canvasArray[j], scripts[i].text);          
+						}
+						j++;
+					}       
+			  	}
+			}
+		});
+	});
+</script>
+</head>
+<body>
+<h1>Cellular Automata</h1>
+
+<script type="application/processing">
+CAMatrix ca;
+CAWolfram1D wolfram;
+int y;
+
+void setup() {
+  size(500, 500);
+  background(255);
+  ca = new CAMatrix(width);
+  wolfram = new CAWolfram1D(1, 2, true).setRuleID(0x5a);
+  ca.setRule(wolfram);
+  seedPattern();
+  frameRate(10);
+}
+
+void draw() {
+  loadPixels();
+  ca.update();
+  int[] m = ca.getMatrix();
+  for(int i = 0; i < m.length; i++) {
+    color c = (m[i] > 0) ? color(0) : color(255);
+    pixels[(y * width) + i] = c;
+  }
+  updatePixels();
+  y = (y + 1) % height;
+}
+
+void keyPressed() {
+  if (key == 'n') {
+    ca.reset();
+    y = 0;
+    ca.addNoise(0.9);
+  }
+  if (key == 'p') {
+    ca.reset();
+    y = 0;
+    seedPattern(); 
+  }
+  if (key == 'r') {
+    ca.reset();
+    y = 0;
+    seedPattern();
+    wolfram.randomize();
+  }
+  println("Current Viewing Rule: " + wolfram.getRuleAsBigInt());
+}
+
+void seedPattern() {
+  ca.setStateAt(width/2, 0, 1);
+}
+
+</script>
+
+<canvas id="myCanvas" width="200" height="200">
+	Your browser doesnt support canvas.
+</canvas>
+<p>Example demo of the cellular automata functions in the sim library. 
+<br />
+Controls:<br />
+p : resets the simulation<br />
+n : resets the simulation and adds random noise<br />
+r : resets the simulation and randomizes the rule<br />
+<br />
+
+</p>
+</body>
+</html>
