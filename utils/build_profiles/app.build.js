@@ -8,10 +8,8 @@
 
 */
 ({
-	appDir: "./",
 	baseUrl: "../../lib/",
-	dir: "../min",
-	findNestedDependencies: true,
+	//findNestedDependencies: true,
 	optimize: 'none',
 	out: "../../build/toxiclibs.js",
 	paths: {

@@ -1,5 +1,9 @@
 #CHANGES
 
+## Issue 18
+*	TriangleMesh#getBoundingBox is now an async method to prevent circular dependency
+*	TriangleMesh#getBoundingSphere is now an async method to prevent circular dependency
+
 ##v0.1.1
 *	ParticleString2D.clear() bugfix
 *	removed all uses of 'instanceof' test, replaced with property testing
