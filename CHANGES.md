@@ -1,5 +1,8 @@
 #CHANGES
 
+##v0.1.2
+*	Resolved [Issue 18](https://github.com/hapticdata/toxiclibsjs/issues/18) TriangleMesh#getBoundingBox and TriangleMesh#getBoundingSphere are now async methods to prevent circular dependency
+
 ##v0.1.1
 *	ParticleString2D.clear() bugfix
 *	removed all uses of 'instanceof' test, replaced with property testing

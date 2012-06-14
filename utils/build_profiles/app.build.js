@@ -8,14 +8,12 @@
 
 */
 ({
-	appDir: "./",
 	baseUrl: "../../lib/",
-	dir: "../min",
-	findNestedDependencies: true,
+	//findNestedDependencies: true,
 	optimize: 'none',
 	out: "../../build/toxiclibs.js",
 	paths: {
-		almond: '../utils/almond/almond',
+		almond: '../utils/almond',
 		almondSettings: '../utils/almond.settings'
 	},
 	include: [
@@ -24,7 +22,7 @@
 		'toxi'
 	],
 	wrap: {
-		start: "//v0.1.1 toxiclibs.js (http://haptic-data.com/toxiclibsjs)\nvar toxi = {};\n(function(){\n",
+		start: "//v0.1.2 toxiclibs.js (http://haptic-data.com/toxiclibsjs)\nvar toxi = {};\n(function(){\n",
 		end: "toxi = require('toxi'); }())\n"
 	}
 })
