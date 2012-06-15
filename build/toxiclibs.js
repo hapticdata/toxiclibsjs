@@ -316,10 +316,10 @@ var requirejs, require, define;
         jQuery: true
     };
 }());
-define("almond", function(){});
+define("../utils/almond", function(){});
 
 define.unordered = true;
-define("almondSettings", function(){});
+define("../utils/almond.settings", function(){});
 
 define('toxi/math/mathUtils',["require", "exports", "module"], function(require, exports, module) {
 /**
@@ -4036,6 +4036,465 @@ module.exports = Line3D;
 
 });
 
+define('toxi/geom/AABB',["require", "exports", "module", "./mesh/TriangleMesh","../internals","./Vec3D","./Vec2D","../math/mathUtils"], function(require, exports, module) {
+
+var	internals = require('../internals'),
+	Vec3D = require('./Vec3D'),
+	Vec2D = require('./Vec2D'),
+	TriangleMesh = require('./mesh/TriangleMesh'),
+	mathUtils = require('../math/mathUtils');
+
+
+
+
+/**
+ @class Axis-aligned Bounding Box
+ @member 
+ */
+var AABB = function(a,b){
+	var vec,
+		extent;
+	if(a === undefined){
+		Vec3D.call(this);
+		this.setExtent(new Vec3D());
+	} else if(typeof(a) == "number") {
+		Vec3D.call(this,new Vec3D());
+		this.setExtent(a);
+	} else if( internals.tests.hasXYZ( a ) ) {
+		Vec3D.call(this,a);
+		if(b === undefined && internals.tests.isAABB( a )) {
+			this.setExtent(a.getExtent());
+		} else {
+			if(typeof b == "number"){
+				this.setExtent(new Vec3D(b,b,b));
+			}else { //should be an AABB
+				this.setExtent(b);
+			}
+		}
+	}
+	
+	
+};
+
+internals.extend(AABB,Vec3D);
+
+AABB.fromMinMax = function(min,max){
+	var a = Vec3D.min(min, max);
+	var b = Vec3D.max(min, max);
+	return new AABB(a.interpolateTo(b,0.5),b.sub(a).scaleSelf(0.5));
+};
+
+AABB.prototype.containsPoint = function(p) {
+    return p.isInAABB(this);
+};
+	
+AABB.prototype.copy = function() {
+    return new AABB(this);
+};
+	
+	/**
+	 * Returns the current box size as new Vec3D instance (updating this vector
+	 * will NOT update the box size! Use {@link #setExtent(ReadonlyVec3D)} for
+	 * those purposes)
+	 * 
+	 * @return box size
+	 */
+AABB.prototype.getExtent = function() {
+   return this.extent.copy();
+};
+	
+AABB.prototype.getMax = function() {
+   // return this.add(extent);
+   return this.max.copy();
+};
+
+AABB.prototype.getMin = function() {
+   return this.min.copy();
+};
+
+AABB.prototype.getNormalForPoint = function(p) {
+    p = p.sub(this);
+    var pabs = this.extent.sub(p.getAbs());
+    var psign = p.getSignum();
+    var normal = Vec3D.X_AXIS.scale(psign.x);
+    var minDist = pabs.x;
+    if (pabs.y < minDist) {
+        minDist = pabs.y;
+        normal = Vec3D.Y_AXIS.scale(psign.y);
+    }
+    if (pabs.z < minDist) {
+        normal = Vec3D.Z_AXIS.scale(psign.z);
+    }
+    return normal;
+};
+
+    /**
+     * Adjusts the box size and position such that it includes the given point.
+     * 
+     * @param p
+     *            point to include
+     * @return itself
+     */
+AABB.prototype.includePoint = function(p) {
+    this.min.minSelf(p);
+    this.max.maxSelf(p);
+    this.set(this.min.interpolateTo(this.max, 0.5));
+    this.extent.set(this.max.sub(this.min).scaleSelf(0.5));
+    return this;
+};
+
+/**
+* Checks if the box intersects the passed in one.
+* 
+* @param box
+*            box to check
+* @return true, if boxes overlap
+*/
+AABB.prototype.intersectsBox = function(box) {
+    var t = box.sub(this);
+    return Math.abs(t.x) <= (this.extent.x + box.extent.x) && Math.abs(t.y) <= (this.extent.y + box.extent.y) && Math.abs(t.z) <= (this.extent.z + box.extent.z);
+};
+
+/**
+ * Calculates intersection with the given ray between a certain distance
+ * interval.
+ * 
+ * Ray-box intersection is using IEEE numerical properties to ensure the
+ * test is both robust and efficient, as described in:
+ * 
+ * Amy Williams, Steve Barrus, R. Keith Morley, and Peter Shirley: "An
+ * Efficient and Robust Ray-Box Intersection Algorithm" Journal of graphics
+ * tools, 10(1):49-54, 2005
+ * 
+ * @param ray
+ *            incident ray
+ * @param minDist
+ * @param maxDist
+ * @return intersection point on the bounding box (only the first is
+ *         returned) or null if no intersection
+ */
+
+AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
+    var invDir = ray.getDirection().reciprocal();
+    var signDirX = invDir.x < 0;
+    var signDirY = invDir.y < 0;
+    var signDirZ = invDir.z < 0;
+    var bbox = signDirX ? this.max : this.min;
+    var tmin = (bbox.x - ray.x) * invDir.x;
+    bbox = signDirX ? this.min : this.max;
+    var tmax = (bbox.x - ray.x) * invDir.x;
+    bbox = signDirY ? this.max : this.min;
+    var tymin = (bbox.y - ray.y) * invDir.y;
+    bbox = signDirY ? this.min : this.max;
+    var tymax = (bbox.y - ray.y) * invDir.y;
+    if ((tmin > tymax) || (tymin > tmax)) {
+        return null;
+    }
+    if (tymin > tmin) {
+        tmin = tymin;
+    }
+    if (tymax < tmax) {
+        tmax = tymax;
+    }
+    bbox = signDirZ ? max : min;
+    var tzmin = (bbox.z - ray.z) * invDir.z;
+    bbox = signDirZ ? min : max;
+    var tzmax = (bbox.z - ray.z) * invDir.z;
+    if ((tmin > tzmax) || (tzmin > tmax)) {
+        return null;
+    }
+    if (tzmin > tmin) {
+        tmin = tzmin;
+    }
+    if (tzmax < tmax) {
+        tmax = tzmax;
+    }
+    if ((tmin < maxDist) && (tmax > minDist)) {
+        return ray.getPointAtDistance(tmin);
+    }
+    return undefined;
+};
+
+/**
+ * @param c
+ *            sphere centre
+ * @param r
+ *            sphere radius
+ * @return true, if AABB intersects with sphere
+ */
+
+AABB.prototype.intersectsSphere = function(c, r) {
+	if(arguments.length == 1){ //must've been a sphere
+		r = c.radius;
+	}
+    var s, 
+		d = 0;
+    // find the square of the distance
+    // from the sphere to the box
+    if (c.x < this.min.x) {
+        s = c.x - this.min.x;
+        d = s * s;
+    } else if (c.x > this.max.x) {
+        s = c.x - this.max.x;
+        d += s * s;
+    }
+
+    if (c.y < this.min.y) {
+        s = c.y - this.min.y;
+        d += s * s;
+    } else if (c.y > this.max.y) {
+        s = c.y - this.max.y;
+        d += s * s;
+    }
+
+    if (c.z < this.min.z) {
+        s = c.z - this.min.z;
+        d += s * s;
+    } else if (c.z > this.max.z) {
+        s = c.z - this.max.z;
+        d += s * s;
+    }
+
+    return d <= r * r;
+};
+
+AABB.prototype.intersectsTriangle = function(tri) {
+	// use separating axis theorem to test overlap between triangle and box
+	// need to test for overlap in these directions:
+	//
+	// 1) the {x,y,z}-directions (actually, since we use the AABB of the
+	// triangle
+	// we do not even need to test these)
+	// 2) normal of the triangle
+	// 3) crossproduct(edge from tri, {x,y,z}-directin)
+	// this gives 3x3=9 more tests
+	var v0, 
+		v1, 
+		v2,
+		normal, 
+		e0, 
+		e1, 
+		e2, 
+		f;
+
+	// move everything so that the boxcenter is in (0,0,0)
+	v0 = tri.a.sub(this);
+	v1 = tri.b.sub(this);
+	v2 = tri.c.sub(this);
+
+	// compute triangle edges
+	e0 = v1.sub(v0);
+	e1 = v2.sub(v1);
+	e2 = v0.sub(v2);
+
+	// test the 9 tests first (this was faster)
+	f = e0.getAbs();
+	if (this.testAxis(e0.z, -e0.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
+	    return false;
+	}
+	if (this.testAxis(-e0.z, e0.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
+	    return false;
+	}
+	if (this.testAxis(e0.y, -e0.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
+	    return false;
+	}
+
+	f = e1.getAbs();
+	if (this.testAxis(e1.z, -e1.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
+	    return false;
+	}
+	if (this.testAxis(-e1.z, e1.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
+	    return false;
+	}
+	if (this.testAxis(e1.y, -e1.x, f.y, f.x, v0.x, v0.y, v1.x, v1.y, this.extent.x, this.extent.y)) {
+	    return false;
+	}
+
+	f = e2.getAbs();
+	if (this.testAxis(e2.z, -e2.y, f.z, f.y, v0.y, v0.z, v1.y, v1.z, this.extent.y, this.extent.z)) {
+	    return false;
+	}
+	if (this.testAxis(-e2.z, e2.x, f.z, f.x, v0.x, v0.z, v1.x, v1.z, this.extent.x, this.extent.z)) {
+	    return false;
+	}
+	if (this.testAxis(e2.y, -e2.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
+	    return false;
+	}
+
+	// first test overlap in the {x,y,z}-directions
+	// find min, max of the triangle each direction, and test for overlap in
+	// that direction -- this is equivalent to testing a minimal AABB around
+	// the triangle against the AABB
+
+	// test in X-direction
+	if (mathUtils.min(v0.x, v1.x, v2.x) > this.extent.x || mathUtils.max(v0.x, v1.x, v2.x) < -this.extent.x) {
+	    return false;
+	}
+
+	// test in Y-direction
+	if (mathUtils.min(v0.y, v1.y, v2.y) > this.extent.y || mathUtils.max(v0.y, v1.y, v2.y) < -this.extent.y) {
+	    return false;
+	}
+
+	// test in Z-direction
+	if (mathUtils.min(v0.z, v1.z, v2.z) > this.extent.z || mathUtils.max(v0.z, v1.z, v2.z) < -this.extent.z) {
+	    return false;
+	}
+
+	// test if the box intersects the plane of the triangle
+	// compute plane equation of triangle: normal*x+d=0
+	normal = e0.cross(e1);
+	var d = -normal.dot(v0);
+	if (!this.planeBoxOverlap(normal, d, extent)) {
+	    return false;
+	}
+	return true;
+};
+
+AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
+    var vmin = new Vec3D();
+    var vmax = new Vec3D();
+
+    if (normal.x > 0.0) {
+        vmin.x = -maxbox.x;
+        vmax.x = maxbox.x;
+    } else {
+        vmin.x = maxbox.x;
+        vmax.x = -maxbox.x;
+    }
+
+    if (normal.y > 0.0) {
+        vmin.y = -maxbox.y;
+        vmax.y = maxbox.y;
+    } else {
+        vmin.y = maxbox.y;
+        vmax.y = -maxbox.y;
+    }
+
+    if (normal.z > 0.0) {
+        vmin.z = -maxbox.z;
+        vmax.z = maxbox.z;
+    } else {
+        vmin.z = maxbox.z;
+        vmax.z = -maxbox.z;
+    }
+    if (normal.dot(vmin) + d > 0.0) {
+        return false;
+    }
+    if (normal.dot(vmax) + d >= 0.0) {
+        return true;
+    }
+    return false;
+};
+		
+/**
+ * Updates the position of the box in space and calls
+ * {@link #updateBounds()} immediately
+ * 
+ * @see geom.Vec3D#set(float, float, float)
+ */
+
+AABB.prototype.set = function(a,b,c) {
+		if(internals.tests.isAABB( a )) {
+			this.extent.set(a.extent);
+			return Vec3D.set.apply(this,[a]);
+		}
+		if( internals.tests.hasXYZ( a )){
+			b = a.y;
+			c = a.z;
+			a = a.a;
+		}
+		this.x = a;
+		this.y = b;
+		this.z = c;
+		this.updateBounds();
+		return this;
+ };
+
+
+AABB.prototype.setExtent = function(extent) {
+        this.extent = extent.copy();
+        return this.updateBounds();
+};
+
+AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
+    var p0 = a * va + b * vb;
+    var p2 = a * wa + b * wb;
+    var min;
+	var max;
+    if (p0 < p2) {
+        min = p0;
+        max = p2;
+    } else {
+        min = p2;
+        max = p0;
+    }
+    var rad = fa * ea + fb * eb;
+    return (min > rad || max < -rad);
+};
+
+AABB.prototype.toMesh = function(mesh){
+	if(mesh === undefined){
+		mesh = new TriangleMesh("aabb",8,12);	
+	}
+	var a = this.min,//new Vec3D(this.min.x,this.max.y,this.max.z),
+		g = this.max,//new Vec3D(this.max.x,this.max.y,this.max.z),
+		b = new Vec3D(a.x, a.y, g.z),
+		c = new Vec3D(g.x, a.y, g.z),
+		d = new Vec3D(g.x, a.y, a.z),
+		e = new Vec3D(a.x, g.y, a.z),
+		f = new Vec3D(a.x, g.y, g.z),
+		h = new Vec3D(g.x, g.y, a.z),
+		ua = new Vec2D(0,0),
+		ub = new Vec2D(1,0),
+		uc = new Vec2D(1,1),
+		ud = new Vec2D(0,1);
+	// left
+	mesh.addFace(a, b, f, ud, uc, ub);
+	mesh.addFace(a, f, e, ud, ub, ua);
+	// front
+	mesh.addFace(b, c, g, ud, uc, ub);
+	mesh.addFace(b, g, f, ud, ub, ua);
+	// right
+	mesh.addFace(c, d, h, ud, uc, ub);
+	mesh.addFace(c, h, g, ud, ub, ua);
+	// back
+	mesh.addFace(d, a, e, ud, uc, ub);
+	mesh.addFace(d, e, h, ud, ub, ua);
+	// top
+	mesh.addFace(e, f, h, ua, ud, ub);
+	mesh.addFace(f, g, h, ud, uc, ub);
+	// bottom
+	mesh.addFace(a, d, b, ud, uc, ua);
+	mesh.addFace(b, d, c, ua, uc, ub);
+	return mesh;
+
+};
+
+
+AABB.prototype.toString = function() {
+   return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
+};
+
+/**
+* Updates the min/max corner points of the box. MUST be called after moving
+* the box in space by manipulating the public x,y,z coordinates directly.
+* 
+* @return itself
+*/
+AABB.prototype.updateBounds = function() {
+  // this is check is necessary for the constructor
+  if (this.extent !== undefined) {
+      this.min = this.sub(this.extent);
+      this.max = this.add(this.extent);
+  }
+  return this;
+};
+
+module.exports = AABB;
+
+});
+
 define('toxi/geom/Triangle3D',["require", "exports", "module", "../math/mathUtils","./Vec3D","./Line3D","./AABB"], function(require, exports, module) {
 
 var mathUtils = require('../math/mathUtils'),
@@ -5411,468 +5870,1417 @@ TriangleMesh.prototype = {
 	}
 };
 
-
+exports.TriangleMesh = TriangleMesh;
 module.exports = TriangleMesh;
 
 });
 
-define('toxi/geom/AABB',["require", "exports", "module", "../internals","./Vec3D","./Vec2D","./mesh/TriangleMesh","../math/mathUtils"], function(require, exports, module) {
+define('toxi/geom/mesh/BezierPatch',["require", "exports", "module", "../Vec3D","./TriangleMesh"], function(require, exports, module) {
+var Vec3D = require('../Vec3D'),
+	TriangleMesh = require('./TriangleMesh');
+
+/**
+ * @class 4x4 bezier patch implementation with tesselation support (dynamic resolution)
+ * for generating triangle mesh representations.
+ * @member toxi
+ */
+var	BezierPatch = function(points){
+	this.points = (points === undefined)?[] : points;
+	for (var i = 0; i < 4; i++) {
+		for (var j = 0; j < 4; j++) {
+			this.points[i][j] = new Vec3D();
+		}
+	}
+};
+
+BezierPatch.prototype = {
+	
+	computePointAt: function(u,v) {
+		return this.computePointAt(u, v, this.points);
+	},
+
+	set: function(x,y,p) {
+		this.points[y][x].set(p);
+		return this;
+	},
+
+	toMesh: function(mesh_or_res,_res) {
+		var mesh,
+			res;
+		if(_res === undefined){
+			mesh = new TriangleMesh();
+			res = mesh_or_res;
+		} else {
+			mesh = mesh_or_res;
+			res = _res;
+		}
+		var curr = new Array(res + 1),
+			prev = new Array(res + 1);
+		var r1 = 1.0 / res;
+		for (var y = 0; y <= res; y++) {
+			for (var x = 0; x <= res; x++) {
+				var p = this.computePointAt(x * r1, y * r1, this.points);
+				if (x > 0 && y > 0) {
+					mesh.addFace(p, curr[x - 1], prev[x - 1]);
+					mesh.addFace(p, prev[x - 1], prev[x]);
+				}
+				curr[x] = p;
+			}
+			var tmp = prev;
+			prev = curr;
+			curr = tmp;
+		}
+		return mesh;
+
+	}
+};
+
+/**
+Computes a single point on the bezier surface given by the 2d array of
+control points. The desired point's coordinates have to be specified in
+UV space (range 0.0 .. 1.0). The implementation does not check or enforce
+the correct range of these coords and will not return valid points if the
+range is exceeded.
+@param u positive normalized U coordinate on the bezier surface
+@param v positive normalized V coordinate on the bezier surface
+@param points 4x4 array defining the patch's control points
+@return point on surface
+*/
+
+BezierPatch.computePointAt = function(u,v,points){
+		var u1 = 1 - u;
+		var u1squared = u1 * u1 * 3 * u,
+		u1cubed = u1 * u1 * u1,
+		usquared = u * u,
+		v1 = 1 - v,
+		vsquared = v * v * 3,
+		v1squared = v1 * v1 * 3,
+		v1cubed = v1 * v1 * v1,
+		vcubed = v * v * v,
+
+		u1usq = u1 * usquared * 3,
+		usqu = u * usquared,
+		v1vsq = v1 * vsquared,
+		v1sqv = v1squared * v;
+
+		var p0 = points[0];
+		var p1 = points[1];
+		var p2 = points[2];
+		var p3 = points[3];
+
+		var x = u1cubed * (p0[0].x * v1cubed + p0[1].x * v1sqv + p0[2].x * v1vsq + p0[3].x * vcubed) + u1squared * (p1[0].x * v1cubed + p1[1].x * v1sqv + p1[2].x * v1vsq + p1[3].x * vcubed) + u1usq * (p2[0].x * v1cubed + p2[1].x * v1sqv + p2[2].x * v1vsq + p2[3].x * vcubed) + usqu * (p3[0].x * v1cubed + p3[1].x * v1sqv + p3[2].x * v1vsq + p3[3].x * vcubed);
+
+		var y = u1cubed * (p0[0].y * v1cubed + p0[1].y * v1sqv + p0[2].y * v1vsq + p0[3].y * vcubed) + u1squared * (p1[0].y * v1cubed + p1[1].y * v1sqv + p1[2].y * v1vsq + p1[3].y * vcubed) + u1usq * (p2[0].y * v1cubed + p2[1].y * v1sqv + p2[2].y * v1vsq + p2[3].y * vcubed) + usqu * (p3[0].y * v1cubed + p3[1].y * v1sqv + p3[2].y * v1vsq + p3[3].y * vcubed);
+
+		var z = u1cubed * (p0[0].z * v1cubed + p0[1].z * v1sqv + p0[2].z * v1vsq + p0[3].z * vcubed) + u1squared * (p1[0].z * v1cubed + p1[1].z * v1sqv + p1[2].z * v1vsq + p1[3].z * vcubed) + u1usq * (p2[0].z * v1cubed + p2[1].z * v1sqv + p2[2].z * v1vsq + p2[3].z * vcubed) + usqu * (p3[0].z * v1cubed + p3[1].z * v1sqv + p3[2].z * v1vsq + p3[3].z * vcubed);
+
+		return new Vec3D(x, y, z);
+
+};
+
+module.exports = BezierPatch;
+});
+
+define('toxi/geom/mesh/VertexSelector',["require", "exports", "module"], function(require, exports, module) {
+/**
+ * @class
+ * @member toxi
+ */
+var VertexSelector = function(mesh){
+	this.mesh = mesh;
+	this.selection = [];
+};
+
+VertexSelector.prototype = {
+	/**
+     * Adds all vertices selected by the given selector to the current
+     * selection. The other selector needs to be assigned to the same mesh
+     * instance.
+     * 
+     * @param sel2 other selector
+     * @return itself
+     */
+
+	addSelection: function(sel2){
+		this.checkMeshIdentity(sel2.getMesh());
+		this.selection.addAll(sel2.getSelection());
+		return this;
+	},
+	
+	/**
+     * Utility function to check if the given mesh is the same instance as ours.
+     * 
+     * @param mesh2
+     */
+    checkMeshIdentity: function(mesh2) {
+        if (mesh2 != this.mesh) {
+            throw new Error("The given selector is not using the same mesh instance");
+        }
+    },
+    
+    clearSelection: function() {
+        this.selection.clear();
+        return this;
+    },
+
+	getMesh: function() {
+        return this.mesh;
+    },
+    
+    getSelection: function() {
+        return this.selection;
+    },
+    /**
+     * Creates a new selection of all vertices NOT currently selected.
+     * 
+     * @return itself
+     */
+    invertSelection: function() {
+        var newSel = [];
+        var vertices = mesh.getVertices();
+        var l = vertices.length;
+        for (var i=0;i<l;i++) {
+			var v = vertices[i];
+            if (!selection.contains(v)) {
+                newSel.add(v);
+            }
+        }
+        this.selection = newSel;
+        return this;
+    },
+
+	/**
+     * Selects vertices identical or closest to the ones given in the list of
+     * points.
+     * 
+     * @param points
+     * @return itself
+     */
+    selectSimilar: function(points) {
+		var l = points.length;
+        for (var i=0;i<l;i++) {
+			var v = points[i];
+            this.selection.add(this.mesh.getClosestVertexToPoint(v));
+        }
+        return this;
+    },
+    
+     /**
+     * Selects vertices using an implementation specific method. This is the
+     * only method which needs to be implemented by any selector subclass.
+     * 
+     * @return itself
+     */
+   selectVertices: function(){
+   return this;
+   },
+	
+	setMesh: function(mesh) {
+        this.mesh = mesh;
+        this.clearSelection();
+    },
+    
+    size: function() {
+        return this.selection.size();
+    },
+	/**
+     * Removes all vertices selected by the given selector from the current
+     * selection. The other selector needs to be assigned to the same mesh
+     * instance.
+     * 
+     * @param sel2
+     *            other selector
+     * @return itself
+     */
+
+	subtractSelection: function(sel2) {
+        this.checkMeshIdentity(sel2.getMesh());
+        this.selection.removeAll(sel2.getSelection());
+        return this;
+	}
+};
+
+module.exports = VertexSelector;
+
+   
+  
+});
+
+define('toxi/geom/mesh/BoxSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
+
+var extend = require('../../internals').extend,
+    VertexSelector = require('./VertexSelector');
+
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
+ */
+var BoxSelector = function(mesh,box) {
+    VertexSelector.apply(this,[mesh]);
+    this.box = box;
+};
+
+extend(BoxSelector,VertexSelector);
+
+BoxSelector.prototype.selectVertices = function() {
+    this.clearSelection();
+    var verts = this.mesh.getVertices();
+    var l = verts.length;
+    for (var i=0;i<l;i++) {
+		var v = verts[i];
+        if (this.box.containsPoint(v)) {
+            this.selection.add(v);
+        }
+    }
+    return this;
+};
+
+
+module.exports = BoxSelector;
+
+});
+
+define('toxi/geom/mesh/DefaultSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
+var extend = require('../../internals').extend,
+    VertexSelector = require('./VertexSelector');
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
+ */
+var DefaultSelector = function(mesh){
+	VertexSelector.apply(this,[mesh]);
+};
+extend(DefaultSelector,VertexSelector);	
+DefaultSelector.prototype.selectVertices = function(){
+	this.clearSelection();
+	this.selection.addAll(this.mesh.getVertices());
+	return this;
+};
+
+module.exports = DefaultSelector;
+});
+
+define('toxi/geom/mesh/OBJWriter',[
+	'../../internals'
+], function( internals ){
+
+	//faster than str += " "
+	var StringBuffer = function(){
+		this.buffer = [];
+	};
+	StringBuffer.prototype.append = function(string){
+		this.buffer.push(string);
+		return this;
+	};
+	StringBuffer.prototype.toString = function(){
+		return this.buffer.join("");
+	};
+	
+	var OBJWriter = function(){
+		this.VERSION = "0.3";
+		this.__stringBuffer = new StringBuffer();
+		this.objStream;
+		this.__filename = "objwriter.obj";
+		this._numVerticesWritten = 0;
+		this._numNormalsWritten = 0;
+	};
+
+
+	OBJWriter.prototype = {
+		/**
+		 * begin saving
+		 * @param {WritableStream | String} [stream] stream can be a node.js WritableStream, or it can be a filename or undefined
+		 */
+		beginSave: function( stream ){
+			if( typeof stream == 'string' ){
+				//if node.js create a writeable stream with this filename
+			} else if( internals.hasProperties(stream,['write','end','writable'] && stream.writable)){
+				this.objStream = stream;
+			} else {
+			}
+			this._handleBeginSave();
+		},
+
+		endSave: function(){
+			if(this.objStream !== undefined ){
+				try {
+					this.objStream.destroy();
+				} catch( e ){
+
+				}
+			}
+		},
+
+		face: function( a, b, c ){
+			this.__stringBuffer.append("f " + a + " " + b + " " + c + "\n");
+		},
+
+		faceList: function(){
+			this.__stringBuffer.append("s off \n");
+		},
+
+		faceWithNormals: function( a, b, c, na, nb, nc ){
+			this.__stringBuffer.append("f " + a + "//" + na + " " + b + "//" + nb + " " + c + "//" + nc + "\n");
+		},
+
+		getCurrNormalOffset: function(){
+			return this._numNormalsWritten;
+		},
+
+		getCurrVertexOffset: function(){
+			return this._numVerticesWritten;
+		},
+
+		//not in java version
+		getOutput: function(){
+			return this.__stringBuffer.toString();
+		},
+
+		_handleBeginSave: function(){
+			this.numVerticesWritten = 0;
+			this.numNormalsWrittern = 0;
+			this.__stringBuffer.append("# generated by OBJExport (js) v" + this.VERSION+'\n');
+		},
+
+		newObject: function( name ){
+			this.__stringBuffer.append("o " + name + "\n");
+		},
+
+		normal: function( vecN ){
+			this.__stringBuffer.append("vn " + vecN.x + " " + vecN.y + " " + vecN.z + "\n");
+			this._numNormalsWritten++;
+		},
+
+		vertex: function( vecV ){
+			this.__stringBuffer.append("v " + vecV.x + " " + vecV.y + " " + vecV.z +"\n");
+			this._numVerticesWritten++;
+		}
+	}
+
+
+	return OBJWriter;
+
+});
+define('toxi/geom/mesh/PlaneSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
+var extend = require('../../internals').extend,
+    VertexSelector = require('./VertexSelector');
+
+/**
+ * @class
+ * @member toxi
+ * @augments toxi.VertexSelector
+ */
+var PlaneSelector = function(mesh,plane,classifier, tolerance) {
+    VertexSelector.apply(this,[mesh]);
+    this.plane = plane;
+    this.classifier = classifier;
+    this.tolerances = (tolerance === undefined)? 0.0001 : tolerance;
+};
+extend(PlaneSelector,VertexSelector);
+PlaneSelector.prototype.selectVertices = function() {
+    this.clearSelection();
+    var verts = this.mesh.getVertices();
+    var l = verts.length;
+    for (var i=0;i<l;i++) {
+		var v = verts[i];
+        if (this.plane.classifyPoint(v, this.tolerance) == this.classifier) {
+            this.selection.add(v);
+        }
+    }
+    return this;
+};
+
+module.exports = PlaneSelector;
+});
+
+define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./TriangleMesh","../Vec3D","../Vec2D"], function(require, exports, module) {
+
+var Vec3D = require('../Vec3D'),
+	Vec2D = require('../Vec2D'),
+	TriangleMesh = require('./TriangleMesh');
+
+/**
+ * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface
+ * functions using spherical coordinates. In order to create mesh, you'll need
+ * to supply a {@link SurfaceFunction} implementation to the builder.
+ * @member toxi
+ */
+var	SurfaceMeshBuilder = function(func) {
+	this.func = func;
+};
+
+SurfaceMeshBuilder.prototype = {
+	/*
+		create a mesh from a surface,
+		parameter options:
+			1 - Object options
+			1 - Number resolution
+			3 - TriangleMesh mesh, Number resolution, Number size
+			4 - TriangleMesh mesh, Number resolution, Number size, boolean isClosed
+	*/
+	createMesh: function() {
+		var opts = {
+			mesh: undefined,
+			resolution: 0,
+			size: 1,
+			isClosed: true
+		};
+		if(arguments.length == 1){
+			if(typeof arguments[0] == 'object'){ //options object
+				var arg = arguments[0];
+				//if a mesh was provided as an option, use it, otherwise make one
+				opts.mesh = arg.mesh;
+				opts.resolution = arg.res || arg.resoultion || 0;
+				if(arg.size !== undefined){
+					opts.size = arg.size;
+				}
+				if(arg.isClosed !== undefined){
+					opts.isClosed = arg.isClosed;
+				}
+			} else { //resolution Number
+				opts.resolution = arguments[0];
+			}
+		} else if(arguments.length > 2){
+			opts.mesh = arguments[0];
+			opts.resolution = arguments[1];
+			opts.size = arguments[2];
+			if(arguments.length == 4){
+				opts.isClosed = arguments[3];
+			}
+		}
+		var mesh = opts.mesh;
+		if(mesh === undefined || mesh === null){
+			mesh = new TriangleMesh(); 
+		}
+		
+		var a = new Vec3D(),
+			b = new Vec3D(),
+			pa = new Vec3D(),
+			pb = new Vec3D(),
+			a0 = new Vec3D(),
+			b0 = new Vec3D(),
+			phiRes = this.func.getPhiResolutionLimit(opts.resolution),
+			phiRange = this.func.getPhiRange(),
+			thetaRes = this.func.getThetaResolutionLimit(opts.resolution),
+			thetaRange = this.func.getThetaRange(),
+			pres = 1.0 / phiRes, //(1 == opts.resolution % 2 ? opts.resolution - 0 : opts.resolution);
+			tres = 1.0 / thetaRes,
+			ires = 1.0 / opts.resolution,
+			pauv = new Vec2D(),
+			pbuv = new Vec2D(),
+			auv = new Vec2D(),
+			buv = new Vec2D();
+
+		for (var p = 0; p < phiRes; p++) {
+			var phi = p * phiRange * ires;
+			var phiNext = (p + 1) * phiRange * ires;
+			for (var t = 0; t <= thetaRes; t++) {
+				var theta = t * thetaRange * ires;
+				var func = this.func;
+				a =	func.computeVertexFor(a, phiNext, theta).scaleSelf(opts.size);
+				auv.set( t * tres, 1 - (p + 1) * pres);
+				b = func.computeVertexFor(b, phi, theta).scaleSelf(opts.size);
+				buv.set( t * tres, 1 - p * pres );
+				if (b.equalsWithTolerance(a, 0.0001) ) {
+					b.set(a);
+				}
+				if (t > 0) {
+					if (t == thetaRes && opts.isClosed) {
+						a.set(a0);
+						b.set(b0);
+					}
+					mesh.addFace(pa, pb, a, pauv.copy(), pbuv.copy(), auv.copy());
+					mesh.addFace(pb, b, a, pbuv.copy(), buv.copy(), auv.copy());
+				} else {
+					a0.set(a);
+					b0.set(b);
+				}
+				pa.set(a);
+				pb.set(b);
+				pauv.set(auv);
+				pbuv.set(buv);
+			}
+		}
+		return mesh;
+	},
+	
+	
+	/**
+	@return the function
+	*/
+	getFunction: function() {
+		return this.func;
+	},
+
+	setFunction: function(func) {
+		this.func = func;
+	}
+};
+exports.SurfaceMeshBuilder = SurfaceMeshBuilder;
+module.exports = SurfaceMeshBuilder;
+});
+
+define('toxi/geom/Sphere',["require", "exports", "module", "../internals","./Vec3D","./mesh/SphereFunction", './mesh/SurfaceMeshBuilder'], function(require, exports, module) {
 
 var	internals = require('../internals'),
-	Vec3D = require('./Vec3D'),
-	Vec2D = require('./Vec2D'),
-	TriangleMesh = require('./mesh/TriangleMesh'),
-	mathUtils = require('../math/mathUtils');
-
+	SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder'),
+	SphereFunction = require('./mesh/SphereFunction'),
+	Vec3D = require('./Vec3D');
 
 
 
 /**
- @class Axis-aligned Bounding Box
- @member 
+ * @module toxi.geom.Sphere
+ * @augments toxi.geom.Vec3D
  */
-var AABB = function(a,b){
-	var vec,
-		extent;
+var	Sphere = function(a,b){
 	if(a === undefined){
-		Vec3D.call(this);
-		this.setExtent(new Vec3D());
-	} else if(typeof(a) == "number") {
-		Vec3D.call(this,new Vec3D());
-		this.setExtent(a);
-	} else if( internals.tests.hasXYZ( a ) ) {
-		Vec3D.call(this,a);
-		if(b === undefined && internals.tests.isAABB( a )) {
-			this.setExtent(a.getExtent());
-		} else {
-			if(typeof b == "number"){
-				this.setExtent(new Vec3D(b,b,b));
-			}else { //should be an AABB
-				this.setExtent(b);
-			}
+		Vec3D.apply(this,[new Vec3D()]);
+		this.radius = 1;
+	}
+	else if( internals.tests.hasXYZ( a ) ){
+		Vec3D.apply(this,[a]);
+		if( internals.tests.isSphere( a ) ){
+			this.radius = a.radius;
+		}
+		else {
+			this.radius = b;
 		}
 	}
-	
-	
+	else {
+		Vec3D.apply(this,[new Vec3D()]);
+		this.radius = a;
+	}
 };
 
-internals.extend(AABB,Vec3D);
+internals.extend(Sphere,Vec3D);
 
-AABB.fromMinMax = function(min,max){
-	var a = Vec3D.min(min, max);
-	var b = Vec3D.max(min, max);
-	return new AABB(a.interpolateTo(b,0.5),b.sub(a).scaleSelf(0.5));
+
+Sphere.prototype.containsPoint = function(p) {
+	var d = this.sub(p).magSquared();
+	return (d <= this.radius * this.radius);
 };
 
-AABB.prototype.containsPoint = function(p) {
-    return p.isInAABB(this);
+/**
+ * Alternative to {@link SphereIntersectorReflector}. Computes primary &
+ * secondary intersection points of this sphere with the given ray. If no
+ * intersection is found the method returns null. In all other cases, the
+ * returned array will contain the distance to the primary intersection
+ * point (i.e. the closest in the direction of the ray) as its first index
+ * and the other one as its second. If any of distance values is negative,
+ * the intersection point lies in the opposite ray direction (might be
+ * useful to know). To get the actual intersection point coordinates, simply
+ * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
+ * 
+ * @param ray
+ * @return 2-element float array of intersection points or null if ray
+ * doesn't intersect sphere at all.
+ */
+Sphere.prototype.intersectRay = function(ray) {
+	var result,
+		a,
+		b,
+		t,
+		q = ray.sub(this),
+		distSquared = q.magSquared(),
+		v = -q.dot(ray.getDirection()),
+		d = this.radius * this.radius - (distSquared - v * v);
+	if (d >= 0.0) {
+		d = Math.sqrt(d);
+		a = v + d;
+		b = v - d;
+		if (!(a < 0 && b < 0)) {
+			if (a > 0 && b > 0) {
+				if (a > b) {
+					t = a;
+					a = b;
+					b = t;
+				}
+			} else {
+				if (b > 0) {
+					t = a;
+					a = b;
+					b = t;
+				}
+			}
+		}
+		result = [a,b];
+	}
+	return result;
 };
+
+/**
+ * Considers the current vector as centre of a collision sphere with radius
+ * r and checks if the triangle abc intersects with this sphere. The Vec3D p
+ * The point on abc closest to the sphere center is returned via the
+ * supplied result vector argument.
+ * 
+ * @param t
+ *			triangle to check for intersection
+ * @param result
+ *			a non-null vector for storing the result
+ * @return true, if sphere intersects triangle ABC
+ */
+Sphere.prototype.intersectSphereTriangle = function(t,result) {
+	// Find Vec3D P on triangle ABC closest to sphere center
+	result.set(t.closestPointOnSurface(this));
+
+	// Sphere and triangle intersect if the (squared) distance from sphere
+	// center to Vec3D p is less than the (squared) sphere radius
+	var v = result.sub(this);
+	return v.magSquared() <= this.radius * this.radius;
+};
+
+/**
+ * Calculates the normal vector on the sphere in the direction of the
+ * current point.
+ * 
+ * @param q
+ * @return a unit normal vector to the tangent plane of the ellipsoid in the
+ * point.
+ */
+Sphere.prototype.tangentPlaneNormalAt = function(q) {
+	return this.sub(q).normalize();
+};
+
+Sphere.prototype.toMesh = function() {
+	//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
+	//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
+
+	//if one argument is passed it can either be a Number for resolution, or an options object
+	//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
+	var opts = {
+		mesh: undefined,
+		resolution: 0
+	};
+	if(arguments.length === 1){
+		if(typeof(arguments[0]) == 'object'){ //options object
+			opts.mesh = arguments[0].mesh;
+			opts.resolution = arguments[0].res || arguments[0].resolution;
+		} else { //it was just the resolution Number
+			opts.resolution = arguments[0];
+		}
+	} else {
+		opts.mesh = arguments[0];
+		opts.resolution = arguments[1];
+	}
+	var builder = new SurfaceMeshBuilder(new SphereFunction(this));
+	return builder.createMesh(opts.mesh, opts.resolution, 1);
+};
+
+module.exports = Sphere;
+});
+
+define('toxi/geom/mesh/SphereFunction',["require", "exports", "module", "../../math/mathUtils","../Vec3D","../Sphere"], function(require, exports, module) {
+
+var mathUtils = require('../../math/mathUtils'),
+	Vec3D = require('../Vec3D'),
+	internals = require('../../internals'),
+	Sphere = require('../Sphere');
+
+/**
+ * @class This implementation of a {@link SurfaceFunction} samples a given
+ * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
+ * @member toxi
+ */
+var	SphereFunction = function(sphere_or_radius) {
+	if(sphere_or_radius === undefined){
+		this.sphere = new Sphere(new Vec3D(),1);
+	}
 	
-AABB.prototype.copy = function() {
-    return new AABB(this);
-};
-	
-	/**
-	 * Returns the current box size as new Vec3D instance (updating this vector
-	 * will NOT update the box size! Use {@link #setExtent(ReadonlyVec3D)} for
-	 * those purposes)
-	 * 
-	 * @return box size
-	 */
-AABB.prototype.getExtent = function() {
-   return this.extent.copy();
-};
-	
-AABB.prototype.getMax = function() {
-   // return this.add(extent);
-   return this.max.copy();
+	if(internals.tests.isSphere( sphere_or_radius )){
+		this.sphere = sphere_or_radius;
+	}
+	else{
+		this.sphere = new Sphere(new Vec3D(),sphere_or_radius);
+	}
+	this.phiRange = mathUtils.PI;
+	this.thetaRange = mathUtils.TWO_PI;
 };
 
-AABB.prototype.getMin = function() {
-   return this.min.copy();
+SphereFunction.prototype = {
+	
+	computeVertexFor: function(p,phi,theta) {
+	    phi -= mathUtils.HALF_PI;
+	    var cosPhi = mathUtils.cos(phi);
+	    var cosTheta = mathUtils.cos(theta);
+	    var sinPhi = mathUtils.sin(phi);
+	    var sinTheta = mathUtils.sin(theta);
+	    var t = mathUtils.sign(cosPhi) * mathUtils.abs(cosPhi);
+	    p.x = t * mathUtils.sign(cosTheta) * mathUtils.abs(cosTheta);
+	    p.y = mathUtils.sign(sinPhi) * mathUtils.abs(sinPhi);
+	    p.z = t * mathUtils.sign(sinTheta) * mathUtils.abs(sinTheta);
+	    return p.scaleSelf(this.sphere.radius).addSelf(this.sphere);
+	},
+	
+	getPhiRange: function() {
+	    return this.phiRange;
+	},
+	
+	getPhiResolutionLimit: function(res) {
+	    return res;
+	},
+	
+	getThetaRange: function() {
+	    return this.thetaRange;
+	},
+	
+	getThetaResolutionLimit: function(res) {
+	    return res;
+	},
+	
+	setMaxPhi: function(max) {
+	    this.phiRange = mathUtils.min(max / 2, mathUtils.PI);
+	},
+	
+	setMaxTheta: function(max) {
+	    this.thetaRange = mathUtils.min(max, mathUtils.TWO_PI);
+	}
 };
 
-AABB.prototype.getNormalForPoint = function(p) {
-    p = p.sub(this);
-    var pabs = this.extent.sub(p.getAbs());
-    var psign = p.getSignum();
-    var normal = Vec3D.X_AXIS.scale(psign.x);
-    var minDist = pabs.x;
-    if (pabs.y < minDist) {
-        minDist = pabs.y;
-        normal = Vec3D.Y_AXIS.scale(psign.y);
+module.exports = SphereFunction;
+});
+
+define('toxi/geom/mesh/SphericalHarmonics',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
+
+var mathUtils = require('../../math/mathUtils');
+
+/**
+ * @class Spherical harmonics surface evaluator based on code by Paul Bourke:
+ * http://local.wasp.uwa.edu.au/~pbourke/geometry/sphericalh/
+ * @member toxi
+ */
+var SphericalHarmonics = function(m) {
+    this.m = m;
+};
+
+SphericalHarmonics.prototype = {
+    // toxiclibs - FIXME check where flipped vertex order is coming from sometimes
+    computeVertexFor: function(p,phi,theta) {
+        var r = 0;
+        r += Math.pow(mathUtils.sin(this.m[0] * theta), this.m[1]);
+        r += Math.pow(mathUtils.cos(this.m[2] * theta), this.m[3]);
+        r += Math.pow(mathUtils.sin(this.m[4] * phi), this.m[5]);
+        r += Math.pow(mathUtils.cos(this.m[6] * phi), this.m[7]);
+
+        var sinTheta = mathUtils.sin(theta);
+        p.x = r * sinTheta * mathUtils.cos(phi);
+        p.y = r * mathUtils.cos(theta);
+        p.z = r * sinTheta * mathUtils.sin(phi);
+        return p;
+    },
+
+    getPhiRange: function() {
+        return mathUtils.TWO_PI;
+    },
+
+    getPhiResolutionLimit: function(res) {
+        return res;
+    },
+
+    getThetaRange: function() {
+        return mathUtils.PI;
+    },
+
+    getThetaResolutionLimit: function(res) {
+        return res;
     }
-    if (pabs.z < minDist) {
-        normal = Vec3D.Z_AXIS.scale(psign.z);
-    }
-    return normal;
 };
 
-    /**
-     * Adjusts the box size and position such that it includes the given point.
-     * 
-     * @param p
-     *            point to include
-     * @return itself
-     */
-AABB.prototype.includePoint = function(p) {
-    this.min.minSelf(p);
-    this.max.maxSelf(p);
-    this.set(this.min.interpolateTo(this.max, 0.5));
-    this.extent.set(this.max.sub(this.min).scaleSelf(0.5));
+module.exports = SphericalHarmonics;
+});
+
+define('toxi/geom/mesh/SuperEllipsoid',["require", "exports", "module", "../../math/mathUtils","./TriangleMesh"], function(require, exports, module) {
+
+var mathUtils = require('../../math/mathUtils');
+
+var TriangleMesh = require('./TriangleMesh');
+
+/**
+ * @class
+ * @member toxi
+ */
+var	SuperEllipsoid = function(n1,n2) {
+	this.p1 = n1;
+	this.p2 = n2;
+};
+
+SuperEllipsoid.prototype = {
+	computeVertexFor: function(p,phi,theta) {
+		phi -= mathUtils.HALF_PI;
+		var cosPhi = mathUtils.cos(phi),
+			cosTheta = mathUtils.cos(theta),
+			sinPhi = mathUtils.sin(phi),
+			sinTheta = mathUtils.sin(theta);
+
+		var t = mathUtils.sign(cosPhi) * Math.pow(mathUtils.abs(cosPhi), this.p1);
+		p.x = t * mathUtils.sign(cosTheta) * Math.pow(Math.abs(cosTheta), this.p2);
+		p.y = mathUtils.sign(sinPhi) * Math.pow(Math.abs(sinPhi), this.p1);
+		p.z = t * mathUtils.sign(sinTheta) * Math.pow(mathUtils.abs(sinTheta), this.p2);
+		return p;
+	},
+ 
+	getPhiRange: function() {
+		return mathUtils.TWO_PI;
+	},
+
+	getPhiResolutionLimit: function(res) {
+		return res / 2;
+	},
+
+	getThetaRange: function() {
+		return mathUtils.TWO_PI;
+	},
+
+	getThetaResolutionLimit: function(res) {
+		return res;
+	}
+};
+
+module.exports = SuperEllipsoid;
+});
+
+define('toxi/math/Interpolation2D',["require", "exports", "module","../internals"], function(require, exports, module) {
+var internals = require("../internals");
+
+/**
+ * @class Implementations of 2D interpolation functions (currently only bilinear).
+ * @member toxi
+ * @static
+ */
+var Interpolation2D = {};
+/**
+ * @param {Number} x
+ *            x coord of point to filter (or Vec2D p)
+ * @param {Number} y
+ *            y coord of point to filter (or Vec2D p1)
+ * @param {Number} x1
+ *            x coord of top-left corner (or Vec2D p2)
+ * @param {Number} y1
+ *            y coord of top-left corner
+ * @param {Number} x2
+ *            x coord of bottom-right corner
+ * @param {Number} y2
+ *            y coord of bottom-right corner
+ * @param {Number} tl
+ *            top-left value
+ * @param {Number} tr
+ *            top-right value (do not use if first 3 are Vec2D)
+ * @param {Number} bl
+ *            bottom-left value (do not use if first 3 are Vec2D)
+ * @param {Number} br
+ *            bottom-right value (do not use if first 3 are Vec2D)
+ * @return {Number} interpolated value
+ */
+Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
+	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
+	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
+	{
+		x = _x.x;
+		y = _x.y;
+		
+		x1 = _y.x;
+		y1 = _y.y;
+		
+		x2 = _x1.x;
+		y2 = _x1.y;
+		
+		tl = _y1;
+		tr = _x2;
+		bl = _y2;
+		br = _tl;
+	} else {
+		x = _x;
+		y = _y;
+		x1 = _x1;
+		y1 = _y1;
+		x2 = _x2;
+		y2 = _y2;
+		tl = _tl;
+		tr = _tr;
+		bl = _bl;
+		br = _br;
+	}
+    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
+    var dx1 = (x - x1) * denom;
+    var dx2 = (x2 - x) * denom;
+    var dy1 = y - y1;
+    var dy2 = y2 - y;
+    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
+};
+
+module.exports = Interpolation2D;
+});
+
+define('toxi/geom/Ray3D',["require", "exports", "module", "../internals","./Vec3D","./Line3D"], function(require, exports, module) {
+
+var extend = require('../internals').extend,
+	Vec3D = require('./Vec3D'),
+	Line3D = require('./Line3D');
+
+/**
+ * @class
+ * @member toxi
+ */
+var	Ray3D = function(a,b,c,d){
+	var o, dir;
+	if(arguments.length == 4){
+		o = new Vec3D(a,b,c);
+		dir = d;
+	}
+	else if(arguments.length == 2){
+		o = a;
+		dir = b;
+	}
+	else {
+		o = new Vec3D();
+		dir = Vec3D.Y_AXIS.copy();
+	}
+	Vec3D.apply(this,[o]);
+	this.dir = dir;
+};
+
+extend(Ray3D,Vec3D);
+
+/**
+	Returns a copy of the ray's direction vector.
+	@return vector
+*/
+Ray3D.prototype.getDirection = function() {
+    return this.dir.copy();
+};
+
+/**
+	Calculates the distance between the given point and the infinite line
+	coinciding with this ray.
+	@param p
+*/
+Ray3D.prototype.getDistanceToPoint = function(p) {
+    var sp = p.sub(this);
+    return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
+};
+
+/**
+	Returns the point at the given distance on the ray. The distance can be
+	any real number.
+	@param dist
+	@return vector
+*/
+Ray3D.prototype.getPointAtDistance = function(dist) {
+    return this.add(this.dir.scale(dist));
+};
+
+/**
+  Uses a normalized copy of the given vector as the ray direction. 
+  @param d new direction
+  @return itself
+*/
+Ray3D.prototype.setDirection = function(d) {
+    this.dir.set(d).normalize();
     return this;
 };
 
 /**
-* Checks if the box intersects the passed in one.
-* 
-* @param box
-*            box to check
-* @return true, if boxes overlap
+  Converts the ray into a 3D Line segment with its start point coinciding
+  with the ray origin and its other end point at the given distance along
+  the ray.
+  
+  @param dist end point distance
+  @return line segment
 */
-AABB.prototype.intersectsBox = function(box) {
-    var t = box.sub(this);
-    return Math.abs(t.x) <= (this.extent.x + box.extent.x) && Math.abs(t.y) <= (this.extent.y + box.extent.y) && Math.abs(t.z) <= (this.extent.z + box.extent.z);
+Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
+    return new Line3D(this, this.getPointAtDistance(dist));
 };
+
+Ray3D.prototype.toString = function() {
+    return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
+};
+
+module.exports = Ray3D;
+});
+
+define('toxi/geom/IsectData3D',["require", "exports", "module", "./Vec3D"], function(require, exports, module) {
+
+var Vec3D = require('./Vec3D');
 
 /**
- * Calculates intersection with the given ray between a certain distance
- * interval.
- * 
- * Ray-box intersection is using IEEE numerical properties to ensure the
- * test is both robust and efficient, as described in:
- * 
- * Amy Williams, Steve Barrus, R. Keith Morley, and Peter Shirley: "An
- * Efficient and Robust Ray-Box Intersection Algorithm" Journal of graphics
- * tools, 10(1):49-54, 2005
- * 
- * @param ray
- *            incident ray
- * @param minDist
- * @param maxDist
- * @return intersection point on the bounding box (only the first is
- *         returned) or null if no intersection
+ * @class
+ * @member toxi
  */
-
-AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
-    var invDir = ray.getDirection().reciprocal();
-    var signDirX = invDir.x < 0;
-    var signDirY = invDir.y < 0;
-    var signDirZ = invDir.z < 0;
-    var bbox = signDirX ? this.max : this.min;
-    var tmin = (bbox.x - ray.x) * invDir.x;
-    bbox = signDirX ? this.min : this.max;
-    var tmax = (bbox.x - ray.x) * invDir.x;
-    bbox = signDirY ? this.max : this.min;
-    var tymin = (bbox.y - ray.y) * invDir.y;
-    bbox = signDirY ? this.min : this.max;
-    var tymax = (bbox.y - ray.y) * invDir.y;
-    if ((tmin > tymax) || (tymin > tmax)) {
-        return null;
-    }
-    if (tymin > tmin) {
-        tmin = tymin;
-    }
-    if (tymax < tmax) {
-        tmax = tymax;
-    }
-    bbox = signDirZ ? max : min;
-    var tzmin = (bbox.z - ray.z) * invDir.z;
-    bbox = signDirZ ? min : max;
-    var tzmax = (bbox.z - ray.z) * invDir.z;
-    if ((tmin > tzmax) || (tzmin > tmax)) {
-        return null;
-    }
-    if (tzmin > tmin) {
-        tmin = tzmin;
-    }
-    if (tzmax < tmax) {
-        tmax = tzmax;
-    }
-    if ((tmin < maxDist) && (tmax > minDist)) {
-        return ray.getPointAtDistance(tmin);
-    }
-    return undefined;
+var	IsectData3D = function(isec){
+	if(isec !== undefined){
+		this.isIntersection = isec.isIntersection;
+		this.dist = isec.dist;
+		this.pos = isec.pos.copy();
+		this.dir = isec.dir.copy();
+		this.normal = isec.normal.copy();
+	}
+	else {
+		this.clear();
+	}
 };
 
-/**
- * @param c
- *            sphere centre
- * @param r
- *            sphere radius
- * @return true, if AABB intersects with sphere
- */
-
-AABB.prototype.intersectsSphere = function(c, r) {
-	if(arguments.length == 1){ //must've been a sphere
-		r = c.radius;
-	}
-    var s, 
-		d = 0;
-    // find the square of the distance
-    // from the sphere to the box
-    if (c.x < this.min.x) {
-        s = c.x - this.min.x;
-        d = s * s;
-    } else if (c.x > this.max.x) {
-        s = c.x - this.max.x;
-        d += s * s;
-    }
-
-    if (c.y < this.min.y) {
-        s = c.y - this.min.y;
-        d += s * s;
-    } else if (c.y > this.max.y) {
-        s = c.y - this.max.y;
-        d += s * s;
-    }
-
-    if (c.z < this.min.z) {
-        s = c.z - this.min.z;
-        d += s * s;
-    } else if (c.z > this.max.z) {
-        s = c.z - this.max.z;
-        d += s * s;
-    }
-
-    return d <= r * r;
-};
-
-AABB.prototype.intersectsTriangle = function(tri) {
-	// use separating axis theorem to test overlap between triangle and box
-	// need to test for overlap in these directions:
-	//
-	// 1) the {x,y,z}-directions (actually, since we use the AABB of the
-	// triangle
-	// we do not even need to test these)
-	// 2) normal of the triangle
-	// 3) crossproduct(edge from tri, {x,y,z}-directin)
-	// this gives 3x3=9 more tests
-	var v0, 
-		v1, 
-		v2,
-		normal, 
-		e0, 
-		e1, 
-		e2, 
-		f;
-
-	// move everything so that the boxcenter is in (0,0,0)
-	v0 = tri.a.sub(this);
-	v1 = tri.b.sub(this);
-	v2 = tri.c.sub(this);
-
-	// compute triangle edges
-	e0 = v1.sub(v0);
-	e1 = v2.sub(v1);
-	e2 = v0.sub(v2);
-
-	// test the 9 tests first (this was faster)
-	f = e0.getAbs();
-	if (this.testAxis(e0.z, -e0.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
-	    return false;
-	}
-	if (this.testAxis(-e0.z, e0.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
-	    return false;
-	}
-	if (this.testAxis(e0.y, -e0.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
-	    return false;
-	}
-
-	f = e1.getAbs();
-	if (this.testAxis(e1.z, -e1.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
-	    return false;
-	}
-	if (this.testAxis(-e1.z, e1.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
-	    return false;
-	}
-	if (this.testAxis(e1.y, -e1.x, f.y, f.x, v0.x, v0.y, v1.x, v1.y, this.extent.x, this.extent.y)) {
-	    return false;
-	}
-
-	f = e2.getAbs();
-	if (this.testAxis(e2.z, -e2.y, f.z, f.y, v0.y, v0.z, v1.y, v1.z, this.extent.y, this.extent.z)) {
-	    return false;
-	}
-	if (this.testAxis(-e2.z, e2.x, f.z, f.x, v0.x, v0.z, v1.x, v1.z, this.extent.x, this.extent.z)) {
-	    return false;
-	}
-	if (this.testAxis(e2.y, -e2.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
-	    return false;
-	}
-
-	// first test overlap in the {x,y,z}-directions
-	// find min, max of the triangle each direction, and test for overlap in
-	// that direction -- this is equivalent to testing a minimal AABB around
-	// the triangle against the AABB
-
-	// test in X-direction
-	if (mathUtils.min(v0.x, v1.x, v2.x) > this.extent.x || mathUtils.max(v0.x, v1.x, v2.x) < -this.extent.x) {
-	    return false;
-	}
-
-	// test in Y-direction
-	if (mathUtils.min(v0.y, v1.y, v2.y) > this.extent.y || mathUtils.max(v0.y, v1.y, v2.y) < -this.extent.y) {
-	    return false;
-	}
-
-	// test in Z-direction
-	if (mathUtils.min(v0.z, v1.z, v2.z) > this.extent.z || mathUtils.max(v0.z, v1.z, v2.z) < -this.extent.z) {
-	    return false;
-	}
-
-	// test if the box intersects the plane of the triangle
-	// compute plane equation of triangle: normal*x+d=0
-	normal = e0.cross(e1);
-	var d = -normal.dot(v0);
-	if (!this.planeBoxOverlap(normal, d, extent)) {
-	    return false;
-	}
-	return true;
-};
-
-AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
-    var vmin = new Vec3D();
-    var vmax = new Vec3D();
-
-    if (normal.x > 0.0) {
-        vmin.x = -maxbox.x;
-        vmax.x = maxbox.x;
-    } else {
-        vmin.x = maxbox.x;
-        vmax.x = -maxbox.x;
-    }
-
-    if (normal.y > 0.0) {
-        vmin.y = -maxbox.y;
-        vmax.y = maxbox.y;
-    } else {
-        vmin.y = maxbox.y;
-        vmax.y = -maxbox.y;
-    }
-
-    if (normal.z > 0.0) {
-        vmin.z = -maxbox.z;
-        vmax.z = maxbox.z;
-    } else {
-        vmin.z = maxbox.z;
-        vmax.z = -maxbox.z;
-    }
-    if (normal.dot(vmin) + d > 0.0) {
-        return false;
-    }
-    if (normal.dot(vmax) + d >= 0.0) {
-        return true;
-    }
-    return false;
-};
-		
-/**
- * Updates the position of the box in space and calls
- * {@link #updateBounds()} immediately
- * 
- * @see geom.Vec3D#set(float, float, float)
- */
-
-AABB.prototype.set = function(a,b,c) {
-		if(internals.tests.isAABB( a )) {
-			this.extent.set(a.extent);
-			return Vec3D.set.apply(this,[a]);
+IsectData3D.prototype = {
+	clear: function(){
+		this.isIntersection = false;
+		this.dist = 0;
+		this.pos = new Vec3D();
+		this.dir = new Vec3D();
+		this.normal = new Vec3D();
+	},
+	
+	toString: function(){
+		var s = "isec: "+this.isIntersection;
+		if(this.isIntersection){
+			s += " at:"+this.pos+ " dist:"+this.dist+" normal:"+this.normal;
 		}
-		if( internals.tests.hasXYZ( a )){
-			b = a.y;
-			c = a.z;
-			a = a.a;
-		}
-		this.x = a;
-		this.y = b;
-		this.z = c;
-		this.updateBounds();
-		return this;
- };
-
-
-AABB.prototype.setExtent = function(extent) {
-        this.extent = extent.copy();
-        return this.updateBounds();
-};
-
-AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
-    var p0 = a * va + b * vb;
-    var p2 = a * wa + b * wb;
-    var min;
-	var max;
-    if (p0 < p2) {
-        min = p0;
-        max = p2;
-    } else {
-        min = p2;
-        max = p0;
-    }
-    var rad = fa * ea + fb * eb;
-    return (min > rad || max < -rad);
-};
-
-AABB.prototype.toMesh = function(mesh){
-	if(mesh === undefined){
-		mesh = new TriangleMesh("aabb",8,12);	
+		return s;
 	}
-	var a = this.min,//new Vec3D(this.min.x,this.max.y,this.max.z),
-		g = this.max,//new Vec3D(this.max.x,this.max.y,this.max.z),
-		b = new Vec3D(a.x, a.y, g.z),
-		c = new Vec3D(g.x, a.y, g.z),
-		d = new Vec3D(g.x, a.y, a.z),
-		e = new Vec3D(a.x, g.y, a.z),
-		f = new Vec3D(a.x, g.y, g.z),
-		h = new Vec3D(g.x, g.y, a.z),
-		ua = new Vec2D(0,0),
-		ub = new Vec2D(1,0),
-		uc = new Vec2D(1,1),
-		ud = new Vec2D(0,1);
-	// left
-	mesh.addFace(a, b, f, ud, uc, ub);
-	mesh.addFace(a, f, e, ud, ub, ua);
-	// front
-	mesh.addFace(b, c, g, ud, uc, ub);
-	mesh.addFace(b, g, f, ud, ub, ua);
-	// right
-	mesh.addFace(c, d, h, ud, uc, ub);
-	mesh.addFace(c, h, g, ud, ub, ua);
-	// back
-	mesh.addFace(d, a, e, ud, uc, ub);
-	mesh.addFace(d, e, h, ud, ub, ua);
-	// top
-	mesh.addFace(e, f, h, ua, ud, ub);
-	mesh.addFace(f, g, h, ud, uc, ub);
-	// bottom
-	mesh.addFace(a, d, b, ud, uc, ua);
-	mesh.addFace(b, d, c, ua, uc, ub);
-	return mesh;
-
 };
 
+module.exports = IsectData3D;
+});
 
-AABB.prototype.toString = function() {
-   return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
-};
+define('toxi/geom/TriangleIntersector',[
+	"../math/mathUtils",
+	"./Triangle3D",
+	"./Vec3D",
+	"./IsectData3D"
+], function(mathUtils, Triangle3D, Vec3D, IsectData3D) {
+
+	/**
+	 * @param {Triangle3D} [t]
+	 */
+	var TriangleIntersector = function(t){
+		this.triangle = t || new Triangle3D();
+		this.isectData = new IsectData3D();
+	};
+
+	TriangleIntersector.prototype = {
+		getIntersectionData: function(){
+			return this.isectData;
+		},
+		getTriangle: function(){
+			return this.triangle;
+		},
+		/**
+		 * @param {Ray3D} ray
+		 * @returns {Boolean}
+		 */
+		intersectsRay: function(ray){
+			this.isectData.isIntersection = false;
+			var n = this.triangle.computeNormal(),
+				dotprod = n.dot(ray.dir);
+			if(dotprod < 0){
+				var rt = ray.sub(this.triangle.a),
+					t = -(n.x * rt.x + n.y * rt.y + n.z * rt.z) / (n.x * ray.dir.x + n.y * ray.dir.y + n.z * ray.dir.z);
+				if(t >= mathUtils.EPS){
+					var pos = ray.getPointAtDistance(t);
+					//check if pos is inside triangle
+					if(this.triangle.containsPoint(pos)){
+						this.isectData.isIntersection = true;
+						this.isectData.pos = pos;
+						this.isectData.normal = n;
+						this.isectData.dist = t;
+						this.isectData.dir = this.isectData.pos.sub(ray).normalize();
+					}
+				}
+			}
+			return this.isectData.isIntersection;
+		},
+		/**
+		 * @param {Triangle3D} tri
+		 * @returns {TriangleIntersector}
+		 */
+		setTriangle: function(tri){
+			this.triangle = tri;
+			return this;
+		}
+	};
+
+	return TriangleIntersector;
+});
 
 /**
-* Updates the min/max corner points of the box. MUST be called after moving
-* the box in space by manipulating the public x,y,z coordinates directly.
-* 
-* @return itself
-*/
-AABB.prototype.updateBounds = function() {
-  // this is check is necessary for the constructor
-  if (this.extent !== undefined) {
-      this.min = this.sub(this.extent);
-      this.max = this.add(this.extent);
-  }
-  return this;
+ * Implementation of a 2D grid based heightfield with basic intersection
+ * features and conversion to {@link TriangleMesh}. The terrain is always
+ * located in the XZ plane with the positive Y axis as up vector.
+ */
+define('toxi/geom/mesh/Terrain',[
+	'../../internals',
+	'../../math/mathUtils',
+	'../../math/Interpolation2D',
+	'../Ray3D',
+	'../TriangleIntersector',
+	'../Triangle3D',
+	'../IsectData3D',
+	'../../geom/Vec2D',
+	'../../geom/Vec3D',
+	'./TriangleMesh'
+], function(internals, mathUtils, Interpolation2D, Ray3D, TriangleIntersector, Triangle3D, IsectData3D, Vec2D, Vec3D, TriangleMesh){
+
+	/**
+	* Constructs a new and initially flat terrain of the given size in the XZ
+	* plane, centred around the world origin.
+	* 
+	* @param {Number} width
+	* @param {Number} depth
+	* @param {toxi.geom.Vec2D | Number} scale
+	*/
+	var Terrain = function(width, depth, scale){
+		this.width = width;
+		this._depth = depth;
+		if(!internals.hasProperties(scale,['x','y'])){
+			this.scale = new Vec2D(scale,scale);
+		} else {
+			this.scale = scale;
+		}
+		this.elevation = [];
+		var i = 0,
+			len = width * depth;
+		for(i=0; i<len; i++){
+			this.elevation[i] = 0;
+		}
+
+		this.__elevationLength = this.width * this._depth;
+		this.vertices = [];
+		var offset = new Vec3D(parseInt(this.width / 2,10), 0, parseInt(this._depth / 2,10)),
+			scaleXZ = this.scale.to3DXZ();
+		for(var z = 0, i =0; z < this._depth; z++){
+			for(var x = 0; x < this.width; x++){
+				this.vertices[i++] = new Vec3D(x,0,z).subSelf(offset).scaleSelf(scaleXZ);
+			}
+		}
+	};
+
+	Terrain.prototype = {
+		/**
+		* @return number of grid cells along the Z axis.
+		*/
+		getDepth: function(){
+			return this._depth;
+		},
+		getElevation: function(){
+			return this.elevation;
+		},
+		/**
+		* @param {Number} x
+		* @param {Number} z
+		* @return the elevation at grid point
+		*/
+		getHeightAtCell: function(x,z){
+			console.log("["+x+","+z+"]");
+			return this.elevation[this._getIndex(x,z)];
+		},
+		/**
+		* Computes the elevation of the terrain at the given 2D world coordinate
+		* (based on current terrain scale).
+		* 
+		* @param {Number} x scaled world coord x
+		* @param {Number} z scaled world coord z
+		* @return {Number} interpolated elevation
+		*/
+		getHeightAtPoint: function(x,z){
+			var xx = x / this.scale.x + this.width * 0.5,
+				zz = z / this.scale.y + this._depth * 0.5,
+				y = 0,
+				fl = {
+					xx: parseInt(xx,10),
+					zz: parseInt(zz,10)
+				};
+			if(xx >= 0 & xx < this.width && zz >= 0 && zz < this._depth){
+				
+				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1), 10),
+					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1), 10);
+
+				var	a = this.getHeightAtCell(fl.xx, fl.zz),
+					b = this.getHeightAtCell(x2, fl.zz),
+					c = this.getHeightAtCell(fl.xx, z2),
+					d = this.getHeightAtCell(x2, z2);
+				
+				y = Interpolation2D.bilinear(xx,zz, fl.xx, fl.zz, x2, z2, a, b, c, d);
+			}
+			return y;
+		},
+		/**
+		* Computes the array index for the given cell coords & checks if they're in
+		* bounds. If not an {@link IndexOutOfBoundsException} is thrown.
+		* 
+		* @param {Number} x
+		* @param {Number} z
+		* @return {Number} array index
+		*/
+		_getIndex: function(x,z){
+			var idx = z * this.width + x;
+			if(idx < 0 || idx > this.__elevationLength){
+				throw new Error("the given terrain cell is invalid: "+x+ ";"+z);
+			}
+			return idx;
+		},
+		/**
+		 * @return {Vec2D} the scale
+		 */
+		getScale: function(){
+			return this.scale;
+		},
+
+		getVertexAtCell: function(x,z){
+			return this.vertices[this._getIndex(x,z)];
+		},
+		/**
+		 * @return {Number} number of grid cells along X axis
+		 */
+		getWidth: function(){
+			return this.width;
+		},
+		/**
+		* Computes the 3D position (with elevation) and normal vector at the given
+		* 2D location in the terrain. The position is in scaled world coordinates
+		* based on the given terrain scale. The returned data is encapsulated in a
+		* {@link toxi.geom.IsectData3D} instance.
+		* 
+		* @param {Number} x
+		* @param {Number} z
+		* @return {IsectData3D} intersection data parcel
+		*/
+		intersectAtPoint: function(x,z){
+			var xx = x / this.scale.x + this.width * 0.5,
+				zz = z / this.scale.y + this._depth * 0.5,
+				isec = new IsectData3D();
+			if(xx >= 0 && xx < this.width && zz >= 0 && zz < this._depth){
+				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1),10),
+					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1),10),
+					fl = {
+						xx: parseInt(xx,10),
+						zz: parseInt(zz,10)
+					},
+					a = this.getVertexAtCell(fl.xx,fl.zz),
+					b = this.getVertexAtCell(x2, fl.zz),
+					c = this.getVertexAtCell(x2,z2),
+					d = this.getVertexAtCell(fl.xx,z2),
+					r = new Ray3D(new Vec3D(x, 10000, z), new Vec3D(0, -1, 0)),
+					i = new TriangleIntersector(new Triangle3D(a, b, d));
+				
+				console.log("ray",r);
+				console.log("intersector",i);
+
+				if(i.intersectsRay(r)){
+					isec = i.getIntersectionData();
+				} else {
+					i.setTriangle(new Triangle3D(b, c, d));
+					i.intersectsRay(r);
+					isec = i.getIntersectionData();
+				}
+			}
+			return isec;
+		},
+		/**
+		* Sets the elevation of all cells to those of the given array values.
+		* 
+		* @param {Array} elevation array of height values
+		* @return itself
+		*/
+		setElevation: function(elevation){
+			if(this.__elevationLength == elevation.length){
+				for(var i = 0, len = elevation.length; i<len; i++){
+					this.vertices[i].y = this.elevation[i] = elevation[i];
+				}
+			} else {
+				throw new Error("the given elevation array size does not match terrain");
+			}
+			return this;
+		},
+		/**
+		* Sets the elevation for a single given grid cell.
+		* 
+		* @param {Number} x
+		* @param {Number} z
+		* @param {Number} h new elevation value
+		* @return itself
+		*/
+		setHeightAtCell: function(x,z,h){
+			var index = this._getIndex(x,z);
+			this.elevation[index] = h;
+			this.vertices[index].y = h;
+			return this;
+		},
+		setScale: function(scale){
+			if(!internals.hasProperties(scale,['x','y'])){
+				this.scale = new Vec2D(scale,scale);
+			} else {
+				this.scale = scale;
+			}
+		},
+		toMesh: function(){
+			var opts = {
+				mesh: undefined,
+				minX: 0,
+				minZ: 0,
+				maxX: this.width,
+				maxZ: this._depth
+			};
+
+			var v = this.vertices,
+				w = this.width,
+				d = this._depth;
+
+			if(arguments.length == 1 && typeof arguments[0] == 'object'){
+				//options object
+				var args = arguments[0];
+				opts.mesh = args.mesh || new TriangleMesh("terrain");
+				opts.minX = args.minX || opts.minX;
+				opts.minZ = args.minZ || opts.minZ;
+				opts.maxX = args.maxX || opts.maxX;
+				opts.maxZ = args.maxZ || opts.maxZ;
+			} else if(arguments.length >= 5){
+				opts.mesh = arguments[0];
+				opts.minX = arguments[1];
+				opts.minZ = arguments[2];
+				opts.maxX  = arguments[3];
+				opts.maxZ = arguments[4];
+			}
+
+			opts.mesh = opts.mesh || new TriangleMesh("terrain");
+			opts.minX = mathUtils.clip(opts.minX, 0, w - 1);
+			opts.maxX = mathUtils.clip(opts.maxX, 0, w);
+			opts.minZ = mathUtils.clip(opts.minZ, 0, d-1);
+			opts.maxZ = mathUtils.clip(opts.maxZ, 0, d);
+			opts.minX++;
+			opts.minZ++;
+
+
+			for(var z = opts.minZ, idx = opts.minX * w; z < opts.maxZ; z++, idx += w){
+				for(var x = opts.minX; x < opts.maxX; x++){
+					opts.mesh.addFace(v[idx - w + x - 1], v[idx - w + x], v[idx + x - 1]);
+					opts.mesh.addFace(v[idx - w + x], v[idx + x], v[idx + x - 1]);
+				}
+			}
+			return opts.mesh;
+		}
+	};
+
+	return	Terrain;
+});
+define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/OBJWriter","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector","./mesh/Terrain"], function(require, exports, module) {
+module.exports = {
+	TriangleMesh: require('./mesh/TriangleMesh'),
+	BezierPatch: require('./mesh/BezierPatch'),
+	BoxSelector: require('./mesh/BoxSelector'),
+	DefaultSelector: require('./mesh/DefaultSelector'),
+	Face: require('./mesh/Face'),
+	OBJWriter: require('./mesh/OBJWriter'),
+	PlaneSelector: require('./mesh/PlaneSelector'),
+	SphereFunction: require('./mesh/SphereFunction'),
+	SphericalHarmonics: require('./mesh/SphericalHarmonics'),
+	SurfaceMeshBuilder: require('./mesh/SurfaceMeshBuilder'),
+	SuperEllipsoid: require('./mesh/SuperEllipsoid'),
+	Terrain: require('./mesh/Terrain'),
+	TriangleMesh: require('./mesh/TriangleMesh'),
+	Vertex: require('./mesh/Vertex'),
+	VertexSelector: require('./mesh/VertexSelector')
 };
-
-module.exports = AABB;
-
 });
 
 define('toxi/geom/BernsteinPolynomial',["require", "exports", "module"], function(require, exports, module) {
@@ -6910,135 +8318,6 @@ IsectData2D.prototype = {
 module.exports = IsectData2D;
 });
 
-define('toxi/geom/IsectData3D',["require", "exports", "module", "./Vec3D"], function(require, exports, module) {
-
-var Vec3D = require('./Vec3D');
-
-/**
- * @class
- * @member toxi
- */
-var	IsectData3D = function(isec){
-	if(isec !== undefined){
-		this.isIntersection = isec.isIntersection;
-		this.dist = isec.dist;
-		this.pos = isec.pos.copy();
-		this.dir = isec.dir.copy();
-		this.normal = isec.normal.copy();
-	}
-	else {
-		this.clear();
-	}
-};
-
-IsectData3D.prototype = {
-	clear: function(){
-		this.isIntersection = false;
-		this.dist = 0;
-		this.pos = new Vec3D();
-		this.dir = new Vec3D();
-		this.normal = new Vec3D();
-	},
-	
-	toString: function(){
-		var s = "isec: "+this.isIntersection;
-		if(this.isIntersection){
-			s += " at:"+this.pos+ " dist:"+this.dist+" normal:"+this.normal;
-		}
-		return s;
-	}
-};
-
-module.exports = IsectData3D;
-});
-
-define('toxi/geom/Ray3D',["require", "exports", "module", "../internals","./Vec3D","./Line3D"], function(require, exports, module) {
-
-var extend = require('../internals').extend,
-	Vec3D = require('./Vec3D'),
-	Line3D = require('./Line3D');
-
-/**
- * @class
- * @member toxi
- */
-var	Ray3D = function(a,b,c,d){
-	var o, dir;
-	if(arguments.length == 4){
-		o = new Vec3D(a,b,c);
-		dir = d;
-	}
-	else if(arguments.length == 2){
-		o = a;
-		dir = b;
-	}
-	else {
-		o = new Vec3D();
-		dir = Vec3D.Y_AXIS.copy();
-	}
-	Vec3D.apply(this,[o]);
-	this.dir = dir;
-};
-
-extend(Ray3D,Vec3D);
-
-/**
-	Returns a copy of the ray's direction vector.
-	@return vector
-*/
-Ray3D.prototype.getDirection = function() {
-    return this.dir.copy();
-};
-
-/**
-	Calculates the distance between the given point and the infinite line
-	coinciding with this ray.
-	@param p
-*/
-Ray3D.prototype.getDistanceToPoint = function(p) {
-    var sp = p.sub(this);
-    return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
-};
-
-/**
-	Returns the point at the given distance on the ray. The distance can be
-	any real number.
-	@param dist
-	@return vector
-*/
-Ray3D.prototype.getPointAtDistance = function(dist) {
-    return this.add(this.dir.scale(dist));
-};
-
-/**
-  Uses a normalized copy of the given vector as the ray direction. 
-  @param d new direction
-  @return itself
-*/
-Ray3D.prototype.setDirection = function(d) {
-    this.dir.set(d).normalize();
-    return this;
-};
-
-/**
-  Converts the ray into a 3D Line segment with its start point coinciding
-  with the ray origin and its other end point at the given distance along
-  the ray.
-  
-  @param dist end point distance
-  @return line segment
-*/
-Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
-    return new Line3D(this, this.getPointAtDistance(dist));
-};
-
-Ray3D.prototype.toString = function() {
-    return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
-};
-
-module.exports = Ray3D;
-});
-
 define('toxi/geom/Plane',["require", "exports", "module", "../internals","../math/mathUtils","./Ray3D","./Vec3D","./mesh/TriangleMesh"], function(require, exports, module) {
 
 var extend = require('../internals').extend,
@@ -7453,354 +8732,6 @@ module.exports = Rect;
 
 
 
-});
-
-define('toxi/geom/mesh/SphereFunction',["require", "exports", "module", "../../math/mathUtils","../Vec3D","../Sphere"], function(require, exports, module) {
-
-var mathUtils = require('../../math/mathUtils'),
-	Vec3D = require('../Vec3D'),
-	internals = require('../../internals'),
-	Sphere = require('../Sphere');
-
-/**
- * @class This implementation of a {@link SurfaceFunction} samples a given
- * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
- * @member toxi
- */
-var	SphereFunction = function(sphere_or_radius) {
-	if(sphere_or_radius === undefined){
-		this.sphere = new Sphere(new Vec3D(),1);
-	}
-	
-	if(internals.tests.isSphere( sphere_or_radius )){
-		this.sphere = sphere_or_radius;
-	}
-	else{
-		this.sphere = new Sphere(new Vec3D(),sphere_or_radius);
-	}
-	this.phiRange = mathUtils.PI;
-	this.thetaRange = mathUtils.TWO_PI;
-};
-
-SphereFunction.prototype = {
-	
-	computeVertexFor: function(p,phi,theta) {
-	    phi -= mathUtils.HALF_PI;
-	    var cosPhi = mathUtils.cos(phi);
-	    var cosTheta = mathUtils.cos(theta);
-	    var sinPhi = mathUtils.sin(phi);
-	    var sinTheta = mathUtils.sin(theta);
-	    var t = mathUtils.sign(cosPhi) * mathUtils.abs(cosPhi);
-	    p.x = t * mathUtils.sign(cosTheta) * mathUtils.abs(cosTheta);
-	    p.y = mathUtils.sign(sinPhi) * mathUtils.abs(sinPhi);
-	    p.z = t * mathUtils.sign(sinTheta) * mathUtils.abs(sinTheta);
-	    return p.scaleSelf(this.sphere.radius).addSelf(this.sphere);
-	},
-	
-	getPhiRange: function() {
-	    return this.phiRange;
-	},
-	
-	getPhiResolutionLimit: function(res) {
-	    return res;
-	},
-	
-	getThetaRange: function() {
-	    return this.thetaRange;
-	},
-	
-	getThetaResolutionLimit: function(res) {
-	    return res;
-	},
-	
-	setMaxPhi: function(max) {
-	    this.phiRange = mathUtils.min(max / 2, mathUtils.PI);
-	},
-	
-	setMaxTheta: function(max) {
-	    this.thetaRange = mathUtils.min(max, mathUtils.TWO_PI);
-	}
-};
-
-module.exports = SphereFunction;
-});
-
-define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./TriangleMesh","../Vec3D","../Vec2D"], function(require, exports, module) {
-
-var Vec3D = require('../Vec3D'),
-	Vec2D = require('../Vec2D'),
-	TriangleMesh = require('./TriangleMesh');
-
-/**
- * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface
- * functions using spherical coordinates. In order to create mesh, you'll need
- * to supply a {@link SurfaceFunction} implementation to the builder.
- * @member toxi
- */
-var	SurfaceMeshBuilder = function(func) {
-	this.func = func;
-};
-
-SurfaceMeshBuilder.prototype = {
-	/*
-		create a mesh from a surface,
-		parameter options:
-			1 - Object options
-			1 - Number resolution
-			3 - TriangleMesh mesh, Number resolution, Number size
-			4 - TriangleMesh mesh, Number resolution, Number size, boolean isClosed
-	*/
-	createMesh: function() {
-		var opts = {
-			mesh: undefined,
-			resolution: 0,
-			size: 1,
-			isClosed: true
-		};
-		if(arguments.length == 1){
-			if(typeof arguments[0] == 'object'){ //options object
-				var arg = arguments[0];
-				//if a mesh was provided as an option, use it, otherwise make one
-				opts.mesh = arg.mesh;
-				opts.resolution = arg.res || arg.resoultion || 0;
-				if(arg.size !== undefined){
-					opts.size = arg.size;
-				}
-				if(arg.isClosed !== undefined){
-					opts.isClosed = arg.isClosed;
-				}
-			} else { //resolution Number
-				opts.resolution = arguments[0];
-			}
-		} else if(arguments.length > 2){
-			opts.mesh = arguments[0];
-			opts.resolution = arguments[1];
-			opts.size = arguments[2];
-			if(arguments.length == 4){
-				opts.isClosed = arguments[3];
-			}
-		}
-		var mesh = opts.mesh;
-		if(mesh === undefined || mesh === null){
-			mesh = new TriangleMesh(); 
-		}
-		
-		var a = new Vec3D(),
-			b = new Vec3D(),
-			pa = new Vec3D(),
-			pb = new Vec3D(),
-			a0 = new Vec3D(),
-			b0 = new Vec3D(),
-			phiRes = this.func.getPhiResolutionLimit(opts.resolution),
-			phiRange = this.func.getPhiRange(),
-			thetaRes = this.func.getThetaResolutionLimit(opts.resolution),
-			thetaRange = this.func.getThetaRange(),
-			pres = 1.0 / phiRes, //(1 == opts.resolution % 2 ? opts.resolution - 0 : opts.resolution);
-			tres = 1.0 / thetaRes,
-			ires = 1.0 / opts.resolution,
-			pauv = new Vec2D(),
-			pbuv = new Vec2D(),
-			auv = new Vec2D(),
-			buv = new Vec2D();
-
-		for (var p = 0; p < phiRes; p++) {
-			var phi = p * phiRange * ires;
-			var phiNext = (p + 1) * phiRange * ires;
-			for (var t = 0; t <= thetaRes; t++) {
-				var theta = t * thetaRange * ires;
-				var func = this.func;
-				a =	func.computeVertexFor(a, phiNext, theta).scaleSelf(opts.size);
-				auv.set( t * tres, 1 - (p + 1) * pres);
-				b = func.computeVertexFor(b, phi, theta).scaleSelf(opts.size);
-				buv.set( t * tres, 1 - p * pres );
-				if (b.equalsWithTolerance(a, 0.0001) ) {
-					b.set(a);
-				}
-				if (t > 0) {
-					if (t == thetaRes && opts.isClosed) {
-						a.set(a0);
-						b.set(b0);
-					}
-					mesh.addFace(pa, pb, a, pauv.copy(), pbuv.copy(), auv.copy());
-					mesh.addFace(pb, b, a, pbuv.copy(), buv.copy(), auv.copy());
-				} else {
-					a0.set(a);
-					b0.set(b);
-				}
-				pa.set(a);
-				pb.set(b);
-				pauv.set(auv);
-				pbuv.set(buv);
-			}
-		}
-		return mesh;
-	},
-	
-	
-	/**
-	@return the function
-	*/
-	getFunction: function() {
-		return this.func;
-	},
-
-	setFunction: function(func) {
-		this.func = func;
-	}
-};
-exports.SurfaceMeshBuilder = SurfaceMeshBuilder;
-module.exports = SurfaceMeshBuilder;
-});
-
-define('toxi/geom/Sphere',["require", "exports", "module", "../internals","./Vec3D","./mesh/SphereFunction", './mesh/SurfaceMeshBuilder'], function(require, exports, module) {
-
-var	internals = require('../internals'),
-	SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder'),
-	SphereFunction = require('./mesh/SphereFunction'),
-	Vec3D = require('./Vec3D');
-
-
-
-/**
- * @module toxi.geom.Sphere
- * @augments toxi.geom.Vec3D
- */
-var	Sphere = function(a,b){
-	if(a === undefined){
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = 1;
-	}
-	else if( internals.tests.hasXYZ( a ) ){
-		Vec3D.apply(this,[a]);
-		if( internals.tests.isSphere( a ) ){
-			this.radius = a.radius;
-		}
-		else {
-			this.radius = b;
-		}
-	}
-	else {
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = a;
-	}
-};
-
-internals.extend(Sphere,Vec3D);
-
-
-Sphere.prototype.containsPoint = function(p) {
-	var d = this.sub(p).magSquared();
-	return (d <= this.radius * this.radius);
-};
-
-/**
- * Alternative to {@link SphereIntersectorReflector}. Computes primary &
- * secondary intersection points of this sphere with the given ray. If no
- * intersection is found the method returns null. In all other cases, the
- * returned array will contain the distance to the primary intersection
- * point (i.e. the closest in the direction of the ray) as its first index
- * and the other one as its second. If any of distance values is negative,
- * the intersection point lies in the opposite ray direction (might be
- * useful to know). To get the actual intersection point coordinates, simply
- * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
- * 
- * @param ray
- * @return 2-element float array of intersection points or null if ray
- * doesn't intersect sphere at all.
- */
-Sphere.prototype.intersectRay = function(ray) {
-	var result,
-		a,
-		b,
-		t,
-		q = ray.sub(this),
-		distSquared = q.magSquared(),
-		v = -q.dot(ray.getDirection()),
-		d = this.radius * this.radius - (distSquared - v * v);
-	if (d >= 0.0) {
-		d = Math.sqrt(d);
-		a = v + d;
-		b = v - d;
-		if (!(a < 0 && b < 0)) {
-			if (a > 0 && b > 0) {
-				if (a > b) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			} else {
-				if (b > 0) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			}
-		}
-		result = [a,b];
-	}
-	return result;
-};
-
-/**
- * Considers the current vector as centre of a collision sphere with radius
- * r and checks if the triangle abc intersects with this sphere. The Vec3D p
- * The point on abc closest to the sphere center is returned via the
- * supplied result vector argument.
- * 
- * @param t
- *			triangle to check for intersection
- * @param result
- *			a non-null vector for storing the result
- * @return true, if sphere intersects triangle ABC
- */
-Sphere.prototype.intersectSphereTriangle = function(t,result) {
-	// Find Vec3D P on triangle ABC closest to sphere center
-	result.set(t.closestPointOnSurface(this));
-
-	// Sphere and triangle intersect if the (squared) distance from sphere
-	// center to Vec3D p is less than the (squared) sphere radius
-	var v = result.sub(this);
-	return v.magSquared() <= this.radius * this.radius;
-};
-
-/**
- * Calculates the normal vector on the sphere in the direction of the
- * current point.
- * 
- * @param q
- * @return a unit normal vector to the tangent plane of the ellipsoid in the
- * point.
- */
-Sphere.prototype.tangentPlaneNormalAt = function(q) {
-	return this.sub(q).normalize();
-};
-
-Sphere.prototype.toMesh = function() {
-	//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
-	//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
-
-	//if one argument is passed it can either be a Number for resolution, or an options object
-	//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
-	var opts = {
-		mesh: undefined,
-		resolution: 0
-	};
-	if(arguments.length === 1){
-		if(typeof(arguments[0]) == 'object'){ //options object
-			opts.mesh = arguments[0].mesh;
-			opts.resolution = arguments[0].res || arguments[0].resolution;
-		} else { //it was just the resolution Number
-			opts.resolution = arguments[0];
-		}
-	} else {
-		opts.mesh = arguments[0];
-		opts.resolution = arguments[1];
-	}
-	var builder = new SurfaceMeshBuilder(new SphereFunction(this));
-	return builder.createMesh(opts.mesh, opts.resolution, 1);
-};
-
-module.exports = Sphere;
 });
 
 define('toxi/geom/Spline2D',["require", "exports", "module", "./Vec2D","./BernsteinPolynomial"], function(require, exports, module) {
@@ -8379,939 +9310,10 @@ ZAxisCylinder.prototype.getMajorAxis = function(){
 module.exports = ZAxisCylinder;
 });
 
-define('toxi/geom/mesh/BezierPatch',["require", "exports", "module", "../Vec3D","./TriangleMesh"], function(require, exports, module) {
-var Vec3D = require('../Vec3D'),
-	TriangleMesh = require('./TriangleMesh');
-
-/**
- * @class 4x4 bezier patch implementation with tesselation support (dynamic resolution)
- * for generating triangle mesh representations.
- * @member toxi
- */
-var	BezierPatch = function(points){
-	this.points = (points === undefined)?[] : points;
-	for (var i = 0; i < 4; i++) {
-		for (var j = 0; j < 4; j++) {
-			this.points[i][j] = new Vec3D();
-		}
-	}
-};
-
-BezierPatch.prototype = {
-	
-	computePointAt: function(u,v) {
-		return this.computePointAt(u, v, this.points);
-	},
-
-	set: function(x,y,p) {
-		this.points[y][x].set(p);
-		return this;
-	},
-
-	toMesh: function(mesh_or_res,_res) {
-		var mesh,
-			res;
-		if(_res === undefined){
-			mesh = new TriangleMesh();
-			res = mesh_or_res;
-		} else {
-			mesh = mesh_or_res;
-			res = _res;
-		}
-		var curr = new Array(res + 1),
-			prev = new Array(res + 1);
-		var r1 = 1.0 / res;
-		for (var y = 0; y <= res; y++) {
-			for (var x = 0; x <= res; x++) {
-				var p = this.computePointAt(x * r1, y * r1, this.points);
-				if (x > 0 && y > 0) {
-					mesh.addFace(p, curr[x - 1], prev[x - 1]);
-					mesh.addFace(p, prev[x - 1], prev[x]);
-				}
-				curr[x] = p;
-			}
-			var tmp = prev;
-			prev = curr;
-			curr = tmp;
-		}
-		return mesh;
-
-	}
-};
-
-/**
-Computes a single point on the bezier surface given by the 2d array of
-control points. The desired point's coordinates have to be specified in
-UV space (range 0.0 .. 1.0). The implementation does not check or enforce
-the correct range of these coords and will not return valid points if the
-range is exceeded.
-@param u positive normalized U coordinate on the bezier surface
-@param v positive normalized V coordinate on the bezier surface
-@param points 4x4 array defining the patch's control points
-@return point on surface
-*/
-
-BezierPatch.computePointAt = function(u,v,points){
-		var u1 = 1 - u;
-		var u1squared = u1 * u1 * 3 * u,
-		u1cubed = u1 * u1 * u1,
-		usquared = u * u,
-		v1 = 1 - v,
-		vsquared = v * v * 3,
-		v1squared = v1 * v1 * 3,
-		v1cubed = v1 * v1 * v1,
-		vcubed = v * v * v,
-
-		u1usq = u1 * usquared * 3,
-		usqu = u * usquared,
-		v1vsq = v1 * vsquared,
-		v1sqv = v1squared * v;
-
-		var p0 = points[0];
-		var p1 = points[1];
-		var p2 = points[2];
-		var p3 = points[3];
-
-		var x = u1cubed * (p0[0].x * v1cubed + p0[1].x * v1sqv + p0[2].x * v1vsq + p0[3].x * vcubed) + u1squared * (p1[0].x * v1cubed + p1[1].x * v1sqv + p1[2].x * v1vsq + p1[3].x * vcubed) + u1usq * (p2[0].x * v1cubed + p2[1].x * v1sqv + p2[2].x * v1vsq + p2[3].x * vcubed) + usqu * (p3[0].x * v1cubed + p3[1].x * v1sqv + p3[2].x * v1vsq + p3[3].x * vcubed);
-
-		var y = u1cubed * (p0[0].y * v1cubed + p0[1].y * v1sqv + p0[2].y * v1vsq + p0[3].y * vcubed) + u1squared * (p1[0].y * v1cubed + p1[1].y * v1sqv + p1[2].y * v1vsq + p1[3].y * vcubed) + u1usq * (p2[0].y * v1cubed + p2[1].y * v1sqv + p2[2].y * v1vsq + p2[3].y * vcubed) + usqu * (p3[0].y * v1cubed + p3[1].y * v1sqv + p3[2].y * v1vsq + p3[3].y * vcubed);
-
-		var z = u1cubed * (p0[0].z * v1cubed + p0[1].z * v1sqv + p0[2].z * v1vsq + p0[3].z * vcubed) + u1squared * (p1[0].z * v1cubed + p1[1].z * v1sqv + p1[2].z * v1vsq + p1[3].z * vcubed) + u1usq * (p2[0].z * v1cubed + p2[1].z * v1sqv + p2[2].z * v1vsq + p2[3].z * vcubed) + usqu * (p3[0].z * v1cubed + p3[1].z * v1sqv + p3[2].z * v1vsq + p3[3].z * vcubed);
-
-		return new Vec3D(x, y, z);
-
-};
-
-module.exports = BezierPatch;
-});
-
-define('toxi/geom/mesh/VertexSelector',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class
- * @member toxi
- */
-var VertexSelector = function(mesh){
-	this.mesh = mesh;
-	this.selection = [];
-};
-
-VertexSelector.prototype = {
-	/**
-     * Adds all vertices selected by the given selector to the current
-     * selection. The other selector needs to be assigned to the same mesh
-     * instance.
-     * 
-     * @param sel2 other selector
-     * @return itself
-     */
-
-	addSelection: function(sel2){
-		this.checkMeshIdentity(sel2.getMesh());
-		this.selection.addAll(sel2.getSelection());
-		return this;
-	},
-	
-	/**
-     * Utility function to check if the given mesh is the same instance as ours.
-     * 
-     * @param mesh2
-     */
-    checkMeshIdentity: function(mesh2) {
-        if (mesh2 != this.mesh) {
-            throw new Error("The given selector is not using the same mesh instance");
-        }
-    },
-    
-    clearSelection: function() {
-        this.selection.clear();
-        return this;
-    },
-
-	getMesh: function() {
-        return this.mesh;
-    },
-    
-    getSelection: function() {
-        return this.selection;
-    },
-    /**
-     * Creates a new selection of all vertices NOT currently selected.
-     * 
-     * @return itself
-     */
-    invertSelection: function() {
-        var newSel = [];
-        var vertices = mesh.getVertices();
-        var l = vertices.length;
-        for (var i=0;i<l;i++) {
-			var v = vertices[i];
-            if (!selection.contains(v)) {
-                newSel.add(v);
-            }
-        }
-        this.selection = newSel;
-        return this;
-    },
-
-	/**
-     * Selects vertices identical or closest to the ones given in the list of
-     * points.
-     * 
-     * @param points
-     * @return itself
-     */
-    selectSimilar: function(points) {
-		var l = points.length;
-        for (var i=0;i<l;i++) {
-			var v = points[i];
-            this.selection.add(this.mesh.getClosestVertexToPoint(v));
-        }
-        return this;
-    },
-    
-     /**
-     * Selects vertices using an implementation specific method. This is the
-     * only method which needs to be implemented by any selector subclass.
-     * 
-     * @return itself
-     */
-   selectVertices: function(){
-   return this;
-   },
-	
-	setMesh: function(mesh) {
-        this.mesh = mesh;
-        this.clearSelection();
-    },
-    
-    size: function() {
-        return this.selection.size();
-    },
-	/**
-     * Removes all vertices selected by the given selector from the current
-     * selection. The other selector needs to be assigned to the same mesh
-     * instance.
-     * 
-     * @param sel2
-     *            other selector
-     * @return itself
-     */
-
-	subtractSelection: function(sel2) {
-        this.checkMeshIdentity(sel2.getMesh());
-        this.selection.removeAll(sel2.getSelection());
-        return this;
-	}
-};
-
-module.exports = VertexSelector;
-
-   
-  
-});
-
-define('toxi/geom/mesh/BoxSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
-
-var extend = require('../../internals').extend,
-    VertexSelector = require('./VertexSelector');
-
-/**
- * @class
- * @member toxi
- * @augments toxi.VertexSelector
- */
-var BoxSelector = function(mesh,box) {
-    VertexSelector.apply(this,[mesh]);
-    this.box = box;
-};
-
-extend(BoxSelector,VertexSelector);
-
-BoxSelector.prototype.selectVertices = function() {
-    this.clearSelection();
-    var verts = this.mesh.getVertices();
-    var l = verts.length;
-    for (var i=0;i<l;i++) {
-		var v = verts[i];
-        if (this.box.containsPoint(v)) {
-            this.selection.add(v);
-        }
-    }
-    return this;
-};
-
-
-module.exports = BoxSelector;
-
-});
-
-define('toxi/geom/mesh/DefaultSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
-var extend = require('../../internals').extend,
-    VertexSelector = require('./VertexSelector');
-/**
- * @class
- * @member toxi
- * @augments toxi.VertexSelector
- */
-var DefaultSelector = function(mesh){
-	VertexSelector.apply(this,[mesh]);
-};
-extend(DefaultSelector,VertexSelector);	
-DefaultSelector.prototype.selectVertices = function(){
-	this.clearSelection();
-	this.selection.addAll(this.mesh.getVertices());
-	return this;
-};
-
-module.exports = DefaultSelector;
-});
-
-define('toxi/geom/mesh/OBJWriter',[
-	'../../internals'
-], function( internals ){
-
-	//faster than str += " "
-	var StringBuffer = function(){
-		this.buffer = [];
-	};
-	StringBuffer.prototype.append = function(string){
-		this.buffer.push(string);
-		return this;
-	};
-	StringBuffer.prototype.toString = function(){
-		return this.buffer.join("");
-	};
-	
-	var OBJWriter = function(){
-		this.VERSION = "0.3";
-		this.__stringBuffer = new StringBuffer();
-		this.objStream;
-		this.__filename = "objwriter.obj";
-		this._numVerticesWritten = 0;
-		this._numNormalsWritten = 0;
-	};
-
-
-	OBJWriter.prototype = {
-		/**
-		 * begin saving
-		 * @param {WritableStream | String} [stream] stream can be a node.js WritableStream, or it can be a filename or undefined
-		 */
-		beginSave: function( stream ){
-			if( typeof stream == 'string' ){
-				//if node.js create a writeable stream with this filename
-			} else if( internals.hasProperties(stream,['write','end','writable'] && stream.writable)){
-				this.objStream = stream;
-			} else {
-			}
-			this._handleBeginSave();
-		},
-
-		endSave: function(){
-			if(this.objStream !== undefined ){
-				try {
-					this.objStream.destroy();
-				} catch( e ){
-
-				}
-			}
-		},
-
-		face: function( a, b, c ){
-			this.__stringBuffer.append("f " + a + " " + b + " " + c + "\n");
-		},
-
-		faceList: function(){
-			this.__stringBuffer.append("s off \n");
-		},
-
-		faceWithNormals: function( a, b, c, na, nb, nc ){
-			this.__stringBuffer.append("f " + a + "//" + na + " " + b + "//" + nb + " " + c + "//" + nc + "\n");
-		},
-
-		getCurrNormalOffset: function(){
-			return this._numNormalsWritten;
-		},
-
-		getCurrVertexOffset: function(){
-			return this._numVerticesWritten;
-		},
-
-		//not in java version
-		getOutput: function(){
-			return this.__stringBuffer.toString();
-		},
-
-		_handleBeginSave: function(){
-			this.numVerticesWritten = 0;
-			this.numNormalsWrittern = 0;
-			this.__stringBuffer.append("# generated by OBJExport (js) v" + this.VERSION+'\n');
-		},
-
-		newObject: function( name ){
-			this.__stringBuffer.append("o " + name + "\n");
-		},
-
-		normal: function( vecN ){
-			this.__stringBuffer.append("vn " + vecN.x + " " + vecN.y + " " + vecN.z + "\n");
-			this._numNormalsWritten++;
-		},
-
-		vertex: function( vecV ){
-			this.__stringBuffer.append("v " + vecV.x + " " + vecV.y + " " + vecV.z +"\n");
-			this._numVerticesWritten++;
-		}
-	}
-
-
-	return OBJWriter;
-
-});
-define('toxi/geom/mesh/PlaneSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
-var extend = require('../../internals').extend,
-    VertexSelector = require('./VertexSelector');
-
-/**
- * @class
- * @member toxi
- * @augments toxi.VertexSelector
- */
-var PlaneSelector = function(mesh,plane,classifier, tolerance) {
-    VertexSelector.apply(this,[mesh]);
-    this.plane = plane;
-    this.classifier = classifier;
-    this.tolerances = (tolerance === undefined)? 0.0001 : tolerance;
-};
-extend(PlaneSelector,VertexSelector);
-PlaneSelector.prototype.selectVertices = function() {
-    this.clearSelection();
-    var verts = this.mesh.getVertices();
-    var l = verts.length;
-    for (var i=0;i<l;i++) {
-		var v = verts[i];
-        if (this.plane.classifyPoint(v, this.tolerance) == this.classifier) {
-            this.selection.add(v);
-        }
-    }
-    return this;
-};
-
-module.exports = PlaneSelector;
-});
-
-define('toxi/geom/mesh/SphericalHarmonics',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
-
-var mathUtils = require('../../math/mathUtils');
-
-/**
- * @class Spherical harmonics surface evaluator based on code by Paul Bourke:
- * http://local.wasp.uwa.edu.au/~pbourke/geometry/sphericalh/
- * @member toxi
- */
-var SphericalHarmonics = function(m) {
-    this.m = m;
-};
-
-SphericalHarmonics.prototype = {
-    // toxiclibs - FIXME check where flipped vertex order is coming from sometimes
-    computeVertexFor: function(p,phi,theta) {
-        var r = 0;
-        r += Math.pow(mathUtils.sin(this.m[0] * theta), this.m[1]);
-        r += Math.pow(mathUtils.cos(this.m[2] * theta), this.m[3]);
-        r += Math.pow(mathUtils.sin(this.m[4] * phi), this.m[5]);
-        r += Math.pow(mathUtils.cos(this.m[6] * phi), this.m[7]);
-
-        var sinTheta = mathUtils.sin(theta);
-        p.x = r * sinTheta * mathUtils.cos(phi);
-        p.y = r * mathUtils.cos(theta);
-        p.z = r * sinTheta * mathUtils.sin(phi);
-        return p;
-    },
-
-    getPhiRange: function() {
-        return mathUtils.TWO_PI;
-    },
-
-    getPhiResolutionLimit: function(res) {
-        return res;
-    },
-
-    getThetaRange: function() {
-        return mathUtils.PI;
-    },
-
-    getThetaResolutionLimit: function(res) {
-        return res;
-    }
-};
-
-module.exports = SphericalHarmonics;
-});
-
-define('toxi/geom/mesh/SuperEllipsoid',["require", "exports", "module", "../../math/mathUtils","./TriangleMesh"], function(require, exports, module) {
-
-var mathUtils = require('../../math/mathUtils');
-
-var TriangleMesh = require('./TriangleMesh');
-
-/**
- * @class
- * @member toxi
- */
-var	SuperEllipsoid = function(n1,n2) {
-	this.p1 = n1;
-	this.p2 = n2;
-};
-
-SuperEllipsoid.prototype = {
-	computeVertexFor: function(p,phi,theta) {
-		phi -= mathUtils.HALF_PI;
-		var cosPhi = mathUtils.cos(phi),
-			cosTheta = mathUtils.cos(theta),
-			sinPhi = mathUtils.sin(phi),
-			sinTheta = mathUtils.sin(theta);
-
-		var t = mathUtils.sign(cosPhi) * Math.pow(mathUtils.abs(cosPhi), this.p1);
-		p.x = t * mathUtils.sign(cosTheta) * Math.pow(Math.abs(cosTheta), this.p2);
-		p.y = mathUtils.sign(sinPhi) * Math.pow(Math.abs(sinPhi), this.p1);
-		p.z = t * mathUtils.sign(sinTheta) * Math.pow(mathUtils.abs(sinTheta), this.p2);
-		return p;
-	},
- 
-	getPhiRange: function() {
-		return mathUtils.TWO_PI;
-	},
-
-	getPhiResolutionLimit: function(res) {
-		return res / 2;
-	},
-
-	getThetaRange: function() {
-		return mathUtils.TWO_PI;
-	},
-
-	getThetaResolutionLimit: function(res) {
-		return res;
-	}
-};
-
-module.exports = SuperEllipsoid;
-});
-
-define('toxi/math/Interpolation2D',["require", "exports", "module","../internals"], function(require, exports, module) {
-var internals = require("../internals");
-
-/**
- * @class Implementations of 2D interpolation functions (currently only bilinear).
- * @member toxi
- * @static
- */
-var Interpolation2D = {};
-/**
- * @param {Number} x
- *            x coord of point to filter (or Vec2D p)
- * @param {Number} y
- *            y coord of point to filter (or Vec2D p1)
- * @param {Number} x1
- *            x coord of top-left corner (or Vec2D p2)
- * @param {Number} y1
- *            y coord of top-left corner
- * @param {Number} x2
- *            x coord of bottom-right corner
- * @param {Number} y2
- *            y coord of bottom-right corner
- * @param {Number} tl
- *            top-left value
- * @param {Number} tr
- *            top-right value (do not use if first 3 are Vec2D)
- * @param {Number} bl
- *            bottom-left value (do not use if first 3 are Vec2D)
- * @param {Number} br
- *            bottom-right value (do not use if first 3 are Vec2D)
- * @return {Number} interpolated value
- */
-Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
-	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
-	{
-		x = _x.x;
-		y = _x.y;
-		
-		x1 = _y.x;
-		y1 = _y.y;
-		
-		x2 = _x1.x;
-		y2 = _x1.y;
-		
-		tl = _y1;
-		tr = _x2;
-		bl = _y2;
-		br = _tl;
-	} else {
-		x = _x;
-		y = _y;
-		x1 = _x1;
-		y1 = _y1;
-		x2 = _x2;
-		y2 = _y2;
-		tl = _tl;
-		tr = _tr;
-		bl = _bl;
-		br = _br;
-	}
-    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
-    var dx1 = (x - x1) * denom;
-    var dx2 = (x2 - x) * denom;
-    var dy1 = y - y1;
-    var dy2 = y2 - y;
-    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
-};
-
-module.exports = Interpolation2D;
-});
-
-define('toxi/geom/TriangleIntersector',[
-	"../math/mathUtils",
-	"./Triangle3D",
-	"./Vec3D",
-	"./IsectData3D"
-], function(mathUtils, Triangle3D, Vec3D, IsectData3D) {
-
-	/**
-	 * @param {Triangle3D} [t]
-	 */
-	var TriangleIntersector = function(t){
-		this.triangle = t || new Triangle3D();
-		this.isectData = new IsectData3D();
-	};
-
-	TriangleIntersector.prototype = {
-		getIntersectionData: function(){
-			return this.isectData;
-		},
-		getTriangle: function(){
-			return this.triangle;
-		},
-		/**
-		 * @param {Ray3D} ray
-		 * @returns {Boolean}
-		 */
-		intersectsRay: function(ray){
-			this.isectData.isIntersection = false;
-			var n = this.triangle.computeNormal(),
-				dotprod = n.dot(ray.dir);
-			if(dotprod < 0){
-				var rt = ray.sub(this.triangle.a),
-					t = -(n.x * rt.x + n.y * rt.y + n.z * rt.z) / (n.x * ray.dir.x + n.y * ray.dir.y + n.z * ray.dir.z);
-				if(t >= mathUtils.EPS){
-					var pos = ray.getPointAtDistance(t);
-					//check if pos is inside triangle
-					if(this.triangle.containsPoint(pos)){
-						this.isectData.isIntersection = true;
-						this.isectData.pos = pos;
-						this.isectData.normal = n;
-						this.isectData.dist = t;
-						this.isectData.dir = this.isectData.pos.sub(ray).normalize();
-					}
-				}
-			}
-			return this.isectData.isIntersection;
-		},
-		/**
-		 * @param {Triangle3D} tri
-		 * @returns {TriangleIntersector}
-		 */
-		setTriangle: function(tri){
-			this.triangle = tri;
-			return this;
-		}
-	};
-
-	return TriangleIntersector;
-});
-
-/**
- * Implementation of a 2D grid based heightfield with basic intersection
- * features and conversion to {@link TriangleMesh}. The terrain is always
- * located in the XZ plane with the positive Y axis as up vector.
- */
-define('toxi/geom/mesh/Terrain',[
-	'../../internals',
-	'../../math/mathUtils',
-	'../../math/Interpolation2D',
-	'../Ray3D',
-	'../TriangleIntersector',
-	'../Triangle3D',
-	'../IsectData3D',
-	'../../geom/Vec2D',
-	'../../geom/Vec3D',
-	'./TriangleMesh'
-], function(internals, mathUtils, Interpolation2D, Ray3D, TriangleIntersector, Triangle3D, IsectData3D, Vec2D, Vec3D, TriangleMesh){
-
-	/**
-	* Constructs a new and initially flat terrain of the given size in the XZ
-	* plane, centred around the world origin.
-	* 
-	* @param {Number} width
-	* @param {Number} depth
-	* @param {toxi.geom.Vec2D | Number} scale
-	*/
-	var Terrain = function(width, depth, scale){
-		this.width = width;
-		this._depth = depth;
-		if(!internals.hasProperties(scale,['x','y'])){
-			this.scale = new Vec2D(scale,scale);
-		} else {
-			this.scale = scale;
-		}
-		this.elevation = [];
-		var i = 0,
-			len = width * depth;
-		for(i=0; i<len; i++){
-			this.elevation[i] = 0;
-		}
-
-		this.__elevationLength = this.width * this._depth;
-		this.vertices = [];
-		var offset = new Vec3D(parseInt(this.width / 2,10), 0, parseInt(this._depth / 2,10)),
-			scaleXZ = this.scale.to3DXZ();
-		for(var z = 0, i =0; z < this._depth; z++){
-			for(var x = 0; x < this.width; x++){
-				this.vertices[i++] = new Vec3D(x,0,z).subSelf(offset).scaleSelf(scaleXZ);
-			}
-		}
-	};
-
-	Terrain.prototype = {
-		/**
-		* @return number of grid cells along the Z axis.
-		*/
-		getDepth: function(){
-			return this._depth;
-		},
-		getElevation: function(){
-			return this.elevation;
-		},
-		/**
-		* @param {Number} x
-		* @param {Number} z
-		* @return the elevation at grid point
-		*/
-		getHeightAtCell: function(x,z){
-			console.log("["+x+","+z+"]");
-			return this.elevation[this._getIndex(x,z)];
-		},
-		/**
-		* Computes the elevation of the terrain at the given 2D world coordinate
-		* (based on current terrain scale).
-		* 
-		* @param {Number} x scaled world coord x
-		* @param {Number} z scaled world coord z
-		* @return {Number} interpolated elevation
-		*/
-		getHeightAtPoint: function(x,z){
-			var xx = x / this.scale.x + this.width * 0.5,
-				zz = z / this.scale.y + this._depth * 0.5,
-				y = 0,
-				fl = {
-					xx: parseInt(xx,10),
-					zz: parseInt(zz,10)
-				};
-			if(xx >= 0 & xx < this.width && zz >= 0 && zz < this._depth){
-				
-				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1), 10),
-					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1), 10);
-
-				var	a = this.getHeightAtCell(fl.xx, fl.zz),
-					b = this.getHeightAtCell(x2, fl.zz),
-					c = this.getHeightAtCell(fl.xx, z2),
-					d = this.getHeightAtCell(x2, z2);
-				
-				y = Interpolation2D.bilinear(xx,zz, fl.xx, fl.zz, x2, z2, a, b, c, d);
-			}
-			return y;
-		},
-		/**
-		* Computes the array index for the given cell coords & checks if they're in
-		* bounds. If not an {@link IndexOutOfBoundsException} is thrown.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @return {Number} array index
-		*/
-		_getIndex: function(x,z){
-			var idx = z * this.width + x;
-			if(idx < 0 || idx > this.__elevationLength){
-				throw new Error("the given terrain cell is invalid: "+x+ ";"+z);
-			}
-			return idx;
-		},
-		/**
-		 * @return {Vec2D} the scale
-		 */
-		getScale: function(){
-			return this.scale;
-		},
-
-		getVertexAtCell: function(x,z){
-			return this.vertices[this._getIndex(x,z)];
-		},
-		/**
-		 * @return {Number} number of grid cells along X axis
-		 */
-		getWidth: function(){
-			return this.width;
-		},
-		/**
-		* Computes the 3D position (with elevation) and normal vector at the given
-		* 2D location in the terrain. The position is in scaled world coordinates
-		* based on the given terrain scale. The returned data is encapsulated in a
-		* {@link toxi.geom.IsectData3D} instance.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @return {IsectData3D} intersection data parcel
-		*/
-		intersectAtPoint: function(x,z){
-			var xx = x / this.scale.x + this.width * 0.5,
-				zz = z / this.scale.y + this._depth * 0.5,
-				isec = new IsectData3D();
-			if(xx >= 0 && xx < this.width && zz >= 0 && zz < this._depth){
-				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1),10),
-					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1),10),
-					fl = {
-						xx: parseInt(xx,10),
-						zz: parseInt(zz,10)
-					},
-					a = this.getVertexAtCell(fl.xx,fl.zz),
-					b = this.getVertexAtCell(x2, fl.zz),
-					c = this.getVertexAtCell(x2,z2),
-					d = this.getVertexAtCell(fl.xx,z2),
-					r = new Ray3D(new Vec3D(x, 10000, z), new Vec3D(0, -1, 0)),
-					i = new TriangleIntersector(new Triangle3D(a, b, d));
-				
-				console.log("ray",r);
-				console.log("intersector",i);
-
-				if(i.intersectsRay(r)){
-					isec = i.getIntersectionData();
-				} else {
-					i.setTriangle(new Triangle3D(b, c, d));
-					i.intersectsRay(r);
-					isec = i.getIntersectionData();
-				}
-			}
-			return isec;
-		},
-		/**
-		* Sets the elevation of all cells to those of the given array values.
-		* 
-		* @param {Array} elevation array of height values
-		* @return itself
-		*/
-		setElevation: function(elevation){
-			if(this.__elevationLength == elevation.length){
-				for(var i = 0, len = elevation.length; i<len; i++){
-					this.vertices[i].y = this.elevation[i] = elevation[i];
-				}
-			} else {
-				throw new Error("the given elevation array size does not match terrain");
-			}
-			return this;
-		},
-		/**
-		* Sets the elevation for a single given grid cell.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @param {Number} h new elevation value
-		* @return itself
-		*/
-		setHeightAtCell: function(x,z,h){
-			var index = this._getIndex(x,z);
-			this.elevation[index] = h;
-			this.vertices[index].y = h;
-			return this;
-		},
-		setScale: function(scale){
-			if(!internals.hasProperties(scale,['x','y'])){
-				this.scale = new Vec2D(scale,scale);
-			} else {
-				this.scale = scale;
-			}
-		},
-		toMesh: function(){
-			var opts = {
-				mesh: undefined,
-				minX: 0,
-				minZ: 0,
-				maxX: this.width,
-				maxZ: this._depth
-			};
-
-			var v = this.vertices,
-				w = this.width,
-				d = this._depth;
-
-			if(arguments.length == 1 && typeof arguments[0] == 'object'){
-				//options object
-				var args = arguments[0];
-				opts.mesh = args.mesh || new TriangleMesh("terrain");
-				opts.minX = args.minX || opts.minX;
-				opts.minZ = args.minZ || opts.minZ;
-				opts.maxX = args.maxX || opts.maxX;
-				opts.maxZ = args.maxZ || opts.maxZ;
-			} else if(arguments.length >= 5){
-				opts.mesh = arguments[0];
-				opts.minX = arguments[1];
-				opts.minZ = arguments[2];
-				opts.maxX  = arguments[3];
-				opts.maxZ = arguments[4];
-			}
-
-			opts.mesh = opts.mesh || new TriangleMesh("terrain");
-			opts.minX = mathUtils.clip(opts.minX, 0, w - 1);
-			opts.maxX = mathUtils.clip(opts.maxX, 0, w);
-			opts.minZ = mathUtils.clip(opts.minZ, 0, d-1);
-			opts.maxZ = mathUtils.clip(opts.maxZ, 0, d);
-			opts.minX++;
-			opts.minZ++;
-
-
-			for(var z = opts.minZ, idx = opts.minX * w; z < opts.maxZ; z++, idx += w){
-				for(var x = opts.minX; x < opts.maxX; x++){
-					opts.mesh.addFace(v[idx - w + x - 1], v[idx - w + x], v[idx + x - 1]);
-					opts.mesh.addFace(v[idx - w + x], v[idx + x], v[idx + x - 1]);
-				}
-			}
-			return opts.mesh;
-		}
-	};
-
-	return	Terrain;
-});
-define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/OBJWriter","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector","./mesh/Terrain"], function(require, exports, module) {
-module.exports = {
-	BezierPatch: require('./mesh/BezierPatch'),
-	BoxSelector: require('./mesh/BoxSelector'),
-	DefaultSelector: require('./mesh/DefaultSelector'),
-	Face: require('./mesh/Face'),
-	OBJWriter: require('./mesh/OBJWriter'),
-	PlaneSelector: require('./mesh/PlaneSelector'),
-	SphereFunction: require('./mesh/SphereFunction'),
-	SphericalHarmonics: require('./mesh/SphericalHarmonics'),
-	SurfaceMeshBuilder: require('./mesh/SurfaceMeshBuilder'),
-	SuperEllipsoid: require('./mesh/SuperEllipsoid'),
-	Terrain: require('./mesh/Terrain'),
-	TriangleMesh: require('./mesh/TriangleMesh'),
-	Vertex: require('./mesh/Vertex'),
-	VertexSelector: require('./mesh/VertexSelector')
-};
-});
-
-define('toxi/geom',["require", "exports", "module", "./geom/AABB","./geom/BernsteinPolynomial","./geom/Circle","./geom/CircleIntersector","./geom/Cone","./geom/Ellipse","./geom/IsectData2D","./geom/IsectData3D","./geom/Line2D","./geom/Line3D","./geom/Matrix4x4","./geom/Plane","./geom/Polygon2D","./geom/Quaternion","./geom/Ray2D","./geom/Ray3D","./geom/Ray3DIntersector","./geom/Rect","./geom/Sphere","./geom/Spline2D","./geom/Triangle2D","./geom/Triangle3D","./geom/Vec2D","./geom/Vec3D","./geom/XAxisCylinder","./geom/YAxisCylinder","./geom/ZAxisCylinder","./geom/mesh"], function(require, exports, module) {
+define('toxi/geom',["require", "exports", "module","./geom/mesh","./geom/AABB","./geom/BernsteinPolynomial","./geom/Circle","./geom/CircleIntersector","./geom/Cone","./geom/Ellipse","./geom/IsectData2D","./geom/IsectData3D","./geom/Line2D","./geom/Line3D","./geom/Matrix4x4","./geom/Plane","./geom/Polygon2D","./geom/Quaternion","./geom/Ray2D","./geom/Ray3D","./geom/Ray3DIntersector","./geom/Rect","./geom/Sphere","./geom/Spline2D","./geom/Triangle2D","./geom/Triangle3D","./geom/Vec2D","./geom/Vec3D","./geom/XAxisCylinder","./geom/YAxisCylinder","./geom/ZAxisCylinder"], function(require, exports, module) {
 module.exports = {
 	AABB: require('./geom/AABB'),
+	mesh: require('./geom/mesh'),
 	BernsteinPolynomial: require('./geom/BernsteinPolynomial'),
 	Circle: require('./geom/Circle'),
 	CircleIntersector: require('./geom/CircleIntersector'),
@@ -9340,7 +9342,6 @@ module.exports = {
 	ZAxisCylinder: require('./geom/ZAxisCylinder')
 };
 
-module.exports.mesh = require('./geom/mesh');
 //module.exports.mesh2d = require('./geom/mesh2d');
 });
 

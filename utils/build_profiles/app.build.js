@@ -17,8 +17,8 @@
 		almondSettings: '../utils/almond.settings'
 	},
 	include: [
-		'almond',
-		'almondSettings',
+		'../utils/almond',
+		'../utils/almond.settings',
 		'toxi'
 	],
 	wrap: {

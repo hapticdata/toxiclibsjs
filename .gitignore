@@ -2,4 +2,5 @@
 .project
 .settings
 site/*
-*node_modules
+TODO.md
+node_modules
