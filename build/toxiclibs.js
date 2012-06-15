@@ -692,11 +692,20 @@ module.exports.Iterator = Iterator;
 
 });
 
-define('toxi/geom/Vec3D',["require", "exports", "module", "./Vec2D","../math/mathUtils", "../internals"], function(require, exports, module) {
+define('toxi/geom/Vec3D',[
+	"require", 
+	"exports", 
+	"module",
+	"../math/mathUtils", 
+	"../internals",
+	/* FIXME adding these in causes a circular dependency
+	"./Vec2D",
+	"./AABB"*/
+], function(require, exports, module) {
 
 var internals = require('../internals'),
-	Vec2D = require('./Vec2D'),
-	AABB = require('./AABB'),
+	//Vec2D = require('./Vec2D'),
+	//AABB = require('./AABB'),
 	mathUtils = require('../math/mathUtils');
 
 
@@ -1569,7 +1578,7 @@ module.exports = Vec3D;
 
 });
 
-define('toxi/geom/Vec2D',["require", "exports", "module", "../math/mathUtils","./Vec3D","./Vec3D","./Vec3D","./Vec3D", '../internals'], function(require, exports, module) {
+define('toxi/geom/Vec2D',["require", "exports", "module", "../math/mathUtils","./Vec3D", '../internals'], function(require, exports, module) {
 var	mathUtils = require('../math/mathUtils');
 var internals = require('../internals');
 
