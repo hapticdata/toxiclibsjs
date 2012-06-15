@@ -694,13 +694,10 @@ module.exports.Iterator = Iterator;
 
 define('toxi/geom/Vec3D',["require", "exports", "module", "./Vec2D","../math/mathUtils", "../internals"], function(require, exports, module) {
 
-var internals = require('../internals');
-var	Vec2D, AABB;
-require(['./Vec2D','./AABB'],function(v2,AB){
-	Vec2D = v2;
-	AABB = AB;
-});
-var	mathUtils = require('../math/mathUtils');
+var internals = require('../internals'),
+	Vec2D = require('./Vec2D'),
+	AABB = require('./AABB'),
+	mathUtils = require('../math/mathUtils');
 
 
 /**
