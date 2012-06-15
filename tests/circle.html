@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>QUnit Test Suite</title>
+	<link rel="stylesheet" href="qunit/qunit.css" type="text/css" media="screen">
+	<script type="text/javascript" src="qunit/qunit.js"></script>
+	<script src="../build/toxiclibs.js"></script>
+</head>
+<body>
+	<h1 id="qunit-header">QUnit Test Suite</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup</div>
+	<script type="text/javascript">
+	
+
+	var Ellipse = toxi.geom.Ellipse,
+		Circle = toxi.geom.Circle;
+		
+	module("Construction of Ellipse");
+	var ellipse0 = new Ellipse();
+	//var ellipse1 = new toxi.Ellipse(new toxi.Vec2D(1,1),new toxi.Vec2D(1,2));
+	//var ellipse4 = new toxi.Ellipse(1,1,1,1);
+	test("Construct 0 param",function(){
+		ok(ellipse0 !== undefined,"ellipse constructed: "+ellipse0.toString());
+	});	
+	/*test("Construct w/ 2 vecs", function(){
+		ok(ellipse1 !== undefined,"ellipse constructed");
+	});
+	test("Construct w/ 4 Numbers",function(){
+		ok(ellipse4 !== undefined,"ellipse constructed");
+	});*/
+
+	var circle1 = new Circle(1,1,1);
+	module("Construction of Circle");
+	test("Construct w/ 3 numbers",function(){
+		ok(circle1 !== undefined,"circle constructed");
+	});
+	</script>
+</body>
+</html>

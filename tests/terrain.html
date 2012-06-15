@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>QUnit Test Suite</title>
+	<link rel="stylesheet" href="qunit/qunit.css" type="text/css" media="screen">
+	<script type="text/javascript" src="qunit/qunit.js"></script>
+</head>
+<body>
+	<h1 id="qunit-header">QUnit Test Suite</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup</div>
+	<script src="../examples/js/require.js"></script>
+	<script type="text/javascript">
+	require.config({
+		paths: {
+			toxi: '../lib/toxi'
+		}
+	})
+	require(['toxi/geom/mesh/Terrain'], function( Terrain ){
+		
+
+
+		var width = 10,
+			depth = 15,
+			scale = 2,
+			indexX = 2,
+			indexZ = 2,
+			setHeight = 3,
+			terrain = new Terrain( width, depth, scale );
+		
+
+		window.terrain = terrain;
+
+		var i =0;
+		for(var x=0; x<10; x++){
+		  for(var y=0; y<15; y++){
+		  terrain.setHeightAtCell(x,y, i);
+		  i++;
+		  }
+		}
+
+		module("Construction of Terrain");
+		test("Construct Terrain", function(){
+			ok(terrain !== undefined, "terrain constructed" + terrain.toString() );
+		});
+
+		test("getDepth", function(){
+			ok(terrain.getDepth() == depth, "depth is correct");
+		});
+
+		test("setHeightAtCell & getHeightAtCell", function(){
+			terrain.setHeightAtCell(indexX, indexZ, setHeight);
+			ok(terrain.getHeightAtCell( indexX, indexZ ) == setHeight, "matched set height");
+		});
+
+		test("getElevation", function(){
+			ok(Array.isArray( terrain.getElevation() ), "elevation is array");
+		});
+
+		test("getHeightAtPoint", function(){
+			var heightAtPoint = terrain.getHeightAtPoint(indexX * scale, indexZ * scale);
+			//value from test-run in java version
+			ok( heightAtPoint == 114.5, heightAtPoint + " matched");
+		});
+
+		test("getScale", function(){
+			var scale = terrain.getScale();
+			ok(scale.x == 2 && scale.y == 2, "scale was converted to correct Vec2D");
+		});
+
+		test("getVertexAtCell", function(){
+			var vertex = terrain.getVertexAtCell( indexX, indexZ);
+			ok( vertex.y == setHeight, "height matched what was set");
+		});
+
+		test("getWidth", function(){
+			ok(terrain.getWidth() == width, "matched");
+		});
+
+		test("intersectAtPoint", function(){
+			var isectData3D = terrain.intersectAtPoint( indexX * scale, indexZ * scale );
+			console.log(isectData3D.toString());
+			ok( isectData3D.isIntersection, "correctly found intersection");
+		});
+
+		test("setScale", function(){
+			console.log("SET");
+			terrain.setScale(3);
+			var scl = terrain.getScale();
+			ok(scl.x == 3 && scl.y == 3, "matched");
+		});
+
+		test("toMesh", function(){
+			var mesh= terrain.toMesh();
+			ok(mesh.vertices.length > 0, "mesh created");
+		});
+		/*
+		setScale
+		toMesh
+		*/
+	});
+	</script>
+</body>
+</html>
