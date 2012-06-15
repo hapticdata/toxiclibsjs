@@ -564,6 +564,7 @@ var hasProperties = function(subject,properties){
 	return true;
 };
 
+module.exports.hasProperties = hasProperties;
 module.exports.tests = {
 	hasXY: function( o ){
 		return hasProperties(o, ['x','y']);
@@ -840,7 +841,7 @@ Vec3D.prototype = {
 	crossSelf: function(vec){
 		var cx = this.y * vec.z - vec.y * this.z;
 		var cy = this.z * vec.x - vec.z * this.x;
-		this.z = vec.y - vec.x * this.y;
+		this.z = this.x * vec.y - vec.x * this.y;
 		this.y = cy;
 		this.x = cx;
 		return this;
@@ -4050,11 +4051,9 @@ var mathUtils = require('../math/mathUtils'),
  * @param {toxi.Vec3D} c
  */
 var Triangle3D = function(a,b,c){
-	if(arguments.length == 3){
-		this.a = a;
-		this.b = b;
-		this.c = c;
-	}
+	this.a = a;
+	this.b = b;
+	this.c = c;
 };
 
 Triangle3D.createEquilateralFrom = function(a, b) {
@@ -4280,11 +4279,15 @@ var Triangle3D = require('../Triangle3D');
  * @class
  * @member toxi
  */
+ var i =0;
 var Face = function(a,b,c,uvA,uvB,uvC) {
     this.a = a;
     this.b = b;
     this.c = c;
-    this.normal = this.a.sub(this.c).crossSelf(this.a.sub(this.b)).normalize();
+    var aminusc = this.a.sub(this.c);
+    var aminusb = this.a.sub(this.b);
+    var cross = aminusc.crossSelf(aminusb);
+    this.normal = cross.normalize();
     this.a.addFaceNormal(this.normal);
     this.b.addFaceNormal(this.normal);
     this.c.addFaceNormal(this.normal);
@@ -4643,9 +4646,9 @@ var extend = require('../../internals').extend,
  * @augments toxi.Vec3D
  */
 var	Vertex = function(v,id) {
-        Vec3D.apply(this,[v]);
-        this.id = id;
-        this.normal = new Vec3D();
+	Vec3D.call(this,v);
+	this.id = id;
+	this.normal = new Vec3D();
 };
 extend(Vertex,Vec3D);
 
@@ -4695,7 +4698,7 @@ var	TriangleMesh = function(name,numV,numF){
 	this.faces = [];
 	this.numVertices = 0;
 	this.numFaces = 0;
-	this.uniqueVertexID = -1;
+	this.uniqueVertexID = 0;
 	return this;
 };
 
@@ -4707,29 +4710,14 @@ TriangleMesh.DEFAULT_STRIDE = 4;
 
 TriangleMesh.prototype = {
 	addFace: function(a,b,c,n,uvA,uvB,uvC){
-		if(uvC === undefined){ //then it wasnt the 7 param method
-			if(uvB === undefined){ //then it wasnt the 6 param method
-				//its either the 3 or 4 param method
-				if(uvA === undefined){
-					//3 param method
-					n = undefined;
-					uvA = undefined;
-					uvB = undefined;
-					uvC = undefined;
-				} else {
-					//4 param method
-					uvA = undefined;
-					uvB = undefined;
-					uvC = undefined;
-				}
-			} else {
-				//6 param method
-				//pass down the chain
-				uvC = uvB;
-				uvB = uvA;
-				uvA = n;
-			}
-		}
+		//can be 3 args, 4 args, 6 args, or 7 args
+		//if it was 6 swap vars around, 
+		if( arguments.length == 6 ){
+			uvC = uvB;
+			uvB = uvA;
+			uvA = n;
+			n = undefined;
+		} 
 		//7 param method
 		var va = this.__checkVertex(a);
 		var vb = this.__checkVertex(b);
@@ -5323,8 +5311,37 @@ TriangleMesh.prototype = {
 		return this.transform(this.matrix.identity().rotateZ(theta));
 	},
 	
-	saveAsOBJ: function(obj) {
-		console.log("TriangleMesh.saveAsOBJ() currently not implemented");
+	saveAsOBJ: function(obj, saveNormals) {
+		if( saveNormals === undefined){
+			saveNormals = true;
+		}
+		var vOffset = obj.getCurrVertexOffset() + 1,
+			nOffset = obj.getCurrNormalOffset() + 1;
+		obj.newObject( this.name );
+		//vertices
+		var v = 0,
+			vlen = this.vertices.length,
+			flen = this.faces.length,
+			face;
+		for( v=0; v<vlen; v++ ){
+			obj.vertex( this.vertices[v] );
+		}
+		//faces
+		if( saveNormals ){
+			//normals
+			for( v=0; v<vlen; v++){
+				obj.normal( this.vertices[v].normal );
+			}
+			for( f=0; f<flen; f++){
+				face = this.faces[f];
+				obj.faceWithNormals(face.b.id + vOffset, face.a.id + vOffset, face.c.id + vOffset, face.b.id + nOffset, face.a.id + nOffset, face.c.id + nOffset);
+			}
+		} else {
+			for( f=0; f<flen; f++){
+				face = this.faces[f];
+				obj.face(face.b.id + vOffset, face.a.id + vOffset, face.c.id + vOffset);
+			}
+		}
 	},
 	
 	saveAsSTL: function(a,b,c){
@@ -5399,10 +5416,11 @@ module.exports = TriangleMesh;
 
 });
 
-define('toxi/geom/AABB',["require", "exports", "module", "../internals","./Vec3D","./mesh/TriangleMesh","../math/mathUtils"], function(require, exports, module) {
+define('toxi/geom/AABB',["require", "exports", "module", "../internals","./Vec3D","./Vec2D","./mesh/TriangleMesh","../math/mathUtils"], function(require, exports, module) {
 
 var	internals = require('../internals'),
 	Vec3D = require('./Vec3D'),
+	Vec2D = require('./Vec2D'),
 	TriangleMesh = require('./mesh/TriangleMesh'),
 	mathUtils = require('../math/mathUtils');
 
@@ -5417,13 +5435,13 @@ var AABB = function(a,b){
 	var vec,
 		extent;
 	if(a === undefined){
-		Vec3D.apply(this);
+		Vec3D.call(this);
 		this.setExtent(new Vec3D());
 	} else if(typeof(a) == "number") {
-		Vec3D.apply(this,[new Vec3D()]);
+		Vec3D.call(this,new Vec3D());
 		this.setExtent(a);
 	} else if( internals.tests.hasXYZ( a ) ) {
-		Vec3D.apply(this,[a]);
+		Vec3D.call(this,a);
 		if(b === undefined && internals.tests.isAABB( a )) {
 			this.setExtent(a.getExtent());
 		} else {
@@ -5799,33 +5817,36 @@ AABB.prototype.toMesh = function(mesh){
 	if(mesh === undefined){
 		mesh = new TriangleMesh("aabb",8,12);	
 	}
-	var a = new Vec3D(this.min.x,this.max.y,this.max.z),
-		b = new Vec3D(this.max.x,this.max.y,this.max.z),
-		c = new Vec3D(this.max.x,this.min.y, this.max.z),
-		d = new Vec3D(this.min.x, this.min.y, this.max.z),
-		e = new Vec3D(this.min.x, this.max.y, this.min.z),
-		f = new Vec3D(this.max.x, this.max.y, this.min.z),
-		g = new Vec3D(this.max.x, this.min.y, this.min.z),
-		h = new Vec3D(this.min.x, this.min.y, this.min.z);
-		
-	// front
-	mesh.addFace(a, b, d, undefined, undefined, undefined, undefined);
-	mesh.addFace(b, c, d, undefined, undefined, undefined, undefined);
-	// back
-	mesh.addFace(f, e, g, undefined, undefined, undefined, undefined);
-	mesh.addFace(e, h, g, undefined, undefined, undefined, undefined);
-	// top
-	mesh.addFace(e, f, a, undefined, undefined, undefined, undefined);
-	mesh.addFace(f, b, a, undefined, undefined, undefined, undefined);
-	// bottom
-	mesh.addFace(g, h, d, undefined, undefined, undefined, undefined);
-	mesh.addFace(g, d, c, undefined, undefined, undefined, undefined);
+	var a = this.min,//new Vec3D(this.min.x,this.max.y,this.max.z),
+		g = this.max,//new Vec3D(this.max.x,this.max.y,this.max.z),
+		b = new Vec3D(a.x, a.y, g.z),
+		c = new Vec3D(g.x, a.y, g.z),
+		d = new Vec3D(g.x, a.y, a.z),
+		e = new Vec3D(a.x, g.y, a.z),
+		f = new Vec3D(a.x, g.y, g.z),
+		h = new Vec3D(g.x, g.y, a.z),
+		ua = new Vec2D(0,0),
+		ub = new Vec2D(1,0),
+		uc = new Vec2D(1,1),
+		ud = new Vec2D(0,1);
 	// left
-	mesh.addFace(e, a, h, undefined, undefined, undefined, undefined);
-	mesh.addFace(a, d, h, undefined, undefined, undefined, undefined);
+	mesh.addFace(a, b, f, ud, uc, ub);
+	mesh.addFace(a, f, e, ud, ub, ua);
+	// front
+	mesh.addFace(b, c, g, ud, uc, ub);
+	mesh.addFace(b, g, f, ud, ub, ua);
 	// right
-	mesh.addFace(b, f, g, undefined, undefined, undefined, undefined);
-	mesh.addFace(b, g, c, undefined, undefined, undefined, undefined);
+	mesh.addFace(c, d, h, ud, uc, ub);
+	mesh.addFace(c, h, g, ud, ub, ua);
+	// back
+	mesh.addFace(d, a, e, ud, uc, ub);
+	mesh.addFace(d, e, h, ud, ub, ua);
+	// top
+	mesh.addFace(e, f, h, ua, ud, ub);
+	mesh.addFace(f, g, h, ud, uc, ub);
+	// bottom
+	mesh.addFace(a, d, b, ud, uc, ua);
+	mesh.addFace(b, d, c, ua, uc, ub);
 	return mesh;
 
 };
@@ -7691,9 +7712,10 @@ SphereFunction.prototype = {
 module.exports = SphereFunction;
 });
 
-define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./TriangleMesh","../Vec3D"], function(require, exports, module) {
+define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./TriangleMesh","../Vec3D","../Vec2D"], function(require, exports, module) {
 
 var Vec3D = require('../Vec3D'),
+	Vec2D = require('../Vec2D'),
 	TriangleMesh = require('./TriangleMesh');
 
 /**
@@ -7760,16 +7782,25 @@ SurfaceMeshBuilder.prototype = {
 			phiRange = this.func.getPhiRange(),
 			thetaRes = this.func.getThetaResolutionLimit(opts.resolution),
 			thetaRange = this.func.getThetaRange(),
-			pres = 1.0 / (1 == opts.resolution % 2 ? opts.resolution - 0 : opts.resolution);
+			pres = 1.0 / phiRes, //(1 == opts.resolution % 2 ? opts.resolution - 0 : opts.resolution);
+			tres = 1.0 / thetaRes,
+			ires = 1.0 / opts.resolution,
+			pauv = new Vec2D(),
+			pbuv = new Vec2D(),
+			auv = new Vec2D(),
+			buv = new Vec2D();
+
 		for (var p = 0; p < phiRes; p++) {
-			var phi = p * phiRange * pres;
-			var phiNext = (p + 1) * phiRange * pres;
+			var phi = p * phiRange * ires;
+			var phiNext = (p + 1) * phiRange * ires;
 			for (var t = 0; t <= thetaRes; t++) {
-				var theta = t * thetaRange / opts.resolution;
+				var theta = t * thetaRange * ires;
 				var func = this.func;
 				a =	func.computeVertexFor(a, phiNext, theta).scaleSelf(opts.size);
+				auv.set( t * tres, 1 - (p + 1) * pres);
 				b = func.computeVertexFor(b, phi, theta).scaleSelf(opts.size);
-				if (b.distanceTo(a) < 0.0001) {
+				buv.set( t * tres, 1 - p * pres );
+				if (b.equalsWithTolerance(a, 0.0001) ) {
 					b.set(a);
 				}
 				if (t > 0) {
@@ -7777,14 +7808,16 @@ SurfaceMeshBuilder.prototype = {
 						a.set(a0);
 						b.set(b0);
 					}
-					mesh.addFace(pa, pb, a);
-					mesh.addFace(pb, b, a);
+					mesh.addFace(pa, pb, a, pauv.copy(), pbuv.copy(), auv.copy());
+					mesh.addFace(pb, b, a, pbuv.copy(), buv.copy(), auv.copy());
 				} else {
 					a0.set(a);
 					b0.set(b);
 				}
 				pa.set(a);
 				pb.set(b);
+				pauv.set(auv);
+				pbuv.set(buv);
 			}
 		}
 		return mesh;
@@ -8630,6 +8663,107 @@ DefaultSelector.prototype.selectVertices = function(){
 module.exports = DefaultSelector;
 });
 
+define('toxi/geom/mesh/OBJWriter',[
+	'../../internals'
+], function( internals ){
+
+	//faster than str += " "
+	var StringBuffer = function(){
+		this.buffer = [];
+	};
+	StringBuffer.prototype.append = function(string){
+		this.buffer.push(string);
+		return this;
+	};
+	StringBuffer.prototype.toString = function(){
+		return this.buffer.join("");
+	};
+	
+	var OBJWriter = function(){
+		this.VERSION = "0.3";
+		this.__stringBuffer = new StringBuffer();
+		this.objStream;
+		this.__filename = "objwriter.obj";
+		this._numVerticesWritten = 0;
+		this._numNormalsWritten = 0;
+	};
+
+
+	OBJWriter.prototype = {
+		/**
+		 * begin saving
+		 * @param {WritableStream | String} [stream] stream can be a node.js WritableStream, or it can be a filename or undefined
+		 */
+		beginSave: function( stream ){
+			if( typeof stream == 'string' ){
+				//if node.js create a writeable stream with this filename
+			} else if( internals.hasProperties(stream,['write','end','writable'] && stream.writable)){
+				this.objStream = stream;
+			} else {
+			}
+			this._handleBeginSave();
+		},
+
+		endSave: function(){
+			if(this.objStream !== undefined ){
+				try {
+					this.objStream.destroy();
+				} catch( e ){
+
+				}
+			}
+		},
+
+		face: function( a, b, c ){
+			this.__stringBuffer.append("f " + a + " " + b + " " + c + "\n");
+		},
+
+		faceList: function(){
+			this.__stringBuffer.append("s off \n");
+		},
+
+		faceWithNormals: function( a, b, c, na, nb, nc ){
+			this.__stringBuffer.append("f " + a + "//" + na + " " + b + "//" + nb + " " + c + "//" + nc + "\n");
+		},
+
+		getCurrNormalOffset: function(){
+			return this._numNormalsWritten;
+		},
+
+		getCurrVertexOffset: function(){
+			return this._numVerticesWritten;
+		},
+
+		//not in java version
+		getOutput: function(){
+			return this.__stringBuffer.toString();
+		},
+
+		_handleBeginSave: function(){
+			this.numVerticesWritten = 0;
+			this.numNormalsWrittern = 0;
+			this.__stringBuffer.append("# generated by OBJExport (js) v" + this.VERSION+'\n');
+		},
+
+		newObject: function( name ){
+			this.__stringBuffer.append("o " + name + "\n");
+		},
+
+		normal: function( vecN ){
+			this.__stringBuffer.append("vn " + vecN.x + " " + vecN.y + " " + vecN.z + "\n");
+			this._numNormalsWritten++;
+		},
+
+		vertex: function( vecV ){
+			this.__stringBuffer.append("v " + vecV.x + " " + vecV.y + " " + vecV.z +"\n");
+			this._numVerticesWritten++;
+		}
+	}
+
+
+	return OBJWriter;
+
+});
 define('toxi/geom/mesh/PlaneSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
 var extend = require('../../internals').extend,
     VertexSelector = require('./VertexSelector');
@@ -8761,18 +8895,411 @@ SuperEllipsoid.prototype = {
 module.exports = SuperEllipsoid;
 });
 
-define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector"], function(require, exports, module) {
+define('toxi/math/Interpolation2D',["require", "exports", "module","../internals"], function(require, exports, module) {
+var internals = require("../internals");
+
+/**
+ * @class Implementations of 2D interpolation functions (currently only bilinear).
+ * @member toxi
+ * @static
+ */
+var Interpolation2D = {};
+/**
+ * @param {Number} x
+ *            x coord of point to filter (or Vec2D p)
+ * @param {Number} y
+ *            y coord of point to filter (or Vec2D p1)
+ * @param {Number} x1
+ *            x coord of top-left corner (or Vec2D p2)
+ * @param {Number} y1
+ *            y coord of top-left corner
+ * @param {Number} x2
+ *            x coord of bottom-right corner
+ * @param {Number} y2
+ *            y coord of bottom-right corner
+ * @param {Number} tl
+ *            top-left value
+ * @param {Number} tr
+ *            top-right value (do not use if first 3 are Vec2D)
+ * @param {Number} bl
+ *            bottom-left value (do not use if first 3 are Vec2D)
+ * @param {Number} br
+ *            bottom-right value (do not use if first 3 are Vec2D)
+ * @return {Number} interpolated value
+ */
+Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
+	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
+	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
+	{
+		x = _x.x;
+		y = _x.y;
+		
+		x1 = _y.x;
+		y1 = _y.y;
+		
+		x2 = _x1.x;
+		y2 = _x1.y;
+		
+		tl = _y1;
+		tr = _x2;
+		bl = _y2;
+		br = _tl;
+	} else {
+		x = _x;
+		y = _y;
+		x1 = _x1;
+		y1 = _y1;
+		x2 = _x2;
+		y2 = _y2;
+		tl = _tl;
+		tr = _tr;
+		bl = _bl;
+		br = _br;
+	}
+    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
+    var dx1 = (x - x1) * denom;
+    var dx2 = (x2 - x) * denom;
+    var dy1 = y - y1;
+    var dy2 = y2 - y;
+    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
+};
+
+module.exports = Interpolation2D;
+});
+
+define('toxi/geom/TriangleIntersector',[
+	"../math/mathUtils",
+	"./Triangle3D",
+	"./Vec3D",
+	"./IsectData3D"
+], function(mathUtils, Triangle3D, Vec3D, IsectData3D) {
+
+	/**
+	 * @param {Triangle3D} [t]
+	 */
+	var TriangleIntersector = function(t){
+		this.triangle = t || new Triangle3D();
+		this.isectData = new IsectData3D();
+	};
+
+	TriangleIntersector.prototype = {
+		getIntersectionData: function(){
+			return this.isectData;
+		},
+		getTriangle: function(){
+			return this.triangle;
+		},
+		/**
+		 * @param {Ray3D} ray
+		 * @returns {Boolean}
+		 */
+		intersectsRay: function(ray){
+			this.isectData.isIntersection = false;
+			var n = this.triangle.computeNormal(),
+				dotprod = n.dot(ray.dir);
+			if(dotprod < 0){
+				var rt = ray.sub(this.triangle.a),
+					t = -(n.x * rt.x + n.y * rt.y + n.z * rt.z) / (n.x * ray.dir.x + n.y * ray.dir.y + n.z * ray.dir.z);
+				if(t >= mathUtils.EPS){
+					var pos = ray.getPointAtDistance(t);
+					//check if pos is inside triangle
+					if(this.triangle.containsPoint(pos)){
+						this.isectData.isIntersection = true;
+						this.isectData.pos = pos;
+						this.isectData.normal = n;
+						this.isectData.dist = t;
+						this.isectData.dir = this.isectData.pos.sub(ray).normalize();
+					}
+				}
+			}
+			return this.isectData.isIntersection;
+		},
+		/**
+		 * @param {Triangle3D} tri
+		 * @returns {TriangleIntersector}
+		 */
+		setTriangle: function(tri){
+			this.triangle = tri;
+			return this;
+		}
+	};
+
+	return TriangleIntersector;
+});
+
+/**
+ * Implementation of a 2D grid based heightfield with basic intersection
+ * features and conversion to {@link TriangleMesh}. The terrain is always
+ * located in the XZ plane with the positive Y axis as up vector.
+ */
+define('toxi/geom/mesh/Terrain',[
+	'../../internals',
+	'../../math/mathUtils',
+	'../../math/Interpolation2D',
+	'../Ray3D',
+	'../TriangleIntersector',
+	'../Triangle3D',
+	'../IsectData3D',
+	'../../geom/Vec2D',
+	'../../geom/Vec3D',
+	'./TriangleMesh'
+], function(internals, mathUtils, Interpolation2D, Ray3D, TriangleIntersector, Triangle3D, IsectData3D, Vec2D, Vec3D, TriangleMesh){
+
+	/**
+	* Constructs a new and initially flat terrain of the given size in the XZ
+	* plane, centred around the world origin.
+	* 
+	* @param {Number} width
+	* @param {Number} depth
+	* @param {toxi.geom.Vec2D | Number} scale
+	*/
+	var Terrain = function(width, depth, scale){
+		this.width = width;
+		this._depth = depth;
+		if(!internals.hasProperties(scale,['x','y'])){
+			this.scale = new Vec2D(scale,scale);
+		} else {
+			this.scale = scale;
+		}
+		this.elevation = [];
+		var i = 0,
+			len = width * depth;
+		for(i=0; i<len; i++){
+			this.elevation[i] = 0;
+		}
+
+		this.__elevationLength = this.width * this._depth;
+		this.vertices = [];
+		var offset = new Vec3D(parseInt(this.width / 2,10), 0, parseInt(this._depth / 2,10)),
+			scaleXZ = this.scale.to3DXZ();
+		for(var z = 0, i =0; z < this._depth; z++){
+			for(var x = 0; x < this.width; x++){
+				this.vertices[i++] = new Vec3D(x,0,z).subSelf(offset).scaleSelf(scaleXZ);
+			}
+		}
+	};
+
+	Terrain.prototype = {
+		/**
+		* @return number of grid cells along the Z axis.
+		*/
+		getDepth: function(){
+			return this._depth;
+		},
+		getElevation: function(){
+			return this.elevation;
+		},
+		/**
+		* @param {Number} x
+		* @param {Number} z
+		* @return the elevation at grid point
+		*/
+		getHeightAtCell: function(x,z){
+			console.log("["+x+","+z+"]");
+			return this.elevation[this._getIndex(x,z)];
+		},
+		/**
+		* Computes the elevation of the terrain at the given 2D world coordinate
+		* (based on current terrain scale).
+		* 
+		* @param {Number} x scaled world coord x
+		* @param {Number} z scaled world coord z
+		* @return {Number} interpolated elevation
+		*/
+		getHeightAtPoint: function(x,z){
+			var xx = x / this.scale.x + this.width * 0.5,
+				zz = z / this.scale.y + this._depth * 0.5,
+				y = 0,
+				fl = {
+					xx: parseInt(xx,10),
+					zz: parseInt(zz,10)
+				};
+			if(xx >= 0 & xx < this.width && zz >= 0 && zz < this._depth){
+				
+				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1), 10),
+					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1), 10);
+
+				var	a = this.getHeightAtCell(fl.xx, fl.zz),
+					b = this.getHeightAtCell(x2, fl.zz),
+					c = this.getHeightAtCell(fl.xx, z2),
+					d = this.getHeightAtCell(x2, z2);
+				
+				y = Interpolation2D.bilinear(xx,zz, fl.xx, fl.zz, x2, z2, a, b, c, d);
+			}
+			return y;
+		},
+		/**
+		* Computes the array index for the given cell coords & checks if they're in
+		* bounds. If not an {@link IndexOutOfBoundsException} is thrown.
+		* 
+		* @param {Number} x
+		* @param {Number} z
+		* @return {Number} array index
+		*/
+		_getIndex: function(x,z){
+			var idx = z * this.width + x;
+			if(idx < 0 || idx > this.__elevationLength){
+				throw new Error("the given terrain cell is invalid: "+x+ ";"+z);
+			}
+			return idx;
+		},
+		/**
+		 * @return {Vec2D} the scale
+		 */
+		getScale: function(){
+			return this.scale;
+		},
+
+		getVertexAtCell: function(x,z){
+			return this.vertices[this._getIndex(x,z)];
+		},
+		/**
+		 * @return {Number} number of grid cells along X axis
+		 */
+		getWidth: function(){
+			return this.width;
+		},
+		/**
+		* Computes the 3D position (with elevation) and normal vector at the given
+		* 2D location in the terrain. The position is in scaled world coordinates
+		* based on the given terrain scale. The returned data is encapsulated in a
+		* {@link toxi.geom.IsectData3D} instance.
+		* 
+		* @param {Number} x
+		* @param {Number} z
+		* @return {IsectData3D} intersection data parcel
+		*/
+		intersectAtPoint: function(x,z){
+			var xx = x / this.scale.x + this.width * 0.5,
+				zz = z / this.scale.y + this._depth * 0.5,
+				isec = new IsectData3D();
+			if(xx >= 0 && xx < this.width && zz >= 0 && zz < this._depth){
+				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1),10),
+					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1),10),
+					fl = {
+						xx: parseInt(xx,10),
+						zz: parseInt(zz,10)
+					},
+					a = this.getVertexAtCell(fl.xx,fl.zz),
+					b = this.getVertexAtCell(x2, fl.zz),
+					c = this.getVertexAtCell(x2,z2),
+					d = this.getVertexAtCell(fl.xx,z2),
+					r = new Ray3D(new Vec3D(x, 10000, z), new Vec3D(0, -1, 0)),
+					i = new TriangleIntersector(new Triangle3D(a, b, d));
+				
+				console.log("ray",r);
+				console.log("intersector",i);
+
+				if(i.intersectsRay(r)){
+					isec = i.getIntersectionData();
+				} else {
+					i.setTriangle(new Triangle3D(b, c, d));
+					i.intersectsRay(r);
+					isec = i.getIntersectionData();
+				}
+			}
+			return isec;
+		},
+		/**
+		* Sets the elevation of all cells to those of the given array values.
+		* 
+		* @param {Array} elevation array of height values
+		* @return itself
+		*/
+		setElevation: function(elevation){
+			if(this.__elevationLength == elevation.length){
+				for(var i = 0, len = elevation.length; i<len; i++){
+					this.vertices[i].y = this.elevation[i] = elevation[i];
+				}
+			} else {
+				throw new Error("the given elevation array size does not match terrain");
+			}
+			return this;
+		},
+		/**
+		* Sets the elevation for a single given grid cell.
+		* 
+		* @param {Number} x
+		* @param {Number} z
+		* @param {Number} h new elevation value
+		* @return itself
+		*/
+		setHeightAtCell: function(x,z,h){
+			var index = this._getIndex(x,z);
+			this.elevation[index] = h;
+			this.vertices[index].y = h;
+			return this;
+		},
+		setScale: function(scale){
+			if(!internals.hasProperties(scale,['x','y'])){
+				this.scale = new Vec2D(scale,scale);
+			} else {
+				this.scale = scale;
+			}
+		},
+		toMesh: function(){
+			var opts = {
+				mesh: undefined,
+				minX: 0,
+				minZ: 0,
+				maxX: this.width,
+				maxZ: this._depth
+			};
+
+			var v = this.vertices,
+				w = this.width,
+				d = this._depth;
+
+			if(arguments.length == 1 && typeof arguments[0] == 'object'){
+				//options object
+				var args = arguments[0];
+				opts.mesh = args.mesh || new TriangleMesh("terrain");
+				opts.minX = args.minX || opts.minX;
+				opts.minZ = args.minZ || opts.minZ;
+				opts.maxX = args.maxX || opts.maxX;
+				opts.maxZ = args.maxZ || opts.maxZ;
+			} else if(arguments.length >= 5){
+				opts.mesh = arguments[0];
+				opts.minX = arguments[1];
+				opts.minZ = arguments[2];
+				opts.maxX  = arguments[3];
+				opts.maxZ = arguments[4];
+			}
+
+			opts.mesh = opts.mesh || new TriangleMesh("terrain");
+			opts.minX = mathUtils.clip(opts.minX, 0, w - 1);
+			opts.maxX = mathUtils.clip(opts.maxX, 0, w);
+			opts.minZ = mathUtils.clip(opts.minZ, 0, d-1);
+			opts.maxZ = mathUtils.clip(opts.maxZ, 0, d);
+			opts.minX++;
+			opts.minZ++;
+
+
+			for(var z = opts.minZ, idx = opts.minX * w; z < opts.maxZ; z++, idx += w){
+				for(var x = opts.minX; x < opts.maxX; x++){
+					opts.mesh.addFace(v[idx - w + x - 1], v[idx - w + x], v[idx + x - 1]);
+					opts.mesh.addFace(v[idx - w + x], v[idx + x], v[idx + x - 1]);
+				}
+			}
+			return opts.mesh;
+		}
+	};
+
+	return	Terrain;
+});
+define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/OBJWriter","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector","./mesh/Terrain"], function(require, exports, module) {
 module.exports = {
 	BezierPatch: require('./mesh/BezierPatch'),
 	BoxSelector: require('./mesh/BoxSelector'),
 	DefaultSelector: require('./mesh/DefaultSelector'),
 	Face: require('./mesh/Face'),
+	OBJWriter: require('./mesh/OBJWriter'),
 	PlaneSelector: require('./mesh/PlaneSelector'),
 	SphereFunction: require('./mesh/SphereFunction'),
 	SphericalHarmonics: require('./mesh/SphericalHarmonics'),
 	SurfaceMeshBuilder: require('./mesh/SurfaceMeshBuilder'),
 	SuperEllipsoid: require('./mesh/SuperEllipsoid'),
-	//Terrain: require('./mesh/Terrain'),
+	Terrain: require('./mesh/Terrain'),
 	TriangleMesh: require('./mesh/TriangleMesh'),
 	Vertex: require('./mesh/Vertex'),
 	VertexSelector: require('./mesh/VertexSelector')
@@ -8980,76 +9507,6 @@ ExponentialInterpolation.prototype = {
 };
 
 module.exports = ExponentialInterpolation;
-});
-
-define('toxi/math/Interpolation2D',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Implementations of 2D interpolation functions (currently only bilinear).
- * @member toxi
- * @static
- */
-var Interpolation2D = {};
-/**
- * @param {Number} x
- *            x coord of point to filter (or Vec2D p)
- * @param {Number} y
- *            y coord of point to filter (or Vec2D p1)
- * @param {Number} x1
- *            x coord of top-left corner (or Vec2D p2)
- * @param {Number} y1
- *            y coord of top-left corner
- * @param {Number} x2
- *            x coord of bottom-right corner
- * @param {Number} y2
- *            y coord of bottom-right corner
- * @param {Number} tl
- *            top-left value
- * @param {Number} tr
- *            top-right value (do not use if first 3 are Vec2D)
- * @param {Number} bl
- *            bottom-left value (do not use if first 3 are Vec2D)
- * @param {Number} br
- *            bottom-right value (do not use if first 3 are Vec2D)
- * @return {Number} interpolated value
- */
-Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
-	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
-	{
-		x = _x.x;
-		y = _x.y;
-		
-		x1 = _y.x;
-		y1 = _y.y;
-		
-		x2 = _x1.x;
-		y2 = _x1.y;
-		
-		tl = _y1;
-		tr = _x2;
-		bl = _y2;
-		br = _tl;
-	} else {
-		x = _x;
-		y = _y;
-		x1 = _x1;
-		y1 = _y1;
-		x2 = _x2;
-		y2 = _y2;
-		tl = _tl;
-		tr = _tr;
-		bl = _bl;
-		br = _br;
-	}
-    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
-    var dx1 = (x - x1) * denom;
-    var dx2 = (x2 - x) * denom;
-    var dy1 = y - y1;
-    var dy2 = y2 - y;
-    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
-};
-
-module.exports = Interpolation2D;
 });
 
 define('toxi/math/ScaleMap',["require", "exports", "module", "./mathUtils","./LinearInterpolation"], function(require, exports, module) {
@@ -12599,7 +13056,7 @@ ToxiclibsSupport.prototype = {
 		if(arguments.length == 1){ //it needs to be an param object
 			toxiTriangleMesh == obj_or_toxiTriangleMesh.geometry;
 			threeMaterials = obj_or_toxiTriangleMesh.materials;
-			holdInDictionary = obj_or_holdInDictionary;
+			holdInDictionary = obj_or_toxiTriangleMesh.holdInDictionary;
 		} else {
 			toxiTriangleMesh = obj_or_toxiTriangleMesh;
 		}

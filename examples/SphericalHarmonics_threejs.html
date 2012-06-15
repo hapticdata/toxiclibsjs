@@ -48,8 +48,8 @@
 	-->
 		<script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
 		<script type="text/javascript" src="../build/toxiclibs.js"></script>
-		<script type="text/javascript" src="js/Three_r42.js"></script> 
-		<script type="text/javascript" src="../src/three.js/ToxiclibsSupport.js"></script>
+		<script type="text/javascript" src="js/Three.js"></script> 
+		<script type="text/javascript" src="/~me/libs/three.js/src/extras/controls/TrackballControls.js"></script>
 		<script src="js/Detector.js"></script>
 		<script src="js/RequestAnimationFrame.js"></script>
 		<!--<script src="js/Stats.js"></script>-->
@@ -64,7 +64,8 @@
 				cameraSensitivity = 1.2,
 				stage = new toxi.geom.Vec2D(window.innerWidth,window.innerHeight),
 				canRotateWorld = true,
-				camera = new THREE.TrackballCamera({
+				camera = new THREE.PerspectiveCamera( 45, stage.x / stage.y, 1, 2000),
+					/*{
 					fov: 45, 
 					aspect: stage.x / stage.y,
 					near: 1,
@@ -74,20 +75,30 @@
 					noZoom: false,
 					staticMoving: false,
 					dynamicDampingFactor: 0.05
-				}),
+				}),*/
 				scene = new THREE.Scene(),
 				renderer = new THREE.WebGLRenderer({antiaalised: true}),
 				//stats = new Stats(),
 				objectRadius = 65,
-				meshResolution = 100,
+				meshResolution = 50,
 				m = [],
 				changeHarmonics = true,
 				toxiToThreeSupport = new toxi.THREE.ToxiclibsSupport(scene),
 				threeMesh = undefined; //<--we'll put the converted mesh here
 			
-			camera.position.x = 400;
-			camera.position.y = 400;
-			camera.position.z = 400;
+			camera.position.z = 800;
+
+			scene.add( camera );
+			var controls = new THREE.TrackballControls( camera );
+			controls.rotateSpeed = 1.0;
+			controls.zoomSpeed = 1.2;
+			controls.panSpeed = 0.2;
+
+			controls.noZoom = false;
+			controls.noPan = false;
+
+			controls.staticMoving = false;
+			controls.dynamicDampingFactor = 0.1;
 			
 			renderer.setSize(stage.x,stage.y);
 			container.appendChild(renderer.domElement);
@@ -98,8 +109,8 @@
 			
 			///the stuff more unique to this sketch
 			var material = new THREE.MeshNormalMaterial({color: 0xBAE8E6, opacity: 1.0});
-			randomizeHarmonics();
-			
+			//randomizeHarmonics();
+			m = [5,8,3,1,7,3,3,7];
 			//GUI
 			var gui = new DAT.GUI();
 			$("#guidat").find(".guidat").prepend('<div id="guiAbout">'+$("#about").html()+"</div>")
@@ -117,12 +128,13 @@
 				render();
 				//stats.update();
 			}
-			
+
 			function render() {
 				/*if(canRotateWorld){
 					camera.position.x += ( (mouse.x*cameraSensitivity) - camera.position.x ) * 0.05;
 					camera.position.y += ( - ( mouse.y * cameraSensitivity) - camera.position.y ) * 0.05;
 				}*/
+				controls.update();
 				renderer.render( scene, camera );
 			}
 			
@@ -138,13 +150,14 @@
 				$("#guiAbout").append($m)
 			}
 			
+			
 
 			function changeMesh(res){
 				if(res === undefined){
 					res = meshResolution;
 				}
 				if(threeMesh !== undefined) {
-					scene.removeObject(threeMesh);
+					scene.remove(threeMesh);
 				}
 				if(changeHarmonics) {
 					randomizeHarmonics();
@@ -157,7 +170,7 @@
 				threeMesh.scale = new THREE.Vector3(objectRadius,objectRadius,objectRadius);
 				threeMesh.doubleSided = true;
 				//console.log(threeMesh);
-				scene.addObject(threeMesh);
+				scene.add(threeMesh);
 			};
 			
 			
