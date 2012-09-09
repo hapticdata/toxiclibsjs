@@ -1,5 +1,6 @@
 #Toxiclibs.js CHANGES
 ##v0.1.3
+*	Updated toxi.THREE.ToxiclibsSupport to remove used of deprecated THREE.Vertex
 *	AABB, Vec3D, Vec2D, Sphere.toMesh and Circle -> Ellipse circular dependencies resolved
 *	TriangleMesh.getBoundingBox and TriangleMesh.getBoundingSphere are no longer async, circular dependency resolved.
 *	bugfixes for toxi.physics2d.constraings.CircularConstraint and toxi.geom.Triangle2D
