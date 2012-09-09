@@ -1,7 +1,11 @@
 #Toxiclibs.js CHANGES
+##v0.1.3
+*	AABB, Vec3D, Vec2D, Sphere.toMesh and Circle -> Ellipse circular dependencies resolved
+*	TriangleMesh.getBoundingBox and TriangleMesh.getBoundingSphere are no longer async, circular dependency resolved.
+*	bugfixes for toxi.physics2d.constraings.CircularConstraint and toxi.geom.Triangle2D
 
 ##v0.1.2
-*	Resolved [Issue 18](https://github.com/hapticdata/toxiclibsjs/issues/18) TriangleMesh#getBoundingBox and TriangleMesh#getBoundingSphere are now async methods to prevent circular dependency
+*	Resolved [Issue 18](https://github.com/hapticdata/toxiclibsjs/issues/18) TriangleMesh.getBoundingBox and TriangleMesh.getBoundingSphere are now async methods to prevent circular dependency
 *	Added `toxi/geom/mesh/Terrain`
 *	Added UV's to `toxi/geom/mesh/SurfaceMeshBuilder`
 *	Added UV's to `toxi/geom/AABB`

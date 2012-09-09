@@ -7,15 +7,25 @@ var assert = require('assert');
 
 //test Sphere's circular dependency issues with mesh classes
 describe('toxi/geom/Sphere.js', function(){
-	var sphere;
+	var sphere, mesh;
 	it('construct a sphere with radius 100', function(){
 		sphere = new toxi.geom.Sphere( 100 );
 		assert.equal(sphere.radius, 100 );
 	});
 
 	it('should create a TriangleMesh', function(){
-		var mesh = sphere.toMesh(null, 5 );
+		mesh = sphere.toMesh(null, 5 );
 		assert.equal(typeof mesh.getFaces, 'function');
+	});
+
+	it('getBoundingBox() should return an AABB', function(){
+		var aabb = mesh.getBoundingBox();
+		assert.equal(toxi.internals.tests.isAABB(aabb), true);
+	});
+	it('getBoundingSphere() should return Sphere', function(){
+		var sph = mesh.getBoundingSphere();
+		assert.equal(toxi.internals.tests.isSphere(sph), true);
+		assert.equal(Math.floor( sph.radius ), 100);
 	});
 });
 
