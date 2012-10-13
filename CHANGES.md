@@ -5,6 +5,8 @@
 *	AABB, Vec3D, Vec2D, Sphere.toMesh and Circle -> Ellipse circular dependencies resolved
 *	TriangleMesh.center now takes a callback for updating bounding box
 *	bugfixes for toxi.physics2d.constraings.CircularConstraint and toxi.geom.Triangle2D
+*	bugfixes for passing points into toxi.geom.Spline2D
+*	support for options object in toxi.geom.Spline2D constructor
 
 ##v0.1.2
 *	Resolved [Issue 18](https://github.com/hapticdata/toxiclibsjs/issues/18) TriangleMesh.getBoundingBox and TriangleMesh.getBoundingSphere are now async methods to prevent circular dependency
