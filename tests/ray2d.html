@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>QUnit Test Suite</title>
+	<link rel="stylesheet" href="qunit/qunit.css" type="text/css" media="screen">
+	<script type="text/javascript" src="qunit/qunit.js"></script>
+	<script src="../build/toxiclibs.js"></script>
+</head>
+<body>
+	<h1 id="qunit-header">QUnit Test Suite</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup</div>
+	<script type="text/javascript">
+	
+	var Vec2D = toxi.geom.Vec2D,
+		Ray2D = toxi.geom.Ray2D;
+		
+	module("Construction of Ray2D");
+
+	var ray = new Ray2D(100,100, new Vec2D(200,200));
+	test("toString()",function(){
+		var ts = ray.toString();
+		ok(ts.length > 0, ts);
+	});	
+	</script>
+</body>
+</html>

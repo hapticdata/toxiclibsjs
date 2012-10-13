@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>QUnit Test Suite</title>
+	<link rel="stylesheet" href="qunit/qunit.css" type="text/css" media="screen">
+	<script type="text/javascript" src="qunit/qunit.js"></script>
+	<script src="../build/toxiclibs.js"></script>
+	<script src="../src/core/geom/Vec2D.js"></script>
+	<script src="../src/core/geom/Vec2D_post.js"></script>
+</head>
+<body>
+	<h1 id="qunit-header">QUnit Test Suite</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup</div>
+	<script type="text/javascript">
+	
+	var Vec2D = toxi.geom.Vec2D,
+		Rect = toxi.geom.Rect,
+		Triangle2D = toxi.geom.Triangle2D,
+		SigmoidInterpolation = toxi.math.SigmoidInterpolation;
+
+	module("Construction of Vec2D");
+
+	test("Construct Vec2D, no prarams", function(){
+		var vec = new Vec2D();
+		ok(vec instanceof Vec2D, "vec: "+vec);
+	});	
+	test("Construct Vec2D, x & y params", function(){
+		var vec = new Vec2D(0.5,0.5);
+		ok(vec.x == 0.5 && vec.y == 0.5,"vec: "+vec);
+	});
+	test("Construct Vec2D {x,y} params", function(){
+		var vec = new Vec2D({
+			x: 100,
+			y: 100
+		});
+		ok(vec.x == 100 && vec.y == 100, vec.toString());
+	});
+	test("Construct Vec2D w/ Vec2D", function(){
+		var vec1 = new Vec2D(100,100);
+		var vec2 = new Vec2D(vec1);
+		
+		ok(vec2.x == vec1.x && vec2.y == vec1.y, vec1 + ", "+vec2);
+	});
+	
+	module("public methods");
+	test("addSelf(), ensure still same object",function(){
+		var vec1 = new Vec2D(100,100);
+		vec1.uid = "test";
+		var vec2 = vec1.addSelf({x: 25, y: 50});
+		ok(vec1.x == 125 && vec1.y == 150 && vec1 === vec2 && vec1.uid == "test","Same object");
+	});
+	
+	test("add(), ensure new object, right coords",function(){
+		var vec1 = new Vec2D();
+		var vec2 = vec1.add(100,150);
+		ok(vec2.x == 100 && vec2.y == 150 && vec2 !== vec1,"is new object");
+	});
+	test("angleBetween", function(){
+		var pos1 = new Vec2D(20,20),
+			pos2 = pos1.scale(0.5);
+			
+		var angle = pos2.angleBetween(pos1,true);
+		ok(!isNaN(angle), "angle: "+angle);
+	});
+	test("clear(), compareTo() when equal isZeroVector())", function(){
+		var vec = new Vec2D(100,100);
+		vec.clear();
+		ok(vec.isZeroVector() && vec.compareTo(new Vec2D()) == 0," success");
+	});
+	test("compareTo()", function(){
+		var vec1 = new Vec2D(200,200);
+		var vec2 = new Vec2D(100,100);
+		var mag = (vec1.x * vec1.x + vec1.y * vec1.y) - (vec2.x * vec2.x + vec2.y * vec2.y);
+		var magCompareTo = vec1.compareTo(vec2);
+		ok(magCompareTo == mag, "mag: "+mag+ " vec1.compareTo(vec2): "+magCompareTo);
+	});
+	
+	test("max and equals",function(){
+		var vec1 = new Vec2D(100,100);
+		var vec2 = new Vec2D(200,200);
+		
+		var vec3 = vec2.max(vec1);
+		
+		ok(vec3.equals(vec2), vec3 + " = "+vec2);
+	});
+	
+	
+	
+	var vec2 = new Vec2D(150,150);
+	var vec1 = new Vec2D();
+
+	
+	test("constrain, w/ Rect",function(){
+		var constrainRect = new Rect(10,10,50,50);
+		var constrained2 = vec2.constrain(constrainRect);
+		var constrained1 = vec1.constrain(constrainRect);
+		ok(constrained2.x == 60 && constrained2.y == 60 && constrained1.x == 10 && constrained1.y == 10, constrained2 + ", "+constrained1);
+	});
+	
+	test("constrain w/ min max",function(){
+		var min = new Vec2D(10,10);
+		var max = new Vec2D(60,60);
+		var constrained2 = vec2.constrain(min,max);
+		var constrained1 = vec1.constrain(min,max);
+		ok(constrained2.x == 60 && constrained2.y == 60 && constrained1.x == 10 && constrained1.y == 10, constrained2 + ", "+constrained1);
+	});
+	
+	test("copy",function(){
+		ok(vec1 !== vec1.copy(), "not equal objects");
+	});
+	
+	test("cross",function(){
+		var vec = new Vec2D(100,100);
+		var cross = vec.cross(new Vec2D(0,10));
+		ok(cross > 0, cross);
+	});
+	
+	test("distanceTo(v)",function(){
+		var distance = vec2.distanceTo(vec1);
+		ok(distance > 0,vec2+".distanceTo("+vec1+") = "+distance);
+	});
+	
+	test("equalsWithTolerance",function(){
+		expect(2);
+		equal(vec1.equalsWithTolerance(new Vec2D(5,5),10),true, "scenario 1 within threshold");
+		equal(vec1.equalsWithTolerance(vec2,10), false, "scenario 2 not within threshold");
+	});
+	
+	test("getComponent",function(){
+		expect(2);
+		equal(vec1.getComponent(1),vec1.y,"used '1' to get y");
+		equal(vec1.getComponent(Vec2D.Axis.Y), vec1.y, "used Vec2D.Axis.Y to get y");
+	});
+	
+	test("interpolateTo",function(){
+		var halfBetween = vec1.interpolateTo(vec2,0.5);
+		var sigBetween = vec1.interpolateTo(vec2,0.35, new SigmoidInterpolation());
+		expect(2);
+		ok(!halfBetween.isZeroVector(), "linear, without interpolator: "+halfBetween );
+		ok(!sigBetween.isZeroVector(), " sigmoid interpolator passed in: " +sigBetween);
+	});
+	
+	test("interpolateToSelf",function(){
+		var vec = new Vec2D(100,70)
+		var vecb = new Vec2D(50,50);
+		var vecb2 = vecb.interpolateToSelf(vec,0.3);
+		var vecc = new Vec2D(50,50);
+		var vecc2 = vecc.interpolateToSelf(vec,0.3,new SigmoidInterpolation());
+		expect(2);
+		equal(vecb, vecb2, "linear, without interpolator: "+vecb );
+		equal(vecc,vecc2, " sigmoid interpolator passed in: " +vecc);
+	});
+	
+	test("isInRectangle(rect)", function(){
+		var vec = new Vec2D();
+		var rect = new Rect(-10,-10,20,20);
+		var rect2 = new Rect(10,10,20,20);
+		expect(2);
+		equal(vec.isInRectangle(rect), true, vec + " is inside "+rect);
+		equal(vec.isInRectangle(rect2), false, vec + "is not inside " + rect);
+	});
+	
+	test("isInTriangle(a,b,c)",function(){
+		var v = new Vec2D();
+		var tri1 = new Triangle2D(new Vec2D(-1,1), new Vec2D(0,-1), new Vec2D(1,1));
+		var tri2 = new Triangle2D(new Vec2D(1,1), new Vec2D(2,25), new Vec2D(3,40));
+		expect(2);
+		equal(v.isInTriangle(tri1.a,tri1.b,tri1.c),true,v+ " is in " + tri1 + " vertices");
+		equal(v.isInTriangle(tri2.a,tri2.b,tri2.c),false,v + " isn't in " + tri2+ " vertices");
+	});
+	
+	test("isMajorAxis(tolerance)",function(){
+		var vec = new Vec2D();
+		var isMajorAxis = vec.isMajorAxis(0.5);
+		ok( isMajorAxis  == false, isMajorAxis);
+	});
+	
+	test("jitter(x,y) jitter(vec) jitter({x,y})",function(){
+		var vec = new Vec2D();
+		var jitVec = new Vec2D(1,1);
+		vec.jitter(jitVec.x,jitVec.y) 
+		expect(3);
+		ok(vec.x != 0 && vec.y != 0, vec + " jitter amount: "+jitVec);
+		vec.clear();
+		vec.jitter(jitVec);
+		ok(vec.x != 0 && vec.y != 0, vec + " jitter amount: "+jitVec);
+		vec.clear();
+		vec.jitter({x: jitVec.x, y: jitVec.y});
+		ok(vec.x != 0 && vec.y != 0, vec + " jitter amount: "+jitVec);
+	});
+	
+	test("limit(lim)",function(){
+		var vec = new Vec2D(3,3);
+		var vecCopy = vec.copy();
+		expect(2);
+		equal(vecCopy.equals(vec.limit(10)), true, vec +" limit not needed");
+		equal(vec.limit(2).equals(vecCopy.normalize().scaleSelf(2)), true, vec + " limited and changed");
+	});
+	
+	
+	test("positiveHeading",function(){
+		var vec = new Vec2D(20,20);
+		ok(vec.positiveHeading() !== undefined, vec.positiveHeading());
+	});
+	
+	test("reflect(normal)",function(){
+		var vec = new Vec2D(2,2);
+		var normal = new Vec2D(10,10);
+		ok(vec.reflect(normal) !== undefined, vec.reflect(normal));
+	});
+	
+	test("rotate(Math.PI/2)",function(){
+		var vec = new Vec2D(10,10);
+		var rotated = vec.rotate(Math.PI/2);
+		expect(1);
+		equal(rotated.equals(new Vec2D(-10,10)),true, rotated);
+	});
+	
+	test("setComponent(id,val)",function(){
+		var vec = new Vec2D();
+		expect(2);
+		equal(new Vec2D(10,0).equals(vec.setComponent(0,10)), true, "set x, using '0' as id component to 10");
+		equal(new Vec2D(10,0).equals(vec.setComponent(Vec2D.Axis.X,10)), true, "sex x, using Vec2D.Axis.X");
+	});
+	
+	test("signum()", function(){
+		var vec0 = new Vec2D().signum();
+		var vec1 = new Vec2D(10,10).signum();
+		var vec2 = new Vec2D(-10,10).signum();
+		var vec3 = new Vec2D(-10,-10).signum();
+		expect(4);
+		ok(vec0.equals(new Vec2D()), vec0);
+		ok(vec1.equals(new Vec2D(1,1)), vec1);
+		ok(vec2.equals(new Vec2D(-1,1)), vec2);
+		ok(vec3.equals(new Vec2D(-1,-1)), vec3);
+	});
+	
+	test("tangentNormalOfEllipse(ellipseOrigin,ellipseRadius)", function(){
+		var vec = new Vec2D();
+		var eO = new Vec2D();
+		var eR = new Vec2D(100,100);	
+		var tangent = vec.tangentNormalOfEllipse(eO,eR);	
+		ok( tangent !== undefined, tangent );
+	});
+	
+	var vec = new Vec2D(Math.PI,100);
+	var vecCopy = vec.copy();
+	test("toCartesian()",function(){
+		ok(vec.toCartesian() !== undefined, vecCopy + " toCartesian: "+vec);
+	});
+	/*test("toPolar()", function(){
+		ok(vec.toPolar().equals(vecCopy), vecCopy + " toPolar: " + vec);
+	});*/
+
+	/*var x = Math.random();
+	var y = Math.random();
+	test("Math.max",function(){
+		var max = Math.max(x,y);
+		ok(true);
+	});
+	test("toxi.MathUtils.max",function(){
+		var max = toxi.MathUtils.max(x,y);
+		ok(true);
+	});*/
+	
+	</script>
+</body>
+</html>
