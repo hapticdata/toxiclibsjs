@@ -45,6 +45,8 @@ pkg('physics2d', t.physics2d, ['behaviors','constraints']);
 pkg('physics2d.behaviors', t.physics2d.behaviors );
 pkg('physics2d.constraint', t.physics2d.constraints );
 pkg('processing', t.processing);
+pkg('sim.automata', t.sim.automata );
+pkg('sim.erosion', t.sim.erosion );
 pkg('THREE', t.THREE);
 pkg('utils', t.utils, ['datatypes']);
 pkg('utils.datatypes', t.utils.datatypes);
