@@ -1,4 +1,4 @@
-//v0.1.2 toxiclibs.js (http://haptic-data.com/toxiclibsjs)
+//v0.1.3 toxiclibs.js (http://haptic-data.com/toxiclibsjs)
 var toxi = {};
 (function(){
 
@@ -536,6 +536,11 @@ var ifUndefinedElse = function(_if,_else){
 };
 
 module.exports.extend = function(childClass,superClass){
+	if(typeof childClass !== 'function'){
+		throw Error("childClass was not function, possible circular: ", childClass);
+	} else if( typeof superClass !== 'function'){
+		throw Error("superClass was not function, possible circular: ", superClass);
+	}
 	childClass.prototype = new superClass();
 	childClass.constructor = childClass;
 	childClass.prototype.parent = superClass.prototype;
@@ -692,1522 +697,1523 @@ module.exports.Iterator = Iterator;
 
 });
 
-define('toxi/geom/Vec3D',["require", "exports", "module", "./Vec2D","../math/mathUtils", "../internals"], function(require, exports, module) {
+define('toxi/geom/vectors',[
+	"require",
+	"exports",
+	"module",
+	"../math/mathUtils",
+	"../internals",
 
-var internals = require('../internals'),
-	Vec2D = require('./Vec2D'),
-	AABB = require('./AABB'),
-	mathUtils = require('../math/mathUtils');
+], function(require, exports, module) {
 
+	var	mathUtils = require('../math/mathUtils');
+	var internals = require('../internals');
 
-/**
- * @member toxi
- * @class Creates a new vector with the given coordinates. Coordinates will default to zero
- * @param {Number} x the x
- * @param {Number} y the y
- * @param {Number} z the z
- */
-var Vec3D = function(x, y, z){
-	if( internals.tests.hasXYZ( x ) ){
-		this.x = x.x;
-		this.y = x.y;
-		this.z = x.z;
-	} else if(x === undefined){ //if none or all were passed
-		this.x = 0.0;
-		this.y = 0.0;
-		this.z = 0.0;
-	} else {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-};
-	
-Vec3D.prototype = {
-	
-	abs: function(){
-		this.x = Math.abs(this.x);
-		this.y = Math.abs(this.y);
-		this.z = Math.abs(this.z);
-		return this;
-	},
-	
-	add: function(a,b,c){
-		if( internals.tests.hasXYZ( a ) ){
-			return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
-		}
-		return new Vec3D(this.x+a,this.y+b,this.z+c);
-		
-	},
-	/**
-	 * Adds vector {a,b,c} and overrides coordinates with result.
-	 * 
-	 * @param a
-	 *            X coordinate
-	 * @param b
-	 *            Y coordinate
-	 * @param c
-	 *            Z coordinate
-	 * @return itself
-	 */
-	addSelf: function(a,b,c){
-		if(a !== undefined && b!== undefined && c !== undefined){
-			this.x += a;
-			this.y += b;
-			this.z += c;
-		} else {
-			this.x += a.x;
-			this.y += a.y;
-			this.z += a.z;
-		}
-		return this;
-	},
-	
-	angleBetween: function(vec, faceNormalizeBool){
-		var theta;
-		if(faceNormalizeBool){
-			theta = this.getNormalized().dot(vec.getNormalized());
-		} else {
-			theta = this.dot(vec);
-		}
-		return Math.acos(theta);
-	},
-	
-	
-	clear: function(){
-		this.x = this.y = this.z = 0;
-		return this;
-	},
-	
-	compareTo: function(vec){
-		if(this.x == vec.x && this.y == vec.y && this.z == vec.z){
-			return 0;
-		}
-		return (this.magSquared() - vec.magSqaured());
-	},
-	/**
-	 * Forcefully fits the vector in the given AABB specified by the 2 given
-	 * points.
-	 * 
-	 * @param box_or_min
-	 *		either the AABB box by itself, or your min Vec3D with accompanying max
-	 * @param max
-	 * @return itself
-	 */
-	constrain: function(box_or_min, max){
-		var min;
-		if( internals.tests.isAABB( box_or_min ) ){
-			max = box_or_min.getMax();
-			min = box_or_min.getMin();
-		} else {
-			min = box_or_min;
-		}
-		this.x = mathUtils.clip(this.x, min.x, max.x);
-		this.y = mathUtils.clip(this.y, min.y, max.y);
-		this.z = mathUtils.clip(this.z, min.z, max.z);
-	   return this;
-	},
-	
-	copy: function(){
-		return new Vec3D(this);
-	},
-	
-	cross: function(vec){
-		return new Vec3D(this.y*vec.z - vec.y * this.z, this.z * vec.x - vec.z * this.x,this.x * vec.y - vec.x * this.y);
-	},
-	
-	crossInto: function(vec, vecResult){
-		var vx = vec.x;
-		var vy = vec.y;
-		var vz = vec.z;
-		result.x = this.y * vz - vy * this.z;
-		result.y = this.z * vx-vz * this.x;
-		result.z = this.x * vy - vx * this.y;
-		return result;
-	},
-	/**
-	 * Calculates cross-product with vector v. The resulting vector is
-	 * perpendicular to both the current and supplied vector and overrides the
-	 * current.
-	 * 
-	 * @param v
-	 *            the v
-	 * 
-	 * @return itself
-	 */
-	crossSelf: function(vec){
-		var cx = this.y * vec.z - vec.y * this.z;
-		var cy = this.z * vec.x - vec.z * this.x;
-		this.z = this.x * vec.y - vec.x * this.y;
-		this.y = cy;
-		this.x = cx;
-		return this;
-	},
-	
-	distanceTo: function(vec){
-		if(vec !== undefined){
-			var dx = this.x - vec.x;
-			var dy = this.y - vec.y;
-			var dz = this.z - vec.z;
-			return Math.sqrt(dx * dx + dy * dy + dz * dz);
-		}
-		return NaN;
-	},
-	
-	distanceToSquared: function(vec){
-		if(vec !== undefined){
-			var dx = this.x - vec.x;
-			var dy = this.y - vec.y;
-			var dz = this.z - vec.z;
-			return dx * dx + dy*dy + dz*dz;
-		}
-		return NaN;
-	},
-	
-	dot: function(vec){
-		return this.x * vec.x + this.y * vec.y + this.z * vec.z;
-	},
-	
-	equals: function(vec){
-		if( internals.tests.hasXYZ( vec ) ){
-			return this.x == vec.x && this.y == vec.y && this.z == vec.z;
-		}
-		return false;
-	},
-	
-	equalsWithTolerance: function(vec,tolerance){
-		if(Math.abs(this.x-vec.x) < tolerance){
-			if(Math.abs(this.y - vec.y) < tolerance){
-				if(Math.abs(this.z - vec.z) < tolerance){
-					return true;
-				}
-			}
-		}
-		return false;
-	},
-	
-	floor: function(){
-		this.x = Math.floor(this.x);
-		this.y = Math.floor(this.y);
-		this.z = Math.floor(this.z);
-		return this;
-	},
-	/**
-	 * Replaces the vector components with the fractional part of their current
-	 * values.
-	 * 
-	 * @return itself
-	 */
-	frac: function(){
-		this.x -= Math.floor(this.x);
-		this.y -= Math.floor(this.y);
-		this.z -= Math.floor(this.z);
-		return this;
-	},
-	
-	getAbs: function(){
-		return new Vec3D(this).abs();
-	},
-	
-	getComponent: function(id){
-		if(typeof(id) == 'number'){
-			if(id === Vec3D.Axis.X){
-				id = 0; 
-			} else if(id === Vec3D.Axis.Y){
-				id = 1;
-			} else {
-				id = 2;
-			}
-		}
-		switch(id){
-			case 0:
-			return this.x;
-			case 1:
-			return this.y;
-			case 2:
-			return this.z;
-		}
-	},
-	
-	getConstrained: function(box){
-		return new Vec3D(this).constrain(box);
-	},
-	
-	getFloored: function(){
-		return new Vec3D(this).floor();
-	},
-	
-	getFrac: function(){
-		return new Vec3D(this).frac();
-	},
-	
-	getInverted: function(){
-		return new Vec3D(-this.x,-this.y,-this.z);
-	},
-	
-	getLimited: function(limit){
-		if(this.magSquared() > limit * limit){
-			return this.getNormalizedTo(limit);
-		}
-		return new Vec3D(this);
-	},
-	
-	getNormalized: function(){
-		return new Vec3D(this).normalize();
-	},
-	
-	getNormalizedTo: function(length){
-		return new Vec3D(this).normalizeTo(length);
-	},
-	
-	getReciprocal: function(){
-		return this.copy().reciprocal();
-	},
-	
-	getReflected: function(normal){
-		return this.copy().reflect(normal);
-	},
-	
-	getRotatedAroundAxis: function(vec_axis,theta){
-		return new Vec3D(this).rotateAroundAxis(vec_axis,theta);
-	},
-	
-	getRotatedX: function(theta){
-		return new Vec3D(this).rotateX(theta);
-	},
-	
-	getRotatedY: function(theta){
-		return new Vec3D(this).rotateY(theta);
-	},
-	
-	getRotatedZ: function(theta){
-		return new Vec3D(this).rotateZ(theta);
-	},
-	
-	getSignum: function(){
-		return new Vec3D(this).signum();
-	},
-	
-	headingXY: function(){
-		return Math.atan2(this.y,this.x);
-	},
-	
-	headingXZ: function(){
-		return Math.atan2(this.z,this.x);
-	},
-	
-	headingYZ: function(){
-		return Math.atan2(this.y,this.z);
-	},
-	
-	immutable: function(){
-		return this; //cant make read-only in javascript, implementing to avoid error
-	},
-	
-	interpolateTo: function(v,f,s) {
-		if(s === undefined){
-			return new Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - this.z)*f);
-		}
-		return new Vec3D(s.interpolate(this.y,v.y,f),s.interpolate(this.y,v.y,f),s.interpolate(this.z,v.z,f));
-		
-	},
-	
-	interpolateToSelf: function(v,f,s){
-		if(s === undefined){
-			this.x += (v.x-this.x)*f;
-			this.y += (v.y-this.y)*f;
-			this.z += (v.z-this.z)*f;
-		} else {
-			this.x = s.interpolate(this.x,v.x,f);
-			this.y = s.interpolate(this.y,v.y,f);
-			this.z = s.interpolate(this.z,v.z,f);
-		}
-		return this;
-	},
-	
-	
-	
-	invert: function(){
-		this.x *= -1;
-		this.y *= -1;
-		this.z *= -1;
-		return this;
-	},
-	
-	isInAABB: function(box_or_origin, boxExtent){
-		if(boxExtent) {
-			var w = boxExtent.x;
-			if(this.x < box_or_origin.x - w || this.x > box_or_origin.x + w){
-				return false;
-			}
-			w = boxExtent.y;
-			if(this.y < box_or_origin.y - w || this.y > box_or_origin.y + w){
-				return false;
-			}
-			w = boxExtent.y;
-			if(this.z < box_or_origin.z - w || this.y > box_or_origin.z + w){
-				return false;
-			}
-		}
-		return true;	
-	},
-	
-	isMajorAxis: function(tol){
-		var ax = mathUtils.abs(this.x);
-		var ay = mathUtils.abs(this.y);
-		var az = mathUtils.abs(this.z);
-		var itol = 1 - tol;
-		if (ax > itol) {
-			if (ay < tol) {
-				return (az < tol);
-			}
-		} else if (ay > itol) {
-		   if (ax < tol) {
-			   return (az < tol);
-		   }
-	   } else if (az > itol) {
-		   if (ax < tol) {
-			   return (ay < tol);
-		   }
-	   }
-	   return false;
-	},
-
-	isZeroVector: function(){
-		return Math.abs(this.x) < mathUtils.EPS && Math.abs(this.y) < mathUtils.EPS && mathUtils.abs(this.z) < mathUtils.EPS;
-	},
-  
-	/**
-	 * Add random jitter to the vector in the range -j ... +j using the default
-	 * {@link Random} generator of {@link MathUtils}.
-	 * 
-	 * @param j
-	 *            the j
-	 * 
-	 * @return the vec3 d
-	 */
-	jitter: function(a,b,c){
-		if(b === undefined || c === undefined){
-			b = c = a;
-		}
-		this.x += mathUtils.normalizedRandom()*a;
-		this.y += mathUtils.normalizedRandom()*b;
-		this.z += mathUtils.normalizedRandom()*c;
-		return this;
-	},
-	
-	limit: function(lim){
-		if(this.magSquared() > lim * lim){
-			return this.normalize().scaleSelf(lim);
-		}
-		return this;
-	},
-	
-	magnitude: function(){
-		return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
-	},
-	
-	magSquared: function(){
-		return this.x*this.x+this.y*this.y+this.z*this.z;
-	},
-	
-	maxSelf: function(vec){
-		this.x = Math.max(this.x,vec.x);
-		this.y = Math.max(this.y,vec.y);
-		this.z = Math.max(this.z,vec.z);
-		return this;
-	},
-	
-	minSelf: function(vec){
-		this.x = Math.min(this.x,vec.x);
-		this.y = Math.min(this.y,vec.y);
-		this.z = Math.min(this.z,vec.z);
-		return this;
-	},
-	
-	modSelf: function(basex,basey,basez){
-		if(basey === undefined || basez === undefined){
-			basey = basez = basex;
-		}
-		this.x %= basex;
-		this.y %= basey;
-		this.z %= basez;
-		return this;
-	},
-	
-	
-	normalize: function(){
-		var mag = Math.sqrt(this.x*this.x + this.y * this.y + this.z * this.z);
-		if(mag > 0) {
-			mag = 1.0 / mag;
-			this.x *= mag;
-			this.y *= mag;
-			this.z *= mag;
-		}
-		return this;
-	},
-	
-	normalizeTo: function(length){
-		var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
-		if(mag>0){
-			mag = length / mag;
-			this.x *= mag;
-			this.y *= mag;
-			this.z *= mag;
-		}
-		return this;
-	},
-	
-	reciprocal: function(){
-		this.x = 1.0 / this.x;
-		this.y = 1.0 / this.y;
-		this.z = 1.0 / this.z;
-		return this;
-	},
-	
-	reflect: function(normal){
-		return this.set(normal.scale(this.dot(normal)*2).subSelf(this));
-	},
-	/**
-	 * Rotates the vector around the giving axis.
-	 * 
-	 * @param axis
-	 *            rotation axis vector
-	 * @param theta
-	 *            rotation angle (in radians)
-	 * 
-	 * @return itself
-	 */
-	rotateAroundAxis: function(vec_axis,theta){
-		var ax = vec_axis.x,
-			ay = vec_axis.y,
-			az = vec_axis.z,
-			ux = ax * this.x,
-			uy = ax * this.y,
-			uz = ax * this.z,
-			vx = ay * this.x,
-			vy = ay * this.y,
-			vz = ay * this.z,
-			wx = az * this.x,
-			wy = az * this.y,
-			wz = az * this.z;
-			si = Math.sin(theta);
-			co = Math.cos(theta);
-		var xx = (ax * (ux + vy + wz) + (this.x * (ay * ay + az * az) - ax * (vy + wz)) * co + (-wy + vz) * si);
-		var yy = (ay * (ux + vy + wz) + (this.y * (ax * ax + az * az) - ay * (ux + wz)) * co + (wx - uz) * si);
-		var zz = (az * (ux + vy + wz) + (this.z * (ax * ax + ay * ay) - az * (ux + vy)) * co + (-vx + uy) * si);
-		this.x = xx;
-		this.y = yy;
-		this.z = zz;
-		return this;
-	},
-	/**
-	 * Rotates the vector by the given angle around the X axis.
-	 * 
-	 * @param theta
-	 *            the theta
-	 * 
-	 * @return itself
-	 */
-	rotateX: function(theta){
-		var co = Math.cos(theta);
-		var si = Math.sin(theta);
-		var zz = co *this.z - si * this.y;
-		this.y = si * this.z + co * this.y;
-		this.z = zz;
-		return this;
-	},
-	/**
-	 * Rotates the vector by the given angle around the Y axis.
-	 * 
-	 * @param theta
-	 *            the theta
-	 * 
-	 * @return itself
-	 */
-   rotateY:function(theta) {
-		var co = Math.cos(theta);
-		var si = Math.sin(theta);
-		var xx = co * this.x - si * this.z;
-		this.z = si * this.x + co * this.z;
-		this.x = xx;
-		return this;
-	},
+	var hasXY = internals.tests.hasXY;
+	var isRect = internals.tests.isRect;
 
 	/**
-	 * Rotates the vector by the given angle around the Z axis.
-	 * 
-	 * @param theta
-	 *            the theta
-	 * 
-	 * @return itself
+	 @member toxi
+	 @class a two-dimensional vector class
 	 */
-	rotateZ:function(theta) {
-		var co = Math.cos(theta);
-		var si = Math.sin(theta);
-		var xx = co * this.x - si * this.y;
-		this.y = si * this.x + co * this.y;
-		this.x = xx;
-		return this;
-	},
-
-	/**
-	 * Rounds the vector to the closest major axis. Assumes the vector is
-	 * normalized.
-	 * 
-	 * @return itself
-	 */
-	 roundToAxis:function() {
-		if (Math.abs(this.x) < 0.5) {
-			this.x = 0;
+	var	Vec2D = function(a,b){
+		if( hasXY( a ) ){
+			b = a.y;
+			a = a.x;
 		} else {
-			this.x = this.x < 0 ? -1 : 1;
-			this.y = this.z = 0;
-		}
-		if (Math.abs(this.y) < 0.5) {
-			this.y = 0;
-		} else {
-			this.y = this.y < 0 ? -1 : 1;
-			this.x = this.z = 0;
-		}
-		if (Math.abs(this.z) < 0.5) {
-			this.z = 0;
-		} else {
-			this.z = this.z < 0 ? -1 : 1;
-			this.x = this.y = 0;
-		}
-		return this;
-	},
-
-	scale:function(a,b,c) {
-		if( internals.tests.hasXYZ( a ) ) { //if it was a vec3d that was passed
-			return new Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
-		}
-		else if(b === undefined || c === undefined) { //if only one float was passed
-			b = c = a;
-		}
-		return new Vec3D(this.x * a, this.y * b, this.z * c);
-	},
-	
-	scaleSelf: function(a,b,c) {
-		if( internals.tests.hasXYZ( a ) ){
-			this.x *= a.x;
-			this.y *= a.y;
-			this.z *= a.z;
-			return this;
-		} else if(b === undefined || c === undefined) {
-			b = c = a;
-		}
-		this.x *= a;
-		this.y *= b;
-		this.z *= c;
-		return this;
-	},
-	
-	set: function(a,b,c){
-		if( internals.tests.hasXYZ( a ) )
-		{
-			this.x = a.x;
-			this.y = a.y;
-			this.z = a.z;
-			return this;
-		} else if(b === undefined || c === undefined) {
-			b = c = a;
+			if(a === undefined)a = 0;
+			if(b === undefined)b = 0;
 		}
 		this.x = a;
 		this.y = b;
-		this.z = c;
-		return this;
-	},
-	
-	setXY: function(v){
-		this.x = v.x;
-		this.y = v.y;
-		return this;
-	},
-	
-	shuffle:function(nIterations){
-		var t;
-		for(var i=0;i<nIterations;i++) {
-			switch(Math.floor(Math.random()*3)){
+	};
+
+	Vec2D.Axis = {
+		X: {
+			getVector: function(){ return Vec2D.X_AXIS; },
+			toString: function(){ return "Vec2D.Axis.X"; }
+		},
+		Y: {
+			getVector: function(){ return Vec2D.Y_AXIS; },
+			toString: function(){ return "Vec2D.Axis.Y"; }
+		}
+	};
+
+	//private, 
+	var _getXY = function(a,b) {
+		if( hasXY( a ) ){
+			b = a.y;
+			a = a.x;
+		}
+		else {
+			if(a !== undefined && b === undefined){
+				b = a;
+			}
+			else if(a === undefined){ a = 0; }
+			else if(b === undefined){ b = 0; }
+		}
+		return {x: a, y: b};
+	};
+	//public
+	Vec2D.prototype = {
+
+		abs: function() {
+	        this.x = Math.abs(this.x);
+	        this.y = Math.abs(this.y);
+	        return this;
+	    },
+
+	    add: function(a, b) {
+			var v  = new Vec2D(a,b);
+			v.x += this.x;
+			v.y += this.y;
+	        return v;
+	    },
+	    
+	    /**
+	     * Adds vector {a,b,c} and overrides coordinates with result.
+	     * 
+	     * @param a
+	     *            X coordinate
+	     * @param b
+	     *            Y coordinate
+	     * @return itself
+	     */
+	    addSelf: function(a,b) {
+			var v = _getXY(a,b);
+	        this.x += v.x;
+	        this.y += v.y;
+	        return this;
+	    },
+
+		angleBetween: function(v, faceNormalize) {
+			if(faceNormalize === undefined){
+				var dot = this.dot(v);
+				return Math.acos(this.dot(v));
+			}
+	        var theta = (faceNormalize) ? this.getNormalized().dot(v.getNormalized()) : this.dot(v);
+	        return Math.acos(theta);
+	    },
+
+		//bisect() is in Vec2D_post.js
+
+	    /**
+	     * Sets all vector components to 0.
+	     * 
+	     * @return itself
+	     */
+	    clear: function() {
+	        this.x = this.y = 0;
+	        return this;
+	    },
+		
+		compareTo: function(vec) {
+	        if (this.x == vec.x && this.y == vec.y) {
+	            return 0;
+	        }
+	        return this.magSquared() - vec.magSquared();
+	    },
+
+		/**
+	     * Forcefully fits the vector in the given rectangle.
+	     * 
+	     * @param a
+	     *		either a Rectangle by itself or the Vec2D min
+		 * @param b
+		 *		Vec2D max
+	     * @return itself
+	     */
+	    constrain: function(a,b) {
+			if( hasXY( a ) && hasXY( b ) ){
+				this.x = mathUtils.clip(this.x, a.x, b.x);
+		        this.y = mathUtils.clip(this.y, a.y, b.y);
+			} else if( isRect( a ) ){
+	            this.x = mathUtils.clip(this.x, a.x, a.x + a.width);
+				this.y = mathUtils.clip(this.y, a.y, a.y + a.height);
+			}
+	        return this;
+	    },
+		
+		copy: function() {
+	        return new Vec2D(this);
+	    },
+
+	    cross: function(v) {
+	        return (this.x * v.y) - (this.y * v.x);
+	    },
+
+	    distanceTo: function(v) {
+	        if (v !== undefined) {
+	            var dx = this.x - v.x;
+	            var dy = this.y - v.y;
+	            return Math.sqrt(dx * dx + dy * dy);
+	        } else {
+	            return NaN;
+	        }
+	    },
+
+	    distanceToSquared: function(v) {
+	        if (v !== undefined) {
+	            var dx = this.x - v.x;
+	            var dy = this.y - v.y;
+	            return dx * dx + dy * dy;
+	        } else {
+	            return NaN;
+	        }
+	    },
+
+		dot: function(v) {
+	        return this.x * v.x + this.y * v.y;
+	    },
+
+		equals: function(obj) {
+	        if ( hasXY( obj ) ) {
+	            return this.x == obj.x && this.y == obj.y;
+	        }
+	        return false;
+	    },
+
+		equalsWithTolerance: function(v, tolerance) {
+	        if (mathUtils.abs(this.x - v.x) < tolerance) {
+	            if (mathUtils.abs(this.y - v.y) < tolerance) {
+	                return true;
+	            }
+	        }
+	        return false;
+	    },
+
+		floor: function() {
+	        this.x = mathUtils.floor(this.x);
+	        this.y = mathUtils.floor(this.y);
+	        return this;
+	    },
+
+		/**
+	     * Replaces the vector components with the fractional part of their current
+	     * values
+	     * 
+	     * @return itself
+	     */
+	    frac: function() {
+	        this.x -= mathUtils.floor(this.x);
+	        this.y -= mathUtils.floor(this.y);
+	        return this;
+	    },
+
+		getAbs: function() {
+	        return new Vec2D(this).abs();
+	    },
+
+		getComponent: function(id) {
+			if(typeof id == 'number')
+			{			
+				id = (id === 0) ? Vec2D.Axis.X : Vec2D.Axis.Y;
+			}
+			if(id == Vec2D.Axis.X){
+				return this.x;
+			} else if(id == Vec2D.Axis.Y){
+				return this.y;
+			}
+			return 0;
+	    },
+
+		getConstrained: function(r) {
+	        return new Vec2D(this).constrain(r);
+	    },
+
+	    getFloored: function() {
+	        return new Vec2D(this).floor();
+	    },
+
+	    getFrac: function() {
+	        return new Vec2D(this).frac();
+	    },
+
+	    getInverted: function() {
+	        return new Vec2D(-this.x, -this.y);
+	    },
+
+	    getLimited: function(lim) {
+	        if (this.magSquared() > lim * lim) {
+	            return this.getNormalizedTo(lim);
+	        }
+	        return new Vec2D(this);
+	    },
+
+	    getNormalized: function() {
+	        return new Vec2D(this).normalize();
+	    },
+
+	    getNormalizedTo: function(len) {
+	        return new Vec2D(this).normalizeTo(len);
+	    },
+		 getPerpendicular: function() {
+	        return new Vec2D(this).perpendicular();
+	    },
+
+	    getReciprocal: function() {
+	        return new Vec2D(this).reciprocal();
+	    },
+
+	    getReflected: function(normal) {
+	        return new Vec2D(this).reflect(normal);
+	    },
+
+	    getRotated: function(theta) {
+	        return new Vec2D(this).rotate(theta);
+	    },
+
+	    getSignum: function() {
+	        return new Vec2D(this).signum();
+	    },
+		
+		heading: function() {
+	        return Math.atan2(this.y, this.x);
+	    },
+	    
+	    interpolateTo: function(v, f, s) {
+			if(s === undefined){
+				return new Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
+			} else
+			{
+				return new Vec2D(s.interpolate(this.x,v.x,f),s.interpolate(this.y,v.y,f));
+			}
+	    },
+
+	    /**
+	     * Interpolates the vector towards the given target vector, using linear
+	     * interpolation
+	     * 
+	     * @param v
+	     *            target vector
+	     * @param f
+	     *            interpolation factor (should be in the range 0..1)
+	     * @return itself, result overrides current vector
+	     */
+	    interpolateToSelf: function(v, f, s) {
+			if(s === undefined) {
+				this.x += (v.x - this.x) * f;
+				this.y += (v.y - this.y) * f;
+			} else {
+				this.x = s.interpolate(this.x,v.x,f);
+				this.y = s.interpolate(this.y,v.y,f);
+			}
+	        return this;
+	    },
+
+		invert: function() {
+	        this.x *= -1;
+	        this.y *= -1;
+	        return this;
+	    },
+
+		isInCircle: function(sO,sR) {
+	        var d = this.sub(sO).magSquared();
+	        return (d <= sR * sR);
+	    },
+
+	    isInRectangle: function(rect) {
+	        if (this.x < rect.x || this.x > rect.x + rect.width) {
+	            return false;
+	        }
+	        if (this.y < rect.y || this.y > rect.y + rect.height) {
+	            return false;
+	        }
+	        return true;
+	    },
+
+	    isInTriangle: function(a,b,c) {
+	        var v1 = this.sub(a).normalize();
+	        var v2 = this.sub(b).normalize();
+	        var v3 = this.sub(c).normalize();
+
+	        var total_angles = Math.acos(v1.dot(v2));
+	        total_angles += Math.acos(v2.dot(v3));
+	        total_angles += Math.acos(v3.dot(v1));
+
+	        return (Math.abs(total_angles - mathUtils.TWO_PI) <= 0.005);
+	    },
+
+		isMajorAxis: function(tol) {
+	        var ax = Math.abs(this.x);
+	        var ay = Math.abs(this.y);
+	        var itol = 1 - tol;
+	        if (ax > itol) {
+	            return (ay < tol);
+	        } else if (ay > itol) {
+	            return (ax < tol);
+	        }
+	        return false;
+	    },
+
+	    isZeroVector: function() {
+	        return Math.abs(this.x) < mathUtils.EPS && Math.abs(this.y) < mathUtils.EPS;
+	    },
+
+	    /**
+	     * Adds random jitter to the vector in the range -j ... +j using the default
+	     * {@link Random} generator of {@link MathUtils}.
+	     * 
+	     * @param a
+	     *            maximum x jitter or  Vec2D
+	     * @param b
+	     *            maximum y jitter or undefined
+	     * @return itself
+	     */
+	    jitter: function(a,b) {
+			var v = _getXY(a,b);
+			this.x += mathUtils.normalizedRandom() * v.x;
+	        this.y += mathUtils.normalizedRandom() * v.y;
+	        return this;
+	    },
+
+		limit: function(lim) {
+	        if (this.magSquared() > lim * lim) {
+	            return this.normalize().scaleSelf(lim);
+	        }
+	        return this;
+	    },
+
+	    magnitude: function() {
+	        return Math.sqrt(this.x * this.x + this.y * this.y);
+	    },
+
+	    magSquared: function() {
+	        return this.x * this.x + this.y * this.y;
+	    },
+
+		max: function(v) {
+	        return new Vec2D(mathUtils.max(this.x, v.x), mathUtils.max(this.y, v.y));
+	    },
+
+		maxSelf: function(v) {
+	        this.x = mathUtils.max(this.x, v.x);
+	        this.y = mathUtils.max(this.y, v.y);
+	        return this;
+	    },
+
+	    min: function(v) {
+	        return new Vec2D(mathUtils.min(this.x, v.x), mathUtils.min(this.y, v.y));
+	    },
+
+		minSelf: function(v) {
+	        this.x = mathUtils.min(this.x, v.x);
+	        this.y = mathUtils.min(this.y, v.y);
+	        return this;
+	    },
+
+	    /**
+	     * Normalizes the vector so that its magnitude = 1
+	     * 
+	     * @return itself
+	     */
+	    normalize: function() {
+	        var mag = this.x * this.x + this.y * this.y;
+	        if (mag > 0) {
+	            mag = 1.0 / Math.sqrt(mag);
+	            this.x *= mag;
+	            this.y *= mag;
+	        }
+	        return this;
+	    },
+
+	    /**
+	     * Normalizes the vector to the given length.
+	     * 
+	     * @param len
+	     *            desired length
+	     * @return itself
+	     */
+	    normalizeTo: function(len) {
+	        var mag = Math.sqrt(this.x * this.x + this.y * this.y);
+	        if (mag > 0) {
+	            mag = len / mag;
+	            this.x *= mag;
+	            this.y *= mag;
+	        }
+	        return this;
+	    },
+
+	    perpendicular: function() {
+	        var t = this.x;
+	        this.x = -this.y;
+	        this.y = t;
+	        return this;
+	    },
+	    
+	    positiveHeading: function() {
+			var dist = Math.sqrt(this.x * this.x + this.y * this.y);
+			if (this.y >= 0){
+				return Math.acos(this.x / dist);
+			}
+			return (Math.acos(-this.x / dist) + mathUtils.PI);
+	    },
+
+	    reciprocal: function() {
+	        this.x = 1.0 / this.x;
+	        this.y = 1.0 / this.y;
+	        return this;
+	    },
+
+		reflect: function(normal) {
+	        return this.set(normal.scale(this.dot(normal) * 2).subSelf(this));
+	    },
+
+	    /**
+	     * Rotates the vector by the given angle around the Z axis.
+	     * 
+	     * @param theta
+	     * @return itself
+	     */
+	    rotate: function(theta) {
+	        var co = Math.cos(theta);
+	        var si = Math.sin(theta);
+	        var xx = co * this.x - si * this.y;
+	        this.y = si * this.x + co * this.y;
+	        this.x = xx;
+	        return this;
+	    },
+
+		roundToAxis: function() {
+	        if (Math.abs(this.x) < 0.5) {
+	            this.x = 0;
+	        } else {
+	            this.x = this.x < 0 ? -1 : 1;
+	            this.y = 0;
+	        }
+	        if (Math.abs(this.y) < 0.5) {
+	            this.y = 0;
+	        } else {
+	            this.y = this.y < 0 ? -1 : 1;
+	            this.x = 0;
+	        }
+	        return this;
+	    },
+
+	    scale: function(a, b) {
+			var v = _getXY(a,b);
+	        return new Vec2D(this.x * v.x, this.y * v.y);
+	    },
+
+	    scaleSelf: function(a,b) {
+			var v = _getXY(a,b);
+	        this.x *= v.x;
+	        this.y *= v.y;
+	        return this;
+	    },
+
+		set: function(a,b){
+			var v = _getXY(a,b);
+			this.x = v.x;
+			this.y = v.y;
+			return this;
+		},
+		
+		setComponent: function(id, val) {
+			if(typeof id == 'number')
+			{			
+				id = (id === 0) ? Vec2D.Axis.X : Vec2D.Axis.Y;
+			}
+			if(id === Vec2D.Axis.X){
+				this.x = val;
+			} else if(id === Vec2D.Axis.Y){
+				this.y = val;
+			}
+			return this;
+		},
+		
+		/**
+	     * Replaces all vector components with the signum of their original values.
+	     * In other words if a components value was negative its new value will be
+	     * -1, if zero => 0, if positive => +1
+	     * 
+	     * @return itself
+	     */
+		signum: function() {
+	        this.x = (this.x < 0 ? -1 : this.x === 0 ? 0 : 1);
+	        this.y = (this.y < 0 ? -1 : this.y === 0 ? 0 : 1);
+	        return this;
+	    },
+
+		sub: function(a,b){
+			var v = _getXY(a,b);
+			return new Vec2D(this.x -v.x,this.y - v.y);
+		},
+		
+		/**
+	     * Subtracts vector {a,b,c} and overrides coordinates with result.
+	     * 
+	     * @param a
+	     *            X coordinate
+	     * @param b
+	     *            Y coordinate
+	     * @return itself
+	     */
+	    subSelf: function(a,b) {
+	        var v = _getXY(a,b);
+			this.x -= v.x;
+	        this.y -= v.y;
+	        return this;
+	    },
+
+		tangentNormalOfEllipse: function(eO,eR) {
+	        var p = this.sub(eO);
+
+	        var xr2 = eR.x * eR.x;
+	        var yr2 = eR.y * eR.y;
+
+	        return new Vec2D(p.x / xr2, p.y / yr2).normalize();
+	    },
+	    
+
+		//to3D** methods are in Vec2D_post.js
+		
+	    toArray: function() {
+	        return [this.x,this.y];
+	    },
+
+		toCartesian: function() {
+	        var xx = (this.x * Math.cos(this.y));
+	        this.y = (this.x * Math.sin(this.y));
+	        this.x = xx;
+	        return this;
+	    },
+
+		toPolar: function() {
+	        var r = Math.sqrt(this.x * this.x + this.y * this.y);
+	        this.y = Math.atan2(this.y, this.x);
+	        this.x = r;
+	        return this;
+	    },
+
+	    toString: function() {
+	        var s = "{x:"+this.x+", y:"+this.y+"}";
+	        return s;
+	    }
+		
+	};
+
+	//these requires are in the functions because of a circular dependency
+	Vec2D.prototype.bisect = function(b) {
+	    var Vec3D = require('./Vec3D');
+	    var diff = this.sub(b);
+	    var sum = this.add(b);
+	    var dot = diff.dot(sum);
+	    return new Vec3D(diff.x, diff.y, -dot / 2);
+	};
+
+	Vec2D.prototype.to3DXY = function() {
+	    var Vec3D = require('./Vec3D');
+	    return new Vec3D(this.x, this.y, 0);
+	};
+
+	Vec2D.prototype.to3DXZ = function() {
+	    var Vec3D = require('./Vec3D');
+	    return new Vec3D(this.x, 0, this.y);
+	};
+
+	Vec2D.prototype.to3DYZ = function() {
+	    var Vec3D = require('./Vec3D');
+	    return new Vec3D(0, this.x, this.y);
+	};
+
+	Vec2D.X_AXIS = new Vec2D(1,0); 
+	Vec2D.Y_AXIS = new Vec2D(0,1); 
+	Vec2D.ZERO = new Vec2D();
+	Vec2D.MIN_VALUE = new Vec2D(Number.MIN_VALUE,Number.MIN_VALUE);
+	Vec2D.MAX_VALUE = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
+	Vec2D.fromTheta = function(theta){
+		return new Vec2D(Math.cos(theta),Math.sin(theta));
+	};
+	Vec2D.max = function(a,b){
+		return new Vec2D(mathUtils.max(a.x,b.x), mathUtils.max(a.y,b.y));
+	};
+
+	Vec2D.min = function(a, b) {
+	    return new Vec2D(mathUtils.min(a.x, b.x), mathUtils.min(a.y, b.y));
+	};
+
+	Vec2D.randomVector = function(rnd){
+		var v = new Vec2D(Math.random()*2 - 1, Math.random() * 2 - 1);
+		return v.normalize();
+	};
+
+	/**
+	 * @member toxi
+	 * @class Creates a new vector with the given coordinates. Coordinates will default to zero
+	 * @param {Number} x the x
+	 * @param {Number} y the y
+	 * @param {Number} z the z
+	 */
+	var Vec3D = function(x, y, z){
+		if( internals.tests.hasXYZ( x ) ){
+			this.x = x.x;
+			this.y = x.y;
+			this.z = x.z;
+		} else if(x === undefined){ //if none or all were passed
+			this.x = 0.0;
+			this.y = 0.0;
+			this.z = 0.0;
+		} else {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+	};
+		
+	Vec3D.prototype = {
+		
+		abs: function(){
+			this.x = Math.abs(this.x);
+			this.y = Math.abs(this.y);
+			this.z = Math.abs(this.z);
+			return this;
+		},
+		
+		add: function(a,b,c){
+			if( internals.tests.hasXYZ( a ) ){
+				return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
+			}
+			return new Vec3D(this.x+a,this.y+b,this.z+c);
+			
+		},
+		/**
+		 * Adds vector {a,b,c} and overrides coordinates with result.
+		 * 
+		 * @param a
+		 *            X coordinate
+		 * @param b
+		 *            Y coordinate
+		 * @param c
+		 *            Z coordinate
+		 * @return itself
+		 */
+		addSelf: function(a,b,c){
+			if(a !== undefined && b!== undefined && c !== undefined){
+				this.x += a;
+				this.y += b;
+				this.z += c;
+			} else {
+				this.x += a.x;
+				this.y += a.y;
+				this.z += a.z;
+			}
+			return this;
+		},
+		
+		angleBetween: function(vec, faceNormalizeBool){
+			var theta;
+			if(faceNormalizeBool){
+				theta = this.getNormalized().dot(vec.getNormalized());
+			} else {
+				theta = this.dot(vec);
+			}
+			return Math.acos(theta);
+		},
+		
+		
+		clear: function(){
+			this.x = this.y = this.z = 0;
+			return this;
+		},
+		
+		compareTo: function(vec){
+			if(this.x == vec.x && this.y == vec.y && this.z == vec.z){
+				return 0;
+			}
+			return (this.magSquared() - vec.magSqaured());
+		},
+		/**
+		 * Forcefully fits the vector in the given AABB specified by the 2 given
+		 * points.
+		 * 
+		 * @param box_or_min
+		 *		either the AABB box by itself, or your min Vec3D with accompanying max
+		 * @param max
+		 * @return itself
+		 */
+		constrain: function(box_or_min, max){
+			var min;
+			if( internals.tests.isAABB( box_or_min ) ){
+				max = box_or_min.getMax();
+				min = box_or_min.getMin();
+			} else {
+				min = box_or_min;
+			}
+			this.x = mathUtils.clip(this.x, min.x, max.x);
+			this.y = mathUtils.clip(this.y, min.y, max.y);
+			this.z = mathUtils.clip(this.z, min.z, max.z);
+		   return this;
+		},
+		
+		copy: function(){
+			return new Vec3D(this);
+		},
+		
+		cross: function(vec){
+			return new Vec3D(this.y*vec.z - vec.y * this.z, this.z * vec.x - vec.z * this.x,this.x * vec.y - vec.x * this.y);
+		},
+		
+		crossInto: function(vec, vecResult){
+			var vx = vec.x;
+			var vy = vec.y;
+			var vz = vec.z;
+			result.x = this.y * vz - vy * this.z;
+			result.y = this.z * vx-vz * this.x;
+			result.z = this.x * vy - vx * this.y;
+			return result;
+		},
+		/**
+		 * Calculates cross-product with vector v. The resulting vector is
+		 * perpendicular to both the current and supplied vector and overrides the
+		 * current.
+		 * 
+		 * @param v
+		 *            the v
+		 * 
+		 * @return itself
+		 */
+		crossSelf: function(vec){
+			var cx = this.y * vec.z - vec.y * this.z;
+			var cy = this.z * vec.x - vec.z * this.x;
+			this.z = this.x * vec.y - vec.x * this.y;
+			this.y = cy;
+			this.x = cx;
+			return this;
+		},
+		
+		distanceTo: function(vec){
+			if(vec !== undefined){
+				var dx = this.x - vec.x;
+				var dy = this.y - vec.y;
+				var dz = this.z - vec.z;
+				return Math.sqrt(dx * dx + dy * dy + dz * dz);
+			}
+			return NaN;
+		},
+		
+		distanceToSquared: function(vec){
+			if(vec !== undefined){
+				var dx = this.x - vec.x;
+				var dy = this.y - vec.y;
+				var dz = this.z - vec.z;
+				return dx * dx + dy*dy + dz*dz;
+			}
+			return NaN;
+		},
+		
+		dot: function(vec){
+			return this.x * vec.x + this.y * vec.y + this.z * vec.z;
+		},
+		
+		equals: function(vec){
+			if( internals.tests.hasXYZ( vec ) ){
+				return this.x == vec.x && this.y == vec.y && this.z == vec.z;
+			}
+			return false;
+		},
+		
+		equalsWithTolerance: function(vec,tolerance){
+			if(Math.abs(this.x-vec.x) < tolerance){
+				if(Math.abs(this.y - vec.y) < tolerance){
+					if(Math.abs(this.z - vec.z) < tolerance){
+						return true;
+					}
+				}
+			}
+			return false;
+		},
+		
+		floor: function(){
+			this.x = Math.floor(this.x);
+			this.y = Math.floor(this.y);
+			this.z = Math.floor(this.z);
+			return this;
+		},
+		/**
+		 * Replaces the vector components with the fractional part of their current
+		 * values.
+		 * 
+		 * @return itself
+		 */
+		frac: function(){
+			this.x -= Math.floor(this.x);
+			this.y -= Math.floor(this.y);
+			this.z -= Math.floor(this.z);
+			return this;
+		},
+		
+		getAbs: function(){
+			return new Vec3D(this).abs();
+		},
+		
+		getComponent: function(id){
+			if(typeof(id) == 'number'){
+				if(id === Vec3D.Axis.X){
+					id = 0; 
+				} else if(id === Vec3D.Axis.Y){
+					id = 1;
+				} else {
+					id = 2;
+				}
+			}
+			switch(id){
 				case 0:
-				t = this.x;
-				this.x = this.y;
-				this.z = t;
-				break;
-				
+				return this.x;
 				case 1:
-				t = this.x;
-				this.x = this.z;
-				this.z = t;
-				break;
-				
+				return this.y;
 				case 2:
-				t = this.y;
-				this.y = this.z;
-				this.z = t;
-				break;
+				return this.z;
+			}
+		},
+		
+		getConstrained: function(box){
+			return new Vec3D(this).constrain(box);
+		},
+		
+		getFloored: function(){
+			return new Vec3D(this).floor();
+		},
+		
+		getFrac: function(){
+			return new Vec3D(this).frac();
+		},
+		
+		getInverted: function(){
+			return new Vec3D(-this.x,-this.y,-this.z);
+		},
+		
+		getLimited: function(limit){
+			if(this.magSquared() > limit * limit){
+				return this.getNormalizedTo(limit);
+			}
+			return new Vec3D(this);
+		},
+		
+		getNormalized: function(){
+			return new Vec3D(this).normalize();
+		},
+		
+		getNormalizedTo: function(length){
+			return new Vec3D(this).normalizeTo(length);
+		},
+		
+		getReciprocal: function(){
+			return this.copy().reciprocal();
+		},
+		
+		getReflected: function(normal){
+			return this.copy().reflect(normal);
+		},
+		
+		getRotatedAroundAxis: function(vec_axis,theta){
+			return new Vec3D(this).rotateAroundAxis(vec_axis,theta);
+		},
+		
+		getRotatedX: function(theta){
+			return new Vec3D(this).rotateX(theta);
+		},
+		
+		getRotatedY: function(theta){
+			return new Vec3D(this).rotateY(theta);
+		},
+		
+		getRotatedZ: function(theta){
+			return new Vec3D(this).rotateZ(theta);
+		},
+		
+		getSignum: function(){
+			return new Vec3D(this).signum();
+		},
+		
+		headingXY: function(){
+			return Math.atan2(this.y,this.x);
+		},
+		
+		headingXZ: function(){
+			return Math.atan2(this.z,this.x);
+		},
+		
+		headingYZ: function(){
+			return Math.atan2(this.y,this.z);
+		},
+		
+		immutable: function(){
+			return this; //cant make read-only in javascript, implementing to avoid error
+		},
+		
+		interpolateTo: function(v,f,s) {
+			if(s === undefined){
+				return new Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - this.z)*f);
+			}
+			return new Vec3D(s.interpolate(this.y,v.y,f),s.interpolate(this.y,v.y,f),s.interpolate(this.z,v.z,f));
+			
+		},
+		
+		interpolateToSelf: function(v,f,s){
+			if(s === undefined){
+				this.x += (v.x-this.x)*f;
+				this.y += (v.y-this.y)*f;
+				this.z += (v.z-this.z)*f;
+			} else {
+				this.x = s.interpolate(this.x,v.x,f);
+				this.y = s.interpolate(this.y,v.y,f);
+				this.z = s.interpolate(this.z,v.z,f);
+			}
+			return this;
+		},
+		
+		
+		
+		invert: function(){
+			this.x *= -1;
+			this.y *= -1;
+			this.z *= -1;
+			return this;
+		},
+		
+		isInAABB: function(box_or_origin, boxExtent){
+			if(boxExtent) {
+				var w = boxExtent.x;
+				if(this.x < box_or_origin.x - w || this.x > box_or_origin.x + w){
+					return false;
+				}
+				w = boxExtent.y;
+				if(this.y < box_or_origin.y - w || this.y > box_or_origin.y + w){
+					return false;
+				}
+				w = boxExtent.y;
+				if(this.z < box_or_origin.z - w || this.y > box_or_origin.z + w){
+					return false;
+				}
+			}
+			return true;	
+		},
+		
+		isMajorAxis: function(tol){
+			var ax = mathUtils.abs(this.x);
+			var ay = mathUtils.abs(this.y);
+			var az = mathUtils.abs(this.z);
+			var itol = 1 - tol;
+			if (ax > itol) {
+				if (ay < tol) {
+					return (az < tol);
+				}
+			} else if (ay > itol) {
+			   if (ax < tol) {
+				   return (az < tol);
+			   }
+		   } else if (az > itol) {
+			   if (ax < tol) {
+				   return (ay < tol);
+			   }
+		   }
+		   return false;
+		},
+
+		isZeroVector: function(){
+			return Math.abs(this.x) < mathUtils.EPS && Math.abs(this.y) < mathUtils.EPS && mathUtils.abs(this.z) < mathUtils.EPS;
+		},
+	  
+		/**
+		 * Add random jitter to the vector in the range -j ... +j using the default
+		 * {@link Random} generator of {@link MathUtils}.
+		 * 
+		 * @param j
+		 *            the j
+		 * 
+		 * @return the vec3 d
+		 */
+		jitter: function(a,b,c){
+			if(b === undefined || c === undefined){
+				b = c = a;
+			}
+			this.x += mathUtils.normalizedRandom()*a;
+			this.y += mathUtils.normalizedRandom()*b;
+			this.z += mathUtils.normalizedRandom()*c;
+			return this;
+		},
+		
+		limit: function(lim){
+			if(this.magSquared() > lim * lim){
+				return this.normalize().scaleSelf(lim);
+			}
+			return this;
+		},
+		
+		magnitude: function(){
+			return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+		},
+		
+		magSquared: function(){
+			return this.x*this.x+this.y*this.y+this.z*this.z;
+		},
+		
+		maxSelf: function(vec){
+			this.x = Math.max(this.x,vec.x);
+			this.y = Math.max(this.y,vec.y);
+			this.z = Math.max(this.z,vec.z);
+			return this;
+		},
+		
+		minSelf: function(vec){
+			this.x = Math.min(this.x,vec.x);
+			this.y = Math.min(this.y,vec.y);
+			this.z = Math.min(this.z,vec.z);
+			return this;
+		},
+		
+		modSelf: function(basex,basey,basez){
+			if(basey === undefined || basez === undefined){
+				basey = basez = basex;
+			}
+			this.x %= basex;
+			this.y %= basey;
+			this.z %= basez;
+			return this;
+		},
+		
+		
+		normalize: function(){
+			var mag = Math.sqrt(this.x*this.x + this.y * this.y + this.z * this.z);
+			if(mag > 0) {
+				mag = 1.0 / mag;
+				this.x *= mag;
+				this.y *= mag;
+				this.z *= mag;
+			}
+			return this;
+		},
+		
+		normalizeTo: function(length){
+			var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+			if(mag>0){
+				mag = length / mag;
+				this.x *= mag;
+				this.y *= mag;
+				this.z *= mag;
+			}
+			return this;
+		},
+		
+		reciprocal: function(){
+			this.x = 1.0 / this.x;
+			this.y = 1.0 / this.y;
+			this.z = 1.0 / this.z;
+			return this;
+		},
+		
+		reflect: function(normal){
+			return this.set(normal.scale(this.dot(normal)*2).subSelf(this));
+		},
+		/**
+		 * Rotates the vector around the giving axis.
+		 * 
+		 * @param axis
+		 *            rotation axis vector
+		 * @param theta
+		 *            rotation angle (in radians)
+		 * 
+		 * @return itself
+		 */
+		rotateAroundAxis: function(vec_axis,theta){
+			var ax = vec_axis.x,
+				ay = vec_axis.y,
+				az = vec_axis.z,
+				ux = ax * this.x,
+				uy = ax * this.y,
+				uz = ax * this.z,
+				vx = ay * this.x,
+				vy = ay * this.y,
+				vz = ay * this.z,
+				wx = az * this.x,
+				wy = az * this.y,
+				wz = az * this.z;
+				si = Math.sin(theta);
+				co = Math.cos(theta);
+			var xx = (ax * (ux + vy + wz) + (this.x * (ay * ay + az * az) - ax * (vy + wz)) * co + (-wy + vz) * si);
+			var yy = (ay * (ux + vy + wz) + (this.y * (ax * ax + az * az) - ay * (ux + wz)) * co + (wx - uz) * si);
+			var zz = (az * (ux + vy + wz) + (this.z * (ax * ax + ay * ay) - az * (ux + vy)) * co + (-vx + uy) * si);
+			this.x = xx;
+			this.y = yy;
+			this.z = zz;
+			return this;
+		},
+		/**
+		 * Rotates the vector by the given angle around the X axis.
+		 * 
+		 * @param theta
+		 *            the theta
+		 * 
+		 * @return itself
+		 */
+		rotateX: function(theta){
+			var co = Math.cos(theta);
+			var si = Math.sin(theta);
+			var zz = co *this.z - si * this.y;
+			this.y = si * this.z + co * this.y;
+			this.z = zz;
+			return this;
+		},
+		/**
+		 * Rotates the vector by the given angle around the Y axis.
+		 * 
+		 * @param theta
+		 *            the theta
+		 * 
+		 * @return itself
+		 */
+	   rotateY:function(theta) {
+			var co = Math.cos(theta);
+			var si = Math.sin(theta);
+			var xx = co * this.x - si * this.z;
+			this.z = si * this.x + co * this.z;
+			this.x = xx;
+			return this;
+		},
+
+		/**
+		 * Rotates the vector by the given angle around the Z axis.
+		 * 
+		 * @param theta
+		 *            the theta
+		 * 
+		 * @return itself
+		 */
+		rotateZ:function(theta) {
+			var co = Math.cos(theta);
+			var si = Math.sin(theta);
+			var xx = co * this.x - si * this.y;
+			this.y = si * this.x + co * this.y;
+			this.x = xx;
+			return this;
+		},
+
+		/**
+		 * Rounds the vector to the closest major axis. Assumes the vector is
+		 * normalized.
+		 * 
+		 * @return itself
+		 */
+		 roundToAxis:function() {
+			if (Math.abs(this.x) < 0.5) {
+				this.x = 0;
+			} else {
+				this.x = this.x < 0 ? -1 : 1;
+				this.y = this.z = 0;
+			}
+			if (Math.abs(this.y) < 0.5) {
+				this.y = 0;
+			} else {
+				this.y = this.y < 0 ? -1 : 1;
+				this.x = this.z = 0;
+			}
+			if (Math.abs(this.z) < 0.5) {
+				this.z = 0;
+			} else {
+				this.z = this.z < 0 ? -1 : 1;
+				this.x = this.y = 0;
+			}
+			return this;
+		},
+
+		scale:function(a,b,c) {
+			if( internals.tests.hasXYZ( a ) ) { //if it was a vec3d that was passed
+				return new Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
+			}
+			else if(b === undefined || c === undefined) { //if only one float was passed
+				b = c = a;
+			}
+			return new Vec3D(this.x * a, this.y * b, this.z * c);
+		},
+		
+		scaleSelf: function(a,b,c) {
+			if( internals.tests.hasXYZ( a ) ){
+				this.x *= a.x;
+				this.y *= a.y;
+				this.z *= a.z;
+				return this;
+			} else if(b === undefined || c === undefined) {
+				b = c = a;
+			}
+			this.x *= a;
+			this.y *= b;
+			this.z *= c;
+			return this;
+		},
+		
+		set: function(a,b,c){
+			if( internals.tests.hasXYZ( a ) )
+			{
+				this.x = a.x;
+				this.y = a.y;
+				this.z = a.z;
+				return this;
+			} else if(b === undefined || c === undefined) {
+				b = c = a;
+			}
+			this.x = a;
+			this.y = b;
+			this.z = c;
+			return this;
+		},
+		
+		setXY: function(v){
+			this.x = v.x;
+			this.y = v.y;
+			return this;
+		},
+		
+		shuffle:function(nIterations){
+			var t;
+			for(var i=0;i<nIterations;i++) {
+				switch(Math.floor(Math.random()*3)){
+					case 0:
+					t = this.x;
+					this.x = this.y;
+					this.z = t;
+					break;
+					
+					case 1:
+					t = this.x;
+					this.x = this.z;
+					this.z = t;
+					break;
+					
+					case 2:
+					t = this.y;
+					this.y = this.z;
+					this.z = t;
+					break;
+				}
+			}
+			return this;
+		},
+		/**
+		 * Replaces all vector components with the signum of their original values.
+		 * In other words if a components value was negative its new value will be
+		 * -1, if zero => 0, if positive => +1
+		 * 
+		 * @return itself
+		 */
+		signum: function(){
+			this.x = (this.x < 0 ? -1 : this.x === 0 ? 0 : 1);
+			this.y = (this.y < 0 ? -1 : this.y === 0 ? 0 : 1);
+			this.z = (this.z < 0 ? -1 : this.z === 0 ? 0 : 1);
+			return this;
+		},
+		
+		sub: function(a,b,c){
+			if( internals.tests.hasXYZ( a ) ){
+				return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
+			} else if(b === undefined || c === undefined) {
+				b = c = a;
+			}
+			return new Vec3D(this.x - a, this.y - b, this.z - c);
+		},
+		
+		subSelf: function(a,b,c){
+			if( internals.tests.hasXYZ( a ) ){
+				this.x -= a.x;
+				this.y -= a.y;
+				this.z -= a.z;
+				return this;
+			}
+			else if(b === undefined || c === undefined){
+				b = c= a;
+			}
+			this.x -= a;
+			this.y -= b;
+			this.z -= c;
+			return this;
+		},
+		
+		to2DXY: function(){
+			return new Vec2D(this.x,this.y);
+		},
+		
+		to2DXZ: function(){
+			return new Vec2D(this.x,this.z);
+		},
+		
+		to2DYZ: function(){
+			return new Vec2D(this.y,this.z);
+		},
+		
+		toArray: function(){
+			return [this.x,this.y,this.z];
+		},
+		
+		toArray4:function(w){
+			var ta = this.toArray();
+			ta[3] = w;
+			return ta;
+		},
+		
+		toCartesian: function(){
+			var a = (this.x * Math.cos(this.z));
+			var xx = (a * Math.cos(this.y));
+			var yy = (this.x * Math.sin(this.z));
+			var zz = (a * Math.sin(this.y));
+			this.x = xx;
+			this.y = yy;
+			this.z = zz;
+			return this;
+		},
+		
+		toSpherical: function(){
+			var xx = Math.abs(this.x) <= mathUtils.EPS ? mathUtils.EPS : this.x;
+			var zz = this.z;
+
+			var radius = Math.sqrt((xx * xx) + (this.y * this.y) + (zz * zz));
+			this.z = Math.asin(this.y / radius);
+			this.y = Math.atan(zz / xx) + (xx < 0.0 ? Math.PI : 0);
+			this.x = radius;
+			return this;
+		},
+		
+		toString: function(){
+			return "[ x: "+this.x+ ", y: "+this.y+ ", z: "+this.z+"]";
+		}
+	};
+	/**
+	  * Defines vector with all coords set to Float.MIN_VALUE. Useful for
+	  * bounding box operations.
+	  */
+	Vec3D.MIN_VALUE = new Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
+	/**
+	  * Defines vector with all coords set to Float.MAX_VALUE. Useful for
+	  * bounding box operations.
+	 */
+	Vec3D.MAX_VALUE = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
+	/**
+	 * Creates a new vector from the given angle in the XY plane. The Z
+	 * component of the vector will be zero.
+	 * 
+	 * The resulting vector for theta=0 is equal to the positive X axis.
+	 * 
+	 * @param theta
+	 *            the theta
+	 * 
+	 * @return new vector in the XY plane
+	 */
+	Vec3D.fromXYTheta = function(theta) {
+		return new Vec3D(Math.cos(theta),Math.sin(theta),0);
+	};
+	/**
+	 * Creates a new vector from the given angle in the XZ plane. The Y
+	 * component of the vector will be zero.
+	 * 
+	 * The resulting vector for theta=0 is equal to the positive X axis.
+	 * 
+	 * @param theta
+	 *            the theta
+	 * 
+	 * @return new vector in the XZ plane
+	 */
+	 Vec3D.fromXZTheta = function(theta) {
+			return new Vec3D(Math.cos(theta), 0, Math.sin(theta));
+	 };
+
+	/**
+	 * Creates a new vector from the given angle in the YZ plane. The X
+	 * component of the vector will be zero.
+	 * 
+	 * The resulting vector for theta=0 is equal to the positive Y axis.
+	 * 
+	 * @param theta
+	 *            the theta
+	 * 
+	 * @return new vector in the YZ plane
+	 */
+	Vec3D.fromYZTheta = function(theta) {
+		return new Vec3D(0, Math.cos(theta), Math.sin(theta));
+	};
+
+	/**
+	 * Constructs a new vector consisting of the largest components of both
+	 * vectors.
+	 * 
+	 * @param b
+	 *            the b
+	 * @param a
+	 *            the a
+	 * 
+	 * @return result as new vector
+	 */
+	Vec3D.max = function(a, b) {
+		return new Vec3D(Math.max(a.x, b.x), Math.max(a.y,b.y), Math.max(a.z, b.z));
+	};
+
+	/**
+	 * Constructs a new vector consisting of the smallest components of both
+	 * vectors.
+	 * 
+	 * @param b
+	 *            comparing vector
+	 * @param a
+	 *            the a
+	 * 
+	 * @return result as new vector
+	 */
+	Vec3D.min = function(a,b) {
+		return new Vec3D(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z));
+	};
+
+
+	/**
+	 * Static factory method. Creates a new random unit vector using the Random
+	 * implementation set as default for the {@link MathUtils} class.
+	 * 
+	 * @return a new random normalized unit vector.
+	 */
+
+	Vec3D.randomVector = function() {
+		var v = new Vec3D(Math.random()*2 - 1, Math.random() * 2 -1, Math.random()* 2 - 1);
+		return v.normalize();
+	};
+	Vec3D.ZERO = new Vec3D(0,0,0);
+	Vec3D.X_AXIS = new Vec3D(1,0,0);
+	Vec3D.Y_AXIS = new Vec3D(0,1,0);
+	Vec3D.Z_AXIS = new Vec3D(0,0,1);
+	Vec3D.Axis = {
+		X: {
+			getVector: function(){ 
+				return Vec3D.X_AXIS;
+			},
+			toString: function(){
+				return "Vec3D.Axis.X";
+			}
+		},
+		Y: {
+			getVector: function(){ 
+				return Vec3D.Y_AXIS;
+			},
+			toString: function(){
+				return "Vec3D.Axis.Y";
+			}
+		},
+		Z: {
+			getVector: function(){ 
+				return Vec3D.Z_AXIS;
+			},
+			toString: function(){
+				return "Vec3D.Axis.Z";
 			}
 		}
-		return this;
-	},
-	/**
-	 * Replaces all vector components with the signum of their original values.
-	 * In other words if a components value was negative its new value will be
-	 * -1, if zero => 0, if positive => +1
-	 * 
-	 * @return itself
-	 */
-	signum: function(){
-		this.x = (this.x < 0 ? -1 : this.x === 0 ? 0 : 1);
-		this.y = (this.y < 0 ? -1 : this.y === 0 ? 0 : 1);
-		this.z = (this.z < 0 ? -1 : this.z === 0 ? 0 : 1);
-		return this;
-	},
-	
-	sub: function(a,b,c){
-		if( internals.tests.hasXYZ( a ) ){
-			return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
-		} else if(b === undefined || c === undefined) {
-			b = c = a;
-		}
-		return new Vec3D(this.x - a, this.y - b, this.z - c);
-	},
-	
-	subSelf: function(a,b,c){
-		if( internals.tests.hasXYZ( a ) ){
-			this.x -= a.x;
-			this.y -= a.y;
-			this.z -= a.z;
-			return this;
-		}
-		else if(b === undefined || c === undefined){
-			b = c= a;
-		}
-		this.x -= a;
-		this.y -= b;
-		this.z -= c;
-		return this;
-	},
-	
-	to2DXY: function(){
-		return new Vec2D(this.x,this.y);
-	},
-	
-	to2DXZ: function(){
-		return new Vec2D(this.x,this.z);
-	},
-	
-	to2DYZ: function(){
-		return new Vec2D(this.y,this.z);
-	},
-	
-	toArray: function(){
-		return [this.x,this.y,this.z];
-	},
-	
-	toArray4:function(w){
-		var ta = this.toArray();
-		ta[3] = w;
-		return ta;
-	},
-	
-	toCartesian: function(){
-		var a = (this.x * Math.cos(this.z));
-		var xx = (a * Math.cos(this.y));
-		var yy = (this.x * Math.sin(this.z));
-		var zz = (a * Math.sin(this.y));
-		this.x = xx;
-		this.y = yy;
-		this.z = zz;
-		return this;
-	},
-	
-	toSpherical: function(){
-		var xx = Math.abs(this.x) <= mathUtils.EPS ? mathUtils.EPS : this.x;
-		var zz = this.z;
+	};
 
-		var radius = Math.sqrt((xx * xx) + (this.y * this.y) + (zz * zz));
-		this.z = Math.asin(this.y / radius);
-		this.y = Math.atan(zz / xx) + (xx < 0.0 ? Math.PI : 0);
-		this.x = radius;
-		return this;
-	},
-	
-	toString: function(){
-		return "[ x: "+this.x+ ", y: "+this.y+ ", z: "+this.z+"]";
-	}
-};
-/**
-  * Defines vector with all coords set to Float.MIN_VALUE. Useful for
-  * bounding box operations.
-  */
-Vec3D.MIN_VALUE = new Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
-/**
-  * Defines vector with all coords set to Float.MAX_VALUE. Useful for
-  * bounding box operations.
- */
-Vec3D.MAX_VALUE = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
-/**
- * Creates a new vector from the given angle in the XY plane. The Z
- * component of the vector will be zero.
- * 
- * The resulting vector for theta=0 is equal to the positive X axis.
- * 
- * @param theta
- *            the theta
- * 
- * @return new vector in the XY plane
- */
-Vec3D.fromXYTheta = function(theta) {
-	return new Vec3D(Math.cos(theta),Math.sin(theta),0);
-};
-/**
- * Creates a new vector from the given angle in the XZ plane. The Y
- * component of the vector will be zero.
- * 
- * The resulting vector for theta=0 is equal to the positive X axis.
- * 
- * @param theta
- *            the theta
- * 
- * @return new vector in the XZ plane
- */
- Vec3D.fromXZTheta = function(theta) {
-		return new Vec3D(Math.cos(theta), 0, Math.sin(theta));
- };
-
-/**
- * Creates a new vector from the given angle in the YZ plane. The X
- * component of the vector will be zero.
- * 
- * The resulting vector for theta=0 is equal to the positive Y axis.
- * 
- * @param theta
- *            the theta
- * 
- * @return new vector in the YZ plane
- */
-Vec3D.fromYZTheta = function(theta) {
-	return new Vec3D(0, Math.cos(theta), Math.sin(theta));
-};
-
-/**
- * Constructs a new vector consisting of the largest components of both
- * vectors.
- * 
- * @param b
- *            the b
- * @param a
- *            the a
- * 
- * @return result as new vector
- */
-Vec3D.max = function(a, b) {
-	return new Vec3D(Math.max(a.x, b.x), Math.max(a.y,b.y), Math.max(a.z, b.z));
-};
-
-/**
- * Constructs a new vector consisting of the smallest components of both
- * vectors.
- * 
- * @param b
- *            comparing vector
- * @param a
- *            the a
- * 
- * @return result as new vector
- */
-Vec3D.min = function(a,b) {
-	return new Vec3D(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z));
-};
-
-
-/**
- * Static factory method. Creates a new random unit vector using the Random
- * implementation set as default for the {@link MathUtils} class.
- * 
- * @return a new random normalized unit vector.
- */
-
-Vec3D.randomVector = function() {
-	var v = new Vec3D(Math.random()*2 - 1, Math.random() * 2 -1, Math.random()* 2 - 1);
-	return v.normalize();
-};
-Vec3D.ZERO = new Vec3D(0,0,0);
-Vec3D.X_AXIS = new Vec3D(1,0,0);
-Vec3D.Y_AXIS = new Vec3D(0,1,0);
-Vec3D.Z_AXIS = new Vec3D(0,0,1);
-Vec3D.Axis = {
-	X: {
-		getVector: function(){ 
-			return Vec3D.X_AXIS;
-		},
-		toString: function(){
-			return "Vec3D.Axis.X";
-		}
-	},
-	Y: {
-		getVector: function(){ 
-			return Vec3D.Y_AXIS;
-		},
-		toString: function(){
-			return "Vec3D.Axis.Y";
-		}
-	},
-	Z: {
-		getVector: function(){ 
-			return Vec3D.Z_AXIS;
-		},
-		toString: function(){
-			return "Vec3D.Axis.Z";
-		}
-	}
-};
-
-module.exports = Vec3D;
-
+	exports.Vec2D = Vec2D;
+	exports.Vec3D = Vec3D;
 });
-
-define('toxi/geom/Vec2D',["require", "exports", "module", "../math/mathUtils","./Vec3D","./Vec3D","./Vec3D","./Vec3D", '../internals'], function(require, exports, module) {
-var	mathUtils = require('../math/mathUtils');
-var internals = require('../internals');
-
-var hasXY = internals.tests.hasXY;
-var isRect = internals.tests.isRect;
-
-/**
- @member toxi
- @class a two-dimensional vector class
- */
-var	Vec2D = function(a,b){
-	if( hasXY( a ) ){
-		b = a.y;
-		a = a.x;
-	} else {
-		if(a === undefined)a = 0;
-		if(b === undefined)b = 0;
-	}
-	this.x = a;
-	this.y = b;
-};
-
-Vec2D.Axis = {
-	X: {
-		getVector: function(){ return Vec2D.X_AXIS; },
-		toString: function(){ return "Vec2D.Axis.X"; }
-	},
-	Y: {
-		getVector: function(){ return Vec2D.Y_AXIS; },
-		toString: function(){ return "Vec2D.Axis.Y"; }
-	}
-};
-
-//private, 
-var _getXY = function(a,b) {
-	if( hasXY( a ) ){
-		b = a.y;
-		a = a.x;
-	}
-	else {
-		if(a !== undefined && b === undefined){
-			b = a;
-		}
-		else if(a === undefined){ a = 0; }
-		else if(b === undefined){ b = 0; }
-	}
-	return {x: a, y: b};
-};
-//public
-Vec2D.prototype = {
-
-	abs: function() {
-        this.x = Math.abs(this.x);
-        this.y = Math.abs(this.y);
-        return this;
-    },
-
-    add: function(a, b) {
-		var v  = new Vec2D(a,b);
-		v.x += this.x;
-		v.y += this.y;
-        return v;
-    },
-    
-    /**
-     * Adds vector {a,b,c} and overrides coordinates with result.
-     * 
-     * @param a
-     *            X coordinate
-     * @param b
-     *            Y coordinate
-     * @return itself
-     */
-    addSelf: function(a,b) {
-		var v = _getXY(a,b);
-        this.x += v.x;
-        this.y += v.y;
-        return this;
-    },
-
-	angleBetween: function(v, faceNormalize) {
-		if(faceNormalize === undefined){
-			var dot = this.dot(v);
-			return Math.acos(this.dot(v));
-		}
-        var theta = (faceNormalize) ? this.getNormalized().dot(v.getNormalized()) : this.dot(v);
-        return Math.acos(theta);
-    },
-
-	//bisect() is in Vec2D_post.js
-
-    /**
-     * Sets all vector components to 0.
-     * 
-     * @return itself
-     */
-    clear: function() {
-        this.x = this.y = 0;
-        return this;
-    },
-	
-	compareTo: function(vec) {
-        if (this.x == vec.x && this.y == vec.y) {
-            return 0;
-        }
-        return this.magSquared() - vec.magSquared();
-    },
-
-	/**
-     * Forcefully fits the vector in the given rectangle.
-     * 
-     * @param a
-     *		either a Rectangle by itself or the Vec2D min
-	 * @param b
-	 *		Vec2D max
-     * @return itself
-     */
-    constrain: function(a,b) {
-		if( hasXY( a ) && hasXY( b ) ){
-			this.x = mathUtils.clip(this.x, a.x, b.x);
-	        this.y = mathUtils.clip(this.y, a.y, b.y);
-		} else if( isRect( a ) ){
-            this.x = mathUtils.clip(this.x, a.x, a.x + a.width);
-			this.y = mathUtils.clip(this.y, a.y, a.y + a.height);
-		}
-        return this;
-    },
-	
-	copy: function() {
-        return new Vec2D(this);
-    },
-
-    cross: function(v) {
-        return (this.x * v.y) - (this.y * v.x);
-    },
-
-    distanceTo: function(v) {
-        if (v !== undefined) {
-            var dx = this.x - v.x;
-            var dy = this.y - v.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        } else {
-            return NaN;
-        }
-    },
-
-    distanceToSquared: function(v) {
-        if (v !== undefined) {
-            var dx = this.x - v.x;
-            var dy = this.y - v.y;
-            return dx * dx + dy * dy;
-        } else {
-            return NaN;
-        }
-    },
-
-	dot: function(v) {
-        return this.x * v.x + this.y * v.y;
-    },
-
-	equals: function(obj) {
-        if ( hasXY( obj ) ) {
-            return this.x == obj.x && this.y == obj.y;
-        }
-        return false;
-    },
-
-	equalsWithTolerance: function(v, tolerance) {
-        if (mathUtils.abs(this.x - v.x) < tolerance) {
-            if (mathUtils.abs(this.y - v.y) < tolerance) {
-                return true;
-            }
-        }
-        return false;
-    },
-
-	floor: function() {
-        this.x = mathUtils.floor(this.x);
-        this.y = mathUtils.floor(this.y);
-        return this;
-    },
-
-	/**
-     * Replaces the vector components with the fractional part of their current
-     * values
-     * 
-     * @return itself
-     */
-    frac: function() {
-        this.x -= mathUtils.floor(this.x);
-        this.y -= mathUtils.floor(this.y);
-        return this;
-    },
-
-	getAbs: function() {
-        return new Vec2D(this).abs();
-    },
-
-	getComponent: function(id) {
-		if(typeof id == 'number')
-		{			
-			id = (id === 0) ? Vec2D.Axis.X : Vec2D.Axis.Y;
-		}
-		if(id == Vec2D.Axis.X){
-			return this.x;
-		} else if(id == Vec2D.Axis.Y){
-			return this.y;
-		}
-		return 0;
-    },
-
-	getConstrained: function(r) {
-        return new Vec2D(this).constrain(r);
-    },
-
-    getFloored: function() {
-        return new Vec2D(this).floor();
-    },
-
-    getFrac: function() {
-        return new Vec2D(this).frac();
-    },
-
-    getInverted: function() {
-        return new Vec2D(-this.x, -this.y);
-    },
-
-    getLimited: function(lim) {
-        if (this.magSquared() > lim * lim) {
-            return this.getNormalizedTo(lim);
-        }
-        return new Vec2D(this);
-    },
-
-    getNormalized: function() {
-        return new Vec2D(this).normalize();
-    },
-
-    getNormalizedTo: function(len) {
-        return new Vec2D(this).normalizeTo(len);
-    },
-	 getPerpendicular: function() {
-        return new Vec2D(this).perpendicular();
-    },
-
-    getReciprocal: function() {
-        return new Vec2D(this).reciprocal();
-    },
-
-    getReflected: function(normal) {
-        return new Vec2D(this).reflect(normal);
-    },
-
-    getRotated: function(theta) {
-        return new Vec2D(this).rotate(theta);
-    },
-
-    getSignum: function() {
-        return new Vec2D(this).signum();
-    },
-	
-	heading: function() {
-        return Math.atan2(this.y, this.x);
-    },
-    
-    interpolateTo: function(v, f, s) {
-		if(s === undefined){
-			return new Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
-		} else
-		{
-			return new Vec2D(s.interpolate(this.x,v.x,f),s.interpolate(this.y,v.y,f));
-		}
-    },
-
-    /**
-     * Interpolates the vector towards the given target vector, using linear
-     * interpolation
-     * 
-     * @param v
-     *            target vector
-     * @param f
-     *            interpolation factor (should be in the range 0..1)
-     * @return itself, result overrides current vector
-     */
-    interpolateToSelf: function(v, f, s) {
-		if(s === undefined) {
-			this.x += (v.x - this.x) * f;
-			this.y += (v.y - this.y) * f;
-		} else {
-			this.x = s.interpolate(this.x,v.x,f);
-			this.y = s.interpolate(this.y,v.y,f);
-		}
-        return this;
-    },
-
-	invert: function() {
-        this.x *= -1;
-        this.y *= -1;
-        return this;
-    },
-
-	isInCircle: function(sO,sR) {
-        var d = this.sub(sO).magSquared();
-        return (d <= sR * sR);
-    },
-
-    isInRectangle: function(rect) {
-        if (this.x < rect.x || this.x > rect.x + rect.width) {
-            return false;
-        }
-        if (this.y < rect.y || this.y > rect.y + rect.height) {
-            return false;
-        }
-        return true;
-    },
-
-    isInTriangle: function(a,b,c) {
-        var v1 = this.sub(a).normalize();
-        var v2 = this.sub(b).normalize();
-        var v3 = this.sub(c).normalize();
-
-        var total_angles = Math.acos(v1.dot(v2));
-        total_angles += Math.acos(v2.dot(v3));
-        total_angles += Math.acos(v3.dot(v1));
-
-        return (Math.abs(total_angles - mathUtils.TWO_PI) <= 0.005);
-    },
-
-	isMajorAxis: function(tol) {
-        var ax = Math.abs(this.x);
-        var ay = Math.abs(this.y);
-        var itol = 1 - tol;
-        if (ax > itol) {
-            return (ay < tol);
-        } else if (ay > itol) {
-            return (ax < tol);
-        }
-        return false;
-    },
-
-    isZeroVector: function() {
-        return Math.abs(this.x) < mathUtils.EPS && Math.abs(this.y) < mathUtils.EPS;
-    },
-
-    /**
-     * Adds random jitter to the vector in the range -j ... +j using the default
-     * {@link Random} generator of {@link MathUtils}.
-     * 
-     * @param a
-     *            maximum x jitter or  Vec2D
-     * @param b
-     *            maximum y jitter or undefined
-     * @return itself
-     */
-    jitter: function(a,b) {
-		var v = _getXY(a,b);
-		this.x += mathUtils.normalizedRandom() * v.x;
-        this.y += mathUtils.normalizedRandom() * v.y;
-        return this;
-    },
-
-	limit: function(lim) {
-        if (this.magSquared() > lim * lim) {
-            return this.normalize().scaleSelf(lim);
-        }
-        return this;
-    },
-
-    magnitude: function() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    },
-
-    magSquared: function() {
-        return this.x * this.x + this.y * this.y;
-    },
-
-	max: function(v) {
-        return new Vec2D(mathUtils.max(this.x, v.x), mathUtils.max(this.y, v.y));
-    },
-
-	maxSelf: function(v) {
-        this.x = mathUtils.max(this.x, v.x);
-        this.y = mathUtils.max(this.y, v.y);
-        return this;
-    },
-
-    min: function(v) {
-        return new Vec2D(mathUtils.min(this.x, v.x), mathUtils.min(this.y, v.y));
-    },
-
-	minSelf: function(v) {
-        this.x = mathUtils.min(this.x, v.x);
-        this.y = mathUtils.min(this.y, v.y);
-        return this;
-    },
-
-    /**
-     * Normalizes the vector so that its magnitude = 1
-     * 
-     * @return itself
-     */
-    normalize: function() {
-        var mag = this.x * this.x + this.y * this.y;
-        if (mag > 0) {
-            mag = 1.0 / Math.sqrt(mag);
-            this.x *= mag;
-            this.y *= mag;
-        }
-        return this;
-    },
-
-    /**
-     * Normalizes the vector to the given length.
-     * 
-     * @param len
-     *            desired length
-     * @return itself
-     */
-    normalizeTo: function(len) {
-        var mag = Math.sqrt(this.x * this.x + this.y * this.y);
-        if (mag > 0) {
-            mag = len / mag;
-            this.x *= mag;
-            this.y *= mag;
-        }
-        return this;
-    },
-
-    perpendicular: function() {
-        var t = this.x;
-        this.x = -this.y;
-        this.y = t;
-        return this;
-    },
-    
-    positiveHeading: function() {
-		var dist = Math.sqrt(this.x * this.x + this.y * this.y);
-		if (this.y >= 0){
-			return Math.acos(this.x / dist);
-		}
-		return (Math.acos(-this.x / dist) + mathUtils.PI);
-    },
-
-    reciprocal: function() {
-        this.x = 1.0 / this.x;
-        this.y = 1.0 / this.y;
-        return this;
-    },
-
-	reflect: function(normal) {
-        return this.set(normal.scale(this.dot(normal) * 2).subSelf(this));
-    },
-
-    /**
-     * Rotates the vector by the given angle around the Z axis.
-     * 
-     * @param theta
-     * @return itself
-     */
-    rotate: function(theta) {
-        var co = Math.cos(theta);
-        var si = Math.sin(theta);
-        var xx = co * this.x - si * this.y;
-        this.y = si * this.x + co * this.y;
-        this.x = xx;
-        return this;
-    },
-
-	roundToAxis: function() {
-        if (Math.abs(this.x) < 0.5) {
-            this.x = 0;
-        } else {
-            this.x = this.x < 0 ? -1 : 1;
-            this.y = 0;
-        }
-        if (Math.abs(this.y) < 0.5) {
-            this.y = 0;
-        } else {
-            this.y = this.y < 0 ? -1 : 1;
-            this.x = 0;
-        }
-        return this;
-    },
-
-    scale: function(a, b) {
-		var v = _getXY(a,b);
-        return new Vec2D(this.x * v.x, this.y * v.y);
-    },
-
-    scaleSelf: function(a,b) {
-		var v = _getXY(a,b);
-        this.x *= v.x;
-        this.y *= v.y;
-        return this;
-    },
-
-	set: function(a,b){
-		var v = _getXY(a,b);
-		this.x = v.x;
-		this.y = v.y;
-		return this;
-	},
-	
-	setComponent: function(id, val) {
-		if(typeof id == 'number')
-		{			
-			id = (id === 0) ? Vec2D.Axis.X : Vec2D.Axis.Y;
-		}
-		if(id === Vec2D.Axis.X){
-			this.x = val;
-		} else if(id === Vec2D.Axis.Y){
-			this.y = val;
-		}
-		return this;
-	},
-	
-	/**
-     * Replaces all vector components with the signum of their original values.
-     * In other words if a components value was negative its new value will be
-     * -1, if zero => 0, if positive => +1
-     * 
-     * @return itself
-     */
-	signum: function() {
-        this.x = (this.x < 0 ? -1 : this.x === 0 ? 0 : 1);
-        this.y = (this.y < 0 ? -1 : this.y === 0 ? 0 : 1);
-        return this;
-    },
-
-	sub: function(a,b){
-		var v = _getXY(a,b);
-		return new Vec2D(this.x -v.x,this.y - v.y);
-	},
-	
-	/**
-     * Subtracts vector {a,b,c} and overrides coordinates with result.
-     * 
-     * @param a
-     *            X coordinate
-     * @param b
-     *            Y coordinate
-     * @return itself
-     */
-    subSelf: function(a,b) {
-        var v = _getXY(a,b);
-		this.x -= v.x;
-        this.y -= v.y;
-        return this;
-    },
-
-	tangentNormalOfEllipse: function(eO,eR) {
-        var p = this.sub(eO);
-
-        var xr2 = eR.x * eR.x;
-        var yr2 = eR.y * eR.y;
-
-        return new Vec2D(p.x / xr2, p.y / yr2).normalize();
-    },
-    
-
-	//to3D** methods are in Vec2D_post.js
-	
-    toArray: function() {
-        return [this.x,this.y];
-    },
-
-	toCartesian: function() {
-        var xx = (this.x * Math.cos(this.y));
-        this.y = (this.x * Math.sin(this.y));
-        this.x = xx;
-        return this;
-    },
-
-	toPolar: function() {
-        var r = Math.sqrt(this.x * this.x + this.y * this.y);
-        this.y = Math.atan2(this.y, this.x);
-        this.x = r;
-        return this;
-    },
-
-    toString: function() {
-        var s = "{x:"+this.x+", y:"+this.y+"}";
-        return s;
-    }
-	
-};
-
-//these requires are in the functions because of a circular dependency
-Vec2D.prototype.bisect = function(b) {
-    var Vec3D = require('./Vec3D');
-    var diff = this.sub(b);
-    var sum = this.add(b);
-    var dot = diff.dot(sum);
-    return new Vec3D(diff.x, diff.y, -dot / 2);
-};
-
-Vec2D.prototype.to3DXY = function() {
-    var Vec3D = require('./Vec3D');
-    return new Vec3D(this.x, this.y, 0);
-};
-
-Vec2D.prototype.to3DXZ = function() {
-    var Vec3D = require('./Vec3D');
-    return new Vec3D(this.x, 0, this.y);
-};
-
-Vec2D.prototype.to3DYZ = function() {
-    var Vec3D = require('./Vec3D');
-    return new Vec3D(0, this.x, this.y);
-};
-
-Vec2D.X_AXIS = new Vec2D(1,0); 
-Vec2D.Y_AXIS = new Vec2D(0,1); 
-Vec2D.ZERO = new Vec2D();
-Vec2D.MIN_VALUE = new Vec2D(Number.MIN_VALUE,Number.MIN_VALUE);
-Vec2D.MAX_VALUE = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
-Vec2D.fromTheta = function(theta){
-	return new Vec2D(Math.cos(theta),Math.sin(theta));
-};
-Vec2D.max = function(a,b){
-	return new Vec2D(mathUtils.max(a.x,b.x), mathUtils.max(a.y,b.y));
-};
-
-Vec2D.min = function(a, b) {
-    return new Vec2D(mathUtils.min(a.x, b.x), mathUtils.min(a.y, b.y));
-};
-
-Vec2D.randomVector = function(rnd){
-	var v = new Vec2D(Math.random()*2 - 1, Math.random() * 2 - 1);
-	return v.normalize();
-};
-
-
-
-module.exports = Vec2D;
-
+define('toxi/geom/Vec2D',['require','exports','module','./vectors'], function( require, exports, module ){
+    //Vec2D is located in toxi/geom/vectors to circumvent circular dependencies
+    module.exports = require('./vectors').Vec2D;
 });
-
+define('toxi/geom/Vec3D',['require','exports','module','./vectors'], function( require, exports, module ){
+	//Vec3D is defined in toxi/geom/vectors to circumvent circular dependencies
+	module.exports = require('./vectors').Vec3D;
+});
 define('toxi/color/TColor',["require", "exports", "module", "../math/mathUtils","../geom/Vec2D","../geom/Vec3D", "../internals"], function(require, exports, module) {
 
 var	internals = require('../internals'),
@@ -3194,10 +3200,8 @@ module.exports = TColor;
 
 });
 
-define('toxi/color',["require", "exports", "module", "./color/TColor"], function(require, exports, module) {
-module.exports = {
-	TColor: require('./color/TColor')	
-};
+define('toxi/color',["require", "exports", "module", "./color/TColor"], function(require, exports) {
+	exports.TColor = require('./color/TColor');
 });
 
 define('toxi/geom/Matrix4x4',["require", "exports", "module", "../math/mathUtils","./Vec3D","../internals"], function(require, exports, module) {
@@ -4033,12 +4037,11 @@ module.exports = Line3D;
 
 });
 
-define('toxi/geom/AABB',["require", "exports", "module", "./mesh/TriangleMesh","../internals","./Vec3D","./Vec2D","../math/mathUtils"], function(require, exports, module) {
+define('toxi/geom/AABB',["require", "exports", "module", "../internals","../math/mathUtils", "./Vec2D", "./Vec3D"], function(require, exports, module) {
 
 var	internals = require('../internals'),
 	Vec3D = require('./Vec3D'),
 	Vec2D = require('./Vec2D'),
-	TriangleMesh = require('./mesh/TriangleMesh'),
 	mathUtils = require('../math/mathUtils');
 
 
@@ -4078,7 +4081,7 @@ internals.extend(AABB,Vec3D);
 AABB.fromMinMax = function(min,max){
 	var a = Vec3D.min(min, max);
 	var b = Vec3D.max(min, max);
-	return new AABB(a.interpolateTo(b,0.5),b.sub(a).scaleSelf(0.5));
+	return new AABB( a.interpolateTo(b,0.5), b.sub(a).scaleSelf(0.5) );
 };
 
 AABB.prototype.containsPoint = function(p) {
@@ -4470,7 +4473,7 @@ AABB.prototype.toMesh = function(mesh){
 
 
 AABB.prototype.toString = function() {
-   return "<aabb> pos: "+this.parent.toString()+" ext: "+this.extent.toString();
+   return "<aabb> pos: "+Vec3D.prototype.toString.call(this)+" ext: "+this.extent.toString();
 };
 
 /**
@@ -5322,44 +5325,32 @@ TriangleMesh.prototype = {
 		return this;
 	},
 	
-	getBoundingBox:function( fn ){
-		if( fn === undefined ){
-			throw new Error("getBoundingBox() is an async method, provide a callback and the AABB will be the first parameter");
-			return;
-		}
-		var self = this;
-		require(['../AABB'], function( AABB ){
-			var minBounds = Vec3D.MAX_VALUE.copy();
-			var maxBounds = Vec3D.MIN_VALUE.copy();
-			var l = self.vertices.length;
+	getBoundingBox: function( ){
+		var minBounds = Vec3D.MAX_VALUE.copy();
+		var maxBounds = Vec3D.MIN_VALUE.copy();
+		var l = this.vertices.length;
 
-			for(var i=0;i<l;i++){
-				var v = self.vertices[i];
-				minBounds.minSelf(v);
-				maxBounds.maxSelf(v);
-			}
-			self.bounds = AABB.fromMinMax(minBounds,maxBounds);
-			fn( self.bounds );
-		});
+		for(var i=0;i<l;i++){
+			var v = this.vertices[i];
+			minBounds.minSelf(v);
+			maxBounds.maxSelf(v);
+		}
+		this.bounds = require('../../geom').AABB.fromMinMax(minBounds,maxBounds);
+		return this.bounds;
 	},
 	
-	getBoundingSphere:function( fn ){
-		if( fn === undefined ){
-			throw new Error("getBoundingSphere() is an async method, provide a callback and the Sphere will be the first parameter");
-			return;
-		}
+	getBoundingSphere:function( ){
 		var self = this;
-		require(['../Sphere'], function(Sphere){
-			var radius = 0;
-			self.computeCentroid();
-			var l = self.vertices.length;
-			for(var i=0;i<l;i++){
-				var v = self.vertices[i];
-				radius = mathUtils.max(radius,v.distanceToSquared(self.centroid));
-			}
-			var sph = new Sphere(self.centroid,Math.sqrt(radius));
-			fn( sph );
-		});
+		var radius = 0;
+		self.computeCentroid();
+		var l = self.vertices.length;
+		for(var i=0;i<l;i++){
+			var v = self.vertices[i];
+			radius = mathUtils.max(radius,v.distanceToSquared(self.centroid));
+		}
+		var Sphere = require('../../geom').Sphere;
+		var sph = new Sphere(self.centroid,Math.sqrt(radius));
+		return sph;
 	},
 	
 	getClosestVertexToPoint: function(p){
@@ -6292,6 +6283,281 @@ PlaneSelector.prototype.selectVertices = function() {
 module.exports = PlaneSelector;
 });
 
+define('toxi/geom/Sphere',[
+	"require",
+	"exports",
+	"module",
+	"../internals",
+	"./Vec3D",
+	"./mesh"
+], function(require, exports, module) {
+
+var internals, mesh, Vec3D;
+internals = require('../internals');
+mesh = require('./mesh');
+Vec3D = require('./Vec3D');
+
+
+
+/**
+ * @module toxi.geom.Sphere
+ * @augments toxi.geom.Vec3D
+ */
+var	Sphere = function(a,b){
+	if(a === undefined){
+		Vec3D.apply(this,[new Vec3D()]);
+		this.radius = 1;
+	}
+	else if( internals.tests.hasXYZ( a ) ){
+		Vec3D.apply(this,[a]);
+		if( internals.tests.isSphere( a ) ){
+			this.radius = a.radius;
+		}
+		else {
+			this.radius = b;
+		}
+	}
+	else {
+		Vec3D.apply(this,[new Vec3D()]);
+		this.radius = a;
+	}
+};
+
+internals.extend(Sphere,Vec3D);
+
+
+Sphere.prototype.containsPoint = function(p) {
+	var d = this.sub(p).magSquared();
+	return (d <= this.radius * this.radius);
+};
+
+/**
+ * Alternative to {@link SphereIntersectorReflector}. Computes primary &
+ * secondary intersection points of this sphere with the given ray. If no
+ * intersection is found the method returns null. In all other cases, the
+ * returned array will contain the distance to the primary intersection
+ * point (i.e. the closest in the direction of the ray) as its first index
+ * and the other one as its second. If any of distance values is negative,
+ * the intersection point lies in the opposite ray direction (might be
+ * useful to know). To get the actual intersection point coordinates, simply
+ * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
+ * 
+ * @param ray
+ * @return 2-element float array of intersection points or null if ray
+ * doesn't intersect sphere at all.
+ */
+Sphere.prototype.intersectRay = function(ray) {
+	var result, a, b, t,
+		q = ray.sub(this),
+		distSquared = q.magSquared(),
+		v = -q.dot(ray.getDirection()),
+		d = this.radius * this.radius - (distSquared - v * v);
+	if (d >= 0.0) {
+		d = Math.sqrt(d);
+		a = v + d;
+		b = v - d;
+		if (!(a < 0 && b < 0)) {
+			if (a > 0 && b > 0) {
+				if (a > b) {
+					t = a;
+					a = b;
+					b = t;
+				}
+			} else {
+				if (b > 0) {
+					t = a;
+					a = b;
+					b = t;
+				}
+			}
+		}
+		result = [a,b];
+	}
+	return result;
+};
+
+/**
+ * Considers the current vector as centre of a collision sphere with radius
+ * r and checks if the triangle abc intersects with this sphere. The Vec3D p
+ * The point on abc closest to the sphere center is returned via the
+ * supplied result vector argument.
+ * 
+ * @param t
+ *			triangle to check for intersection
+ * @param result
+ *			a non-null vector for storing the result
+ * @return true, if sphere intersects triangle ABC
+ */
+Sphere.prototype.intersectSphereTriangle = function(t,result) {
+	// Find Vec3D P on triangle ABC closest to sphere center
+	result.set(t.closestPointOnSurface(this));
+
+	// Sphere and triangle intersect if the (squared) distance from sphere
+	// center to Vec3D p is less than the (squared) sphere radius
+	var v = result.sub(this);
+	return v.magSquared() <= this.radius * this.radius;
+};
+
+/**
+ * Calculates the normal vector on the sphere in the direction of the
+ * current point.
+ * 
+ * @param q
+ * @return a unit normal vector to the tangent plane of the ellipsoid in the
+ * point.
+ */
+Sphere.prototype.tangentPlaneNormalAt = function(q) {
+	return this.sub(q).normalize();
+};
+
+Sphere.prototype.toMesh = function() {
+	//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
+	//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
+
+	//if one argument is passed it can either be a Number for resolution, or an options object
+	//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
+	var opts = {
+		mesh: undefined,
+		resolution: 0
+	};
+	if(arguments.length === 1){
+		if(typeof(arguments[0]) == 'object'){ //options object
+			opts.mesh = arguments[0].mesh;
+			opts.resolution = arguments[0].res || arguments[0].resolution;
+		} else { //it was just the resolution Number
+			opts.resolution = arguments[0];
+		}
+	} else {
+		opts.mesh = arguments[0];
+		opts.resolution = arguments[1];
+	}
+
+	var builder = new mesh.SurfaceMeshBuilder(new mesh.SphereFunction(this));
+	return builder.createMesh(opts.mesh, opts.resolution, 1);
+};
+
+module.exports = Sphere;
+});
+
+define('toxi/geom/mesh/SphereFunction',["require", "exports", "module", "../../math/mathUtils","../Vec3D","../Sphere"], function(require, exports, module) {
+
+var mathUtils = require('../../math/mathUtils'),
+	Vec3D = require('../Vec3D'),
+	internals = require('../../internals'),
+	Sphere = require('../Sphere');
+
+/**
+ * @class This implementation of a {@link SurfaceFunction} samples a given
+ * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
+ * @member toxi
+ */
+var	SphereFunction = function(sphere_or_radius) {
+	if(sphere_or_radius === undefined){
+		this.sphere = new Sphere(new Vec3D(),1);
+	}
+	
+	if(internals.tests.isSphere( sphere_or_radius )){
+		this.sphere = sphere_or_radius;
+	}
+	else{
+		this.sphere = new Sphere(new Vec3D(),sphere_or_radius);
+	}
+	this.phiRange = mathUtils.PI;
+	this.thetaRange = mathUtils.TWO_PI;
+};
+
+SphereFunction.prototype = {
+	
+	computeVertexFor: function(p,phi,theta) {
+	    phi -= mathUtils.HALF_PI;
+	    var cosPhi = mathUtils.cos(phi);
+	    var cosTheta = mathUtils.cos(theta);
+	    var sinPhi = mathUtils.sin(phi);
+	    var sinTheta = mathUtils.sin(theta);
+	    var t = mathUtils.sign(cosPhi) * mathUtils.abs(cosPhi);
+	    p.x = t * mathUtils.sign(cosTheta) * mathUtils.abs(cosTheta);
+	    p.y = mathUtils.sign(sinPhi) * mathUtils.abs(sinPhi);
+	    p.z = t * mathUtils.sign(sinTheta) * mathUtils.abs(sinTheta);
+	    return p.scaleSelf(this.sphere.radius).addSelf(this.sphere);
+	},
+	
+	getPhiRange: function() {
+	    return this.phiRange;
+	},
+	
+	getPhiResolutionLimit: function(res) {
+	    return res;
+	},
+	
+	getThetaRange: function() {
+	    return this.thetaRange;
+	},
+	
+	getThetaResolutionLimit: function(res) {
+	    return res;
+	},
+	
+	setMaxPhi: function(max) {
+	    this.phiRange = mathUtils.min(max / 2, mathUtils.PI);
+	},
+	
+	setMaxTheta: function(max) {
+	    this.thetaRange = mathUtils.min(max, mathUtils.TWO_PI);
+	}
+};
+
+module.exports = SphereFunction;
+});
+
+define('toxi/geom/mesh/SphericalHarmonics',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
+
+var mathUtils = require('../../math/mathUtils');
+
+/**
+ * @class Spherical harmonics surface evaluator based on code by Paul Bourke:
+ * http://local.wasp.uwa.edu.au/~pbourke/geometry/sphericalh/
+ * @member toxi
+ */
+var SphericalHarmonics = function(m) {
+    this.m = m;
+};
+
+SphericalHarmonics.prototype = {
+    // toxiclibs - FIXME check where flipped vertex order is coming from sometimes
+    computeVertexFor: function(p,phi,theta) {
+        var r = 0;
+        r += Math.pow(mathUtils.sin(this.m[0] * theta), this.m[1]);
+        r += Math.pow(mathUtils.cos(this.m[2] * theta), this.m[3]);
+        r += Math.pow(mathUtils.sin(this.m[4] * phi), this.m[5]);
+        r += Math.pow(mathUtils.cos(this.m[6] * phi), this.m[7]);
+
+        var sinTheta = mathUtils.sin(theta);
+        p.x = r * sinTheta * mathUtils.cos(phi);
+        p.y = r * mathUtils.cos(theta);
+        p.z = r * sinTheta * mathUtils.sin(phi);
+        return p;
+    },
+
+    getPhiRange: function() {
+        return mathUtils.TWO_PI;
+    },
+
+    getPhiResolutionLimit: function(res) {
+        return res;
+    },
+
+    getThetaRange: function() {
+        return mathUtils.PI;
+    },
+
+    getThetaResolutionLimit: function(res) {
+        return res;
+    }
+};
+
+module.exports = SphericalHarmonics;
+});
+
 define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./TriangleMesh","../Vec3D","../Vec2D"], function(require, exports, module) {
 
 var Vec3D = require('../Vec3D'),
@@ -6417,276 +6683,6 @@ SurfaceMeshBuilder.prototype = {
 };
 exports.SurfaceMeshBuilder = SurfaceMeshBuilder;
 module.exports = SurfaceMeshBuilder;
-});
-
-define('toxi/geom/Sphere',["require", "exports", "module", "../internals","./Vec3D","./mesh/SphereFunction", './mesh/SurfaceMeshBuilder'], function(require, exports, module) {
-
-var	internals = require('../internals'),
-	SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder'),
-	SphereFunction = require('./mesh/SphereFunction'),
-	Vec3D = require('./Vec3D');
-
-
-
-/**
- * @module toxi.geom.Sphere
- * @augments toxi.geom.Vec3D
- */
-var	Sphere = function(a,b){
-	if(a === undefined){
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = 1;
-	}
-	else if( internals.tests.hasXYZ( a ) ){
-		Vec3D.apply(this,[a]);
-		if( internals.tests.isSphere( a ) ){
-			this.radius = a.radius;
-		}
-		else {
-			this.radius = b;
-		}
-	}
-	else {
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = a;
-	}
-};
-
-internals.extend(Sphere,Vec3D);
-
-
-Sphere.prototype.containsPoint = function(p) {
-	var d = this.sub(p).magSquared();
-	return (d <= this.radius * this.radius);
-};
-
-/**
- * Alternative to {@link SphereIntersectorReflector}. Computes primary &
- * secondary intersection points of this sphere with the given ray. If no
- * intersection is found the method returns null. In all other cases, the
- * returned array will contain the distance to the primary intersection
- * point (i.e. the closest in the direction of the ray) as its first index
- * and the other one as its second. If any of distance values is negative,
- * the intersection point lies in the opposite ray direction (might be
- * useful to know). To get the actual intersection point coordinates, simply
- * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
- * 
- * @param ray
- * @return 2-element float array of intersection points or null if ray
- * doesn't intersect sphere at all.
- */
-Sphere.prototype.intersectRay = function(ray) {
-	var result,
-		a,
-		b,
-		t,
-		q = ray.sub(this),
-		distSquared = q.magSquared(),
-		v = -q.dot(ray.getDirection()),
-		d = this.radius * this.radius - (distSquared - v * v);
-	if (d >= 0.0) {
-		d = Math.sqrt(d);
-		a = v + d;
-		b = v - d;
-		if (!(a < 0 && b < 0)) {
-			if (a > 0 && b > 0) {
-				if (a > b) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			} else {
-				if (b > 0) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			}
-		}
-		result = [a,b];
-	}
-	return result;
-};
-
-/**
- * Considers the current vector as centre of a collision sphere with radius
- * r and checks if the triangle abc intersects with this sphere. The Vec3D p
- * The point on abc closest to the sphere center is returned via the
- * supplied result vector argument.
- * 
- * @param t
- *			triangle to check for intersection
- * @param result
- *			a non-null vector for storing the result
- * @return true, if sphere intersects triangle ABC
- */
-Sphere.prototype.intersectSphereTriangle = function(t,result) {
-	// Find Vec3D P on triangle ABC closest to sphere center
-	result.set(t.closestPointOnSurface(this));
-
-	// Sphere and triangle intersect if the (squared) distance from sphere
-	// center to Vec3D p is less than the (squared) sphere radius
-	var v = result.sub(this);
-	return v.magSquared() <= this.radius * this.radius;
-};
-
-/**
- * Calculates the normal vector on the sphere in the direction of the
- * current point.
- * 
- * @param q
- * @return a unit normal vector to the tangent plane of the ellipsoid in the
- * point.
- */
-Sphere.prototype.tangentPlaneNormalAt = function(q) {
-	return this.sub(q).normalize();
-};
-
-Sphere.prototype.toMesh = function() {
-	//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
-	//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
-
-	//if one argument is passed it can either be a Number for resolution, or an options object
-	//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
-	var opts = {
-		mesh: undefined,
-		resolution: 0
-	};
-	if(arguments.length === 1){
-		if(typeof(arguments[0]) == 'object'){ //options object
-			opts.mesh = arguments[0].mesh;
-			opts.resolution = arguments[0].res || arguments[0].resolution;
-		} else { //it was just the resolution Number
-			opts.resolution = arguments[0];
-		}
-	} else {
-		opts.mesh = arguments[0];
-		opts.resolution = arguments[1];
-	}
-	var builder = new SurfaceMeshBuilder(new SphereFunction(this));
-	return builder.createMesh(opts.mesh, opts.resolution, 1);
-};
-
-module.exports = Sphere;
-});
-
-define('toxi/geom/mesh/SphereFunction',["require", "exports", "module", "../../math/mathUtils","../Vec3D","../Sphere"], function(require, exports, module) {
-
-var mathUtils = require('../../math/mathUtils'),
-	Vec3D = require('../Vec3D'),
-	internals = require('../../internals'),
-	Sphere = require('../Sphere');
-
-/**
- * @class This implementation of a {@link SurfaceFunction} samples a given
- * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
- * @member toxi
- */
-var	SphereFunction = function(sphere_or_radius) {
-	if(sphere_or_radius === undefined){
-		this.sphere = new Sphere(new Vec3D(),1);
-	}
-	
-	if(internals.tests.isSphere( sphere_or_radius )){
-		this.sphere = sphere_or_radius;
-	}
-	else{
-		this.sphere = new Sphere(new Vec3D(),sphere_or_radius);
-	}
-	this.phiRange = mathUtils.PI;
-	this.thetaRange = mathUtils.TWO_PI;
-};
-
-SphereFunction.prototype = {
-	
-	computeVertexFor: function(p,phi,theta) {
-	    phi -= mathUtils.HALF_PI;
-	    var cosPhi = mathUtils.cos(phi);
-	    var cosTheta = mathUtils.cos(theta);
-	    var sinPhi = mathUtils.sin(phi);
-	    var sinTheta = mathUtils.sin(theta);
-	    var t = mathUtils.sign(cosPhi) * mathUtils.abs(cosPhi);
-	    p.x = t * mathUtils.sign(cosTheta) * mathUtils.abs(cosTheta);
-	    p.y = mathUtils.sign(sinPhi) * mathUtils.abs(sinPhi);
-	    p.z = t * mathUtils.sign(sinTheta) * mathUtils.abs(sinTheta);
-	    return p.scaleSelf(this.sphere.radius).addSelf(this.sphere);
-	},
-	
-	getPhiRange: function() {
-	    return this.phiRange;
-	},
-	
-	getPhiResolutionLimit: function(res) {
-	    return res;
-	},
-	
-	getThetaRange: function() {
-	    return this.thetaRange;
-	},
-	
-	getThetaResolutionLimit: function(res) {
-	    return res;
-	},
-	
-	setMaxPhi: function(max) {
-	    this.phiRange = mathUtils.min(max / 2, mathUtils.PI);
-	},
-	
-	setMaxTheta: function(max) {
-	    this.thetaRange = mathUtils.min(max, mathUtils.TWO_PI);
-	}
-};
-
-module.exports = SphereFunction;
-});
-
-define('toxi/geom/mesh/SphericalHarmonics',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
-
-var mathUtils = require('../../math/mathUtils');
-
-/**
- * @class Spherical harmonics surface evaluator based on code by Paul Bourke:
- * http://local.wasp.uwa.edu.au/~pbourke/geometry/sphericalh/
- * @member toxi
- */
-var SphericalHarmonics = function(m) {
-    this.m = m;
-};
-
-SphericalHarmonics.prototype = {
-    // toxiclibs - FIXME check where flipped vertex order is coming from sometimes
-    computeVertexFor: function(p,phi,theta) {
-        var r = 0;
-        r += Math.pow(mathUtils.sin(this.m[0] * theta), this.m[1]);
-        r += Math.pow(mathUtils.cos(this.m[2] * theta), this.m[3]);
-        r += Math.pow(mathUtils.sin(this.m[4] * phi), this.m[5]);
-        r += Math.pow(mathUtils.cos(this.m[6] * phi), this.m[7]);
-
-        var sinTheta = mathUtils.sin(theta);
-        p.x = r * sinTheta * mathUtils.cos(phi);
-        p.y = r * mathUtils.cos(theta);
-        p.z = r * sinTheta * mathUtils.sin(phi);
-        return p;
-    },
-
-    getPhiRange: function() {
-        return mathUtils.TWO_PI;
-    },
-
-    getPhiResolutionLimit: function(res) {
-        return res;
-    },
-
-    getThetaRange: function() {
-        return mathUtils.PI;
-    },
-
-    getThetaResolutionLimit: function(res) {
-        return res;
-    }
-};
-
-module.exports = SphericalHarmonics;
 });
 
 define('toxi/geom/mesh/SuperEllipsoid',["require", "exports", "module", "../../math/mathUtils","./TriangleMesh"], function(require, exports, module) {
@@ -7068,7 +7064,7 @@ define('toxi/geom/mesh/Terrain',[
 		* @return the elevation at grid point
 		*/
 		getHeightAtCell: function(x,z){
-			console.log("["+x+","+z+"]");
+			//console.log("["+x+","+z+"]");
 			return this.elevation[this._getIndex(x,z)];
 		},
 		/**
@@ -7159,9 +7155,6 @@ define('toxi/geom/mesh/Terrain',[
 					d = this.getVertexAtCell(fl.xx,z2),
 					r = new Ray3D(new Vec3D(x, 10000, z), new Vec3D(0, -1, 0)),
 					i = new TriangleIntersector(new Triangle3D(a, b, d));
-				
-				console.log("ray",r);
-				console.log("intersector",i);
 
 				if(i.intersectsRay(r)){
 					isec = i.getIntersectionData();
@@ -7260,24 +7253,22 @@ define('toxi/geom/mesh/Terrain',[
 
 	return	Terrain;
 });
-define('toxi/geom/mesh',["require", "exports", "module", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/OBJWriter","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector","./mesh/Terrain"], function(require, exports, module) {
-module.exports = {
-	TriangleMesh: require('./mesh/TriangleMesh'),
-	BezierPatch: require('./mesh/BezierPatch'),
-	BoxSelector: require('./mesh/BoxSelector'),
-	DefaultSelector: require('./mesh/DefaultSelector'),
-	Face: require('./mesh/Face'),
-	OBJWriter: require('./mesh/OBJWriter'),
-	PlaneSelector: require('./mesh/PlaneSelector'),
-	SphereFunction: require('./mesh/SphereFunction'),
-	SphericalHarmonics: require('./mesh/SphericalHarmonics'),
-	SurfaceMeshBuilder: require('./mesh/SurfaceMeshBuilder'),
-	SuperEllipsoid: require('./mesh/SuperEllipsoid'),
-	Terrain: require('./mesh/Terrain'),
-	TriangleMesh: require('./mesh/TriangleMesh'),
-	Vertex: require('./mesh/Vertex'),
-	VertexSelector: require('./mesh/VertexSelector')
-};
+define('toxi/geom/mesh',["require", "exports", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/OBJWriter","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector","./mesh/Terrain"], function(require, exports) {
+	exports.TriangleMesh = require('./mesh/TriangleMesh');
+	exports.BezierPatch = require('./mesh/BezierPatch');
+	exports.BoxSelector = require('./mesh/BoxSelector');
+	exports.DefaultSelector = require('./mesh/DefaultSelector');
+	exports.Face = require('./mesh/Face');
+	exports.OBJWriter = require('./mesh/OBJWriter');
+	exports.PlaneSelector = require('./mesh/PlaneSelector');
+	exports.SphereFunction = require('./mesh/SphereFunction');
+	exports.SphericalHarmonics = require('./mesh/SphericalHarmonics');
+	exports.SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
+	exports.SuperEllipsoid = require('./mesh/SuperEllipsoid');
+	exports.Terrain = require('./mesh/Terrain');
+	exports.TriangleMesh = require('./mesh/TriangleMesh');
+	exports.Vertex = require('./mesh/Vertex');
+	exports.VertexSelector = require('./mesh/VertexSelector');
 });
 
 define('toxi/geom/BernsteinPolynomial',["require", "exports", "module"], function(require, exports, module) {
@@ -7881,7 +7872,6 @@ var	Ellipse = function(a,b,c,d) {
 				this.setRadii(c,c);
 			}
 		} else {
-			console.log("yup");
 			Vec2D.apply(this,[a,b]);
 			this.setRadii(c,d);
 		}
@@ -7985,13 +7975,14 @@ module.exports = Ellipse;
 
 });
 
-define('toxi/geom/Circle',["require", "exports", "module", "../internals","../math/mathUtils","./Vec2D","./Ellipse"], function(require, exports, module) {
-var	internals = require('../internals'),
-	mathUtils = require('../math/mathUtils'),
-	Vec2D = require('./Vec2D'),
-	Ellipse = require('./Ellipse');
+define('toxi/geom/Circle',["require", "exports", "module", "../internals","../math/mathUtils",'./Ellipse','./Vec2D'], function(require, exports, module) {
+var internals, mathUtils;
 
 
+internals = require('../internals');
+mathUtils = require('../math/mathUtils');
+var Ellipse = require('./Ellipse');
+var Vec2D = require('./Vec2D');
 
 /**
  * @class This class overrides {@link Ellipse} to define a 2D circle and provides
@@ -9007,7 +8998,7 @@ Triangle2D.prototype = {
      },
      
      getBounds: function(){
-		return new Rect(Vec2D.min(Vec2D.min(a,b),c),Vec2D.max(Vec2D.max(a,b),c));
+		return new Rect(Vec2D.min(Vec2D.min(this.a,this.b),this.c),Vec2D.max(Vec2D.max(this.a,this.b),this.c));
      },
      
      getCircumCircle: function(){
@@ -9307,39 +9298,35 @@ ZAxisCylinder.prototype.getMajorAxis = function(){
 module.exports = ZAxisCylinder;
 });
 
-define('toxi/geom',["require", "exports", "module","./geom/mesh","./geom/AABB","./geom/BernsteinPolynomial","./geom/Circle","./geom/CircleIntersector","./geom/Cone","./geom/Ellipse","./geom/IsectData2D","./geom/IsectData3D","./geom/Line2D","./geom/Line3D","./geom/Matrix4x4","./geom/Plane","./geom/Polygon2D","./geom/Quaternion","./geom/Ray2D","./geom/Ray3D","./geom/Ray3DIntersector","./geom/Rect","./geom/Sphere","./geom/Spline2D","./geom/Triangle2D","./geom/Triangle3D","./geom/Vec2D","./geom/Vec3D","./geom/XAxisCylinder","./geom/YAxisCylinder","./geom/ZAxisCylinder"], function(require, exports, module) {
-module.exports = {
-	AABB: require('./geom/AABB'),
-	mesh: require('./geom/mesh'),
-	BernsteinPolynomial: require('./geom/BernsteinPolynomial'),
-	Circle: require('./geom/Circle'),
-	CircleIntersector: require('./geom/CircleIntersector'),
-	Cone: require('./geom/Cone'),
-	Ellipse: require('./geom/Ellipse'),
-	IsectData2D: require('./geom/IsectData2D'),
-	IsectData3D: require('./geom/IsectData3D'),
-	Line2D: require('./geom/Line2D'),
-	Line3D: require('./geom/Line3D'),
-	Matrix4x4: require('./geom/Matrix4x4'),
-	Plane: require('./geom/Plane'),
-	Polygon2D: require('./geom/Polygon2D'),
-	Quaternion: require('./geom/Quaternion'),
-	Ray2D: require('./geom/Ray2D'),
-	Ray3D: require('./geom/Ray3D'),
-	Ray3DIntersector: require('./geom/Ray3DIntersector'),
-	Rect: require('./geom/Rect'),
-	Sphere: require('./geom/Sphere'),
-	Spline2D: require('./geom/Spline2D'),
-	Triangle2D: require('./geom/Triangle2D'),
-	Triangle3D: require('./geom/Triangle3D'),
-	Vec2D: require('./geom/Vec2D'),
-	Vec3D: require('./geom/Vec3D'),
-	XAxisCylinder: require('./geom/XAxisCylinder'),
-	YAxisCylinder: require('./geom/YAxisCylinder'),
-	ZAxisCylinder: require('./geom/ZAxisCylinder')
-};
-
-//module.exports.mesh2d = require('./geom/mesh2d');
+define('toxi/geom',["require", "exports","./geom/mesh","./geom/AABB","./geom/BernsteinPolynomial","./geom/Circle","./geom/CircleIntersector","./geom/Cone","./geom/Ellipse","./geom/IsectData2D","./geom/IsectData3D","./geom/Line2D","./geom/Line3D","./geom/Matrix4x4","./geom/Plane","./geom/Polygon2D","./geom/Quaternion","./geom/Ray2D","./geom/Ray3D","./geom/Ray3DIntersector","./geom/Rect","./geom/Sphere","./geom/Spline2D","./geom/Triangle2D","./geom/Triangle3D","./geom/Vec2D","./geom/Vec3D","./geom/XAxisCylinder","./geom/YAxisCylinder","./geom/ZAxisCylinder"], function(require, exports) {
+	exports.AABB = require('./geom/AABB');
+	exports.mesh = require('./geom/mesh');
+	exports.BernsteinPolynomial = require('./geom/BernsteinPolynomial');
+	exports.Circle = require('./geom/Circle');
+	exports.CircleIntersector = require('./geom/CircleIntersector');
+	exports.Cone = require('./geom/Cone');
+	exports.Ellipse = require('./geom/Ellipse');
+	exports.IsectData2D = require('./geom/IsectData2D');
+	exports.IsectData3D = require('./geom/IsectData3D');
+	exports.Line2D = require('./geom/Line2D');
+	exports.Line3D = require('./geom/Line3D');
+	exports.Matrix4x4 = require('./geom/Matrix4x4');
+	exports.Plane = require('./geom/Plane');
+	exports.Polygon2D = require('./geom/Polygon2D');
+	exports.Quaternion = require('./geom/Quaternion');
+	exports.Ray2D = require('./geom/Ray2D');
+	exports.Ray3D = require('./geom/Ray3D');
+	exports.Ray3DIntersector = require('./geom/Ray3DIntersector');
+	exports.Rect = require('./geom/Rect');
+	exports.Sphere = require('./geom/Sphere');
+	exports.Spline2D = require('./geom/Spline2D');
+	exports.Triangle2D = require('./geom/Triangle2D');
+	exports.Triangle3D = require('./geom/Triangle3D');
+	exports.Vec2D = require('./geom/Vec2D');
+	exports.Vec3D = require('./geom/Vec3D');
+	exports.XAxisCylinder = require('./geom/XAxisCylinder');
+	exports.YAxisCylinder = require('./geom/YAxisCylinder');
+	exports.ZAxisCylinder = require('./geom/ZAxisCylinder');
 });
 
 define('toxi/math/BezierInterpolation',["require", "exports", "module"], function(require, exports, module) {
@@ -12350,23 +12337,24 @@ AxisConstraint.prototype.applyConstraint = function(p){
 module.exports = AxisConstraint;
 });
 
-define('toxi/physics2d/constraints/CircularConstraint',["require", "exports", "module"], function(require, exports, module) {
-var	CircularConstraint = function(a,b){
-	if(arguments.length == 1){
-		this.circle = a;
-	} else {
-		console.log("a: "+a);
-		this.circle = new toxi.Circle(a,b);
-	}
-};
+define('toxi/physics2d/constraints/CircularConstraint',["require", "exports", "module", "../../geom/Circle"], function(require, exports, module) {
+	var Circle = require('../../geom/Circle');
+	
+	var	CircularConstraint = function(a,b){
+		if(arguments.length == 1){
+			this.circle = a;
+		} else {
+			this.circle = new Circle(a,b);
+		}
+	};
 
-CircularConstraint.prototype.applyConstraint = function(p){
-	if(this.circle.containsPoint(p)){
-		p.set(this.circle.add(p.sub(this.circle).normalizeTo(this.circle.getRadius())));
-	}
-};
+	CircularConstraint.prototype.applyConstraint = function(p){
+		if(this.circle.containsPoint(p)){
+			p.set(this.circle.add(p.sub(this.circle).normalizeTo(this.circle.getRadius())));
+		}
+	};
 
-module.exports = CircularConstraint;
+	module.exports = CircularConstraint;
 });
 
 define('toxi/physics2d/constraints/MaxConstraint',["require", "exports", "module"], function(require, exports, module) {
@@ -13417,6 +13405,8 @@ module.exports.datatypes = require('./utils/datatypes');
 });
 
 define('toxi/main',[
+	"require",
+	"exports",
 	"./color",
 	"./geom",
 	"./internals",
@@ -13425,19 +13415,15 @@ define('toxi/main',[
 	"./processing",
 	"./THREE",
 	"./utils"
-	], function(color,geom,internals,math,physics2d,processing,THREE,utils) {
-
-	return {
-		color: color,
-		geom: geom,
-		internals: internals,
-		math: math,
-		physics2d: physics2d,
-		processing: processing,
-		THREE: THREE,
-		utils: utils
-	};
-
+	], function(require, exports) {
+		exports.color = require('./color');
+		exports.geom = require('./geom');
+		exports.internals = require('./internals');
+		exports.math = require('./math');
+		exports.physics2d = require('./physics2d');
+		exports.processing = require('./processing');
+		exports.THREE = require('./THREE');
+		exports.utils = require('./utils');
 });
 
 define('toxi',["./toxi/main"], function(toxi) {

@@ -238,7 +238,7 @@
             // create a position on a sphere, using the direction vector
             var pos = dir.scale(SCALE);
             // create a box mesh at the origin
-            var b = new toxi.geom.AABB(new toxi.geom.Vec3D(), BOX_SIZE).toMesh();
+            var b = new toxi.geom.AABB(new toxi.geom.Vec3D(), BOX_SIZE).toMesh( new toxi.geom.mesh.TriangleMesh("aabb") );
             // align the Z axis of the box with the direction vector
             b.pointTowards(dir);
             b.transform(new toxi.geom.Matrix4x4().translateSelf(pos.x,pos.y,pos.z));
