@@ -20,22 +20,18 @@ describe('toxi/geom/Sphere.js', function(){
 		assert.equal(typeof mesh.getFaces, 'function');
 	});
 
-	it('async getBoundingBox( fn ) should return an AABB', function( done ){
-		mesh.getBoundingBox(function( aabb ){
-			if(toxi.internals.tests.isAABB(aabb)){
-				done();
-			}
-		});
+	it('should return an AABB', function(){
+		var aabb = mesh.getBoundingBox();
+		assert.equal( toxi.internals.tests.isAABB( aabb ), true);
 	});
-	it('async getBoundingSphere( fn ) should return Sphere', function( done ){
-		mesh.getBoundingSphere(function( sphere ){
-			if(toxi.internals.tests.isSphere(sphere)) done();
-		});
+
+	it('should return a Sphere', function(){
+		var sphere = mesh.getBoundingSphere();
+		assert.equal( toxi.internals.tests.isSphere( sphere ), true );
 	});
-	it('async center( origin, fn ) should return bounds', function( done ){
-		mesh.center( toxi.geom.Vec3D.randomVector(), function( aabb ){
-			if( toxi.internals.tests.isAABB( aabb ) ) done();
-		});
+	it('should return bounds AABB', function(){
+		var aabb = mesh.center( toxi.geom.Vec3D.randomVector() );
+		assert.equal( toxi.internals.tests.isAABB( aabb ), true);
 	});
 });
 
@@ -46,19 +42,13 @@ describe('requirejs toxi/geom/mesh/TriangleMesh', function(){
 			cylMesh = new XAxisCylinder( new Vec3D(), 100, 125).toMesh({ steps: 5 });
 			assert.equal(typeof cylMesh.vertices,  'object');
 		});
-		it('should create an AABB', function( done ){
-			cylMesh.getBoundingBox(function( bounds ){
-				if( internals.tests.isAABB( bounds )){
-					done();
-				}
-			});
+		it('should create an AABB', function(){
+			var bounds = cylMesh.getBoundingBox();
+			assert.equal(internals.tests.isAABB( bounds ), true);
 		});
-		it('should create a Sphere', function( done ){
-			cylMesh.getBoundingSphere(function( sphere ){
-				if(internals.tests.isSphere( sphere )){
-					done();
-				}
-			});
+		it('should create a Sphere', function(){
+			var sphere = cylMesh.getBoundingSphere();
+			assert.equal(internals.tests.isSphere( sphere ), true);
 		});
 
 	});

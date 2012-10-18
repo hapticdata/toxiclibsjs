@@ -1,8 +1,30 @@
+/*global describe,it, console*/
 var toxi = require('../../index'),
 	assert = require('assert');
 
 describe('TriangleMesh', function(){
 
+	describe('from Sphere', function(){
+		var sphere = new toxi.geom.Sphere(1);
+		var instance = sphere.toMesh();
+		testComputingGeometry( instance );
+	});
+
+	function testComputingGeometry( instance ){
+		describe("#getBoundingBox()", function(){
+			var aabb = instance.getBoundingBox();
+			it('should return an AABB', function(){
+				assert.equal( aabb instanceof toxi.geom.AABB, true );
+			});
+		});
+
+		describe('#getBoundingSphere()', function(){
+			var sphere = instance.getBoundingSphere();
+			it('should return a Sphere', function(){
+				assert.equal( sphere instanceof toxi.geom.Sphere, true );
+			});
+		});
+	}
 	function testPositionAndExtent( instance, pos, extentNumber ){
 		it(['should have a centroid of ',pos.x, pos.y, pos.z].join(','), function(){
 			var c = instance.computeCentroid();
@@ -39,6 +61,7 @@ describe('TriangleMesh', function(){
 				assert.equal(instance.getNumFaces(), 12);
 			});
 			testPositionAndExtent( instance, {x: 0, y: 0, z: 0}, 1);
+			testComputingGeometry( instance );
 		});
 
 		describe('#transform()', function(){
@@ -49,13 +72,13 @@ describe('TriangleMesh', function(){
 			instance2.transform( matrix );
 
 			testPositionAndExtent( instance2, {x: 1, y: 1, z: 1}, 2);
+			testComputingGeometry( instance );
 		});
 
 		describe('#toWEMesh()', function(){
-			instance.toWEMesh(function( wemesh ){
-				it('should be a WETriangleMesh instance', function(){
-					assert.equal( wemesh instanceof toxi.geom.mesh.WETriangleMesh, true );
-				});
+			var wemesh = instance.toWEMesh();
+			it('should be a WETriangleMesh instance', function(){
+				assert.equal( wemesh instanceof toxi.geom.mesh.WETriangleMesh, true );
 			});
 		});
 	});
