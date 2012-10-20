@@ -521,7 +521,7 @@ module.exports = MathUtils;
 
 });
 
-define('toxi/internals',["require", "exports", "module"], function(require, exports, module) {
+define('toxi/internals',["require", "exports"], function(require, exports) {
 /**
  * @module toxi/libUtils
  * contains the helper functions for the library,
@@ -535,13 +535,13 @@ var ifUndefinedElse = function(_if,_else){
 	return (typeof _if !== 'undefined') ? _if : _else;
 };
 
-module.exports.extend = function(childClass,superClass){
+exports.extend = function(childClass,superClass){
 	if(typeof childClass !== 'function'){
 		throw Error("childClass was not function, possible circular: ", childClass);
 	} else if( typeof superClass !== 'function'){
 		throw Error("superClass was not function, possible circular: ", superClass);
 	}
-	childClass.prototype = new superClass();
+	childClass.prototype = Object.create( superClass.prototype );//new superClass();
 	childClass.constructor = childClass;
 	childClass.prototype.parent = superClass.prototype;
 };
@@ -549,9 +549,9 @@ module.exports.extend = function(childClass,superClass){
 
  //allow the library to assume Array.isArray has been implemented
 var isArray = Array.isArray || function(a){
-	return a.toString() == '[object Array]';	
+	return a.toString() == '[object Array]';
 };
-module.exports.isArray = isArray;
+exports.isArray = isArray;
 
 var hasProperties = function(subject,properties){
 	if(subject === undefined || typeof subject != 'object'){
@@ -569,8 +569,8 @@ var hasProperties = function(subject,properties){
 	return true;
 };
 
-module.exports.hasProperties = hasProperties;
-module.exports.tests = {
+exports.hasProperties = hasProperties;
+exports.tests = {
 	hasXY: function( o ){
 		return hasProperties(o, ['x','y']);
 	},
@@ -591,7 +591,7 @@ module.exports.tests = {
 		return hasProperties(o, ['closestPointTo','intersectLine','getLength']);
 	},
 	isMatrix4x4: function( o ){
-    	return hasProperties( o, ['identity', 'invert', 'setFrustrum']);
+		return hasProperties( o, ['identity', 'invert', 'setFrustrum']);
 	},
 	isRect: function( o ){
 		return hasProperties(o, ['x','y','width','height','getArea','getCentroid','getDimensions']);
@@ -613,24 +613,24 @@ module.exports.tests = {
 //basic forEach, use native implementation is available
 //from Underscore.js
 var breaker = {};
-module.exports.each = function(obj, iterator, context) {
+exports.each = function(obj, iterator, context) {
     if (obj == null) return;
 	if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
-	  obj.forEach(iterator, context);
+		obj.forEach(iterator, context);
 	} else if (obj.length === +obj.length) {
-	  for (var i = 0, l = obj.length; i < l; i++) {
-	    if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
-	  }
+		for (var i = 0, l = obj.length; i < l; i++) {
+			if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
+		}
 	} else {
-	  for (var key in obj) {
-	    if (hasOwnProperty.call(obj, key)) {
-	      if (iterator.call(context, obj[key], key, obj) === breaker) return;
-	    }
-	  }
+		for (var key in obj) {
+			if (hasOwnProperty.call(obj, key)) {
+				if (iterator.call(context, obj[key], key, obj) === breaker) return;
+			}
+		}
 	}
 };
 
-module.exports.removeItemFrom = function(item,array){
+exports.removeItemFrom = function(item,array){
 	var index = array.indexOf(item);
 	if(index > -1){
 		return array.splice(index,1);
@@ -638,62 +638,129 @@ module.exports.removeItemFrom = function(item,array){
 	return undefined;
 };
 //basic mixin function, copy over object properties to provided object
-module.exports.mixin = function(destination,source){
-	module.exports.each(source,function(val,key){
+exports.mixin = function(destination,source){
+	exports.each(source,function(val,key){
 		destination[key] = val;
 	});
 };
 
-module.exports.numberCompare = function(f1,f2){
+exports.numberCompare = function(f1,f2){
 	if(f1 == f2) return 0;
 	if(f1 < f2) return -1;
-	if(f1 > f2) return 1;	
+	if(f1 > f2) return 1;
 };
 
 //set up for use with typed-arrays
-module.exports.Int32Array = (typeof Int32Array !== 'undefined') ? Int32Array : Array;
-module.exports.Float32Array = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
+exports.Int32Array = (typeof Int32Array !== 'undefined') ? Int32Array : Array;
+exports.Float32Array = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
+	//imitate the basic functionality of a Java Iterator
+	(function(){
+		var ArrayIterator = function(collection){
+			this.__it = collection.slice(0);
+		};
+		ArrayIterator.prototype = {
+			hasNext: function(){
+				return this.__it.length > 0;
+			},
+			next: function(){
+				return this.__it.shift();
+			}
+		};
+		var ObjectIterator = function(object){
+			this.__obj = {};
+			this.__keys = [];
+			for(var prop in object){
+				this.__obj[prop] = object[prop];
+				this.__keys.push(prop);
+			}
+			this.__it = new ArrayIterator(this.__keys);
+		};
+		ObjectIterator.prototype = {
+			hasNext: function(){
+				return this.__it.hasNext();
+			},
+			next: function(){
+				var key = this.__it.next();
+				return this.__obj[key];
+			}
+		};
 
-//imitate the basic functionality of a Java Iterator
+		var Iterator = function(collection){
+			if(exports.isArray(collection)){
+				return new ArrayIterator(collection);
+			}
+			return new ObjectIterator(collection);
+		};
 
-var ArrayIterator = function(collection){
-	this.__it = collection.slice(0);
-};
-ArrayIterator.prototype = {
-	hasNext: function(){
-		return this.__it.length > 0;
-	},
-	next: function(){
-		return this.__it.shift();
-	}
-};
-var ObjectIterator = function(object){
-	this.__obj = {};
-	this.__keys = [];
-	for(var prop in object){
-		this.__obj[prop] = object[prop];
-		this.__keys.push(prop);
-	}
-	this.__it = new ArrayIterator(this.__keys);
-};
-ObjectIterator.prototype = {
-	hasNext: function(){
-		return this.__it.hasNext();
-	},
-	next: function(){
-		var key = this.__it.next();
-		return this.__obj[key];
-	}
-};
+		exports.Iterator = Iterator;
+	}());
 
-var Iterator = function(collection){
-	if(module.exports.isArray(collection)){
-		return new ArrayIterator(collection);
-	}
-	return new ObjectIterator(collection);
-};
+	(function(){
+		// {Function} keyGeneratorFunction - key to use to return the identifier
+		var LinkedMap = function( keyGeneratorFunction ){
+			this.__list = [];
+			this.__map = {};
+			this.__inverseMap = {};
+			if( typeof keyGeneratorFunction === 'function' ){
+				this.generateKey = keyGeneratorFunction;
+			}
+		};
 
-module.exports.Iterator = Iterator;
+		LinkedMap.prototype = {
+			each: function( fn ){
+				exports.each(this.__map, fn);
+			},
+			get: function( id_or_val ){
+				var self = this;
+				var checkBoth = function(){
+					if( self.__inverseMap[id_or_val] !== undefined ){
+						return id_or_val;
+					}
+					return self.__map[id_or_val];
+				};
+
+				var result = checkBoth();
+				
+				if( result === undefined ){
+					id_or_val = this.generateKey( id_or_val );
+					result = checkBoth();
+				}
+				return result;
+			},
+			generateKey: function( key ){ return key.toString(); },
+			getArray: function(){
+				return this.__list;
+			},
+			has: function( id_or_val ){
+				var self = this;
+				var _has = function( id ){
+					return ( self.__map[ id ] !== undefined || self.__inverseMap[ id ] !== undefined );
+				};
+				if( _has( id_or_val ) ){
+					return true;
+				}
+				return _has( this.generateKey( id_or_val ) ); 
+			},
+			put: function( id, val ){
+				id = this.generateKey( id );
+				this.__map[id] = val;
+				this.__inverseMap[val] = id;
+				this.__list.push( val );
+			},
+			remove: function( val ){
+				val = this.get( val );
+				var id = this.__inverseMap[val];
+				delete this.__inverseMap[val];
+				delete this.__map[id];
+				return this.__list.splice( this.__list.indexOf(val), 1)[0];
+			},
+			size: function(){
+				return this.__list.length;
+			}
+		};
+
+		exports.LinkedMap = LinkedMap;
+	}());
 
 });
 
@@ -1828,8 +1895,8 @@ define('toxi/geom/vectors',[
 				vz = ay * this.z,
 				wx = az * this.x,
 				wy = az * this.y,
-				wz = az * this.z;
-				si = Math.sin(theta);
+				wz = az * this.z,
+				si = Math.sin(theta),
 				co = Math.cos(theta);
 			var xx = (ax * (ux + vy + wz) + (this.x * (ay * ay + az * az) - ax * (vy + wz)) * co + (-wy + vz) * si);
 			var yy = (ay * (ux + vy + wz) + (this.y * (ax * ax + az * az) - ay * (ux + wz)) * co + (wx - uz) * si);
@@ -4037,7 +4104,16 @@ module.exports = Line3D;
 
 });
 
-define('toxi/geom/AABB',["require", "exports", "module", "../internals","../math/mathUtils", "./Vec2D", "./Vec3D"], function(require, exports, module) {
+define('toxi/geom/AABB',[
+	"require",
+	"exports",
+	"module",
+	"../internals",
+	"../math/mathUtils",
+	"./Vec2D",
+	"./Vec3D",
+	"./mesh/TriangleMesh"
+], function(require, exports, module) {
 
 var	internals = require('../internals'),
 	Vec3D = require('./Vec3D'),
@@ -4049,11 +4125,9 @@ var	internals = require('../internals'),
 
 /**
  @class Axis-aligned Bounding Box
- @member 
+ @member
  */
 var AABB = function(a,b){
-	var vec,
-		extent;
 	if(a === undefined){
 		Vec3D.call(this);
 		this.setExtent(new Vec3D());
@@ -4091,14 +4165,14 @@ AABB.prototype.containsPoint = function(p) {
 AABB.prototype.copy = function() {
     return new AABB(this);
 };
-	
-	/**
-	 * Returns the current box size as new Vec3D instance (updating this vector
-	 * will NOT update the box size! Use {@link #setExtent(ReadonlyVec3D)} for
-	 * those purposes)
-	 * 
-	 * @return box size
-	 */
+
+/**
+ * Returns the current box size as new Vec3D instance (updating this vector
+ * will NOT update the box size! Use {@link #setExtent(ReadonlyVec3D)} for
+ * those purposes)
+ *
+ * @return box size
+ */
 AABB.prototype.getExtent = function() {
    return this.extent.copy();
 };
@@ -4128,13 +4202,13 @@ AABB.prototype.getNormalForPoint = function(p) {
     return normal;
 };
 
-    /**
-     * Adjusts the box size and position such that it includes the given point.
-     * 
-     * @param p
-     *            point to include
-     * @return itself
-     */
+/**
+ * Adjusts the box size and position such that it includes the given point.
+ *
+ * @param p
+ *            point to include
+ * @return itself
+ */
 AABB.prototype.includePoint = function(p) {
     this.min.minSelf(p);
     this.max.maxSelf(p);
@@ -4145,7 +4219,7 @@ AABB.prototype.includePoint = function(p) {
 
 /**
 * Checks if the box intersects the passed in one.
-* 
+*
 * @param box
 *            box to check
 * @return true, if boxes overlap
@@ -4158,16 +4232,15 @@ AABB.prototype.intersectsBox = function(box) {
 /**
  * Calculates intersection with the given ray between a certain distance
  * interval.
- * 
+ *
  * Ray-box intersection is using IEEE numerical properties to ensure the
  * test is both robust and efficient, as described in:
- * 
+ *
  * Amy Williams, Steve Barrus, R. Keith Morley, and Peter Shirley: "An
  * Efficient and Robust Ray-Box Intersection Algorithm" Journal of graphics
  * tools, 10(1):49-54, 2005
- * 
- * @param ray
- *            incident ray
+ *
+ * @param ray incident ray
  * @param minDist
  * @param maxDist
  * @return intersection point on the bounding box (only the first is
@@ -4196,9 +4269,9 @@ AABB.prototype.intersectsRay = function(ray, minDist, maxDist) {
     if (tymax < tmax) {
         tmax = tymax;
     }
-    bbox = signDirZ ? max : min;
+    bbox = signDirZ ? this.max : this.min;
     var tzmin = (bbox.z - ray.z) * invDir.z;
-    bbox = signDirZ ? min : max;
+    bbox = signDirZ ? this.min : this.max;
     var tzmax = (bbox.z - ray.z) * invDir.z;
     if ((tmin > tzmax) || (tzmin > tmax)) {
         return null;
@@ -4227,7 +4300,7 @@ AABB.prototype.intersectsSphere = function(c, r) {
 	if(arguments.length == 1){ //must've been a sphere
 		r = c.radius;
 	}
-    var s, 
+    var s,
 		d = 0;
     // find the square of the distance
     // from the sphere to the box
@@ -4268,13 +4341,13 @@ AABB.prototype.intersectsTriangle = function(tri) {
 	// 2) normal of the triangle
 	// 3) crossproduct(edge from tri, {x,y,z}-directin)
 	// this gives 3x3=9 more tests
-	var v0, 
-		v1, 
+	var v0,
+		v1,
 		v2,
-		normal, 
-		e0, 
-		e1, 
-		e2, 
+		normal,
+		e0,
+		e1,
+		e2,
 		f;
 
 	// move everything so that the boxcenter is in (0,0,0)
@@ -4290,35 +4363,35 @@ AABB.prototype.intersectsTriangle = function(tri) {
 	// test the 9 tests first (this was faster)
 	f = e0.getAbs();
 	if (this.testAxis(e0.z, -e0.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
-	    return false;
+		return false;
 	}
 	if (this.testAxis(-e0.z, e0.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
-	    return false;
+		return false;
 	}
 	if (this.testAxis(e0.y, -e0.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
-	    return false;
+		return false;
 	}
 
 	f = e1.getAbs();
 	if (this.testAxis(e1.z, -e1.y, f.z, f.y, v0.y, v0.z, v2.y, v2.z, this.extent.y, this.extent.z)) {
-	    return false;
+		return false;
 	}
 	if (this.testAxis(-e1.z, e1.x, f.z, f.x, v0.x, v0.z, v2.x, v2.z, this.extent.x, this.extent.z)) {
-	    return false;
+		return false;
 	}
 	if (this.testAxis(e1.y, -e1.x, f.y, f.x, v0.x, v0.y, v1.x, v1.y, this.extent.x, this.extent.y)) {
-	    return false;
+		return false;
 	}
 
 	f = e2.getAbs();
 	if (this.testAxis(e2.z, -e2.y, f.z, f.y, v0.y, v0.z, v1.y, v1.z, this.extent.y, this.extent.z)) {
-	    return false;
+		return false;
 	}
 	if (this.testAxis(-e2.z, e2.x, f.z, f.x, v0.x, v0.z, v1.x, v1.z, this.extent.x, this.extent.z)) {
-	    return false;
+		return false;
 	}
 	if (this.testAxis(e2.y, -e2.x, f.y, f.x, v1.x, v1.y, v2.x, v2.y, this.extent.x, this.extent.y)) {
-	    return false;
+		return false;
 	}
 
 	// first test overlap in the {x,y,z}-directions
@@ -4328,25 +4401,25 @@ AABB.prototype.intersectsTriangle = function(tri) {
 
 	// test in X-direction
 	if (mathUtils.min(v0.x, v1.x, v2.x) > this.extent.x || mathUtils.max(v0.x, v1.x, v2.x) < -this.extent.x) {
-	    return false;
+		return false;
 	}
 
 	// test in Y-direction
 	if (mathUtils.min(v0.y, v1.y, v2.y) > this.extent.y || mathUtils.max(v0.y, v1.y, v2.y) < -this.extent.y) {
-	    return false;
+		return false;
 	}
 
 	// test in Z-direction
 	if (mathUtils.min(v0.z, v1.z, v2.z) > this.extent.z || mathUtils.max(v0.z, v1.z, v2.z) < -this.extent.z) {
-	    return false;
+		return false;
 	}
 
 	// test if the box intersects the plane of the triangle
 	// compute plane equation of triangle: normal*x+d=0
 	normal = e0.cross(e1);
 	var d = -normal.dot(v0);
-	if (!this.planeBoxOverlap(normal, d, extent)) {
-	    return false;
+	if (!this.planeBoxOverlap(normal, d, this.extent)) {
+		return false;
 	}
 	return true;
 };
@@ -4390,7 +4463,7 @@ AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
 /**
  * Updates the position of the box in space and calls
  * {@link #updateBounds()} immediately
- * 
+ *
  * @see geom.Vec3D#set(float, float, float)
  */
 
@@ -4435,7 +4508,8 @@ AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
 
 AABB.prototype.toMesh = function(mesh){
 	if(mesh === undefined){
-		mesh = new TriangleMesh("aabb",8,12);	
+		var TriangleMesh = require('./mesh/TriangleMesh');
+		mesh = new TriangleMesh("aabb",8,12);
 	}
 	var a = this.min,//new Vec3D(this.min.x,this.max.y,this.max.z),
 		g = this.max,//new Vec3D(this.max.x,this.max.y,this.max.z),
@@ -4479,7 +4553,7 @@ AABB.prototype.toString = function() {
 /**
 * Updates the min/max corner points of the box. MUST be called after moving
 * the box in space by manipulating the public x,y,z coordinates directly.
-* 
+*
 * @return itself
 */
 AABB.prototype.updateBounds = function() {
@@ -4730,82 +4804,278 @@ Triangle3D.prototype = {
 module.exports = Triangle3D;
 });
 
-define('toxi/geom/mesh/Face',["require", "exports", "module", "../Triangle3D"], function(require, exports, module) {
+define('toxi/geom/mesh/Face',[
+	"require",
+	"exports",
+	"module",
+	"../Triangle3D",
+	"../../internals"
+], function(require, exports, module) {
+	//these 2 modules get defined
+	var Face, WEFace;
 
-var Triangle3D = require('../Triangle3D');
+	(function(){
+		var Triangle3D = require('../Triangle3D');
+		Face = function(a,b,c,uvA,uvB,uvC) {
+			this.a = a;
+			this.b = b;
+			this.c = c;
+			var aminusc = this.a.sub(this.c);
+			var aminusb = this.a.sub(this.b);
+			var cross = aminusc.crossSelf(aminusb);
+			this.normal = cross.normalize();
+			this.a.addFaceNormal(this.normal);
+			this.b.addFaceNormal(this.normal);
+			this.c.addFaceNormal(this.normal);
+			
+			if(uvA !== undefined){
+				this.uvA = uvA;
+				this.uvB = uvB;
+				this.uvC = uvC;
+			}
+		};
 
-/** 
- * @class
- * @member toxi
+		Face.prototype = {
+			computeNormal: function() {
+				this.normal = this.a.sub(this.c).crossSelf(this.a.sub(this.b)).normalize();
+			},
+
+			flipVertexOrder: function() {
+				var t = this.a;
+				this.a = this.b;
+				this.b = t;
+				this.normal.invert();
+			},
+			
+			getCentroid: function() {
+				return this.a.add(this.b).addSelf(this.c).scale(1.0 / 3);
+			},
+			
+			getClass: function(){
+				return "Face";
+			},
+
+			getVertices: function(verts) {
+				if (verts !== undefined) {
+					verts[0] = this.a;
+					verts[1] = this.b;
+					verts[2] = this.c;
+				} else {
+					verts = [ this.a, this.b, this.c ];
+				}
+				return verts;
+			},
+
+			toString: function() {
+				return this.getClass() + " " + this.a + ", " + this.b + ", " + this.c;
+			},
+
+			/**
+			 * Creates a generic {@link Triangle3D} instance using this face's vertices.
+			 * The new instance is made up of copies of the original vertices and
+			 * manipulating them will not impact the originals.
+			 *
+			 * @return triangle copy of this mesh face
+			 */
+			toTriangle: function() {
+				return new Triangle3D(this.a.copy(), this.b.copy(), this.c.copy());
+			}
+		};
+	}());
+
+	//define WEFace
+	(function(){
+		var internals = require('../../internals');
+		var proto;
+		//@param {WEVertex} a
+		//@param {WEVertex} b
+		//@param {WEVertex} c
+		//@param {Vec2D} [uvA]
+		//@param {Vec2D} [uvB]
+		//@param {Vec2D} [uvC]
+		WEFace = function( a, b, c, uvA, uvB, uvC ){
+			Face.call(this, a, b, c, uvA, uvB, uvC);
+			this.edges = [];
+		};
+		internals.extend( WEFace, Face );
+		proto = WEFace.prototype;
+		//@param {WingedEdge} edge
+		proto.addEdge = function( edge ){
+			this.edges.push( edge );
+		};
+		proto.getEdges = function(){
+			return this.edges;
+		};
+		//@param {WEVertex[]} [verts]
+		proto.getVertices = function( verts ){
+			if( verts !== undefined ){
+				verts[0] = this.a;
+				verts[1] = this.b;
+				verts[2] = this.c;
+			} else {
+				verts = [ this.a, this.b, this.c ];
+			}
+			return verts;
+		};
+	}());
+	Face.WEFace = WEFace;
+	module.exports = Face;
+});
+
+define('toxi/geom/Sphere',[
+	"require",
+	"exports",
+	"module",
+	"../internals",
+	"./Vec3D",
+	"./mesh"
+], function(require, exports, module) {
+
+var internals, mesh, Vec3D;
+internals = require('../internals');
+mesh = require('./mesh');
+Vec3D = require('./Vec3D');
+
+
+
+/**
+ * @module toxi.geom.Sphere
+ * @augments toxi.geom.Vec3D
  */
- var i =0;
-var Face = function(a,b,c,uvA,uvB,uvC) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
-    var aminusc = this.a.sub(this.c);
-    var aminusb = this.a.sub(this.b);
-    var cross = aminusc.crossSelf(aminusb);
-    this.normal = cross.normalize();
-    this.a.addFaceNormal(this.normal);
-    this.b.addFaceNormal(this.normal);
-    this.c.addFaceNormal(this.normal);
-    
-    if(uvA !== undefined){
-		this.uvA = uvA;
-		this.uvB = uvB;
-		this.uvC = uvC;
-    }
+var	Sphere = function(a,b){
+	if(a === undefined){
+		Vec3D.apply(this,[new Vec3D()]);
+		this.radius = 1;
+	}
+	else if( internals.tests.hasXYZ( a ) ){
+		Vec3D.apply(this,[a]);
+		if( internals.tests.isSphere( a ) ){
+			this.radius = a.radius;
+		}
+		else {
+			this.radius = b;
+		}
+	}
+	else {
+		Vec3D.apply(this,[new Vec3D()]);
+		this.radius = a;
+	}
 };
 
-Face.prototype = {
-	computeNormal: function() {
-        this.normal = this.a.sub(this.c).crossSelf(this.a.sub(this.b)).normalize();
-    },
+internals.extend(Sphere,Vec3D);
 
-	flipVertexOrder: function() {
-        var t = this.a;
-        this.a = this.b;
-        this.b = t;
-        this.normal.invert();
-    },
-	
-	getCentroid: function() {
-        return this.a.add(this.b).addSelf(this.c).scale(1.0 / 3);
-    },
-    
-    getClass: function(){
-		return "Face";
-	},
 
-    getVertices: function(verts) {
-        if (verts !== undefined) {
-            verts[0] = this.a;
-            verts[1] = this.b;
-            verts[2] = this.c;
-        } else {
-            verts = [ this.a, this.b, this.c ];
-        }
-        return verts;
-    },
-
-    toString: function() {
-        return this.getClass() + " " + this.a + ", " + this.b + ", " + this.c;
-    },
-
-    /**
-     * Creates a generic {@link Triangle3D} instance using this face's vertices.
-     * The new instance is made up of copies of the original vertices and
-     * manipulating them will not impact the originals.
-     * 
-     * @return triangle copy of this mesh face
-     */
-    toTriangle: function() {
-        return new Triangle3D(this.a.copy(), this.b.copy(), this.c.copy());
-    }
+Sphere.prototype.containsPoint = function(p) {
+	var d = this.sub(p).magSquared();
+	return (d <= this.radius * this.radius);
 };
 
-module.exports = Face;
+/**
+ * Alternative to {@link SphereIntersectorReflector}. Computes primary &
+ * secondary intersection points of this sphere with the given ray. If no
+ * intersection is found the method returns null. In all other cases, the
+ * returned array will contain the distance to the primary intersection
+ * point (i.e. the closest in the direction of the ray) as its first index
+ * and the other one as its second. If any of distance values is negative,
+ * the intersection point lies in the opposite ray direction (might be
+ * useful to know). To get the actual intersection point coordinates, simply
+ * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
+ * 
+ * @param ray
+ * @return 2-element float array of intersection points or null if ray
+ * doesn't intersect sphere at all.
+ */
+Sphere.prototype.intersectRay = function(ray) {
+	var result, a, b, t,
+		q = ray.sub(this),
+		distSquared = q.magSquared(),
+		v = -q.dot(ray.getDirection()),
+		d = this.radius * this.radius - (distSquared - v * v);
+	if (d >= 0.0) {
+		d = Math.sqrt(d);
+		a = v + d;
+		b = v - d;
+		if (!(a < 0 && b < 0)) {
+			if (a > 0 && b > 0) {
+				if (a > b) {
+					t = a;
+					a = b;
+					b = t;
+				}
+			} else {
+				if (b > 0) {
+					t = a;
+					a = b;
+					b = t;
+				}
+			}
+		}
+		result = [a,b];
+	}
+	return result;
+};
+
+/**
+ * Considers the current vector as centre of a collision sphere with radius
+ * r and checks if the triangle abc intersects with this sphere. The Vec3D p
+ * The point on abc closest to the sphere center is returned via the
+ * supplied result vector argument.
+ * 
+ * @param t
+ *			triangle to check for intersection
+ * @param result
+ *			a non-null vector for storing the result
+ * @return true, if sphere intersects triangle ABC
+ */
+Sphere.prototype.intersectSphereTriangle = function(t,result) {
+	// Find Vec3D P on triangle ABC closest to sphere center
+	result.set(t.closestPointOnSurface(this));
+
+	// Sphere and triangle intersect if the (squared) distance from sphere
+	// center to Vec3D p is less than the (squared) sphere radius
+	var v = result.sub(this);
+	return v.magSquared() <= this.radius * this.radius;
+};
+
+/**
+ * Calculates the normal vector on the sphere in the direction of the
+ * current point.
+ * 
+ * @param q
+ * @return a unit normal vector to the tangent plane of the ellipsoid in the
+ * point.
+ */
+Sphere.prototype.tangentPlaneNormalAt = function(q) {
+	return this.sub(q).normalize();
+};
+
+Sphere.prototype.toMesh = function() {
+	//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
+	//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
+
+	//if one argument is passed it can either be a Number for resolution, or an options object
+	//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
+	var opts = {
+		mesh: undefined,
+		resolution: 0
+	};
+	if(arguments.length === 1){
+		if(typeof(arguments[0]) == 'object'){ //options object
+			opts.mesh = arguments[0].mesh;
+			opts.resolution = arguments[0].res || arguments[0].resolution;
+		} else { //it was just the resolution Number
+			opts.resolution = arguments[0];
+		}
+	} else {
+		opts.mesh = arguments[0];
+		opts.resolution = arguments[1];
+	}
+
+	var builder = new mesh.SurfaceMeshBuilder(new mesh.SphereFunction(this));
+	return builder.createMesh(opts.mesh, opts.resolution, 1);
+};
+
+module.exports = Sphere;
 });
 
 define('toxi/geom/Quaternion',["require", "exports", "module", "../math/mathUtils","./Matrix4x4"], function(require, exports, module) {
@@ -5094,772 +5364,1287 @@ Quaternion.createFromMatrix = function(m){
  module.exports = Quaternion;
 });
 
-define('toxi/geom/mesh/Vertex',["require", "exports", "module", "../../internals","../Vec3D"], function(require, exports, module) {
+define('toxi/geom/mesh/Vertex',[
+	"require",
+	"exports",
+	"module",
+	"../../internals",
+	"../Vec3D"
+], function(require, exports, module) {
 
-var extend = require('../../internals').extend,
-	Vec3D = require('../Vec3D');
+	//WEVertex becomes a property on Vertex
+	var Vertex, WEVertex;
 
-/**
- * @class
- * @member toxi
- * @augments toxi.Vec3D
- */
-var	Vertex = function(v,id) {
-	Vec3D.call(this,v);
-	this.id = id;
-	this.normal = new Vec3D();
-};
-extend(Vertex,Vec3D);
+	(function(){
+		var extend = require('../../internals').extend,
+			Vec3D = require('../Vec3D'),
+			proto;
 
-Vertex.prototype.addFaceNormal = function(n) {
-    this.normal.addSelf(n);
-};
+		Vertex = function(v,id) {
+			Vec3D.call(this,v);
+			this.id = id;
+			this.normal = new Vec3D();
+		};
+		extend(Vertex,Vec3D);
+		proto = Vertex.prototype;
+		proto.addFaceNormal = function(n) {
+			this.normal.addSelf(n);
+		};
 
-Vertex.prototype.clearNormal = function() {
-    this.normal.clear();
-};
+		proto.clearNormal = function() {
+			this.normal.clear();
+		};
 
-Vertex.prototype.computeNormal = function() {
-    this.normal.normalize();
-};
+		proto.computeNormal = function() {
+			this.normal.normalize();
+		};
 
-Vertex.prototype.toString = function() {
-    return this.id + ": p: " + this.parent.toString.call(this) + " n:" + this.normal.toString();
-};
+		proto.toString = function() {
+			return this.id + ": p: " + this.parent.toString.call(this) + " n:" + this.normal.toString();
+		};
+	}());
 
-module.exports = Vertex;
-});
+	(function(){
+		var extend = require('../../internals').extend, proto;
 
-define('toxi/geom/mesh/TriangleMesh',["require", "exports", "module", "../../math/mathUtils","../Matrix4x4","./Face","../Vec3D","../Triangle3D","../Quaternion","./Vertex"], function(require, exports, module) {
-
-var	mathUtils = require('../../math/mathUtils'),
-	Matrix4x4 = require('../Matrix4x4'),
-	Face = require('./Face'),
-	Vec3D = require('../Vec3D'),
-	Triangle3D = require('../Triangle3D'),
-	Quaternion = require('../Quaternion'),
-	Vertex = require('./Vertex');
-
-
-/**
- * @class
- * @member toxi
- */
-var	TriangleMesh = function(name,numV,numF){
-	if(name === undefined)name = "untitled";
-	if(numV === undefined)numV = TriangleMesh.DEFAULT_NUM_VERTICES;
-	if(numF === undefined)numF = TriangleMesh.DEFAULT_NUM_FACES;
-	this.setName(name);
-	this.matrix = new Matrix4x4();
-	this.centroid = new Vec3D();
-	this.vertices = [];
-	this.__verticesObject = {};
-	this.faces = [];
-	this.numVertices = 0;
-	this.numFaces = 0;
-	this.uniqueVertexID = 0;
-	return this;
-};
-
-
-//statics
-TriangleMesh.DEFAULT_NUM_VERTICES = 1000;
-TriangleMesh.DEFAULT_NUM_FACES = 3000;
-TriangleMesh.DEFAULT_STRIDE = 4;
-
-TriangleMesh.prototype = {
-	addFace: function(a,b,c,n,uvA,uvB,uvC){
-		//can be 3 args, 4 args, 6 args, or 7 args
-		//if it was 6 swap vars around, 
-		if( arguments.length == 6 ){
-			uvC = uvB;
-			uvB = uvA;
-			uvA = n;
-			n = undefined;
-		} 
-		//7 param method
-		var va = this.__checkVertex(a);
-		var vb = this.__checkVertex(b);
-		var vc = this.__checkVertex(c);
-	
-		if(va.id === vb.id || va.id === vc.id || vb.id === vc.id){
-			//console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
-		} else {
-			if(n !== undefined){
-				var nc = va.sub(vc).crossSelf(va.sub(vb));
-				if(n.dot(nc)<0){
-					var t = va;
-					va = vb;
-					vb = t;
+		WEVertex = function( vec3d, id ){
+			Vertex.call(this, vec3d, id);
+			this.edges = [];
+		};
+		extend( WEVertex, Vertex );
+		proto = WEVertex.prototype;
+		//@param {WingedEdge} edge to add
+		proto.addEdge = function( edge ){
+			this.edges.push( edge );
+		};
+		//@param {Vec3D} dir
+		//@param {Number} tolerance
+		//@return {WingedEdge} closest
+		proto.getNeighborInDirection = function( dir, tolerance ){
+			var closest, delta = 1 - tolerance;
+			var neighbors = this.getNeighbors();
+			var d;
+			for(var i=0, l=neighbors.length; i<l; i++){
+				d = neighbors[i].sub( this ).normalize().dot( dir );
+				if( d > delta ){
+					closest = neighbors[i];
+					delta = d;
 				}
 			}
-			var f = new Face(va,vb,vc,uvA,uvB,uvC);
-			//console.log(f.toString());
-			this.faces.push(f);
-			this.numFaces++;
-		}
-		return this;
-	},
-	
-	addMesh: function(m){
-		var l = m.getFaces().length;
-		for(var i=0;i<l;i++){
-			var f = m.getFaces()[i];
-			this.addFace(f.a,f.b,f.c);
-		}
-		return this;
-	},
-	
-	center: function(origin){
-		this.computeCentroid();
-		var delta = (origin !== undefined) ? origin.sub(this.centroid) : this.centroid.getInverted();
-		var l = this.vertices.length;
-		for(var i=0;i<l;i++){
-			var v = this.vertices[i];
-			v.addSelf(delta);
-		}
-		this.getBoundingBox();
-		return this.bounds;
-	},
-	
-	__checkVertex: function(v){
-		var vString = v.toString();
-		var vertex = this.__verticesObject[vString];
-		if(vertex === undefined){
-			vertex = this.createVertex(v,this.uniqueVertexID++);
-			this.__verticesObject[vString] = vertex;
-			this.vertices.push(vertex);
-			this.numVertices++;
-		}
-		return vertex;
-	},
-	
-	clear: function(){
-		this.vertices = [];
+			return closest;
+		};
+		//@return {WingedEdge[]} neighbors
+		proto.getNeighbors = function(){
+			var neighbors = [];
+			for(var i=0, l=this.edges.length; i<l; i++){
+				neighbors.push( this.edges[i].getOtherEndFor(this) );
+			}
+			return neighbors;
+		};
+
+		proto.removeEdge = function( e ){
+			this.edges.splice( this.edges.indexOf( e ), 1 );
+		};
+
+		proto.toString = function(){
+			return this.id + " {" + this.x + "," + this.y + "," + this.z + "}";
+		};
+
+		return WEVertex;
+	}());
+	Vertex.WEVertex = WEVertex;
+	module.exports = Vertex;
+});
+
+define('toxi/geom/mesh/WingedEdge',[
+	'../../internals',
+	'../Line3D'
+], function( internals, Line3D ){
+
+	var WingedEdge, proto;
+	//@param {WEVertex} va
+	//@param {WEVertex} vb
+	//@param {WEFace} face
+	//@param {Number} id
+	WingedEdge = function( va, vb, face, id ){
+		Line3D.call(this, va, vb);
+		this.id = id;
 		this.faces = [];
-		this.bounds = undefined;
-		this.numVertices = 0;
-		this.numFaces = 0;
+		this.addFace( face );
+	};
+	internals.extend( WingedEdge, Line3D );
+	proto = WingedEdge.prototype;
+	//@param {WEFace} face
+	//@return {WingedEdge} this
+	proto.addFace = function( face ){
+		this.faces.push( face );
 		return this;
-	},
-	
-	computeCentroid: function(){
-		this.centroid.clear();
-		var l = this.vertices.length;
-		for(var i=0;i<l;i++){
-			this.centroid.addSelf(this.vertices[i]);
-		}
-		return this.centroid.scaleSelf(1.0/this.numVertices).copy();
-	},
-	
-	computeFaceNormals: function(){
-		var l = this.faces.length;
-		for(var i=0;i<l;i++){
-			this.faces[i].computeNormal();
-		}
-	},
-	
-	computeVertexNormals: function(){
-		var l = this.vertices.length,
-			i = 0;
-		for(i=0;i<l;i++){
-			this.vertices[i].clearNormal();
-		}
-		l = this.faces.length;
-		for(i=0;i<l;i++){
-			var f = this.faces[i];
-			f.a.addFaceNormal(f);
-			f.b.addFaceNormal(f);
-			f.c.addFaceNormal(f);
-		}
-		l = this.vertices.length;
-		for(i=0;i<l;i++){
-			this.vertices[i].computeNormal();
-		}
-		return this;
-	},
-	
-	copy: function(){
-		var m = new TriangleMesh(this.name+"-copy",this.numVertices,this.numFaces);
-		var l = this.faces.length;
-		for(var i=0;i<l;i++){
-			var f = this.faces[i];
-			m.addFace(f.a,f.b,f.c,f.normal,f.uvA,f.uvB,f.uvC);
-		}
-		return m;
-	},
-	
-	createVertex: function(v,id){
-		return new Vertex(v,id);
-	},
-	
-	faceOutwards: function(){
-		this.computeCentroid();
-		var l = this.faces.length;
-		for(var i=0;i<l;i++){
-			var f = this.faces[i];
-			var n = f.getCentroid().sub(this.centroid);
-			var dot = n.dot(f.normal);
-			if(dot <0) {
-				f.flipVertexOrder();
-			}
-		}
-		return this;
-	},
-	
-	flipVertexOrder: function(){
-		var l = this.faces.length;
-		for(var i=0;i<l;i++){
-			var f = this.faces[i];
-			var t = f.a;
-			f.a = f.b;
-			f.b = t;
-			f.normal.invert();
-		}
-		return this;
-	},
-	
-	flipYAxis: function(){
-		this.transform(new Matrix4x4().scaleSelf(1,-1,1));
-		this.flipVertexOrder();
-		return this;
-	},
-	
-	getBoundingBox: function( ){
-		var minBounds = Vec3D.MAX_VALUE.copy();
-		var maxBounds = Vec3D.MIN_VALUE.copy();
-		var l = this.vertices.length;
-
-		for(var i=0;i<l;i++){
-			var v = this.vertices[i];
-			minBounds.minSelf(v);
-			maxBounds.maxSelf(v);
-		}
-		this.bounds = require('../../geom').AABB.fromMinMax(minBounds,maxBounds);
-		return this.bounds;
-	},
-	
-	getBoundingSphere:function( ){
-		var self = this;
-		var radius = 0;
-		self.computeCentroid();
-		var l = self.vertices.length;
-		for(var i=0;i<l;i++){
-			var v = self.vertices[i];
-			radius = mathUtils.max(radius,v.distanceToSquared(self.centroid));
-		}
-		var Sphere = require('../../geom').Sphere;
-		var sph = new Sphere(self.centroid,Math.sqrt(radius));
-		return sph;
-	},
-	
-	getClosestVertexToPoint: function(p){
-		var closest,
-			minDist = Number.MAX_VALUE,
-			l = this.vertices.length;
-		for(var i=0;i<l;i++){
-			var v = this.vertices[i];
-			var d = v.distanceToSquared(p);
-			if(d<minDist){
-				closest = v;
-				minDist = d;
-			}
-		}
-		return closest;
-	},
-	
-	/**
-	 * Creates an array of unravelled normal coordinates. For each vertex the
-	 * normal vector of its parent face is used. This method can be used to
-	 * translate the internal mesh data structure into a format suitable for
-	 * OpenGL Vertex Buffer Objects (by choosing stride=4). For more detail,
-	 * please see {@link #getMeshAsVertexArray(float[], int, int)}
-	 * 
-	 * @see #getMeshAsVertexArray(float[], int, int)
-	 * 
-	 * @param normals
-	 *            existing float array or null to automatically create one
-	 * @param offset
-	 *            start index in array to place normals
-	 * @param stride
-	 *            stride/alignment setting for individual coordinates (min value
-	 *            = 3)
-	 * @return array of xyz normal coords
-	 */
-	getFaceNormalsAsArray: function(normals, offset, stride) {
-		if(arguments.length === 0){
-			normals = undefined;
-			offset = 0;
-			stride = TriangleMesh.DEFAULT_STRIDE;
-		} else if(arguments.length == 1 && typeof(arguments[0]) == 'object'){ //options object
-			var opts = arguments[0];
-			normals = opts.normals;
-			offset = opts.offset;
-			stride = opts.stride;
-		}
-		stride = mathUtils.max(stride, 3);
-		if (normals === undefined) {
-			normals = [];
-		}
-		var i = offset;
-		var l = this.faces.length;
-		for (var j=0;j<l;j++) {
-			var f = this.faces[j];
-			normals[i] = f.normal.x;
-			normals[i + 1] = f.normal.y;
-			normals[i + 2] = f.normal.z;
-			i += stride;
-			normals[i] = f.normal.x;
-			normals[i + 1] = f.normal.y;
-			normals[i + 2] = f.normal.z;
-			i += stride;
-			normals[i] = f.normal.x;
-			normals[i + 1] = f.normal.y;
-			normals[i + 2] = f.normal.z;
-			i += stride;
-		}
-		return normals;
-	},
-	
-	getFaces: function() {
+	};
+	//@return {WEFace[]} faces
+	proto.getFaces = function() {
 		return this.faces;
-	},
+	};
+	//@param {WEVertex} wevert
+	//@return {WingedEdge}
+	proto.getOtherEndFor = function( wevert ){
+		if( this.a === wevert ){
+			return this.b;
+		}
+		if( this.b === wevert ){
+			return this.a;
+		}
+	};
+
+	proto.remove = function(){
+		var self = this;
+		var rm = function( edges ){
+			edges.splice( edges.indexOf( self ), 1 );
+		};
+		for( var i=0, l = this.faces.length; i<l; i++){
+			rm( this.faces[i].edges );
+		}
+		rm( this.a.edges );
+		rm( this.b.edges );
+	};
+
+	proto.toString = function(){
+		return "id: " + this.id + " " + Line3D.prototype.toString.call(this) + " f: " + this.faces.length;
+	};
+
+	return WingedEdge;
+
+});
+define('toxi/geom/mesh/subdiv/EdgeLengthComparator',[],function(){
+	var EdgeLengthComparator = function(){};
+	EdgeLengthComparator.prototype.compare = function( edge1, edge2 ){
+		return -parseInt( edge1.getLengthSquared()-edge2.getLengthSquared(), 10);
+	};
+	return EdgeLengthComparator;
+});
+define('toxi/geom/mesh/subdiv/SubdivisionStrategy',[
+	'./EdgeLengthComparator'
+], function( EdgeLengthComparator ){
 	
-	/**
-	 * Builds an array of vertex indices of all faces. Each vertex ID
-	 * corresponds to its position in the {@link #vertices} HashMap. The
-	 * resulting array will be 3 times the face count.
-	 * 
-	 * @return array of vertex indices
-	 */
-	getFacesAsArray: function() {
-		var faceList = [];
-		var i = 0;
-		var l = this.faces.length;
-		for (var j=0;j<l;j++) {
-			var f = this.faces[j];
-			faceList[i++] = f.a.id;
-			faceList[i++] = f.b.id;
-			faceList[i++] = f.c.id;
+	var SubdivisionStrategy, proto;
+	SubdivisionStrategy = function(){
+		this._order = SubdivisionStrategy.DEFAULT_ORDERING;
+	};
+	SubdivisionStrategy.DEFAULT_ORDERING = new EdgeLengthComparator();
+	proto = SubdivisionStrategy.prototype;
+
+	proto.getEdgeOrdering = function(){
+		return this._order.compare;
+	};
+	proto.setEdgeOrdering = function( order ){
+		this._order = order;
+	};
+
+	return SubdivisionStrategy;
+
+});
+define('toxi/geom/mesh/subdiv/MidpointSubdivision',[
+	'../../../internals',
+	'./SubdivisionStrategy'
+], function( internals, SubdivisionStrategy ){
+
+	var MidpointSubdivison = function(){
+		SubdivisionStrategy.call(this);
+	};
+	internals.extend( MidpointSubdivison, SubdivisionStrategy );
+	MidpointSubdivison.prototype.computeSplitPoints = function( edge ){
+		var mid = [];
+		mid.push( edge.getMidPoint() );
+		return mid;
+	};
+
+	return MidpointSubdivison;
+});
+define('toxi/geom/mesh/TriangleMesh',[
+	"require",
+	"exports",
+	"module",
+	"../../internals",
+	"../../math/mathUtils",
+	"../Matrix4x4",
+	"./Face",
+	"../Vec3D",
+	"../AABB",
+	"../Sphere",
+	"../Triangle3D",
+	"../Quaternion",
+	"./Vertex",
+	'../Line3D',
+	'../Vec2D',
+	'./WingedEdge',
+	'./subdiv/MidpointSubdivision'
+], function(require, exports, module) {
+	//these 2 modules get defined
+	//WETriangleMesh gets exported as a property on TriangleMesh
+	var TriangleMesh, WETriangleMesh;
+
+	//define TriangleMesh
+	(function(){
+		var	internals = require('../../internals'),
+			mathUtils = require('../../math/mathUtils'),
+			Matrix4x4 = require('../Matrix4x4'),
+			Face = require('./Face'),
+			Vec3D = require('../Vec3D'),
+			Triangle3D = require('../Triangle3D'),
+			Quaternion = require('../Quaternion'),
+			Vertex = require('./Vertex');
+
+
+		function vertexKeyGenerator( v ){
+			var precision = 10000;
+			var format = function( n ){
+				return Math.floor(n*precision) / precision;
+			};
+			//this will hold the ids consistently between vertex and vec3ds
+			return "[ x: "+format(v.x)+ ", y: "+format(v.y)+ ", z: "+format(v.z)+"]";
 		}
-		return faceList;
-	},
-	
-	getIntersectionData: function() {
-		return this.intersector.getIntersectionData();
-	},
-	
-	
-	/**
-	 * Creates an array of unravelled vertex coordinates for all faces. This
-	 * method can be used to translate the internal mesh data structure into a
-	 * format suitable for OpenGL Vertex Buffer Objects (by choosing stride=4).
-	 * The order of the array will be as follows:
-	 * 
-	 * <ul>
-	 * <li>Face 1:
-	 * <ul>
-	 * <li>Vertex #1
-	 * <ul>
-	 * <li>x</li>
-	 * <li>y</li>
-	 * <li>z</li>
-	 * <li>[optional empty indices to match stride setting]</li>
-	 * </ul>
-	 * </li>
-	 * <li>Vertex #2
-	 * <ul>
-	 * <li>x</li>
-	 * <li>y</li>
-	 * <li>z</li>
-	 * <li>[optional empty indices to match stride setting]</li>
-	 * </ul>
-	 * </li>
-	 * <li>Vertex #3
-	 * <ul>
-	 * <li>x</li>
-	 * <li>y</li>
-	 * <li>z</li>
-	 * <li>[optional empty indices to match stride setting]</li>
-	 * </ul>
-	 * </li>
-	 * </ul>
-	 * <li>Face 2:
-	 * <ul>
-	 * <li>Vertex #1</li>
-	 * <li>...etc.</li>
-	 * </ul>
-	 * </ul>
-	 * 
-	 * @param verts
-	 *            an existing target array or null to automatically create one
-	 * @param offset
-	 *            start index in arrtay to place vertices
-	 * @param stride
-	 *            stride/alignment setting for individual coordinates
-	 * @return array of xyz vertex coords
-	 */
-	getMeshAsVertexArray: function(verts, offset, stride) {
-		if(verts ===undefined){
-			verts = undefined;
+
+		/**
+		 * @class
+		 * @member toxi
+		 */
+		//java TriangleMesh constructor is (name, numVertices, numFaces)
+		//numVertices, numFaces is irrelevant with js arrays
+		TriangleMesh = function(name){
+			if(name === undefined)name = "untitled";
+			this.init( name );
+			return this;
+		};
+
+
+		//statics
+		TriangleMesh.DEFAULT_NUM_VERTICES = 1000;
+		TriangleMesh.DEFAULT_NUM_FACES = 3000;
+		TriangleMesh.DEFAULT_STRIDE = 4;
+
+		TriangleMesh.prototype = {
+			addFace: function(a,b,c,n,uvA,uvB,uvC){
+				//can be 3 args, 4 args, 6 args, or 7 args
+				//if it was 6 swap vars around,
+				if( arguments.length == 6 ){
+					uvC = uvB;
+					uvB = uvA;
+					uvA = n;
+					n = undefined;
+				}
+				//7 param method
+				var va = this.__checkVertex(a);
+				var vb = this.__checkVertex(b);
+				var vc = this.__checkVertex(c);
+			
+				if(va.id === vb.id || va.id === vc.id || vb.id === vc.id){
+					//console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
+				} else {
+					if(n !== undefined){
+						var nc = va.sub(vc).crossSelf(va.sub(vb));
+						if(n.dot(nc)<0){
+							var t = va;
+							va = vb;
+							vb = t;
+						}
+					}
+					var f = new Face(va,vb,vc,uvA,uvB,uvC);
+					//console.log(f.toString());
+					this.faces.push(f);
+				}
+				return this;
+			},
+			
+			addMesh: function(m){
+				var l = m.getFaces().length;
+				for(var i=0;i<l;i++){
+					var f = m.getFaces()[i];
+					this.addFace(f.a,f.b,f.c);
+				}
+				return this;
+			},
+			
+			//if no function is called it is assumed the response is not needed
+			center: function(origin){
+				this.computeCentroid();
+				var delta = (origin !== undefined) ? origin.sub(this.centroid) : this.centroid.getInverted();
+				var l = this.vertices.length;
+				for(var i=0;i<l;i++){
+					var v = this.vertices[i];
+					v.addSelf(delta);
+				}
+				
+				return this.getBoundingBox();
+			},
+			
+			__checkVertex: function(v){
+				var vertex = this.vertexMap.get(v);
+				if(vertex === undefined){
+					vertex = this._createVertex(v,this.uniqueVertexID++);
+					this.vertexMap.put( vertex, vertex );
+				}
+				return vertex;
+			},
+			
+			clear: function(){
+				this.vertexMap = new internals.LinkedMap( vertexKeyGenerator );
+				this.vertices = this.vertexMap.getArray();
+				this.faces = [];
+				this.bounds = undefined;
+				return this;
+			},
+			
+			computeCentroid: function(){
+				this.centroid.clear();
+				var l = this.vertices.length;
+				for(var i=0;i<l;i++){
+					this.centroid.addSelf(this.vertices[i]);
+				}
+				return this.centroid.scaleSelf(1.0/this.vertexMap.size()).copy();
+			},
+			
+			computeFaceNormals: function(){
+				var l = this.faces.length;
+				for(var i=0;i<l;i++){
+					this.faces[i].computeNormal();
+				}
+			},
+			
+			computeVertexNormals: function(){
+				var l = this.vertices.length,
+					i = 0;
+				for(i=0;i<l;i++){
+					this.vertices[i].clearNormal();
+				}
+				l = this.faces.length;
+				for(i=0;i<l;i++){
+					var f = this.faces[i];
+					f.a.addFaceNormal(f.normal);
+					f.b.addFaceNormal(f.normal);
+					f.c.addFaceNormal(f.normal);
+				}
+				l = this.vertices.length;
+				for(i=0;i<l;i++){
+					this.vertices[i].computeNormal();
+				}
+				return this;
+			},
+			
+			copy: function(){
+				var m = new TriangleMesh(this.name+"-copy",this.vertexMap.size(),this.faces.length);
+				var l = this.faces.length;
+				for(var i=0;i<l;i++){
+					var f = this.faces[i];
+					m.addFace(f.a,f.b,f.c,f.normal,f.uvA,f.uvB,f.uvC);
+				}
+				return m;
+			},
+			
+			_createVertex: function(vec3D,id){
+				var vertex = new Vertex( vec3D, id );
+				return vertex;
+			},
+			
+			faceOutwards: function(){
+				this.computeCentroid();
+				var l = this.faces.length;
+				for(var i=0;i<l;i++){
+					var f = this.faces[i];
+					var n = f.getCentroid().sub(this.centroid);
+					var dot = n.dot(f.normal);
+					if(dot <0) {
+						f.flipVertexOrder();
+					}
+				}
+				return this;
+			},
+			
+			flipVertexOrder: function(){
+				var l = this.faces.length;
+				for(var i=0;i<l;i++){
+					var f = this.faces[i];
+					var t = f.a;
+					f.a = f.b;
+					f.b = t;
+					f.normal.invert();
+				}
+				return this;
+			},
+			
+			flipYAxis: function(){
+				this.transform(new Matrix4x4().scaleSelf(1,-1,1));
+				this.flipVerteAxOrder();
+				return this;
+			},
+			
+			getBoundingBox: function( ){
+				/*if( fn === undefined ){
+					throw new Error("getBoundingBox() is an async method, provide a callback and the AABB will be the first parameter");
+				}*/
+				var AABB = require('../AABB');
+				var self = this;
+				var minBounds = Vec3D.MAX_VALUE.copy();
+				var maxBounds = Vec3D.MIN_VALUE.copy();
+				var l = self.vertices.length;
+
+				for(var i=0;i<l;i++){
+					var v = self.vertices[i];
+					minBounds.minSelf(v);
+					maxBounds.maxSelf(v);
+				}
+				self.bounds = AABB.fromMinMax(minBounds,maxBounds);
+				return self.bounds;
+			},
+			
+			getBoundingSphere:function(){
+				/*if( fn === undefined ){
+					throw new Error("getBoundingSphere() is an async method, provide a callback and the Sphere will be the first parameter");
+				}*/
+				//var self = this;
+				var Sphere = require('../Sphere');
+				var radius = 0;
+				this.computeCentroid();
+				var l = this.vertices.length;
+				for(var i=0;i<l;i++){
+					var v = this.vertices[i];
+					radius = mathUtils.max(radius,v.distanceToSquared(this.centroid));
+				}
+				var sph = new Sphere(this.centroid,Math.sqrt(radius));
+				return sph;
+			},
+			
+			getClosestVertexToPoint: function(p){
+				var closest,
+					minDist = Number.MAX_VALUE,
+					l = this.vertices.length;
+				for(var i=0;i<l;i++){
+					var v = this.vertices[i];
+					var d = v.distanceToSquared(p);
+					if(d<minDist){
+						closest = v;
+						minDist = d;
+					}
+				}
+				return closest;
+			},
+			
+			/**
+			 * Creates an array of unravelled normal coordinates. For each vertex the
+			 * normal vector of its parent face is used. This method can be used to
+			 * translate the internal mesh data structure into a format suitable for
+			 * OpenGL Vertex Buffer Objects (by choosing stride=4). For more detail,
+			 * please see {@link #getMeshAsVertexArray(float[], int, int)}
+			 *
+			 * @see #getMeshAsVertexArray(float[], int, int)
+			 *
+			 * @param normals existing float array or null to automatically create one
+			 * @param offset start index in array to place normals
+			 * @param stride stride/alignment setting for individual coordinates (min value
+			 *            = 3)
+			 * @return array of xyz normal coords
+			 */
+			getFaceNormalsAsArray: function(normals, offset, stride) {
+				if(arguments.length === 0){
+					normals = undefined;
+					offset = 0;
+					stride = TriangleMesh.DEFAULT_STRIDE;
+				} else if(arguments.length == 1 && typeof(arguments[0]) == 'object'){ //options object
+					var opts = arguments[0];
+					normals = opts.normals;
+					offset = opts.offset;
+					stride = opts.stride;
+				}
+				stride = mathUtils.max(stride, 3);
+				if (normals === undefined) {
+					normals = [];
+				}
+				var i = offset;
+				var l = this.faces.length;
+				for (var j=0;j<l;j++) {
+					var f = this.faces[j];
+					normals[i] = f.normal.x;
+					normals[i + 1] = f.normal.y;
+					normals[i + 2] = f.normal.z;
+					i += stride;
+					normals[i] = f.normal.x;
+					normals[i + 1] = f.normal.y;
+					normals[i + 2] = f.normal.z;
+					i += stride;
+					normals[i] = f.normal.x;
+					normals[i + 1] = f.normal.y;
+					normals[i + 2] = f.normal.z;
+					i += stride;
+				}
+				return normals;
+			},
+			
+			getFaces: function() {
+				return this.faces;
+			},
+			
+			/**
+			 * Builds an array of vertex indices of all faces. Each vertex ID
+			 * corresponds to its position in the {@link #vertices} HashMap. The
+			 * resulting array will be 3 times the face count.
+			 *
+			 * @return array of vertex indices
+			 */
+			getFacesAsArray: function() {
+				var faceList = [];
+				var i = 0;
+				var l = this.faces.length;
+				for (var j=0;j<l;j++) {
+					var f = this.faces[j];
+					faceList[i++] = f.a.id;
+					faceList[i++] = f.b.id;
+					faceList[i++] = f.c.id;
+				}
+				return faceList;
+			},
+			
+			getIntersectionData: function() {
+				return this.intersector.getIntersectionData();
+			},
+			
+			
+			/**
+			 * Creates an array of unravelled vertex coordinates for all faces. This
+			 * method can be used to translate the internal mesh data structure into a
+			 * format suitable for OpenGL Vertex Buffer Objects (by choosing stride=4).
+			 * The order of the array will be as follows:
+			 *
+			 * <ul>
+			 * <li>Face 1:
+			 * <ul>
+			 * <li>Vertex #1
+			 * <ul>
+			 * <li>x</li>
+			 * <li>y</li>
+			 * <li>z</li>
+			 * <li>[optional empty indices to match stride setting]</li>
+			 * </ul>
+			 * </li>
+			 * <li>Vertex #2
+			 * <ul>
+			 * <li>x</li>
+			 * <li>y</li>
+			 * <li>z</li>
+			 * <li>[optional empty indices to match stride setting]</li>
+			 * </ul>
+			 * </li>
+			 * <li>Vertex #3
+			 * <ul>
+			 * <li>x</li>
+			 * <li>y</li>
+			 * <li>z</li>
+			 * <li>[optional empty indices to match stride setting]</li>
+			 * </ul>
+			 * </li>
+			 * </ul>
+			 * <li>Face 2:
+			 * <ul>
+			 * <li>Vertex #1</li>
+			 * <li>...etc.</li>
+			 * </ul>
+			 * </ul>
+			 *
+			 * @param verts  an existing target array or null to automatically create one
+			 * @param offset start index in arrtay to place vertices
+			 * @param stride stride/alignment setting for individual coordinates
+			 * @return array of xyz vertex coords
+			 */
+			getMeshAsVertexArray: function(verts, offset, stride) {
+				if(verts ===undefined){
+					verts = undefined;
+				}
+				if(offset === undefined){
+					offset = 0;
+				}
+				if(stride === undefined){
+					stride = TriangleMesh.DEFAULT_STRIDE;
+				}
+				stride = mathUtils.max(stride, 3);
+				if (verts === undefined) {
+					verts = [];
+				}
+				var i = 0,//offset
+					l = this.faces.length;
+				for (var j=0;j<l;++j) {
+					var f = this.faces[j];
+					verts[i] = f.a.x;
+					verts[i + 1] = f.a.y;
+					verts[i + 2] = f.a.z;
+					i += stride;
+					verts[i] = f.b.x;
+					verts[i + 1] = f.b.y;
+					verts[i + 2] = f.b.z;
+					i += stride;
+					verts[i] = f.c.x;
+					verts[i + 1] = f.c.y;
+					verts[i + 2] = f.c.z;
+					i += stride;
+				}
+				return verts;
+			},
+			
+			getNumFaces: function() {
+				return this.faces.length;
+			},
+			
+			getNumVertices: function() {
+				return this.vertexMap.size();
+			},
+			
+			getRotatedAroundAxis: function(axis,theta) {
+				return this.copy().rotateAroundAxis(axis, theta);
+			},
+			
+			getRotatedX: function(theta) {
+				return this.copy().rotateX(theta);
+			},
+			
+			getRotatedY: function(theta) {
+				return this.copy().rotateY(theta);
+			},
+			
+			getRotatedZ: function(theta) {
+				return this.copy().rotateZ(theta);
+			},
+			
+			getScaled: function(scale) {
+				return this.copy().scale(scale);
+			},
+			
+			getTranslated: function(trans) {
+				return this.copy().translate(trans);
+			},
+			
+			getUniqueVerticesAsArray: function() {
+				var verts = [];
+				var i = 0;
+				var l = this.vertices.length;
+				for (var j=0;i<l;j++) {
+					var v = this.vertices[j];
+					verts[i++] = v.x;
+					verts[i++] = v.y;
+					verts[i++] = v.z;
+				}
+				return verts;
+			},
+			
+			getVertexAtPoint: function(v) {
+				var index;
+				for(var i=0;i<this.vertices.length;i++){
+					if(this.vertices[i].equals(v)){
+						index = i;
+					}
+				}
+				return this.vertices[index];
+			},
+			//my own method to help
+			getVertexIndex: function(vec) {
+				var matchedVertex = -1;
+				var l = this.vertices.length;
+				for(var i=0;i<l;i++)
+				{
+					var vert = this.vertices[i];
+					if(vert.equals(vec))
+					{
+						matchedVertex =i;
+					}
+				}
+				return matchedVertex;
+			
+			},
+			
+			getVertexForID: function(id) {
+				var vertex,
+					l = this.vertices.length;
+				for (var i=0;i<l;i++) {
+					var v = this.vertices[i];
+					if (v.id == id) {
+						vertex = v;
+						break;
+					}
+				}
+				return vertex;
+			},
+			
+			/**
+			 * Creates an array of unravelled vertex normal coordinates for all faces.
+			 * This method can be used to translate the internal mesh data structure
+			 * into a format suitable for OpenGL Vertex Buffer Objects (by choosing
+			 * stride=4). For more detail, please see
+			 * {@link #getMeshAsVertexArray(float[], int, int)}
+			 *
+			 * @see #getMeshAsVertexArray(float[], int, int)
+			 *
+			 * @param normals existing float array or null to automatically create one
+			 * @param offset start index in array to place normals
+			 * @param stride stride/alignment setting for individual coordinates (min value
+			 *            = 3)
+			 * @return array of xyz normal coords
+			 */
+			getVertexNormalsAsArray: function(normals, offset,stride) {
+				if(offset === undefined)offset = 0;
+				if(stride === undefined)stride = TriangleMesh.DEFAULT_STRIDE;
+				stride = mathUtils.max(stride, 3);
+				if (normals === undefined) {
+					normals = [];
+				}
+				var i = offset;
+				var l = this.faces.length;
+				for (var j=0;j<l;j++) {
+					var f = this.faces[j];
+					normals[i] = f.a.normal.x;
+					normals[i + 1] = f.a.normal.y;
+					normals[i + 2] = f.a.normal.z;
+					i += stride;
+					normals[i] = f.b.normal.x;
+					normals[i + 1] = f.b.normal.y;
+					normals[i + 2] = f.b.normal.z;
+					i += stride;
+					normals[i] = f.c.normal.x;
+					normals[i + 1] = f.c.normal.y;
+					normals[i + 2] = f.c.normal.z;
+					i += stride;
+				}
+				return normals;
+			},
+			
+			getVertices: function() {
+				return this.vertices;
+			},
+			
+			handleSaveAsSTL: function(stl,useFlippedY) {
+				/*f (useFlippedY) {
+					stl.setScale(new Vec3D(1, -1, 1));
+					for (Face f : faces) {
+						stl.face(f.a, f.b, f.c, f.normal, STLWriter.DEFAULT_RGB);
+					}
+				} else {
+					for (Face f : faces) {
+						stl.face(f.b, f.a, f.c, f.normal, STLWriter.DEFAULT_RGB);
+					}
+				}
+				stl.endSave();
+				console.log(numFaces + " faces written");
+				*/
+				throw Error("TriangleMesh.handleSaveAsSTL() currently not implemented");
+			
+			},
+
+			init: function( name ){
+				this.setName(name);
+				this.matrix = new Matrix4x4();
+				this.centroid = new Vec3D();
+				this.vertexMap = new internals.LinkedMap( vertexKeyGenerator );
+				//used for checking if theres an existing Vertex
+				this.vertices = this.vertexMap.getArray();
+				this.faces = [];
+				this.uniqueVertexID = 0;
+			},
+			
+			//FIXME this.intersector needs implementing of TriangleIntersector
+			intersectsRay: function(ray) {
+				throw Error('intersectsRay not yet implemented');
+				/*var tri = this.intersector.getTriangle();
+				var l = this.faces.length;
+				var f;
+				for (var i =0;i<l;i++) {
+					f = this.faces[i];
+					tri.a = f.a;
+					tri.b = f.b;
+					tri.c = f.c;
+					if (this.intersector.intersectsRay(ray)) {
+						return true;
+					}
+				}
+				return false;*/
+			},
+			
+			perforateFace: function(f, size) {
+				var centroid = f.getCentroid();
+				var d = 1 - size;
+				var a2 = f.a.interpolateTo(centroid, d);
+				var b2 = f.b.interpolateTo(centroid, d);
+				var c2 = f.c.interpolateTo(centroid, d);
+				this.removeFace(f);
+				this.addFace(f.a, b2, a2);
+				this.addFace(f.a, f.b, b2);
+				this.addFace(f.b, c2, b2);
+				this.addFace(f.b, f.c, c2);
+				this.addFace(f.c, a2, c2);
+				this.addFace(f.c, f.a, a2);
+				return new Triangle3D(a2, b2, c2);
+			},
+			
+			/**
+			 * Rotates the mesh in such a way so that its "forward" axis is aligned with
+			 * the given direction. This version uses the positive Z-axis as default
+			 * forward direction.
+			 *
+			 * @param dir, new target direction to point in
+			 * @param [forward], optional vector, defaults to Vec3D.Z_AXIS
+			 * @return itself
+			 */
+			pointTowards: function(dir, forward) {
+				forward = forward || Vec3D.Z_AXIS;
+				return this.transform( Quaternion.getAlignmentQuat(dir, forward).toMatrix4x4(this.matrix), true);
+			},
+			
+			removeFace: function(f) {
+				var index = -1;
+				var l = this.faces.length;
+				for(var i=0;i<l;i++){
+					if(this.faces[i] == f){
+						index = i;
+						break;
+					}
+				}
+				if(index > -1){
+					this.faces.splice(index,1);
+				}
+			},
+			
+			
+			rotateAroundAxis: function(axis, theta) {
+				return this.transform(this.matrix.identity().rotateAroundAxis(axis, theta));
+			},
+			
+			rotateX: function(theta) {
+				return this.transform(this.matrix.identity().rotateX(theta));
+			},
+			
+			rotateY: function(theta) {
+				return this.transform(this.matrix.identity().rotateY(theta));
+			},
+			
+			rotateZ: function(theta) {
+				return this.transform(this.matrix.identity().rotateZ(theta));
+			},
+			
+			saveAsOBJ: function(obj, saveNormals) {
+				if( saveNormals === undefined){
+					saveNormals = true;
+				}
+				var vOffset = obj.getCurrVertexOffset() + 1,
+					nOffset = obj.getCurrNormalOffset() + 1;
+				obj.newObject( this.name );
+				//vertices
+				var v = 0, f = 0,
+					vlen = this.vertices.length,
+					flen = this.faces.length,
+					face;
+				for( v=0; v<vlen; v++ ){
+					obj.vertex( this.vertices[v] );
+				}
+				//faces
+				if( saveNormals ){
+					//normals
+					for( v=0; v<vlen; v++){
+						obj.normal( this.vertices[v].normal );
+					}
+					for( f=0; f<flen; f++){
+						face = this.faces[f];
+						obj.faceWithNormals(face.b.id + vOffset, face.a.id + vOffset, face.c.id + vOffset, face.b.id + nOffset, face.a.id + nOffset, face.c.id + nOffset);
+					}
+				} else {
+					for( f=0; f<flen; f++){
+						face = this.faces[f];
+						obj.face(face.b.id + vOffset, face.a.id + vOffset, face.c.id + vOffset);
+					}
+				}
+			},
+			
+			saveAsSTL: function(a,b,c){
+				throw Error("TriangleMesh.saveAsSTL() currently not implemented");
+			},
+			
+			scale: function(scale) {
+				return this.transform(this.matrix.identity().scaleSelf(scale));
+			},
+			
+			setName: function(name) {
+				this.name = name;
+				return this;
+			},
+			
+			toString: function() {
+				return "TriangleMesh: " + this.name + " vertices: " + this.getNumVertices() + " faces: " + this.getNumFaces();
+			},
+			
+			toWEMesh: function() {
+				return new WETriangleMesh(this.name).addMesh(this);
+			},
+			
+			/**
+			* Applies the given matrix transform to all mesh vertices. If the
+			* updateNormals flag is true, all face normals are updated automatically,
+			* however vertex normals need a manual update.
+			* @param mat
+			* @param updateNormals
+			* @return itself
+			*/
+			transform: function(mat,updateNormals) {
+				if(updateNormals === undefined){
+					updateNormals = true;
+				}
+				var l = this.vertices.length;
+				for(var i=0;i<l;i++){
+					var v = this.vertices[i];
+					v.set(mat.applyTo(v));
+				}
+				if(updateNormals){
+					this.computeFaceNormals();
+				}
+				return this;
+			},
+
+			translate: function(x,y,z){
+				if(arguments.length == 1){
+					y = x.y;
+					z = x.z;
+					x = x.x;
+				}
+				return this.transform(this.matrix.identity().translateSelf(x,y,z));
+			},
+			
+			updateVertex: function(origVec3D,newPos) {
+				var vertex = this.vertexMap.get( origVec3D );
+				if (vertex !== undefined ) {
+					this.vertexMap.remove( vertex );
+					vertex.set( newPos );
+					this.vertexMap.put( newPos, vertex );
+				}
+				return this;
+			}
+		};
+
+		TriangleMesh.__vertexKeyGenerator = vertexKeyGenerator;
+	}());
+
+	//define WETriangleMesh
+	(function(){
+		//dependenecies
+		var internals = require('../../internals');
+		var Line3D = require('../Line3D');
+		var Vec3D = require('../Vec3D');
+		var WEVertex = require('./Vertex').WEVertex;
+		var WEFace = require('./Face').WEFace;
+		var WingedEdge = require('./WingedEdge');
+		var MidpointSubdivision = require('./subdiv/MidpointSubdivision');
+		
+		//locals
+		var proto;
+		//used for tracking edges in the internals.LinkedMap
+		function edgeKeyGenerator( edge ){
+			return Line3D.prototype.toString.call( edge );
 		}
-		if(offset === undefined){ 
-			offset = 0;
-		}
-		if(stride === undefined){
-			stride = TriangleMesh.DEFAULT_STRIDE;
-		}
-		stride = mathUtils.max(stride, 3);
-		if (verts === undefined) {
-			verts = [];
-		}
-		var i = 0,//offset
+		//constructor
+		WETriangleMesh = function( name ){
+			name = name || "untitled";
+			TriangleMesh.call(this, name);
+		};
+		//passing these on to match java api
+		WETriangleMesh.DEFAULT_NUM_FACES = TriangleMesh.DEFAULT_NUM_FACES;
+		WETriangleMesh.DEFAULT_NUM_VERTICES = TriangleMesh.DEFAULT_NUM_VERTICES;
+		
+		internals.extend( WETriangleMesh, TriangleMesh );
+		proto = WETriangleMesh.prototype;
+
+		proto.addFace = function( a, b, c, norm, uvA, uvB, uvC ){
+			if( arguments.length === 6 ){
+				//6-arg a,b,c,uvA,uvB,uvC pass everything up one
+				uvC = uvB;
+				uvB = uvA;
+				uvA = norm;
+				norm = undefined;
+			}
+
+			var va = this.__checkVertex(a),
+				vb = this.__checkVertex(b),
+				vc = this.__checkVertex(c),
+				nc, t, f;
+
+			if( va.id === vb.id || va.id === vc.id || vb.id === vc.id ){
+				console.log('Ignoring invalid face: ' + a + ',' + b + ',' + c);
+			} else {
+				if( norm !== undefined && norm !== null ){
+					nc = va.sub(vc).crossSelf(va.sub(vb));
+					if( norm.dot(nc) < 0 ){
+						t = va;
+						va = vb;
+						vb = t;
+					}
+				}
+				f = new WEFace(va, vb, vc, uvA, uvB, uvC);
+				this.faces.push(f);
+				this.updateEdge( va,vb,f );
+				this.updateEdge( vb,vc,f );
+				this.updateEdge( vc,va,f );
+			}
+			return this;
+		};
+
+		proto.center = function( origin, callback ){
+			TriangleMesh.prototype.center.call(this, origin, callback);
+			this.rebuildIndex();
+		};
+
+		proto.clear = function(){
+			TriangleMesh.prototype.clear.call(this);
+			this.edgeMap = new internals.LinkedMap( edgeKeyGenerator );
+			this.edges = this.edgeMap.getArray();
+			return this;
+		};
+
+		proto.copy = function(){
+			var m = new WETriangleMesh( this.name+"-copy" );
+			var i, l, f;
 			l = this.faces.length;
-		for (var j=0;j<l;++j) {
-			var f = this.faces[j];
-			verts[i] = f.a.x;
-			verts[i + 1] = f.a.y;
-			verts[i + 2] = f.a.z;
-			i += stride;
-			verts[i] = f.b.x;
-			verts[i + 1] = f.b.y;
-			verts[i + 2] = f.b.z;
-			i += stride;
-			verts[i] = f.c.x;
-			verts[i + 1] = f.c.y;
-			verts[i + 2] = f.c.z;
-			i += stride;
-		}
-		return verts;
-	},
-	
-	getNumFaces: function() {
-		return this.numFaces;
-	},
-	
-	getNumVertices: function() {
-		return this.numVertices;
-	},
-	
-	getRotatedAroundAxis: function(axis,theta) {
-		return this.copy().rotateAroundAxis(axis, theta);
-	},
-	
-	getRotatedX: function(theta) {
-		return this.copy().rotateX(theta);
-	},
-	
-	getRotatedY: function(theta) {
-		return this.copy().rotateY(theta);
-	},
-	
-	getRotatedZ: function(theta) {
-		return this.copy().rotateZ(theta);
-	},
-	
-	getScaled: function(scale) {
-		return this.copy().scale(scale);
-	},
-	
-	getTranslated: function(trans) {
-		return this.copy().translate(trans);
-	},
-	
-	getUniqueVerticesAsArray: function() {
-		var verts = [];
-		var i = 0;
-		var l = this.vertices.length;
-		for (var j=0;i<l;j++) {
-			var v = this.vertices[j];
-			verts[i++] = v.x;
-			verts[i++] = v.y;
-			verts[i++] = v.z;
-		}
-		return verts;
-	},
-	
-	getVertexAtPoint: function(v) {
-		var index;
-		for(var i=0;i<this.vertices.length;i++){
-			if(this.vertices[i].equals(v)){
-				index = i;
+			for(i=0; i<l; i++){
+				f = this.faces[i];
+				m.addFace( f.a, f.b, f.c, f.normal, f.uvA, f.uvB, f.uvC );
 			}
-		}
-		return this.vertices[index];
-	},
-	//my own method to help
-	getVertexIndex: function(vec) {
-		var index = -1;
-		var l = this.vertices.length;
-		for(var i=0;i<l;i++)
-		{
-			var vert = this.vertices[i];
-			if(vert.equals(vec))
-			{
-				matchedVertex =i;
+			return m;
+		};
+
+		proto._createVertex = function( vec3D, id ){
+			var vertex = new WEVertex( vec3D, id );
+			return vertex;
+		};
+		//TODO: numEdges currently not hooked up
+		proto.getNumEdges = function(){
+			return this.edgeMap.size();
+		};
+
+		proto.init = function( name ){
+			TriangleMesh.prototype.init.call(this, name);
+			//this.edgeMap.put(va.toString()+vb.toString(), {WingedEdge} );
+			this.edgeMap = new internals.LinkedMap( edgeKeyGenerator );
+			this.edges = this.edgeMap.getArray();
+			this.__edgeCheck = new Line3D( new Vec3D(), new Vec3D() );
+			this.__uniqueEdgeID = 0;
+		};
+
+		proto.rebuildIndex = function(){
+			//if vertices have moved / transformed a new vertexMap and edgeMap must be made
+			//in order to have updated string keys of new positions
+			//newVertexDictionary[{String}] = {Vertex}
+			var newVertexMap = new internals.LinkedMap( TriangleMesh.__vertexKeyGenerator );
+			var newEdgeMap = new internals.LinkedMap( edgeKeyGenerator );
+
+			this.vertexMap.each(function( vertex ){
+				newVertexMap.put( vertex, vertex );
+			});
+			this.edgeMap.each(function( edge ){
+				newEdgeMap.put( edge, edge );
+			});
+
+			this.vertexMap = newVertexMap;
+			this.vertices = newVertexMap.getArray();
+			this.edgeMap = newEdgeMap;
+			this.edges = newEdgeMap.getArray();
+		};
+
+		proto.removeEdge = function( edge ){
+			var self = this;
+			edge.remove();
+			var v = edge.a;
+			if( v.edges.length === 0 ){
+				this.vertexMap.remove( v );
 			}
-		}
-		return matchedVertex;
-	
-	},
-	
-	getVertexForID: function(id) {
-		var vertex,
-			l = this.vertices.length;
-		for (var i=0;i<l;i++) {
-			var v = this.vertices[i];
-			if (v.id == id) {
-				vertex = v;
-				break;
+			v = edge.b;
+			if( v.edges.length === 0 ){
+				this.vertexMap.remove( v );
 			}
-		}
-		return vertex;
-	},
-	
-	/**
-	 * Creates an array of unravelled vertex normal coordinates for all faces.
-	 * This method can be used to translate the internal mesh data structure
-	 * into a format suitable for OpenGL Vertex Buffer Objects (by choosing
-	 * stride=4). For more detail, please see
-	 * {@link #getMeshAsVertexArray(float[], int, int)}
-	 * 
-	 * @see #getMeshAsVertexArray(float[], int, int)
-	 * 
-	 * @param normals
-	 *            existing float array or null to automatically create one
-	 * @param offset
-	 *            start index in array to place normals
-	 * @param stride
-	 *            stride/alignment setting for individual coordinates (min value
-	 *            = 3)
-	 * @return array of xyz normal coords
-	 */
-	getVertexNormalsAsArray: function(normals, offset,stride) {
-		if(offset === undefined)offset = 0;
-		if(stride === undefined)stride = TriangleMesh.DEFAULT_STRIDE;
-		stride = mathUtils.max(stride, 3);
-		if (normals === undefined) {
-			normals = [];
-		}
-		var i = offset;
-		var l = this.faces.length;
-		for (var j=0;j<l;j++) {
-			var f = this.faces[j];
-			normals[i] = f.a.normal.x;
-			normals[i + 1] = f.a.normal.y;
-			normals[i + 2] = f.a.normal.z;
-			i += stride;
-			normals[i] = f.b.normal.x;
-			normals[i + 1] = f.b.normal.y;
-			normals[i + 2] = f.b.normal.z;
-			i += stride;
-			normals[i] = f.c.normal.x;
-			normals[i + 1] = f.c.normal.y;
-			normals[i + 2] = f.c.normal.z;
-			i += stride;
-		}
-		return normals;
-	},
-	
-	getVertices: function() {
-		return this.vertices;
-	},
-	
-	handleSaveAsSTL: function(stl,useFlippedY) {
-		/*f (useFlippedY) {
-			stl.setScale(new Vec3D(1, -1, 1));
-			for (Face f : faces) {
-				stl.face(f.a, f.b, f.c, f.normal, STLWriter.DEFAULT_RGB);
+			internals.each(edge.faces, function( face ){
+				self.removeFace( face );
+			});
+			var removed = this.edgeMap.remove( this.__edgeCheck.set( edge.a, edge.b ) );
+			if( removed !== edge ){
+				throw Error("Can't remove edge");
 			}
-		} else {
-			for (Face f : faces) {
-				stl.face(f.b, f.a, f.c, f.normal, STLWriter.DEFAULT_RGB);
+		};
+
+		proto.removeFace = function( face ){
+			var self = this;
+			var i = this.faces.indexOf( face );
+			if( i > -1 ){
+				this.faces.splice( i, 1 );
 			}
-		}
-		stl.endSave();
-		 console.log(numFaces + " faces written");
+			internals.each( face.edges, function( edge ){
+				edge.faces.splice( edge.faces.indexOf(face), 1 );
+				if( edge.faces.length === 0 ){
+					self.removeEdge( edge );
+				}
+			});
+		};
+
+		//FIXME (FIXME in original java source)
+		//TODO UNIT TEST .splice
+		proto.removeUnusedVertices = function(){
+			internals.each( this.vertices, function( vertex, i ){
+				var isUsed = false;
+				internals.each( this.faces, function( f ){
+					if( f.a == vertex || f.b == vertex || f.c == vertex ){
+						isUsed = true;
+						return;
+					}
+				});
+				if( !isUsed ){
+					this.vertices.splice( i, 1 );
+				}
+			});
+		};
+
+		/**
+		* @param {Vertex[] | Vertex{}} selection, array or object of Vertex's to remove
 		*/
-		console.log("TriangleMesh.handleSaveAsSTL() currently not implemented");
-	
-	},
-	
-	
-	intersectsRay: function(ray) {
-		var tri = this.intersector.getTriangle();
-		var l = this.faces.length;
-		for (var i =0;i<l;i++) {
-			tri.a = f.a;
-			tri.b = f.b;
-			tri.c = f.c;
-			if (this.intersector.intersectsRay(ray)) {
-				return true;
-			}
-		}
-		return false;
-	},
-	
-	perforateFace: function(f, size) {
-		var centroid = f.getCentroid();
-		var d = 1 - size;
-		var a2 = f.a.interpolateTo(centroid, d);
-		var b2 = f.b.interpolateTo(centroid, d);
-		var c2 = f.c.interpolateTo(centroid, d);
-		this.removeFace(f);
-		this.addFace(f.a, b2, a2);
-		this.addFace(f.a, f.b, b2);
-		this.addFace(f.b, c2, b2);
-		this.addFace(f.b, f.c, c2);
-		this.addFace(f.c, a2, c2);
-		this.addFace(f.c, f.a, a2);
-		return new Triangle3D(a2, b2, c2);
-	},
-	
-	 /**
-	 * Rotates the mesh in such a way so that its "forward" axis is aligned with
-	 * the given direction. This version uses the positive Z-axis as default
-	 * forward direction.
-	 * 
-	 * @param dir
-	 *            new target direction to point in
-	 * @return itself
-	 */
-	pointTowards: function(dir) {
-		return this.transform( Quaternion.getAlignmentQuat(dir, Vec3D.Z_AXIS).toMatrix4x4(), true);
-	},
-	
-	removeFace: function(f) {
-		var index = -1;
-		var l = this.faces.length;
-		for(var i=0;i<l;i++){
-			if(this.faces[i] == f){
-				index = i;
-				break;
-			}
-		}
-		if(index > -1){
-			this.faces.splice(index,1);
-		}
-	},
-	
-	
-	rotateAroundAxis: function(axis, theta) {
-		return this.transform(this.matrix.identity().rotateAroundAxis(axis, theta));
-	},
-	
-	rotateX: function(theta) {
-		return this.transform(this.matrix.identity().rotateX(theta));
-	},
-	
-	rotateY: function(theta) {
-		return this.transform(this.matrix.identity().rotateY(theta));
-	},
-	
-	rotateZ: function(theta) {
-		return this.transform(this.matrix.identity().rotateZ(theta));
-	},
-	
-	saveAsOBJ: function(obj, saveNormals) {
-		if( saveNormals === undefined){
-			saveNormals = true;
-		}
-		var vOffset = obj.getCurrVertexOffset() + 1,
-			nOffset = obj.getCurrNormalOffset() + 1;
-		obj.newObject( this.name );
-		//vertices
-		var v = 0,
-			vlen = this.vertices.length,
-			flen = this.faces.length,
-			face;
-		for( v=0; v<vlen; v++ ){
-			obj.vertex( this.vertices[v] );
-		}
-		//faces
-		if( saveNormals ){
-			//normals
-			for( v=0; v<vlen; v++){
-				obj.normal( this.vertices[v].normal );
-			}
-			for( f=0; f<flen; f++){
-				face = this.faces[f];
-				obj.faceWithNormals(face.b.id + vOffset, face.a.id + vOffset, face.c.id + vOffset, face.b.id + nOffset, face.a.id + nOffset, face.c.id + nOffset);
-			}
-		} else {
-			for( f=0; f<flen; f++){
-				face = this.faces[f];
-				obj.face(face.b.id + vOffset, face.a.id + vOffset, face.c.id + vOffset);
-			}
-		}
-	},
-	
-	saveAsSTL: function(a,b,c){
-		console.log("TriangleMesh.saveAsSTL() currently not implemented");
-	},
-	
-	scale: function(scale) {
-		return this.transform(this.matrix.identity().scaleSelf(scale));
-	},
-	
-	setName: function(name) {
-		this.name = name;
-		return this;
-	},
-	
-	toString: function() {
-		return "TriangleMesh: " + this.name + " vertices: " + this.getNumVertices() + " faces: " + this.getNumFaces();
-	},
-	
-	toWEMesh: function() {
-	  /*  return new WETriangleMesh(name, vertices.size(), faces.size())
-				.addMesh(this);
-	   */
-	   console.log("TriangleMesh.toWEMesh() currently not implemented");
-	},
-	
-	/** 
-	* Applies the given matrix transform to all mesh vertices. If the 
-	* updateNormals flag is true, all face normals are updated automatically, 
-	* however vertex normals need a manual update. 
-	* @param mat 
-	* @param updateNormals 
-	* @return itself 
-	*/ 
-	transform: function(mat,updateNormals) {
-		if(updateNormals === undefined){
-			updateNormals = true;
-		}
-		var l = this.vertices.length;
-		for(var i=0;i<l;i++){
-			var v = this.vertices[i];
-			v.set(mat.applyTo(v));
-		}
-		if(updateNormals){
-			this.computeFaceNormals();
-		}
-		return this;
-	},
+		proto.removeVertices = function( selection ){
+			internals.each( selection, function( vertex ){
+				//WingedEdgeVertex
+				internals.each( vertex.edges, function( edge ){
+					internals.each( edge.faces, function( face ){
+						this.removeFace( face );
+					});
+				});
+			});
+		};
 
-	translate: function(x,y,z){
-		if(arguments.length == 1){
-			y = x.y;
-			z = x.z;
-			x = x.x;
-		}
-		return this.transform(this.matrix.identity().translateSelf(x,y,z));
-	},
-	
-	updateVertex: function(orig,newPos) {
-		var vi = this.getVertexIndex(orig);
-		if (vi > -1) {
-			this.vertices.splice(v,1);
-			this.vertices[vi].set(newPos);
-			this.vertices.push(v);
-		}
-		return this;
-	}
-};
+		//@param {Vec3D | WingedEdge} a or edge
+		//@param {Vec3D | SubdivisionStrategy} b or strategy if edge supplied
+		//@param {SubdivisionStrategy} [subDiv] or undefined
+		proto.splitEdge = function( a, b, subDiv ){
+			var edge, mid;
+			if( arguments.length === 3 ){
+				edge = this.edgeMap.get( this.__edgeCheck.set(a, b) );
+			} else if( arguments.length == 2 ){
+				edge = a;
+				subDiv = b;
+			}
+			mid = subDiv.computeSplitPoints( edge );
+			this.splitFace( edge.faces[0], edge, mid);
+			if( edge.faces.length > 1 ){
+				this.splitFace( edge.faces[1], edge, mid);
+			}
+			this.removeEdge( edge );
+		};
+		//@param {WEFace} face,
+		//@param {WingedEdge} edge,
+		//@param {Vec3D[]} midPoints
+		proto.splitFace = function( face, edge, midPoints ){
+			var p, i, ec, prev, num, mid;
+			for(i=0; i<3; i++){
+				ec = face.edges[i];
+				if( !ec.equals(edge) ){
+					if( ec.a.equals(edge.a) || ec.a.equals(edge.b) ){
+						p = ec.b;
+					} else {
+						p = ec.a;
+					}
+					break;
+				}
+			}
+			num = midPoints.length;
+			for(i=0; i<num; i++){
+				mid = midPoints[i];
+				if( i === 0 ){
+					this.addFace( p, edge.a, mid, face.normal );
+				} else {
+					this.addFace( p, prev, mid, face.normal );
+				}
+				if( i === num-1 ){
+					this.addFace( p, mid, edge.b, face.normal );
+				}
+				prev = mid;
+			}
+		};
 
-exports.TriangleMesh = TriangleMesh;
-module.exports = TriangleMesh;
+		//@param {SubdivisionStrategy | Number} subDiv or minLength
+		//@param {Number} [minLength] if also supplying subDiv
+		proto.subdivide = function( subDiv, minLength ){
+			if( arguments.length === 1 ){
+				minLength = subDiv;
+				subDiv = new MidpointSubdivision();
+			}
+			this.subdivideEdges( this.edges.slice(0), subDiv, minLength);
+		};
+
+		proto.subdivideEdges = function( origEdges, subDiv, minLength ){
+			origEdges.sort( subDiv.getEdgeOrdering() );
+			minLength *= minLength;
+			var i=0, l = origEdges.length;
+			for(i=0; i<l; i++){
+				var e = origEdges[i];
+				if( this.edges.indexOf( e ) > -1 ) {
+					if( e.getLengthSquared() >= minLength ) {
+						this.splitEdge( e, subDiv );
+					}
+				}
+			}
+		};
+
+		proto.subdivideFaceEdges = function( faces, subDiv, minLength ){
+			var fedges = [], i,j, f, e, fl, el;
+			fl = this.faces.length;
+			for(i=0; i<fl; i++){
+				f = this.faces[i];
+				el = f.edges.length;
+				for(j=0; j<el; j++){
+					e = f.edges[j];
+					if( fedges.indexOf(e) < 0 ){
+						fedges.push( e );
+					}
+				}
+			}
+			this.subdividEdges( fedges, subDiv, minLength );
+		};
+
+		proto.toString = function(){
+			return "WETriangleMesh: " + this.name + " vertices: " + this.getNumVertices() + " faces: " + this.getNumFaces() + " edges:" + this.getNumEdges();
+		};
+
+		/**
+		* Applies the given matrix transform to all mesh vertices. If the
+		* updateNormals flag is true, all face normals are updated automatically,
+		* however vertex normals still need a manual update.
+		* @param {toxi.geom.Matrix4x4} matrix
+		* @param {Boolean} [updateNormals]
+		*/
+		proto.transform = function( matrix, updateNormals ){
+			if( updateNormals === undefined || updateNormals === null ){
+				updateNormals = true;
+			}
+			for(var i=0, l = this.vertices.length; i<l; i++){
+				matrix.applyToSelf( this.vertices[i] );
+			}
+			this.rebuildIndex();
+			if( updateNormals ){
+				this.computeFaceNormals();
+			}
+			return this;
+		};
+
+		proto.updateEdge = function( va, vb, face ){
+			//dictionary key is va.toString() + vb.toString() 
+			//because Line3D toString would be different than WingedEdge toString()
+			this.__edgeCheck.set( va, vb );
+			var e = this.edgeMap.get( this.__edgeCheck );
+			if( e !== undefined ){
+				e.addFace( face );
+			} else {
+				e = new WingedEdge( va, vb, face, this.__uniqueEdgeID++ );
+				this.edgeMap.put( e, e );
+				va.addEdge( e );
+				vb.addEdge( e );
+			}
+			face.addEdge( e );
+		};
+	}());
+
+	TriangleMesh.WETriangleMesh = WETriangleMesh;
+	module.exports = TriangleMesh;
 
 });
 
@@ -5984,20 +6769,16 @@ VertexSelector.prototype = {
      * Adds all vertices selected by the given selector to the current
      * selection. The other selector needs to be assigned to the same mesh
      * instance.
-     * 
      * @param sel2 other selector
      * @return itself
      */
-
 	addSelection: function(sel2){
 		this.checkMeshIdentity(sel2.getMesh());
-		this.selection.addAll(sel2.getSelection());
+		this.selection = this.selection.concat(sel2.getSelection());
 		return this;
 	},
-	
 	/**
      * Utility function to check if the given mesh is the same instance as ours.
-     * 
      * @param mesh2
      */
     checkMeshIdentity: function(mesh2) {
@@ -6007,7 +6788,7 @@ VertexSelector.prototype = {
     },
     
     clearSelection: function() {
-        this.selection.clear();
+        this.selection = [];
         return this;
     },
 
@@ -6020,17 +6801,16 @@ VertexSelector.prototype = {
     },
     /**
      * Creates a new selection of all vertices NOT currently selected.
-     * 
      * @return itself
      */
     invertSelection: function() {
         var newSel = [];
-        var vertices = mesh.getVertices();
+        var vertices = this.mesh.getVertices();
         var l = vertices.length;
         for (var i=0;i<l;i++) {
 			var v = vertices[i];
-            if (!selection.contains(v)) {
-                newSel.add(v);
+            if (this.selection.indexOf(v) < 0 ) {
+                newSel.push(v);
             }
         }
         this.selection = newSel;
@@ -6040,7 +6820,6 @@ VertexSelector.prototype = {
 	/**
      * Selects vertices identical or closest to the ones given in the list of
      * points.
-     * 
      * @param points
      * @return itself
      */
@@ -6048,7 +6827,7 @@ VertexSelector.prototype = {
 		var l = points.length;
         for (var i=0;i<l;i++) {
 			var v = points[i];
-            this.selection.add(this.mesh.getClosestVertexToPoint(v));
+            this.selection.push( this.mesh.getClosestVertexToPoint(v) );
         }
         return this;
     },
@@ -6056,11 +6835,10 @@ VertexSelector.prototype = {
      /**
      * Selects vertices using an implementation specific method. This is the
      * only method which needs to be implemented by any selector subclass.
-     * 
      * @return itself
      */
    selectVertices: function(){
-   return this;
+        return this;
    },
 	
 	setMesh: function(mesh) {
@@ -6069,21 +6847,22 @@ VertexSelector.prototype = {
     },
     
     size: function() {
-        return this.selection.size();
+        return this.selection.length;
     },
 	/**
      * Removes all vertices selected by the given selector from the current
      * selection. The other selector needs to be assigned to the same mesh
      * instance.
-     * 
-     * @param sel2
-     *            other selector
+     * @param sel2 other selector
      * @return itself
      */
-
 	subtractSelection: function(sel2) {
         this.checkMeshIdentity(sel2.getMesh());
-        this.selection.removeAll(sel2.getSelection());
+        var removeThese = sel2.getSelection();
+        var i,l = removeThese.length;
+        for ( i=0; i<l; i++ ) {
+            this.selection.splice( this.selection.indexOf(removeThese[i]), 1 );
+        }
         return this;
 	}
 };
@@ -6130,24 +6909,24 @@ module.exports = BoxSelector;
 });
 
 define('toxi/geom/mesh/DefaultSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
-var extend = require('../../internals').extend,
-    VertexSelector = require('./VertexSelector');
-/**
- * @class
- * @member toxi
- * @augments toxi.VertexSelector
- */
-var DefaultSelector = function(mesh){
-	VertexSelector.apply(this,[mesh]);
-};
-extend(DefaultSelector,VertexSelector);	
-DefaultSelector.prototype.selectVertices = function(){
-	this.clearSelection();
-	this.selection.addAll(this.mesh.getVertices());
-	return this;
-};
+	var extend = require('../../internals').extend,
+		VertexSelector = require('./VertexSelector');
+	/**
+	 * @class
+	 * @member toxi
+	 * @augments toxi.VertexSelector
+	 */
+	var DefaultSelector = function(mesh){
+		VertexSelector.apply(this,[mesh]);
+	};
+	extend(DefaultSelector,VertexSelector);
+	DefaultSelector.prototype.selectVertices = function(){
+		this.clearSelection();
+		this.selection = this.selection.concat( this.mesh.getVertices() );
+		return this;
+	};
 
-module.exports = DefaultSelector;
+	module.exports = DefaultSelector;
 });
 
 define('toxi/geom/mesh/OBJWriter',[
@@ -6169,7 +6948,7 @@ define('toxi/geom/mesh/OBJWriter',[
 	var OBJWriter = function(){
 		this.VERSION = "0.3";
 		this.__stringBuffer = new StringBuffer();
-		this.objStream;
+		this.objStream = undefined;
 		this.__filename = "objwriter.obj";
 		this._numVerticesWritten = 0;
 		this._numNormalsWritten = 0;
@@ -6245,7 +7024,7 @@ define('toxi/geom/mesh/OBJWriter',[
 			this.__stringBuffer.append("v " + vecV.x + " " + vecV.y + " " + vecV.z +"\n");
 			this._numVerticesWritten++;
 		}
-	}
+	};
 
 
 	return OBJWriter;
@@ -6281,162 +7060,6 @@ PlaneSelector.prototype.selectVertices = function() {
 };
 
 module.exports = PlaneSelector;
-});
-
-define('toxi/geom/Sphere',[
-	"require",
-	"exports",
-	"module",
-	"../internals",
-	"./Vec3D",
-	"./mesh"
-], function(require, exports, module) {
-
-var internals, mesh, Vec3D;
-internals = require('../internals');
-mesh = require('./mesh');
-Vec3D = require('./Vec3D');
-
-
-
-/**
- * @module toxi.geom.Sphere
- * @augments toxi.geom.Vec3D
- */
-var	Sphere = function(a,b){
-	if(a === undefined){
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = 1;
-	}
-	else if( internals.tests.hasXYZ( a ) ){
-		Vec3D.apply(this,[a]);
-		if( internals.tests.isSphere( a ) ){
-			this.radius = a.radius;
-		}
-		else {
-			this.radius = b;
-		}
-	}
-	else {
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = a;
-	}
-};
-
-internals.extend(Sphere,Vec3D);
-
-
-Sphere.prototype.containsPoint = function(p) {
-	var d = this.sub(p).magSquared();
-	return (d <= this.radius * this.radius);
-};
-
-/**
- * Alternative to {@link SphereIntersectorReflector}. Computes primary &
- * secondary intersection points of this sphere with the given ray. If no
- * intersection is found the method returns null. In all other cases, the
- * returned array will contain the distance to the primary intersection
- * point (i.e. the closest in the direction of the ray) as its first index
- * and the other one as its second. If any of distance values is negative,
- * the intersection point lies in the opposite ray direction (might be
- * useful to know). To get the actual intersection point coordinates, simply
- * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
- * 
- * @param ray
- * @return 2-element float array of intersection points or null if ray
- * doesn't intersect sphere at all.
- */
-Sphere.prototype.intersectRay = function(ray) {
-	var result, a, b, t,
-		q = ray.sub(this),
-		distSquared = q.magSquared(),
-		v = -q.dot(ray.getDirection()),
-		d = this.radius * this.radius - (distSquared - v * v);
-	if (d >= 0.0) {
-		d = Math.sqrt(d);
-		a = v + d;
-		b = v - d;
-		if (!(a < 0 && b < 0)) {
-			if (a > 0 && b > 0) {
-				if (a > b) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			} else {
-				if (b > 0) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			}
-		}
-		result = [a,b];
-	}
-	return result;
-};
-
-/**
- * Considers the current vector as centre of a collision sphere with radius
- * r and checks if the triangle abc intersects with this sphere. The Vec3D p
- * The point on abc closest to the sphere center is returned via the
- * supplied result vector argument.
- * 
- * @param t
- *			triangle to check for intersection
- * @param result
- *			a non-null vector for storing the result
- * @return true, if sphere intersects triangle ABC
- */
-Sphere.prototype.intersectSphereTriangle = function(t,result) {
-	// Find Vec3D P on triangle ABC closest to sphere center
-	result.set(t.closestPointOnSurface(this));
-
-	// Sphere and triangle intersect if the (squared) distance from sphere
-	// center to Vec3D p is less than the (squared) sphere radius
-	var v = result.sub(this);
-	return v.magSquared() <= this.radius * this.radius;
-};
-
-/**
- * Calculates the normal vector on the sphere in the direction of the
- * current point.
- * 
- * @param q
- * @return a unit normal vector to the tangent plane of the ellipsoid in the
- * point.
- */
-Sphere.prototype.tangentPlaneNormalAt = function(q) {
-	return this.sub(q).normalize();
-};
-
-Sphere.prototype.toMesh = function() {
-	//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
-	//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
-
-	//if one argument is passed it can either be a Number for resolution, or an options object
-	//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
-	var opts = {
-		mesh: undefined,
-		resolution: 0
-	};
-	if(arguments.length === 1){
-		if(typeof(arguments[0]) == 'object'){ //options object
-			opts.mesh = arguments[0].mesh;
-			opts.resolution = arguments[0].res || arguments[0].resolution;
-		} else { //it was just the resolution Number
-			opts.resolution = arguments[0];
-		}
-	} else {
-		opts.mesh = arguments[0];
-		opts.resolution = arguments[1];
-	}
-
-	var builder = new mesh.SurfaceMeshBuilder(new mesh.SphereFunction(this));
-	return builder.createMesh(opts.mesh, opts.resolution, 1);
-};
-
-module.exports = Sphere;
 });
 
 define('toxi/geom/mesh/SphereFunction',["require", "exports", "module", "../../math/mathUtils","../Vec3D","../Sphere"], function(require, exports, module) {
@@ -7253,7 +7876,188 @@ define('toxi/geom/mesh/Terrain',[
 
 	return	Terrain;
 });
-define('toxi/geom/mesh',["require", "exports", "./mesh/BezierPatch","./mesh/BoxSelector","./mesh/DefaultSelector","./mesh/Face","./mesh/OBJWriter","./mesh/PlaneSelector","./mesh/SphereFunction","./mesh/SphericalHarmonics","./mesh/SurfaceMeshBuilder","./mesh/SuperEllipsoid","./mesh/TriangleMesh","./mesh/Vertex","./mesh/VertexSelector","./mesh/Terrain"], function(require, exports) {
+define('toxi/geom/mesh/WETriangleMesh',['./TriangleMesh'], function( TriangleMesh ){
+	//WETriangleMesh is defined in toxi/geom/mesh/TriangleMesh
+	//this is to avoid circular dependecy
+	return TriangleMesh.WETriangleMesh;
+});
+define('toxi/geom/mesh/subdiv/DisplacementSubdivision',[
+	'../../../internals',
+	'./SubdivisionStrategy'
+], function ( internals, SubdivisionStrategy ){
+	//Abstract class
+	var DisplacementSubdivision, proto;
+	DisplacementSubdivision = function( amp ){
+		SubdivisionStrategy.call(this);
+		this.amp = amp;
+	};
+	internals.extend( DisplacementSubdivision, SubdivisionStrategy );
+	proto = DisplacementSubdivision.prototype;
+
+	proto.getAmp = function(){ return this.amp; };
+	proto.invertAmp = function(){
+		this.amp *= -1;
+		return this;
+	};
+	proto.scaleAmp = function( scale ){
+		this.amp *= scale;
+		return this;
+	};
+	proto.setAmp = function( amp ){
+		this.amp = amp;
+		return this;
+	};
+
+	return DisplacementSubdivision;
+});
+    
+define('toxi/geom/mesh/subdiv/DualDisplacementSubdivision',[
+	'../../../internals',
+	'./SubdivisionStrategy'
+], function ( internals, SubdivisionStrategy ){
+	
+	var DualDisplacementSubdivision = function( centroid, ampA, ampB ){
+		this.centroid = centroid;
+		this.ampA = ampA;
+		this.ampB = ampB;
+	};
+	internals.extend( DualDisplacementSubdivision, SubdivisionStrategy );
+	DualDisplacementSubdivision.prototype.computeSplitPoints = function( edge ){
+		var len = ege.getLength(), a, b;
+		a = edge.a.interpolateTo( edge.b, 0.33333333333 );
+		a.addSelf( a.sub(this.centroid).normalizeTo(this.ampA*len) );
+		b = edge.a.interpolateTo( edge.b, 0.66666666666 );
+		b.addSelf( b.sub(this.centroid).normalizeTo(this.ampB*len) );
+		return [a, b];
+	};
+	return DualDisplacementSubdivision;
+});
+    
+define('toxi/geom/mesh/subdiv/DualSubdivision',[
+	'../../../internals',
+	'./SubdivisionStrategy'
+], function( internals, SubdivisionStrategy ){
+
+	var DualSubdivision = function(){
+		SubdivisionStrategy.call(this);
+	};
+	internals.extend( DualSubdivision, SubdivisionStrategy );
+	DualSubdivision.prototype.computeSplitPoints = function( edge ){
+		return [ edge.a.interpolateTo(edge.b, 0.3333), edge.a.interpolateTo(edge.b, 0.6666) ];
+	};
+	return DualSubdivision;
+});
+define('toxi/geom/mesh/subdiv/FaceCountComparator',[],function(){
+	
+	var FaceCountComparator = function(){};
+	FaceCountComparator.prototype.compare = function( edge1, edge2 ){
+		return -(edge1.faces.length - edge2.faces.length);
+	};
+	return FaceCountComparator;
+
+});
+define('toxi/geom/mesh/subdiv/MidpointDisplacementSubdivision',[
+	'../../../internals',
+	'./DisplacementSubdivision'
+], function ( internals, DisplacementSubdivision ){
+	
+	var MidpointDisplacementSubdivision = function( centroid, amount ){
+		DisplacementSubdivision.call(this, amount);
+		this.centroid = centroid;
+	};
+	internals.extend( MidpointDisplacementSubdivision, DisplacementSubdivision );
+	MidpointDisplacementSubdivision.prototype.computeSplitPoints = function( edge ){
+		var mid = edge.getMidPoint(),
+			n = mid.sub( this.centroid ).normalizeTo( this.amp * edge.getLength() );
+		return [ mid.addSelf(n) ];
+	};
+	return MidpointDisplacementSubdivision;
+});
+    
+define('toxi/geom/mesh/subdiv/NormalDisplacementSubdivision',[
+	'../../../internals',
+	'./DisplacementSubdivision'
+], function( internals, DisplacementSubdivision ){
+
+	var NormalDisplacementSubdivision = function( amp ){
+		DisplacementSubdivision.call( this, amp );
+	};
+	internals.extend( NormalDisplacementSubdivision, DisplacementSubdivision );
+	NormalDisplacementSubdivision.prototype.computeSplitPoints = function( edge ){
+		var mid = edge.getMidPoint(),
+			n = edge.faces[0].normal;
+
+		if( edge.faces.length > 1 ){
+			n.addSelf( edge.faces[1].normal );
+		}
+		n.normalizeTo( this.amp * edge.getLength() );
+		return [ mid.addSelf(n) ];
+	};
+	return NormalDisplacementSubdivision;
+});
+define('toxi/geom/mesh/subdiv/TriSubdivision',[
+	'../../../internals',
+	'./SubdivisionStrategy'
+], function ( internals, SubdivisionStrategy ){
+	
+	var TriSubdivision = function(){
+		SubdivisionStrategy.call(this);
+	};
+	internals.extend( TriSubdivision, SubdivisionStrategy );
+	TriSubdivision.prototype.computeSplitPoints = function( edge ){
+		return [
+			edge.a.interpolateTo(edge.b, 0.25),
+			edge.a.interpolateTo(edge.b, 0.5),
+			edge.a.interpolateTo(edge.b, 0.75)
+		];
+	};
+	return TriSubdivision;
+});
+    
+define('toxi/geom/mesh/subdiv',[
+	'require',
+	'exports',
+	'./subdiv/SubdivisionStrategy',
+	'./subdiv/DisplacementSubdivision',
+	'./subdiv/DualDisplacementSubdivision',
+	'./subdiv/DualSubdivision',
+	'./subdiv/EdgeLengthComparator',
+	'./subdiv/FaceCountComparator',
+	'./subdiv/MidpointDisplacementSubdivision',
+	'./subdiv/MidpointSubdivision',
+	'./subdiv/NormalDisplacementSubdivision',
+	'./subdiv/TriSubdivision'
+], function( require, exports ){
+	exports.DisplacementSubdivision = require('./subdiv/DisplacementSubdivision');
+	exports.DualDisplacementSubdivision = require('./subdiv/DualDisplacementSubdivision');
+	exports.DualSubdivision = require('./subdiv/DualSubdivision');
+	exports.EdgeLengthComparator = require('./subdiv/EdgeLengthComparator');
+	exports.FaceCountComparator = require('./subdiv/FaceCountComparator');
+	exports.MidpointDisplacementSubdivision = require('./subdiv/MidpointDisplacementSubdivision');
+	exports.MidpointSubdivision = require('./subdiv/MidpointSubdivision');
+	exports.NormalDisplacementSubdivision = require('./subdiv/NormalDisplacementSubdivision');
+	exports.SubdivisionStrategy = require('./subdiv/SubdivisionStrategy');
+	exports.TriSubdivision = require('./subdiv/TriSubdivision');
+});
+define('toxi/geom/mesh',[
+	"require",
+	"exports",
+	"./mesh/BezierPatch",
+	"./mesh/BoxSelector",
+	"./mesh/DefaultSelector",
+	"./mesh/Face",
+	"./mesh/OBJWriter","./mesh/PlaneSelector",
+	"./mesh/SphereFunction",
+	"./mesh/SphericalHarmonics",
+	"./mesh/SurfaceMeshBuilder",
+	"./mesh/SuperEllipsoid",
+	"./mesh/TriangleMesh",
+	"./mesh/Vertex",
+	"./mesh/VertexSelector",
+	"./mesh/Terrain",
+	"./mesh/WETriangleMesh",
+	"./mesh/subdiv"
+], function(require, exports) {
 	exports.TriangleMesh = require('./mesh/TriangleMesh');
 	exports.BezierPatch = require('./mesh/BezierPatch');
 	exports.BoxSelector = require('./mesh/BoxSelector');
@@ -7269,6 +8073,8 @@ define('toxi/geom/mesh',["require", "exports", "./mesh/BezierPatch","./mesh/BoxS
 	exports.TriangleMesh = require('./mesh/TriangleMesh');
 	exports.Vertex = require('./mesh/Vertex');
 	exports.VertexSelector = require('./mesh/VertexSelector');
+	exports.WETriangleMesh = require('./mesh/WETriangleMesh');
+	exports.subdiv = require('./mesh/subdiv');
 });
 
 define('toxi/geom/BernsteinPolynomial',["require", "exports", "module"], function(require, exports, module) {
@@ -7281,10 +8087,10 @@ define('toxi/geom/BernsteinPolynomial',["require", "exports", "module"], functio
  */
 var	BernsteinPolynomial = function(res) {
 	this.resolution = res;
-	var b0 = new Array(res),
-		b1 = new Array(res),
-		b2 = new Array(res),
-		b3 = new Array(res);
+	var b0 = [],
+		b1 = [],
+		b2 = [],
+		b3 = [];
 	var t = 0;
 	var dt = 1.0 / (res - 1);
 	for (var i = 0; i < res; i++) {
@@ -8229,7 +9035,7 @@ Cone.prototype.toMesh = function(args) {
 		phi = (Math.PI*2) / opts.steps;
 	
 	
-	var i = 0;
+	var i = 0, j=1;
 	for(i=0;i<opts.steps;i++){
 		var theta = i * phi + opts.thetaOffset;
 		var nr = n.getRotatedAroundAxis(this.dir,theta);
@@ -8243,7 +9049,7 @@ Cone.prototype.toMesh = function(args) {
 		numF = opts.steps * 2 + (opts.topClosed ? opts.steps : 0) + (opts.bottomClosed ? opts.steps : 0),
 		mesh = opts.mesh || new TriangleMesh("cone",numV,numF);
 
-	for(i=0, j=1; i<opts.steps; i++, j++){
+	for(i=0; i<opts.steps; i++, j++){
 		if(j == opts.steps){
 			j = 0;
 		}
@@ -8722,97 +9528,104 @@ module.exports = Rect;
 
 });
 
-define('toxi/geom/Spline2D',["require", "exports", "module", "./Vec2D","./BernsteinPolynomial"], function(require, exports, module) {
+define('toxi/geom/Spline2D',["require", "exports", "module", "../internals","./Vec2D","./BernsteinPolynomial"], function(require, exports, module) {
 
 var Vec2D = require('./Vec2D'),
+	internals = require('../internals'),
 	BernsteinPolynomial = require('./BernsteinPolynomial');
 
 /**
  * @class
  * @member toxi
- * @param {Vec2D[]} rawPoints array of Vec2D's
+ * @param {Vec2D[]} points array of Vec2D's
  * @param {BernsteinPolynomial} [bernsteinPoly]
  */
-var	Spline2D = function(rawPoints,bernsteinPoly){
-	if(arguments.length === 0){
-			this.setTightness(Spline2D.DEFAULT_TIGHTNESS);
-			this.pointList = [];
+var	Spline2D = function(points, bernsteinPoly, tightness){
+	if( arguments.length === 1 && !internals.isArray( points ) && typeof points === 'object' ){
+		//if its an options object
+		bernsteinPoly = bernsteinPoly || points.bernsteinPoly;
+		tightness = tightness || points.tightness;
+		points = points.points;
+	}
+	var i = 0, l;
+	this.pointList = [];
+	if( typeof tightness !== 'number' ){
+		tightness = Spline2D.DEFAULT_TIGHTNESS;
+	}
+	this.setTightness(tightness);
+	//this may be undefined
+	this.bernstein = bernsteinPoly;
+	if( points !== undefined ){
+		for(i = 0, l = points.length; i<l; i++){
+			this.add( points[i].copy() );
 		}
-		else if(arguments.length >= 3){
-			this.pointList = rawPoints.slice(0); //copy array
-			this.bernstein = bernsteinPoly;
-			this.setTightness(tightness);
-		}
-		else if(arguments.length == 1){
-		
-			this.pointList = rawPoints;
-	        this.numP = rawPoints.length;
-	        this.coeffA = [];
-	        this.delta = [];
-	        this.bi = [];
-	        for (var i = 0; i < this.numP; i++) {
-	            this.coeffA[i] = new Vec2D();
-	            this.delta[i] = new Vec2D();
-	            this.bi[i] = 0;
-	        }
-			//this.pointList = rawPoints.slice(0);
-			//this.setTightness(Spline2D.DEFAULT_TIGHTNESS);
-		}
-		this.numP = this.pointList.length;
-		this.bi = [];
+	}
+	this.coeffA = [];
+	this.delta = [];
+	this.bi = [];
+	for (i = 0; i < this.numP; i++) {
+		this.coeffA[i] = new Vec2D();
+		this.delta[i] = new Vec2D();
+		this.bi[i] = 0;
+	}
+	this.bi = [];
 };
 
 
 Spline2D.prototype = {
 	add: function(p){
 		this.pointList.push(p.copy());
+		this.numP = this.pointList.length;
 		return this;
 	},
 
 	
 	computeVertices: function(res){
 		this.updateCoefficients();
-        if (this.bernstein === undefined || this.bernstein.resolution != res) {
-            this.bernstein = new BernsteinPolynomial(res);
-        }
-        var bst = this.bernstein;
-        this.vertices = [];
-        this.findCPoints();
-        var deltaP = new Vec2D();
-        var deltaQ = new Vec2D();
-        for (var i = 0; i < this.numP - 1; i++) {
-            var p = this.points[i];
-            var q = this.points[i + 1];
-            deltaP.set(this.delta[i]).addSelf(p);
-            deltaQ.set(q).subSelf(this.delta[i + 1]);
-            for (var k = 0; k < bst.resolution; k++) {
-                var x = p.x * bst.b0[k] + deltaP.x * bst.b1[k] +
-                deltaQ.x * bst.b2[k] +
-                q.x * bst.b3[k];
-                var y = p.y * bst.b0[k] + deltaP.y * bst.b1[k] +
-                deltaQ.y * bst.b2[k] +
-                q.y * bst.b3[k];
-                this.vertices.push(new Vec2D(x, y));
-            }
-        }
-        return this.vertices;
-    },
+		if (this.bernstein === undefined || this.bernstein.resolution != res) {
+			this.bernstein = new BernsteinPolynomial(res);
+		}
+		var bst = this.bernstein;
+		this.vertices = [];
+		this.findCPoints();
+		var deltaP = new Vec2D();
+		var deltaQ = new Vec2D();
+		for (var i = 0; i < this.numP - 1; i++) {
+			var p = this.points[i];
+			var q = this.points[i + 1];
+			deltaP.set(this.delta[i]).addSelf(p);
+			deltaQ.set(q).subSelf(this.delta[i + 1]);
+			for (var k = 0; k < bst.resolution; k++) {
+				var x = p.x * bst.b0[k] + deltaP.x * bst.b1[k] +
+				deltaQ.x * bst.b2[k] +
+				q.x * bst.b3[k];
+				var y = p.y * bst.b0[k] + deltaP.y * bst.b1[k] +
+				deltaQ.y * bst.b2[k] +
+				q.y * bst.b3[k];
+				this.vertices.push(new Vec2D(x, y));
+			}
+		}
+		return this.vertices;
+	},
 
 	findCPoints: function(){
-        this.bi[1] = -0.25;
-        var i;
-        this.coeffA[1].set((this.points[2].x - this.points[0].x - this.delta[0].x) * this.tightness, (this.points[2].y - this.points[0].y - this.delta[0].y) * this.tightness);
-        for (i = 2; i < this.numP - 1; i++) {
-            this.bi[i] = -1 / (this.invTightness + this.bi[i - 1]);
-            this.coeffA[i].set(-(this.points[i + 1].x - this.points[i - 1].x - this.coeffA[i - 1].x) *
-            this.bi[i], -(this.points[i + 1].y - this.points[i - 1].y - this.coeffA[i - 1].y) *
-            this.bi[i]);
-        }
-        for (i = this.numP - 2; i > 0; i--) {
-            this.delta[i].set(this.coeffA[i].x + this.delta[i + 1].x * this.bi[i], this.coeffA[i].y +
-            this.delta[i + 1].y * this.bi[i]);
-        }
-      },
+		this.bi[1] = -0.25;
+		var i, p0, p2, d0;
+		p0 = this.pointList[0];
+		p2 = this.pointList[2];
+		d0 = this.delta[0];
+		this.coeffA[1].set((p2.x - p0.x - d0.x) * this.tightness, (p2.y - p0.y - d0.y) * this.tightness);
+		for (i = 2; i < this.numP - 1; i++) {
+			this.bi[i] = -1 / (this.invTightness + this.bi[i - 1]);
+			this.coeffA[i].set(-(this.points[i + 1].x - this.points[i - 1].x - this.coeffA[i - 1].x) *
+			this.bi[i], -(this.points[i + 1].y - this.points[i - 1].y - this.coeffA[i - 1].y) *
+			this.bi[i]);
+		}
+		for (i = this.numP - 2; i > 0; i--) {
+			this.delta[i].set(this.coeffA[i].x + this.delta[i + 1].x * this.bi[i], this.coeffA[i].y +
+			this.delta[i + 1].y * this.bi[i]);
+		}
+	},
 	
 	getDecimatedVertices: function(step,doAddFinalVertex){
 		if(doAddFinalVertex === undefined)doAddFinalVertex = true;
@@ -12965,7 +13778,7 @@ var f3 = function(geometry,i1,i2,i3){
 };
 var v3 = function(geometry,a){
 	var threeV = new THREE.Vector3(a.x,a.y,a.z);
-	geometry.vertices.push( new THREE.Vertex( threeV ) );
+	geometry.vertices.push( threeV );
 };
 
 

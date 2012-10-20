@@ -1,5 +1,6 @@
 #Toxiclibs.js CHANGES
 ##v0.1.3
+*	bugfix toxi.geom.mesh.TriangleMesh#computeVertexNormals returning NaN
 *	bugfix toxi.geom.mesh.TriangleMesh#updateVertex
 *	Updated toxi.THREE.ToxiclibsSupport to remove used of deprecated THREE.Vertex
 *	AABB, Vec3D, Vec2D, Sphere.toMesh and Circle -> Ellipse circular dependencies resolved
