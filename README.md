@@ -1,20 +1,23 @@
-[Toxiclibsjs](http://haptic-data.com/toxiclibsjs) is an open-source library for computational design tasks with JavaScript. It is a port of [Karsten Schmidt's Toxiclibs](http://toxiclibs.org) for Java and Processing. Toxiclibs.js works great with Canvas, with SVG or any ordinary DOM element. Examples pair with such fine libraries as: [Processing.js](http://processingjs.org), [Three.js](http://github.com/mrdoob/three.js), or [Raphael.js](http://raphaeljs.com) for SVG.
+#[Toxiclibsjs](http://haptic-data.com/toxiclibsjs) 
+##an open-source library for computational design tasks with JavaScript. 
+
+Toxiclibs.js is a port of [Karsten Schmidt's Toxiclibs](http://toxiclibs.org) for Java and [Processing](http://processing.org). Toxiclibs.js works great with any DOM element, such as Canvas and SVG. The library is also available for use with [Node.js](http://nodejs.org) for desktop applications and servers. Examples pair with such fine libraries as: [Processing.js](http://processingjs.org), [Three.js](http://github.com/mrdoob/three.js), or [Raphael.js](http://raphaeljs.com) for SVG.
+
+##What it is…
+-	2D/3D geometry
+-	Mesh generation and subdivision
+-	Interpolation / Mapping
+-	Wave Generators
+-	2D physics simulation
+-	Color theory sorting and conversion
 
 
 
-* Examples of toxiclibs.js can be found at [http://haptic-data.com/toxiclibsjs](http://haptic-data.com/toxiclibsjs), and are included in the examples/ folder of the repository.
-* Examples of the original library can be found at [http://toxiclibs.org](http://toxiclibs.org)
-
-
-### A few examples ###
+### A few examples
+[![Spherical Harmonics in three.js](http://haptic-data.com/toxiclibsjs/img/spherical_harmonics.jpg)](http://haptic-data.com/toxiclibsjs/examples/SphericalHarmonics_threejs.html)
 [![additive_waves](http://haptic-data.com/toxiclibsjs/img/additive_waves.jpg)](http://haptic-data.com/toxiclibsjs/examples/AdditiveWaves_pjs-webgl.html)
-[![smooth_doodle](http://haptic-data.com/toxiclibsjs/img/smooth_doodle.gif)](http://haptic-data.com/toxiclibsjs/examples/SmoothDoodle_canvas.html)
 [![polar_unravel](http://haptic-data.com/toxiclibsjs/img/polar_unravel.gif)](http://haptic-data.com/toxiclibsjs/examples/PolarUnravel_pjs.html)
-[![circle_3_points](http://haptic-data.com/toxiclibsjs/img/circle_3_points.gif)](http://haptic-data.com/toxiclibsjs/examples/Circle3Points_pjs.html)
-[![line2d_intersection](http://haptic-data.com/toxiclibsjs/img/line2d_intersection.gif)](http://haptic-data.com/toxiclibsjs/examples/Line2DIntersection_pjs.html)
 [![attraction2d](http://haptic-data.com/toxiclibsjs/img/physics2d_attraction2d.gif)](http://haptic-data.com/toxiclibsjs/examples/Attraction2D_pjs.html)
-[![draggable_particles](http://haptic-data.com/toxiclibsjs/img/physics2d_draggableparticles.gif)](http://haptic-data.com/toxiclibsjs/examples/DraggableParticles_pjs.html)
-[![softbody_square](http://haptic-data.com/toxiclibsjs/img/physics2d_softbodysquare.gif)](http://haptic-data.com/toxiclibsjs/examples/SoftBodySquare_pjs.html)
 
 
 #Getting Started with Toxiclibs.js
@@ -48,8 +51,6 @@ then:
 	var	toxi = require('toxiclibsjs'),
 		myVector = new toxi.geom.Ve2D(0.5,0.5),
 		myColor = toxi.color.TColor.newRGB(128/255,64/255,32/255);
-
-There are many different ways to use toxiclibs.js. Most of the [examples](http://haptic-data.com/toxiclibsjs/#examples) currently use [Processing.js](http://processingjs.org) and are created using the java-syntax style of the original [Processing](http://processing.org). This can be helpful to those that are making the transition from Java, but can be confusing to others. I will explain the basics of using toxiclibs.js and the few differences between it and [the original toxiclibs](http://toxiclibs.org). 
 
 For comprehensive documentation, read the original libraries [javadocs](http://toxiclibs.org/javadocs/). As the library is still growing, you can compare that documentation to this list of implemented classes.
 

@@ -769,8 +769,7 @@ define('toxi/geom/vectors',[
 	"exports",
 	"module",
 	"../math/mathUtils",
-	"../internals",
-
+	"../internals"
 ], function(require, exports, module) {
 
 	var	mathUtils = require('../math/mathUtils');
@@ -780,8 +779,8 @@ define('toxi/geom/vectors',[
 	var isRect = internals.tests.isRect;
 
 	/**
-	 @member toxi
-	 @class a two-dimensional vector class
+	@member toxi
+	@class a two-dimensional vector class
 	 */
 	var	Vec2D = function(a,b){
 		if( hasXY( a ) ){
@@ -806,7 +805,7 @@ define('toxi/geom/vectors',[
 		}
 	};
 
-	//private, 
+	//private,
 	var _getXY = function(a,b) {
 		if( hasXY( a ) ){
 			b = a.y;
@@ -825,155 +824,154 @@ define('toxi/geom/vectors',[
 	Vec2D.prototype = {
 
 		abs: function() {
-	        this.x = Math.abs(this.x);
-	        this.y = Math.abs(this.y);
-	        return this;
-	    },
+			this.x = Math.abs(this.x);
+			this.y = Math.abs(this.y);
+			return this;
+		},
 
-	    add: function(a, b) {
+		add: function(a, b) {
 			var v  = new Vec2D(a,b);
 			v.x += this.x;
 			v.y += this.y;
-	        return v;
-	    },
-	    
-	    /**
-	     * Adds vector {a,b,c} and overrides coordinates with result.
-	     * 
-	     * @param a
-	     *            X coordinate
-	     * @param b
-	     *            Y coordinate
-	     * @return itself
-	     */
-	    addSelf: function(a,b) {
+			return v;
+		},
+		
+		/**
+		 * Adds vector {a,b,c} and overrides coordinates with result.
+		 *
+		 * @param a
+		 *            X coordinate
+		 * @param b
+		 *            Y coordinate
+		 * @return itself
+		 */
+		addSelf: function(a,b) {
 			var v = _getXY(a,b);
-	        this.x += v.x;
-	        this.y += v.y;
-	        return this;
-	    },
+			this.x += v.x;
+			this.y += v.y;
+			return this;
+		},
 
 		angleBetween: function(v, faceNormalize) {
 			if(faceNormalize === undefined){
 				var dot = this.dot(v);
 				return Math.acos(this.dot(v));
 			}
-	        var theta = (faceNormalize) ? this.getNormalized().dot(v.getNormalized()) : this.dot(v);
-	        return Math.acos(theta);
-	    },
+			var theta = (faceNormalize) ? this.getNormalized().dot(v.getNormalized()) : this.dot(v);
+			return Math.acos(theta);
+		},
 
 		//bisect() is in Vec2D_post.js
 
-	    /**
-	     * Sets all vector components to 0.
-	     * 
-	     * @return itself
-	     */
-	    clear: function() {
-	        this.x = this.y = 0;
-	        return this;
-	    },
+		/**
+		 * Sets all vector components to 0.
+		 * 
+		 * @return itself
+		 */
+		clear: function() {
+			this.x = this.y = 0;
+			return this;
+		},
 		
 		compareTo: function(vec) {
-	        if (this.x == vec.x && this.y == vec.y) {
-	            return 0;
-	        }
-	        return this.magSquared() - vec.magSquared();
-	    },
+			if (this.x == vec.x && this.y == vec.y) {
+				return 0;
+			}
+			return this.magSquared() - vec.magSquared();
+		},
 
 		/**
-	     * Forcefully fits the vector in the given rectangle.
-	     * 
-	     * @param a
-	     *		either a Rectangle by itself or the Vec2D min
+		 * Forcefully fits the vector in the given rectangle.
+		 * 
+		 * @param a
+		 *		either a Rectangle by itself or the Vec2D min
 		 * @param b
 		 *		Vec2D max
-	     * @return itself
-	     */
-	    constrain: function(a,b) {
+		 * @return itself
+		 */
+		constrain: function(a,b) {
 			if( hasXY( a ) && hasXY( b ) ){
 				this.x = mathUtils.clip(this.x, a.x, b.x);
-		        this.y = mathUtils.clip(this.y, a.y, b.y);
+				this.y = mathUtils.clip(this.y, a.y, b.y);
 			} else if( isRect( a ) ){
-	            this.x = mathUtils.clip(this.x, a.x, a.x + a.width);
+				this.x = mathUtils.clip(this.x, a.x, a.x + a.width);
 				this.y = mathUtils.clip(this.y, a.y, a.y + a.height);
 			}
-	        return this;
-	    },
+			return this;
+		},
 		
 		copy: function() {
-	        return new Vec2D(this);
-	    },
+			return new Vec2D(this);
+		},
 
-	    cross: function(v) {
-	        return (this.x * v.y) - (this.y * v.x);
-	    },
+		cross: function(v) {
+			return (this.x * v.y) - (this.y * v.x);
+		},
 
-	    distanceTo: function(v) {
-	        if (v !== undefined) {
-	            var dx = this.x - v.x;
-	            var dy = this.y - v.y;
-	            return Math.sqrt(dx * dx + dy * dy);
-	        } else {
-	            return NaN;
-	        }
-	    },
+		distanceTo: function(v) {
+			if (v !== undefined) {
+				var dx = this.x - v.x;
+				var dy = this.y - v.y;
+				return Math.sqrt(dx * dx + dy * dy);
+			} else {
+				return NaN;
+			}
+		},
 
-	    distanceToSquared: function(v) {
-	        if (v !== undefined) {
-	            var dx = this.x - v.x;
-	            var dy = this.y - v.y;
-	            return dx * dx + dy * dy;
-	        } else {
-	            return NaN;
-	        }
-	    },
+		distanceToSquared: function(v) {
+			if (v !== undefined) {
+				var dx = this.x - v.x;
+				var dy = this.y - v.y;
+				return dx * dx + dy * dy;
+			} else {
+				return NaN;
+			}
+		},
 
 		dot: function(v) {
-	        return this.x * v.x + this.y * v.y;
-	    },
+			return this.x * v.x + this.y * v.y;
+		},
 
 		equals: function(obj) {
-	        if ( hasXY( obj ) ) {
-	            return this.x == obj.x && this.y == obj.y;
-	        }
-	        return false;
-	    },
+			if ( hasXY( obj ) ) {
+				return this.x == obj.x && this.y == obj.y;
+			}
+			return false;
+		},
 
 		equalsWithTolerance: function(v, tolerance) {
-	        if (mathUtils.abs(this.x - v.x) < tolerance) {
-	            if (mathUtils.abs(this.y - v.y) < tolerance) {
-	                return true;
-	            }
-	        }
-	        return false;
-	    },
+			if (mathUtils.abs(this.x - v.x) < tolerance) {
+				if (mathUtils.abs(this.y - v.y) < tolerance) {
+					return true;
+				}
+			}
+			return false;
+		},
 
 		floor: function() {
-	        this.x = mathUtils.floor(this.x);
-	        this.y = mathUtils.floor(this.y);
-	        return this;
-	    },
+			this.x = mathUtils.floor(this.x);
+			this.y = mathUtils.floor(this.y);
+			return this;
+		},
 
 		/**
-	     * Replaces the vector components with the fractional part of their current
-	     * values
-	     * 
-	     * @return itself
-	     */
-	    frac: function() {
-	        this.x -= mathUtils.floor(this.x);
-	        this.y -= mathUtils.floor(this.y);
-	        return this;
-	    },
+		 * Replaces the vector components with the fractional part of their current
+		 * values
+		 *
+		 * @return itself
+		 */
+		frac: function() {
+			this.x -= mathUtils.floor(this.x);
+			this.y -= mathUtils.floor(this.y);
+			return this;
+		},
 
 		getAbs: function() {
-	        return new Vec2D(this).abs();
-	    },
+			return new Vec2D(this).abs();
+		},
 
 		getComponent: function(id) {
-			if(typeof id == 'number')
-			{			
+			if(typeof id == 'number'){
 				id = (id === 0) ? Vec2D.Axis.X : Vec2D.Axis.Y;
 			}
 			if(id == Vec2D.Axis.X){
@@ -982,82 +980,82 @@ define('toxi/geom/vectors',[
 				return this.y;
 			}
 			return 0;
-	    },
+		},
 
 		getConstrained: function(r) {
-	        return new Vec2D(this).constrain(r);
-	    },
+			return new Vec2D(this).constrain(r);
+		},
 
-	    getFloored: function() {
-	        return new Vec2D(this).floor();
-	    },
+		getFloored: function() {
+			return new Vec2D(this).floor();
+		},
 
-	    getFrac: function() {
-	        return new Vec2D(this).frac();
-	    },
+		getFrac: function() {
+			return new Vec2D(this).frac();
+		},
 
-	    getInverted: function() {
-	        return new Vec2D(-this.x, -this.y);
-	    },
+		getInverted: function() {
+			return new Vec2D(-this.x, -this.y);
+		},
 
-	    getLimited: function(lim) {
-	        if (this.magSquared() > lim * lim) {
-	            return this.getNormalizedTo(lim);
-	        }
-	        return new Vec2D(this);
-	    },
+		getLimited: function(lim) {
+			if (this.magSquared() > lim * lim) {
+				return this.getNormalizedTo(lim);
+			}
+			return new Vec2D(this);
+		},
 
-	    getNormalized: function() {
-	        return new Vec2D(this).normalize();
-	    },
+		getNormalized: function() {
+			return new Vec2D(this).normalize();
+		},
 
-	    getNormalizedTo: function(len) {
-	        return new Vec2D(this).normalizeTo(len);
-	    },
+		getNormalizedTo: function(len) {
+			return new Vec2D(this).normalizeTo(len);
+		},
 		 getPerpendicular: function() {
-	        return new Vec2D(this).perpendicular();
-	    },
+			return new Vec2D(this).perpendicular();
+		},
 
-	    getReciprocal: function() {
-	        return new Vec2D(this).reciprocal();
-	    },
+		getReciprocal: function() {
+			return new Vec2D(this).reciprocal();
+		},
 
-	    getReflected: function(normal) {
-	        return new Vec2D(this).reflect(normal);
-	    },
+		getReflected: function(normal) {
+			return new Vec2D(this).reflect(normal);
+		},
 
-	    getRotated: function(theta) {
-	        return new Vec2D(this).rotate(theta);
-	    },
+		getRotated: function(theta) {
+			return new Vec2D(this).rotate(theta);
+		},
 
-	    getSignum: function() {
-	        return new Vec2D(this).signum();
-	    },
+		getSignum: function() {
+			return new Vec2D(this).signum();
+		},
 		
 		heading: function() {
-	        return Math.atan2(this.y, this.x);
-	    },
-	    
-	    interpolateTo: function(v, f, s) {
+			return Math.atan2(this.y, this.x);
+		},
+		
+		interpolateTo: function(v, f, s) {
 			if(s === undefined){
 				return new Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
 			} else
 			{
 				return new Vec2D(s.interpolate(this.x,v.x,f),s.interpolate(this.y,v.y,f));
 			}
-	    },
+		},
 
-	    /**
-	     * Interpolates the vector towards the given target vector, using linear
-	     * interpolation
-	     * 
-	     * @param v
-	     *            target vector
-	     * @param f
-	     *            interpolation factor (should be in the range 0..1)
-	     * @return itself, result overrides current vector
-	     */
-	    interpolateToSelf: function(v, f, s) {
+		/**
+		 * Interpolates the vector towards the given target vector, using linear
+		 * interpolation
+		 * 
+		 * @param v
+		 *            target vector
+		 * @param f
+		 *            interpolation factor (should be in the range 0..1)
+		 * @return itself, result overrides current vector
+		 */
+		interpolateToSelf: function(v, f, s) {
 			if(s === undefined) {
 				this.x += (v.x - this.x) * f;
 				this.y += (v.y - this.y) * f;
@@ -1065,209 +1063,209 @@ define('toxi/geom/vectors',[
 				this.x = s.interpolate(this.x,v.x,f);
 				this.y = s.interpolate(this.y,v.y,f);
 			}
-	        return this;
-	    },
+			return this;
+		},
 
 		invert: function() {
-	        this.x *= -1;
-	        this.y *= -1;
-	        return this;
-	    },
+			this.x *= -1;
+			this.y *= -1;
+			return this;
+		},
 
 		isInCircle: function(sO,sR) {
-	        var d = this.sub(sO).magSquared();
-	        return (d <= sR * sR);
-	    },
+			var d = this.sub(sO).magSquared();
+			return (d <= sR * sR);
+		},
 
-	    isInRectangle: function(rect) {
-	        if (this.x < rect.x || this.x > rect.x + rect.width) {
-	            return false;
-	        }
-	        if (this.y < rect.y || this.y > rect.y + rect.height) {
-	            return false;
-	        }
-	        return true;
-	    },
+		isInRectangle: function(rect) {
+			if (this.x < rect.x || this.x > rect.x + rect.width) {
+				return false;
+			}
+			if (this.y < rect.y || this.y > rect.y + rect.height) {
+				return false;
+			}
+			return true;
+		},
 
-	    isInTriangle: function(a,b,c) {
-	        var v1 = this.sub(a).normalize();
-	        var v2 = this.sub(b).normalize();
-	        var v3 = this.sub(c).normalize();
+		isInTriangle: function(a,b,c) {
+			var v1 = this.sub(a).normalize();
+			var v2 = this.sub(b).normalize();
+			var v3 = this.sub(c).normalize();
 
-	        var total_angles = Math.acos(v1.dot(v2));
-	        total_angles += Math.acos(v2.dot(v3));
-	        total_angles += Math.acos(v3.dot(v1));
+			var total_angles = Math.acos(v1.dot(v2));
+			total_angles += Math.acos(v2.dot(v3));
+			total_angles += Math.acos(v3.dot(v1));
 
-	        return (Math.abs(total_angles - mathUtils.TWO_PI) <= 0.005);
-	    },
+			return (Math.abs(total_angles - mathUtils.TWO_PI) <= 0.005);
+		},
 
 		isMajorAxis: function(tol) {
-	        var ax = Math.abs(this.x);
-	        var ay = Math.abs(this.y);
-	        var itol = 1 - tol;
-	        if (ax > itol) {
-	            return (ay < tol);
-	        } else if (ay > itol) {
-	            return (ax < tol);
-	        }
-	        return false;
-	    },
+			var ax = Math.abs(this.x);
+			var ay = Math.abs(this.y);
+			var itol = 1 - tol;
+			if (ax > itol) {
+				return (ay < tol);
+			} else if (ay > itol) {
+				return (ax < tol);
+			}
+			return false;
+		},
 
-	    isZeroVector: function() {
-	        return Math.abs(this.x) < mathUtils.EPS && Math.abs(this.y) < mathUtils.EPS;
-	    },
+		isZeroVector: function() {
+			return Math.abs(this.x) < mathUtils.EPS && Math.abs(this.y) < mathUtils.EPS;
+		},
 
-	    /**
-	     * Adds random jitter to the vector in the range -j ... +j using the default
-	     * {@link Random} generator of {@link MathUtils}.
-	     * 
-	     * @param a
-	     *            maximum x jitter or  Vec2D
-	     * @param b
-	     *            maximum y jitter or undefined
-	     * @return itself
-	     */
-	    jitter: function(a,b) {
+		/**
+		 * Adds random jitter to the vector in the range -j ... +j using the default
+		 * {@link Random} generator of {@link MathUtils}.
+		 * 
+		 * @param a
+		 *            maximum x jitter or  Vec2D
+		 * @param b
+		 *            maximum y jitter or undefined
+		 * @return itself
+		 */
+		jitter: function(a,b) {
 			var v = _getXY(a,b);
 			this.x += mathUtils.normalizedRandom() * v.x;
-	        this.y += mathUtils.normalizedRandom() * v.y;
-	        return this;
-	    },
+			this.y += mathUtils.normalizedRandom() * v.y;
+			return this;
+		},
 
 		limit: function(lim) {
-	        if (this.magSquared() > lim * lim) {
-	            return this.normalize().scaleSelf(lim);
-	        }
-	        return this;
-	    },
+			if (this.magSquared() > lim * lim) {
+				return this.normalize().scaleSelf(lim);
+			}
+			return this;
+		},
 
-	    magnitude: function() {
-	        return Math.sqrt(this.x * this.x + this.y * this.y);
-	    },
+		magnitude: function() {
+			return Math.sqrt(this.x * this.x + this.y * this.y);
+		},
 
-	    magSquared: function() {
-	        return this.x * this.x + this.y * this.y;
-	    },
+		magSquared: function() {
+			return this.x * this.x + this.y * this.y;
+		},
 
 		max: function(v) {
-	        return new Vec2D(mathUtils.max(this.x, v.x), mathUtils.max(this.y, v.y));
-	    },
+			return new Vec2D(mathUtils.max(this.x, v.x), mathUtils.max(this.y, v.y));
+		},
 
 		maxSelf: function(v) {
-	        this.x = mathUtils.max(this.x, v.x);
-	        this.y = mathUtils.max(this.y, v.y);
-	        return this;
-	    },
+			this.x = mathUtils.max(this.x, v.x);
+			this.y = mathUtils.max(this.y, v.y);
+			return this;
+		},
 
-	    min: function(v) {
-	        return new Vec2D(mathUtils.min(this.x, v.x), mathUtils.min(this.y, v.y));
-	    },
+		min: function(v) {
+			return new Vec2D(mathUtils.min(this.x, v.x), mathUtils.min(this.y, v.y));
+		},
 
 		minSelf: function(v) {
-	        this.x = mathUtils.min(this.x, v.x);
-	        this.y = mathUtils.min(this.y, v.y);
-	        return this;
-	    },
+			this.x = mathUtils.min(this.x, v.x);
+			this.y = mathUtils.min(this.y, v.y);
+			return this;
+		},
 
-	    /**
-	     * Normalizes the vector so that its magnitude = 1
-	     * 
-	     * @return itself
-	     */
-	    normalize: function() {
-	        var mag = this.x * this.x + this.y * this.y;
-	        if (mag > 0) {
-	            mag = 1.0 / Math.sqrt(mag);
-	            this.x *= mag;
-	            this.y *= mag;
-	        }
-	        return this;
-	    },
+		/**
+		 * Normalizes the vector so that its magnitude = 1
+		 * 
+		 * @return itself
+		 */
+		normalize: function() {
+			var mag = this.x * this.x + this.y * this.y;
+			if (mag > 0) {
+				mag = 1.0 / Math.sqrt(mag);
+				this.x *= mag;
+				this.y *= mag;
+			}
+			return this;
+		},
 
-	    /**
-	     * Normalizes the vector to the given length.
-	     * 
-	     * @param len
-	     *            desired length
-	     * @return itself
-	     */
-	    normalizeTo: function(len) {
-	        var mag = Math.sqrt(this.x * this.x + this.y * this.y);
-	        if (mag > 0) {
-	            mag = len / mag;
-	            this.x *= mag;
-	            this.y *= mag;
-	        }
-	        return this;
-	    },
+		/**
+		 * Normalizes the vector to the given length.
+		 * 
+		 * @param len
+		 *            desired length
+		 * @return itself
+		 */
+		normalizeTo: function(len) {
+			var mag = Math.sqrt(this.x * this.x + this.y * this.y);
+			if (mag > 0) {
+				mag = len / mag;
+				this.x *= mag;
+				this.y *= mag;
+			}
+			return this;
+		},
 
-	    perpendicular: function() {
-	        var t = this.x;
-	        this.x = -this.y;
-	        this.y = t;
-	        return this;
-	    },
-	    
-	    positiveHeading: function() {
+		perpendicular: function() {
+			var t = this.x;
+			this.x = -this.y;
+			this.y = t;
+			return this;
+		},
+		
+		positiveHeading: function() {
 			var dist = Math.sqrt(this.x * this.x + this.y * this.y);
 			if (this.y >= 0){
 				return Math.acos(this.x / dist);
 			}
 			return (Math.acos(-this.x / dist) + mathUtils.PI);
-	    },
+		},
 
-	    reciprocal: function() {
-	        this.x = 1.0 / this.x;
-	        this.y = 1.0 / this.y;
-	        return this;
-	    },
+		reciprocal: function() {
+			this.x = 1.0 / this.x;
+			this.y = 1.0 / this.y;
+			return this;
+		},
 
 		reflect: function(normal) {
-	        return this.set(normal.scale(this.dot(normal) * 2).subSelf(this));
-	    },
+			return this.set(normal.scale(this.dot(normal) * 2).subSelf(this));
+		},
 
-	    /**
-	     * Rotates the vector by the given angle around the Z axis.
-	     * 
-	     * @param theta
-	     * @return itself
-	     */
-	    rotate: function(theta) {
-	        var co = Math.cos(theta);
-	        var si = Math.sin(theta);
-	        var xx = co * this.x - si * this.y;
-	        this.y = si * this.x + co * this.y;
-	        this.x = xx;
-	        return this;
-	    },
+		/**
+		 * Rotates the vector by the given angle around the Z axis.
+		 * 
+		 * @param theta
+		 * @return itself
+		 */
+		rotate: function(theta) {
+			var co = Math.cos(theta);
+			var si = Math.sin(theta);
+			var xx = co * this.x - si * this.y;
+			this.y = si * this.x + co * this.y;
+			this.x = xx;
+			return this;
+		},
 
 		roundToAxis: function() {
-	        if (Math.abs(this.x) < 0.5) {
-	            this.x = 0;
-	        } else {
-	            this.x = this.x < 0 ? -1 : 1;
-	            this.y = 0;
-	        }
-	        if (Math.abs(this.y) < 0.5) {
-	            this.y = 0;
-	        } else {
-	            this.y = this.y < 0 ? -1 : 1;
-	            this.x = 0;
-	        }
-	        return this;
-	    },
+			if (Math.abs(this.x) < 0.5) {
+				this.x = 0;
+			} else {
+				this.x = this.x < 0 ? -1 : 1;
+				this.y = 0;
+			}
+			if (Math.abs(this.y) < 0.5) {
+				this.y = 0;
+			} else {
+				this.y = this.y < 0 ? -1 : 1;
+				this.x = 0;
+			}
+			return this;
+		},
 
-	    scale: function(a, b) {
+		scale: function(a, b) {
 			var v = _getXY(a,b);
-	        return new Vec2D(this.x * v.x, this.y * v.y);
-	    },
+			return new Vec2D(this.x * v.x, this.y * v.y);
+		},
 
-	    scaleSelf: function(a,b) {
+		scaleSelf: function(a,b) {
 			var v = _getXY(a,b);
-	        this.x *= v.x;
-	        this.y *= v.y;
-	        return this;
-	    },
+			this.x *= v.x;
+			this.y *= v.y;
+			return this;
+		},
 
 		set: function(a,b){
 			var v = _getXY(a,b);
@@ -1290,17 +1288,17 @@ define('toxi/geom/vectors',[
 		},
 		
 		/**
-	     * Replaces all vector components with the signum of their original values.
-	     * In other words if a components value was negative its new value will be
-	     * -1, if zero => 0, if positive => +1
-	     * 
-	     * @return itself
-	     */
+		 * Replaces all vector components with the signum of their original values.
+		 * In other words if a components value was negative its new value will be
+		 * -1, if zero => 0, if positive => +1
+		 * 
+		 * @return itself
+		 */
 		signum: function() {
-	        this.x = (this.x < 0 ? -1 : this.x === 0 ? 0 : 1);
-	        this.y = (this.y < 0 ? -1 : this.y === 0 ? 0 : 1);
-	        return this;
-	    },
+			this.x = (this.x < 0 ? -1 : this.x === 0 ? 0 : 1);
+			this.y = (this.y < 0 ? -1 : this.y === 0 ? 0 : 1);
+			return this;
+		},
 
 		sub: function(a,b){
 			var v = _getXY(a,b);
@@ -1308,80 +1306,80 @@ define('toxi/geom/vectors',[
 		},
 		
 		/**
-	     * Subtracts vector {a,b,c} and overrides coordinates with result.
-	     * 
-	     * @param a
-	     *            X coordinate
-	     * @param b
-	     *            Y coordinate
-	     * @return itself
-	     */
-	    subSelf: function(a,b) {
-	        var v = _getXY(a,b);
+		 * Subtracts vector {a,b,c} and overrides coordinates with result.
+		 * 
+		 * @param a
+		 *            X coordinate
+		 * @param b
+		 *            Y coordinate
+		 * @return itself
+		 */
+		subSelf: function(a,b) {
+			var v = _getXY(a,b);
 			this.x -= v.x;
-	        this.y -= v.y;
-	        return this;
-	    },
+			this.y -= v.y;
+			return this;
+		},
 
 		tangentNormalOfEllipse: function(eO,eR) {
-	        var p = this.sub(eO);
+			var p = this.sub(eO);
 
-	        var xr2 = eR.x * eR.x;
-	        var yr2 = eR.y * eR.y;
+			var xr2 = eR.x * eR.x;
+			var yr2 = eR.y * eR.y;
 
-	        return new Vec2D(p.x / xr2, p.y / yr2).normalize();
-	    },
-	    
+			return new Vec2D(p.x / xr2, p.y / yr2).normalize();
+		},
+		
 
 		//to3D** methods are in Vec2D_post.js
 		
-	    toArray: function() {
-	        return [this.x,this.y];
-	    },
+		toArray: function() {
+			return [this.x,this.y];
+		},
 
 		toCartesian: function() {
-	        var xx = (this.x * Math.cos(this.y));
-	        this.y = (this.x * Math.sin(this.y));
-	        this.x = xx;
-	        return this;
-	    },
+			var xx = (this.x * Math.cos(this.y));
+			this.y = (this.x * Math.sin(this.y));
+			this.x = xx;
+			return this;
+		},
 
 		toPolar: function() {
-	        var r = Math.sqrt(this.x * this.x + this.y * this.y);
-	        this.y = Math.atan2(this.y, this.x);
-	        this.x = r;
-	        return this;
-	    },
+			var r = Math.sqrt(this.x * this.x + this.y * this.y);
+			this.y = Math.atan2(this.y, this.x);
+			this.x = r;
+			return this;
+		},
 
-	    toString: function() {
-	        var s = "{x:"+this.x+", y:"+this.y+"}";
-	        return s;
-	    }
+		toString: function() {
+			var s = "{x:"+this.x+", y:"+this.y+"}";
+			return s;
+		}
 		
 	};
 
 	//these requires are in the functions because of a circular dependency
 	Vec2D.prototype.bisect = function(b) {
-	    var Vec3D = require('./Vec3D');
-	    var diff = this.sub(b);
-	    var sum = this.add(b);
-	    var dot = diff.dot(sum);
-	    return new Vec3D(diff.x, diff.y, -dot / 2);
+		var Vec3D = require('./Vec3D');
+		var diff = this.sub(b);
+		var sum = this.add(b);
+		var dot = diff.dot(sum);
+		return new Vec3D(diff.x, diff.y, -dot / 2);
 	};
 
 	Vec2D.prototype.to3DXY = function() {
-	    var Vec3D = require('./Vec3D');
-	    return new Vec3D(this.x, this.y, 0);
+		var Vec3D = require('./Vec3D');
+		return new Vec3D(this.x, this.y, 0);
 	};
 
 	Vec2D.prototype.to3DXZ = function() {
-	    var Vec3D = require('./Vec3D');
-	    return new Vec3D(this.x, 0, this.y);
+		var Vec3D = require('./Vec3D');
+		return new Vec3D(this.x, 0, this.y);
 	};
 
 	Vec2D.prototype.to3DYZ = function() {
-	    var Vec3D = require('./Vec3D');
-	    return new Vec3D(0, this.x, this.y);
+		var Vec3D = require('./Vec3D');
+		return new Vec3D(0, this.x, this.y);
 	};
 
 	Vec2D.X_AXIS = new Vec2D(1,0); 
@@ -1397,7 +1395,7 @@ define('toxi/geom/vectors',[
 	};
 
 	Vec2D.min = function(a, b) {
-	    return new Vec2D(mathUtils.min(a.x, b.x), mathUtils.min(a.y, b.y));
+		return new Vec2D(mathUtils.min(a.x, b.x), mathUtils.min(a.y, b.y));
 	};
 
 	Vec2D.randomVector = function(rnd){
@@ -2291,11 +2289,11 @@ var	internals = require('../internals'),
 
 //private
 var dec2hex = function decimalToHexString(number){
-    if (number < 0){
-        number = 0xFFFFFFFF + number + 1;
-    }
+	if (number < 0){
+		number = 0xFFFFFFFF + number + 1;
+	}
 
-    return number.toString(16);
+	return number.toString(16);
 };
 
 /**
@@ -2324,48 +2322,47 @@ TColor.prototype = {
 	
 	addSelf: function(c) {
 		this.rgb[0] = mathUtils.min(this.rgb[0] + c.rgb[0], 1);
-	    this.rgb[1] = mathUtils.min(this.rgb[1] + c.rgb[1], 1);
-	    this.rgb[2] = mathUtils.min(this.rgb[2] + c.rgb[2], 1);
-	    return this.setRGB(rgb);
+		this.rgb[1] = mathUtils.min(this.rgb[1] + c.rgb[1], 1);
+		this.rgb[2] = mathUtils.min(this.rgb[2] + c.rgb[2], 1);
+		return this.setRGB( this.rgb);
 	},
 	
 	/**
 	 * Changes the brightness of the color by the given amount in the direction
 	 * towards either the black or white point (depending on if current
 	 * brightness >= 50%)
-	 * 
+	 *
 	 * @param {Number} amount
 	 * @return itself
 	 */
 	adjustConstrast: function(amount) {
-	    return this.hsv[2] < 0.5 ? this.darken(amount) : this.lighten(amount);
+		return this.hsv[2] < 0.5 ? this.darken(amount) : this.lighten(amount);
 	},
 	
 	
 	/**
 	 * Adds the given HSV values as offsets to the current color. Hue will
 	 * automatically wrap.
-	 * 
+	 *
 	 * @param h
 	 * @param s
 	 * @param v
 	 * @return itself
 	 */
 	adjustHSV: function(h, s, v) {
-	    return this.setHSV([ this.hsv[0] + h, this.hsv[1] + s, this.hsv[2] + v ]);
+		return this.setHSV([ this.hsv[0] + h, this.hsv[1] + s, this.hsv[2] + v ]);
 	},
 	
 	/**
 	 * Adds the given RGB values as offsets to the current color. TColor will
 	 * clip at black or white.
-	 * 
 	 * @param r
 	 * @param g
 	 * @param b
 	 * @return itself
 	 */
 	adjustRGB: function(r, g,b) {
-	    return this.setRGB([this.rgb[0] + r, this.rgb[1] + g, this.rgb[2] + b]);
+		return this.setRGB([this.rgb[0] + r, this.rgb[1] + g, this.rgb[2] + b]);
 	},
 	
 	alpha:function(){
@@ -2376,7 +2373,6 @@ TColor.prototype = {
 	 * Rotates this color by a random amount (not exceeding the one specified)
 	 * and creates variations in saturation and brightness based on the 2nd
 	 * parameter.
-	 * 
 	 * @param theta
 	 *            max. rotation angle (in radians)
 	 * @param delta
@@ -2384,7 +2380,7 @@ TColor.prototype = {
 	 * @return itself
 	 */
 	analog: function(theta, delta) {
-	    var angle = mathUtils.degrees(theta);
+		var angle = mathUtils.degrees(theta);
 		this.rotateRYB(angle * mathUtils.normalizedRandom());
 		this.hsv[1] += delta * mathUtils.normalizedRandom();
 		this.hsv[2] += delta * mathUtils.normalizedRandom();
@@ -2397,7 +2393,6 @@ TColor.prototype = {
 	},
 	/**
 	 * Blends the color with the given one by the stated amount
-	 * 
 	 * @param c
 	 *            target color
 	 * @param t
@@ -2406,12 +2401,12 @@ TColor.prototype = {
 	 */
 	blend: function(c, t) {
 		if(t === undefined) { t = 0.5; }
-	    var crgb = c.toRGBAArray();
-	    this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
-	    this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
-	    this.rgb[2] += (crgb[2] - this.rgb[2]) * t;
-	    this._alpha += (c.alpha() - this._alpha) * t;
-	    return this.setRGB(this.rgb);
+		var crgb = c.toRGBAArray();
+		this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
+		this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
+		this.rgb[2] += (crgb[2] - this.rgb[2]) * t;
+		this._alpha += (c.alpha() - this._alpha) * t;
+		return this.setRGB(this.rgb);
 	},
 	
 	blue: function() {
@@ -2439,157 +2434,155 @@ TColor.prototype = {
 		return this.setHSV(this.hsv);
 	},
 	/**
-	Reduced the color's saturation by the given amount. 
+	Reduced the color's saturation by the given amount.
 	@param step
 	@return itself
 	*/
 	desaturate: function(step) {
-	    this.hsv[1] = mathUtils.clip((this.hsv[1] - step), 0, 1);
-	    return this.setHSV(this.hsv);
+		this.hsv[1] = mathUtils.clip((this.hsv[1] - step), 0, 1);
+		return this.setHSV(this.hsv);
 	},
 
 	differenceTo: function(c) {
-	    return  TColor.newRGB(Math.abs(this.rgb[0] - c.rgb[0]),
-	            Math.abs(this.rgb[1] - c.rgb[1]),
-	            Math.abs(this.rgb[2] - c.rgb[2]));
+		return  TColor.newRGB(Math.abs(this.rgb[0] - c.rgb[0]),
+			Math.abs(this.rgb[1] - c.rgb[1]),
+			Math.abs(this.rgb[2] - c.rgb[2]));
 	},
 	
 	distanceToCMYK: function(c) {
-	    var ccmyk = c.toCMYKAArray();
-	    var dc = this.cmyk[0] - ccmyk[0];
-	    var dm = this.cmyk[1] - ccmyk[1];
-	    var dy = this.cmyk[2] - ccmyk[2];
-	    var dk = this.cmyk[3] - ccmyk[3];
-	    return Math.sqrt(dc * dc + dm * dm + dy * dy + dk * dk);
+		var ccmyk = c.toCMYKAArray();
+		var dc = this.cmyk[0] - ccmyk[0];
+		var dm = this.cmyk[1] - ccmyk[1];
+		var dy = this.cmyk[2] - ccmyk[2];
+		var dk = this.cmyk[3] - ccmyk[3];
+		return Math.sqrt(dc * dc + dm * dm + dy * dy + dk * dk);
 	},
 	
 	distanceToHSV: function(c) {
-	    var hue = this.hsv[0] * mathUtils.TWO_PI;
-	    var hue2 = c.hue() * mathUtils.TWO_PI;
-	    var v1 =
-	            new Vec3D((Math.cos(hue) * this.hsv[1]),
-	                    (Math.sin(hue) * this.hsv[1]), this.hsv[2]);
-	    var v2 =
-	            new Vec3D((Math.cos(hue2) * c.saturation()),
-	                    (Math.sin(hue2) * c.saturation()), c.brightness());
-	    return v1.distanceTo(v2);
+		var hue = this.hsv[0] * mathUtils.TWO_PI;
+		var hue2 = c.hue() * mathUtils.TWO_PI;
+		var v1 = new Vec3D((Math.cos(hue) * this.hsv[1]),
+			(Math.sin(hue) * this.hsv[1]), this.hsv[2]);
+		var v2 = new Vec3D((Math.cos(hue2) * c.saturation()),
+			(Math.sin(hue2) * c.saturation()), c.brightness());
+		return v1.distanceTo(v2);
 	},
 	
 	distanceToRGB: function(c) {
-	    var crgb = c.toRGBAArray();
-	    var dr = this.rgb[0] - crgb[0];
-	    var dg = this.rgb[1] - crgb[1];
-	    var db = this.rgb[2] - crgb[2];
-	    return Math.sqrt(dr * dr + dg * dg + db * db);
+		var crgb = c.toRGBAArray();
+		var dr = this.rgb[0] - crgb[0];
+		var dg = this.rgb[1] - crgb[1];
+		var db = this.rgb[2] - crgb[2];
+		return Math.sqrt(dr * dr + dg * dg + db * db);
 	},
 	
 	equals: function(o) {
-	    if ( internals.tests.isTColor( o ) ) {
-	        var c =  o;
-	        var dr = c.rgb[0] - this.rgb[0];
-	        var dg = c.rgb[1] - this.rgb[1];
-	        var db = c.rgb[2] - this.rgb[2];
-	        var da = c.alpha() - this._alpha;
-	        var d = Math.sqrt(dr * dr + dg * dg + db * db + da * da);
-	        return d < TColor.EPS;
-	    }
-	    return false;
+		if ( internals.tests.isTColor( o ) ) {
+			var c =  o;
+			var dr = c.rgb[0] - this.rgb[0];
+			var dg = c.rgb[1] - this.rgb[1];
+			var db = c.rgb[2] - this.rgb[2];
+			var da = c.alpha() - this._alpha;
+			var d = Math.sqrt(dr * dr + dg * dg + db * db + da * da);
+			return d < TColor.EPS;
+		}
+		return false;
 	},
 	
 	getAnalog: function(theta,delta) {
-	    return new TColor(this).analog(theta, delta);
+		return new TColor(this).analog(theta, delta);
 	},
 	
 	getBlended: function(c,t) {
-	    return new TColor(this).blend(c, t);
+		return new TColor(this).blend(c, t);
 	},
 	
 	/*getClosestHue: function(primaryOnly) {
-	    return Hue.getClosest(hsv[0], false,primaryOnly);
+		return Hue.getClosest(hsv[0], false,primaryOnly);
 	},*/
 	
 	getComplement: function() {
-	    return new TColor(this).complement();
+		return new TColor(this).complement();
 	},
 	
 	getComponentValue: function(criteria) {
-	    return criteria.getComponentValueFor(this);
+		return criteria.getComponentValueFor(this);
 	},
 	
 	getDarkened: function(step) {
-	    return new TColor(this).darken(step);
+		return new TColor(this).darken(step);
 	},
 	
 	getDesaturated: function(step) {
-	    return new TColor(this).desaturate(step);
+		return new TColor(this).desaturate(step);
 	},
 	
 	getDifferenceTo: function(c) {
-	    return this.copy().differenceTo(c);
+		return this.copy().differenceTo(c);
 	},
 	
 	getInverted: function() {
-	    return new TColor(this).invert();
+		return new TColor(this).invert();
 	},
 	
 	getLightened: function(step) {
-	    return new TColor(this).lighten(step);
+		return new TColor(this).lighten(step);
 	},
 	
 	getRotatedRYB: function(theta) {
-	    return new TColor(this).rotateRYB(theta);
+		return new TColor(this).rotateRYB(theta);
 	},
 	
 	getSaturated: function(step) {
-	    return new TColor(this).saturate(step);
+		return new TColor(this).saturate(step);
 	},
 	
 	green: function() {
-	    return this.rgb[1];
+		return this.rgb[1];
 	},
 	
 	hue: function() {
-	    return this.hsv[0];
+		return this.hsv[0];
 	},
 	
 	invert: function() {
-	    this.rgb[0] = 1 - this.rgb[0];
-	    this.rgb[1] = 1 - this.rgb[1];
-	    this.rgb[2] = 1 - this.rgb[2];
-	    return this.setRGB(this.rgb);
+		this.rgb[0] = 1 - this.rgb[0];
+		this.rgb[1] = 1 - this.rgb[1];
+		this.rgb[2] = 1 - this.rgb[2];
+		return this.setRGB(this.rgb);
 	},
 	
 	isBlack: function() {
-	    return (this.rgb[0] <= TColor.BLACK_POINT && ((this.rgb[0]==this.rgb[1]) && this.rgb[0] == this.rgb[2]));
+		return (this.rgb[0] <= TColor.BLACK_POINT && ((this.rgb[0]==this.rgb[1]) && this.rgb[0] == this.rgb[2]));
 	},
 	
 	isGrey:function() {
-	    return this.hsv[1] < TColor.GREY_THRESHOLD;
+		return this.hsv[1] < TColor.GREY_THRESHOLD;
 	},
 	/*
 	isPrimary:function() {
-	    return Hue.isPrimary(this.hsv[0]);
+		return Hue.isPrimary(this.hsv[0]);
 	},*/
 	
 	isWhite: function() {
-	    return (this.rgb[0] >= TColor.WHITE_POINT && (this.rgb[0] == this.rgb[1]) && (this.rgb[0] == this.rgb[2]));
+		return (this.rgb[0] >= TColor.WHITE_POINT && (this.rgb[0] == this.rgb[1]) && (this.rgb[0] == this.rgb[2]));
 	},
 	
 	lighten: function(step) {
-	    this.hsv[2] = mathUtils.clip(this.hsv[2] + step, 0, 1);
-	    return this.setHSV(this.hsv);
+		this.hsv[2] = mathUtils.clip(this.hsv[2] + step, 0, 1);
+		return this.setHSV(this.hsv);
 	},
 	
 	luminance: function() {
-	    return this.rgb[0] * 0.299 + this.rgb[1] * 0.587 + this.rgb[2] * 0.114;
+		return this.rgb[0] * 0.299 + this.rgb[1] * 0.587 + this.rgb[2] * 0.114;
 	},
 	
 	magenta: function() {
-	    return this.cmyk[1];
+		return this.cmyk[1];
 	},
 	
 	red: function() {
-	    return this.rgb[0];
+		return this.rgb[0];
 	},
 	
 	rotateRYB: function(theta) {
@@ -2600,74 +2593,74 @@ TColor.prototype = {
 			q;
 		theta %= 360;
 
-	    var resultHue = 0;
-	    for (i = 0; i < TColor.RYB_WHEEL.length - 1; i++) {
-	        p = TColor.RYB_WHEEL[i];
-	        q = TColor.RYB_WHEEL[i + 1];
-	        if (q.y < p.y) {
-	            q.y += 360;
-	        }
-	        if (p.y <= h && h <= q.y) {
-	            resultHue = p.x + (q.x - p.x) * (h - p.y) / (q.y - p.y);
-	            break;
-	        }
-	    }
+		var resultHue = 0;
+		for (i = 0; i < TColor.RYB_WHEEL.length - 1; i++) {
+			p = TColor.RYB_WHEEL[i];
+			q = TColor.RYB_WHEEL[i + 1];
+			if (q.y < p.y) {
+				q.y += 360;
+			}
+			if (p.y <= h && h <= q.y) {
+				resultHue = p.x + (q.x - p.x) * (h - p.y) / (q.y - p.y);
+				break;
+			}
+		}
 
-	    // And the user-given angle (e.g. complement).
-	    resultHue = (resultHue + theta) % 360;
+		// And the user-given angle (e.g. complement).
+		resultHue = (resultHue + theta) % 360;
 
-	    // For the given angle, find out what hue is
-	    // located there on the artistic color wheel.
-	    for (i = 0; i < TColor.RYB_WHEEL.length - 1; i++) {
-	        p = TColor.RYB_WHEEL[i];
-	        q = TColor.RYB_WHEEL[i + 1];
-	        if (q.y < p.y) {
-	            q.y += 360;
-	        }
-	        if (p.x <= resultHue && resultHue <= q.x) {
-	            h = p.y + (q.y - p.y) * (resultHue - p.x) / (q.x - p.x);
-	            break;
-	        }
-	    }
+		// For the given angle, find out what hue is
+		// located there on the artistic color wheel.
+		for (i = 0; i < TColor.RYB_WHEEL.length - 1; i++) {
+			p = TColor.RYB_WHEEL[i];
+			q = TColor.RYB_WHEEL[i + 1];
+			if (q.y < p.y) {
+				q.y += 360;
+			}
+			if (p.x <= resultHue && resultHue <= q.x) {
+				h = p.y + (q.y - p.y) * (resultHue - p.x) / (q.x - p.x);
+				break;
+			}
+		}
 
-	    this.hsv[0] = (h % 360) / 360.0;
-	    return this.setHSV(this.hsv);
+		this.hsv[0] = (h % 360) / 360.0;
+		return this.setHSV(this.hsv);
 	
 	},
 	
 	saturate: function(step) {
-	    this.hsv[1] = mathUtils.clip(this.hsv[1] + step, 0, 1);
-	    return this.setHSV(this.hsv);
+		this.hsv[1] = mathUtils.clip(this.hsv[1] + step, 0, 1);
+		return this.setHSV(this.hsv);
 	},
 	
 	saturation: function() {
-	    return this.hsv[1];
+		return this.hsv[1];
 	},
 	
 	setAlpha: function(alpha) {
-	    this._alpha = alpha;
-	    return this;
+		this._alpha = alpha;
+		return this;
 	},
 	
 	setARGB: function(argb) {
-	    this.setRGB(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff) * TColor.INV8BIT, (argb & 0xff) * TColor.INV8BIT);
-	    this._alpha = (argb >>> 24) * TColor.INV8BIT;
-	    return this;
+		this.setRGB(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff) * TColor.INV8BIT, (argb & 0xff) * TColor.INV8BIT);
+		this._alpha = (argb >>> 24) * TColor.INV8BIT;
+		return this;
 	},
 	
 	setBlack: function(val) {
-	    this.cmyk[3] = val;
-	    return this.setCMYK(cmyk);
+		this.cmyk[3] = val;
+		return this.setCMYK( this.cmyk );
 	},
 	
 	setBlue: function(blue) {
-	    this.rgb[2] = blue;
-	    return this.setRGB(this.rgb);
+		this.rgb[2] = blue;
+		return this.setRGB(this.rgb);
 	},
 	
 	setBrightness: function(brightness) {
-	    this.hsv[2] = mathUtils.clip(brightness, 0, 1);
-	    return this.setHSV(this.hsv);
+		this.hsv[2] = mathUtils.clip(brightness, 0, 1);
+		return this.setHSV(this.hsv);
 	},
 	
 	setCMYK: function(c,m,y,k) {
@@ -2678,28 +2671,28 @@ TColor.prototype = {
 			k = c[3];
 			c = c[0];
 		}
-	    this.cmyk[0] = c;
-	    this.cmyk[1] = m;
-	    this.cmyk[2] = y;
-	    this.cmyk[3] = k;
+		this.cmyk[0] = c;
+		this.cmyk[1] = m;
+		this.cmyk[2] = y;
+		this.cmyk[3] = k;
 		this.rgb = TColor.cmykToRGB(this.cmyk[0],this.cmyk[1],this.cmyk[2],this.cmyk[3]);
 		this.hsv = TColor.rgbToHSV(this.rgb[0],this.rgb[1],this.rgb[2]);
-	    return this;
+		return this;
 	},
 	
 	/*setComponent(AccessCriteria criteria, float val) {
-	    criteria.setComponentValueFor(this, val);
-	    return this;
+		criteria.setComponentValueFor(this, val);
+		return this;
 	}*/
 	
 	setCyan: function(val) {
-	    this.cmyk[0] = val;
-	    return this.setCMYK(this.cmyk);
+		this.cmyk[0] = val;
+		return this.setCMYK(this.cmyk);
 	},
 
 	setGreen: function(green) {
-	    this.rgb[1] = green;
-	    return this.setRGB(this.rgb);
+		this.rgb[1] = green;
+		return this.setRGB(this.rgb);
 	},
 
 	setHSV: function(h,s,v) {
@@ -2709,7 +2702,7 @@ TColor.prototype = {
 			h = h[0];
 		}
 		var newHSV = [h,s,v];
-	    this.hsv[0] = newHSV[0] % 1;
+		this.hsv[0] = newHSV[0] % 1;
 		if (this.hsv[0] < 0) {
 			this.hsv[0]++;
 		}
@@ -2721,22 +2714,22 @@ TColor.prototype = {
 	},
 	
 	setHue: function(hue) {
-	    hue %= 1.0;
-	    if (hue < 0.0) {
-	        hue++;
-	    }
-	    this.hsv[0] = hue;
-	    this.setHSV(this.hsv);
+		hue %= 1.0;
+		if (hue < 0.0) {
+			hue++;
+		}
+		this.hsv[0] = hue;
+		this.setHSV(this.hsv);
 	},
 	
 	setMagenta: function(val) {
-	    this.cmyk[1] = val;
-	    return this.setCMYK(this.cmyk);
+		this.cmyk[1] = val;
+		return this.setCMYK(this.cmyk);
 	},
 
 	setRed: function(red) {
-	    this.rgb[0] = red;
-	    return this.setRGB(this.rgb);
+		this.rgb[0] = red;
+		return this.setRGB(this.rgb);
 	},
 
 	setRGB: function(r,g,b) {
@@ -2745,33 +2738,33 @@ TColor.prototype = {
 			b = r[2];
 			r = r[0];
 		}
-	    this.rgb[0] = mathUtils.clip(r,0,1);
-	    this.rgb[1] = mathUtils.clip(g,0,1);
-	    this.rgb[2] = mathUtils.clip(b,0,1);
+		this.rgb[0] = mathUtils.clip(r,0,1);
+		this.rgb[1] = mathUtils.clip(g,0,1);
+		this.rgb[2] = mathUtils.clip(b,0,1);
 		this.cmyk = TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
 		this.hsv = TColor.rgbToHSV(this.rgb[0], this.rgb[1], this.rgb[2]);
-	    return this;
+		return this;
 	},
 	
 	setSaturation: function(saturation) {
-	    this.hsv[1] = mathUtils.clip(saturation, 0, 1);
-	    return this.setHSV(this.hsv);
+		this.hsv[1] = mathUtils.clip(saturation, 0, 1);
+		return this.setHSV(this.hsv);
 	},
 
 	setYellow: function(val) {
-	    this.cmyk[2] = val;
-	    return this.setCMYK(this.cmyk);
+		this.cmyk[2] = val;
+		return this.setCMYK(this.cmyk);
 	},
 
 	sub: function(c) {
-	    return this.copy().subSelf(c);
+		return this.copy().subSelf(c);
 	},
 	
 	subSelf: function(c) {
-	    this.rgb[0] = mathUtils.max(this.rgb[0] - c.rgb[0], 0);
-	    this.rgb[1] = mathUtils.max(this.rgb[1] - c.rgb[1], 0);
-	    this.rgb[2] = mathUtils.max(this.rgb[2] - c.rgb[2], 0);
-	    return this.setRGB(this.rgb);
+		this.rgb[0] = mathUtils.max(this.rgb[0] - c.rgb[0], 0);
+		this.rgb[1] = mathUtils.max(this.rgb[1] - c.rgb[1], 0);
+		this.rgb[2] = mathUtils.max(this.rgb[2] - c.rgb[2], 0);
+		return this.setRGB(this.rgb);
 	},
 	
 	toARGB: function() {
@@ -2779,53 +2772,65 @@ TColor.prototype = {
 			g = parseInt((this.rgb[1] * 255),10),
 			b = parseInt((this.rgb[2] * 255),10),
 			a = parseInt((this._alpha * 255),10);
-	    return  r << 16 | g << 8 | b | a << 24;
+		return  r << 16 | g << 8 | b | a << 24;
 	},
 	
 	toCMYKAArray: function(cmyka) {
-	    if (cmyka === undefined) {
-	        cmyka = [];
-	    }
-	    cmyka[0] = this.cmyk[0];
-	    cmyka[1] = this.cmyk[1];
-	    cmyka[2] = this.cmyk[2];
-	    cmyka[3] = this.cmyk[3];
-	    cmyka[4] = this._alpha;
-	    return cmyka;
+		if (cmyka === undefined) {
+			cmyka = [];
+		}
+		cmyka[0] = this.cmyk[0];
+		cmyka[1] = this.cmyk[1];
+		cmyka[2] = this.cmyk[2];
+		cmyka[3] = this.cmyk[3];
+		cmyka[4] = this._alpha;
+		return cmyka;
 	},
 	
 	toHex: function() {
-	    var hex = dec2hex(this.toARGB());
-	    if (hex.length > 6) {
-	        hex = hex.substring(2);
-	    }
-	    return hex;
+		var hex = dec2hex(this.toARGB());
+		if (hex.length > 6) {
+			hex = hex.substring(2);
+		}
+		return hex;
+	},
+
+	toHexCSS: function(){
+		return "#"+this.toHex();
 	},
 	
 	toHSVAArray: function(hsva) {
-	    if (hsva === undefined) {
-	        hsva = [];
-	    }
-	    hsva[0] = this.hsv[0];
-	    hsva[1] = this.hsv[1];
-	    hsva[2] = this.hsv[2];
-	    hsva[3] = this._alpha;
-	    return hsva;
+		if (hsva === undefined) {
+			hsva = [];
+		}
+		hsva[0] = this.hsv[0];
+		hsva[1] = this.hsv[1];
+		hsva[2] = this.hsv[2];
+		hsva[3] = this._alpha;
+		return hsva;
+	},
+
+	/**
+	* to CSS's hsl() string
+	*/
+	toHSLCSS: function(){
+		var hsva = scaleHSLACSSColors( this.toHSVAArray() );
+		return "hsl("+hsva[0]+","+hsva[1]+"%,"+hsva[2]+"%)";
 	},
 
 	/**
 	 * to CSS's hsla() string
 	 */
 	toHSLACSS: function(){
-		var hsva = this.toHSVAArray();
-		//hue is 0 - 360
-		hsva[0] = Math.floor(hsva[0] * 360);
-		//saturation & value/luminosity is 0-100 (%)
-		hsva[1] = Math.floor(hsva[1] * 100);
-		hsva[2] = Math.floor(hsva[2] * 100);
-		//alpha stays in range 0 - 1	
-
+		var hsva = scaleHSLACSSColors( this.toHSVAArray() );
 		return "hsla("+hsva[0]+","+hsva[1]+"%,"+hsva[2]+"%,"+hsva[3]+")";
+	},
+
+	/**
+	* to integer for color
+	*/
+	toInt: function(){
+		return Number( '0x' + this.toHex() );
 	},
 	
 	/**
@@ -2835,17 +2840,22 @@ TColor.prototype = {
 	 * @return rgba array
 	 */
 	toRGBAArray: function(rgba, offset) {
-	    if (rgba === undefined) {
-	        rgba = [];
-	    }
-	    if(offset == undefined){
-	    	offset = 0;
-	    }
-	    rgba[offset++] = this.rgb[0];
-	    rgba[offset++] = this.rgb[1];
-	    rgba[offset++] = this.rgb[2];
-	    rgba[offset] = this._alpha;
-	    return rgba;
+		if (rgba === undefined) {
+			rgba = [];
+		}
+		if(offset == undefined){
+			offset = 0;
+		}
+		rgba[offset++] = this.rgb[0];
+		rgba[offset++] = this.rgb[1];
+		rgba[offset++] = this.rgb[2];
+		rgba[offset] = this._alpha;
+		return rgba;
+	},
+
+	toRGBCSS: function( asPercents ){
+		var rgba = scaleRGBACSSColors( this.toRGBAArray(), asPercents );
+		return "rgb("+rgba[0]+","+rgba[1]+","+rgba[2]+")";
 	},
 
 	/**
@@ -2853,68 +2863,76 @@ TColor.prototype = {
 	 * @param asPercents if true creates string based on percents rather than 0-255
 	 */
 	toRGBACSS: function(asPercents){
-		asPercents == asPercents || false;
-		var rgba = this.toRGBAArray();
-		if(asPercents) {
-			rgba[0] = Math.floor(rgba[0] * 100);
-			rgba[1] = Math.floor(rgba[1] * 100);
-			rgba[2] = Math.floor(rgba[2] * 100);
-			return "rgba("+rgba[0]+"%,"+rgba[1]+"%,"+rgba[2]+"%,"+rgba[3]+")";
-		}
-		//as 0 - 255
-		rgba[0] = Math.floor(rgba[0] * 255);
-		rgba[1] = Math.floor(rgba[1] * 255);
-		rgba[2] = Math.floor(rgba[2] * 255);
+		var rgba = scaleRGBACSSColors( this.toRGBAArray(), asPercents );
 		return "rgba("+rgba[0]+","+rgba[1]+","+rgba[2]+","+rgba[3]+")";
 	},
 	
 	toString: function(){
-		return "TColor: rgb: "+this.rgb[0] + ", " +this.rgb[1] + ", "+this.rgb[2]+ 
+		return "TColor: rgb: "+this.rgb[0] + ", " +this.rgb[1] + ", "+this.rgb[2]+
 				" hsv: "+ this.hsv[0] + ","+this.hsv[1]+","+this.hsv[2]+
 				" cmyk: "+this.cmyk[0] + ", "+this.cmyk[1]+","+this.cmyk[2]+","+this.cmyk[3]+
 				" alpha: "+this._alpha;
 	},
 	
 	yellow: function() {
-	    return this.cmyk[2];
+		return this.cmyk[2];
 	}
 	
 };
 
-
+function scaleHSLACSSColors( hsva ){
+	//hue is 0 - 360
+	hsva[0] = Math.floor(hsva[0] * 360);
+	//saturation & value/luminosity is 0-100 (%)
+	hsva[1] = Math.floor(hsva[1] * 100);
+	hsva[2] = Math.floor(hsva[2] * 100);
+	//alpha stays in range 0 - 1
+	return hsva;
+}
+function scaleRGBACSSColors( rgba, asPercents ){
+	asPercents = asPercents || false;
+	if(asPercents) {
+		rgba[0] = Math.floor(rgba[0] * 100);
+		rgba[1] = Math.floor(rgba[1] * 100);
+		rgba[2] = Math.floor(rgba[2] * 100);
+		return "rgba("+rgba[0]+"%,"+rgba[1]+"%,"+rgba[2]+"%,"+rgba[3]+")";
+	}
+	//as 0 - 255
+	rgba[0] = Math.floor(rgba[0] * 255);
+	rgba[1] = Math.floor(rgba[1] * 255);
+	rgba[2] = Math.floor(rgba[2] * 255);
+	return rgba;
+}
 
 TColor.INV60DEGREES = 60.0 / 360;
 TColor.INV8BIT = 1.0 / 255;
 TColor.EPS = 0.001;
 /*
-    protected static final Vec2D[] RYB_WHEEL = new Vec2D[] { new Vec2D(0, 0),
-            new Vec2D(15, 8), new Vec2D(30, 17), new Vec2D(45, 26),
-            new Vec2D(60, 34), new Vec2D(75, 41), new Vec2D(90, 48),
-            new Vec2D(105, 54), new Vec2D(120, 60), new Vec2D(135, 81),
-            new Vec2D(150, 103), new Vec2D(165, 123), new Vec2D(180, 138),
-            new Vec2D(195, 155), new Vec2D(210, 171), new Vec2D(225, 187),
-            new Vec2D(240, 204), new Vec2D(255, 219), new Vec2D(270, 234),
-            new Vec2D(285, 251), new Vec2D(300, 267), new Vec2D(315, 282),
-            new Vec2D(330, 298), new Vec2D(345, 329), new Vec2D(360, 0) };
+	protected static final Vec2D[] RYB_WHEEL = new Vec2D[] { new Vec2D(0, 0),
+			new Vec2D(15, 8), new Vec2D(30, 17), new Vec2D(45, 26),
+			new Vec2D(60, 34), new Vec2D(75, 41), new Vec2D(90, 48),
+			new Vec2D(105, 54), new Vec2D(120, 60), new Vec2D(135, 81),
+			new Vec2D(150, 103), new Vec2D(165, 123), new Vec2D(180, 138),
+			new Vec2D(195, 155), new Vec2D(210, 171), new Vec2D(225, 187),
+			new Vec2D(240, 204), new Vec2D(255, 219), new Vec2D(270, 234),
+			new Vec2D(285, 251), new Vec2D(300, 267), new Vec2D(315, 282),
+			new Vec2D(330, 298), new Vec2D(345, 329), new Vec2D(360, 0) };
 */
 
 /**
  * Maximum rgb component value for a color to be classified as black.
- * 
  * @see #isBlack()
  */
 TColor.BLACK_POINT = 0.08;
 
 /**
  * Minimum rgb component value for a color to be classified as white.
- * 
  * @see #isWhite()
  */
 TColor.WHITE_POINT = 1.0;
 
 /**
  * Maximum saturations value for a color to be classified as grey
- * 
  * @see #isGrey()
  */
 TColor.GREY_THRESHOLD = 0.01;
@@ -2923,7 +2941,6 @@ TColor.GREY_THRESHOLD = 0.01;
 
 /**
  * Converts CMYK floats into an RGB array.
- * 
  * @param c
  * @param m
  * @param y
@@ -2944,7 +2961,6 @@ TColor.cmykToRGB = function(c,m,y,k,rgb) {
 
 /**
  * Converts hex string into a RGB array.
- * 
  * @param hexRGB
  * @param rgb array optional
  * @return rgb array
@@ -2956,13 +2972,12 @@ TColor.hexToRGB = function(hexRGB,rgb) {
 	rgb[0] = parseInt(hexRGB.substring(0,2),16) * TColor.INV8BIT;//((rgbInt >> 16) & 0xff) * TColor.INV8BIT;
 	rgb[1] = parseInt(hexRGB.substring(2,4),16) * TColor.INV8BIT;//((rgbInt >> 8) & 0xff) * TColor.INV8BIT;
 	rgb[2] = parseInt(hexRGB.substring(4,6),16) * TColor.INV8BIT;//((rgbInt & 0xff) * TColor.INV8BIT);
-    return rgb;
+	return rgb;
 };
 
 
 /**
  * Converts HSV values into RGB array.
- * 
  * @param h
  * @param s
  * @param v
@@ -2981,43 +2996,40 @@ TColor.hsvToRGB = function(h, s, v,rgb) {
 			q = v * (1 - s * f),
 			t = v * (1 - s * (1 - f));
 
-        if (i === 0) {
-            rgb[0] = v;
-            rgb[1] = t;
-            rgb[2] = p;
-        } else if (i == 1) {
-            rgb[0] = q;
-            rgb[1] = v;
-            rgb[2] = p;
-        } else if (i == 2) {
-            rgb[0] = p;
-            rgb[1] = v;
-            rgb[2] = t;
-        } else if (i == 3) {
-            rgb[0] = p;
-            rgb[1] = q;
-            rgb[2] = v;
-        } else if (i == 4) {
-            rgb[0] = t;
-            rgb[1] = p;
-            rgb[2] = v;
-        } else {
-            rgb[0] = v;
-            rgb[1] = p;
-            rgb[2] = q;
-        }
-    }
-    return rgb;
+		if (i === 0) {
+			rgb[0] = v;
+			rgb[1] = t;
+			rgb[2] = p;
+		} else if (i == 1) {
+			rgb[0] = q;
+			rgb[1] = v;
+			rgb[2] = p;
+		} else if (i == 2) {
+			rgb[0] = p;
+			rgb[1] = v;
+			rgb[2] = t;
+		} else if (i == 3) {
+			rgb[0] = p;
+			rgb[1] = q;
+			rgb[2] = v;
+		} else if (i == 4) {
+			rgb[0] = t;
+			rgb[1] = p;
+			rgb[2] = v;
+		} else {
+			rgb[0] = v;
+			rgb[1] = p;
+			rgb[2] = q;
+		}
+	}
+	return rgb;
 };
 
 /**
  * Converts CIE Lab to RGB components.
- * 
  * First we have to convert to XYZ color space. Conversion involves using a
  * white point, in this case D65 which represents daylight illumination.
- * 
  * Algorithm adopted from: http://www.easyrgb.com/math.php
- * 
  * @param l
  * @param a
  * @param b
@@ -3026,53 +3038,52 @@ TColor.hsvToRGB = function(h, s, v,rgb) {
  */
 TColor.labToRGB = function(l, a, b,rgb) {
 	if(rgb === undefined){ rgb = []; }
-    var y = (l + 16) / 116.0,
+	var y = (l + 16) / 116.0,
 		x = a / 500.0 + y,
 		z = y - b / 200.0,
 		i = 0;
-    rgb[0] = x;
-    rgb[1] = y;
-    rgb[2] = z;
-    for (i = 0; i < 3; i++) {
-        var p = Math.pow(rgb[i], 3);
-        if (p > 0.008856) {
-            rgb[i] = p;
-        } else {
-            rgb[i] = (rgb[i] - 16 / 116.0) / 7.787;
-        }
-    }
+	rgb[0] = x;
+	rgb[1] = y;
+	rgb[2] = z;
+	for (i = 0; i < 3; i++) {
+		var p = Math.pow(rgb[i], 3);
+		if (p > 0.008856) {
+			rgb[i] = p;
+		} else {
+			rgb[i] = (rgb[i] - 16 / 116.0) / 7.787;
+		}
+	}
 
-    // Observer = 2, Illuminant = D65
-    x = rgb[0] * 0.95047;
-    y = rgb[1];
-    z = rgb[2] * 1.08883;
+	// Observer = 2, Illuminant = D65
+	x = rgb[0] * 0.95047;
+	y = rgb[1];
+	z = rgb[2] * 1.08883;
 
-    rgb[0] = x * 3.2406 + y * -1.5372 + z * -0.4986;
-    rgb[1] = x * -0.9689 + y * 1.8758 + z * 0.0415;
-    rgb[2] = x * 0.0557 + y * -0.2040 + z * 1.0570;
-    var tpow = 1 / 2.4;
-    for (i = 0; i < 3; i++) {
-        if (rgb[i] > 0.0031308) {
-            rgb[i] = (1.055 * Math.pow(rgb[i], tpow) - 0.055);
-        } else {
-            rgb[i] = 12.92 * rgb[i];
-        }
-    }
-    return rgb;
+	rgb[0] = x * 3.2406 + y * -1.5372 + z * -0.4986;
+	rgb[1] = x * -0.9689 + y * 1.8758 + z * 0.0415;
+	rgb[2] = x * 0.0557 + y * -0.2040 + z * 1.0570;
+	var tpow = 1 / 2.4;
+	for (i = 0; i < 3; i++) {
+		if (rgb[i] > 0.0031308) {
+			rgb[i] = (1.055 * Math.pow(rgb[i], tpow) - 0.055);
+		} else {
+			rgb[i] = 12.92 * rgb[i];
+		}
+	}
+	return rgb;
 };
 
 /**
  * Factory method. Creates new color from ARGB int.
- * 
  * @param argb
  * @return new color
  */
 TColor.newARGB = function(argb) {
-    return TColor.newRGBA(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff) * TColor.INV8BIT, (argb & 0xff) * TColor.INV8BIT, (argb >>> 24) * TColor.INV8BIT);
+	return TColor.newRGBA(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff) * TColor.INV8BIT, (argb & 0xff) * TColor.INV8BIT, (argb >>> 24) * TColor.INV8BIT);
 };
 
 /**
-Factory method. Creates new color from CMYK values. 
+Factory method. Creates new color from CMYK values.
 @param c
 @param m
 @param y
@@ -3080,11 +3091,11 @@ Factory method. Creates new color from CMYK values.
 @return new color
 */
 TColor.newCMYK = function(c, m, y, k) {
-    return TColor.newCMYKA(c, m, y, k, 1);
+	return TColor.newCMYKA(c, m, y, k, 1);
 };
 
 /**
-Factory method. Creates new color from CMYK + alpha values. 
+Factory method. Creates new color from CMYK + alpha values.
 @param c
 @param m
 @param y
@@ -3093,65 +3104,129 @@ Factory method. Creates new color from CMYK + alpha values.
 @return new color
 */
 TColor.newCMYKA = function(c, m, y, k, a) {
-    var col = new TColor();
-    col.setCMYK([c, m, y, k ]);
-    col.setAlpha(mathUtils.clip(a, 0, 1));
-    return col;
+	var col = new TColor();
+	col.setCMYK([c, m, y, k ]);
+	col.setAlpha(mathUtils.clip(a, 0, 1));
+	return col;
 };
 
 /**
-Factory method. Creates a new shade of gray + alpha. 
+Factory method. Creats a new color from any CSS color values
+@param {String} css value
+@return new color
+*/
+TColor.newCSS = function( css ){
+	//remove all spaces
+	while( css.indexOf(' ') > -1 ){
+		css = css.replace(' ', '');
+	}
+	css = css.toLowerCase();
+	
+	function digits( colorFnStr ){
+		//hack off the trailing )
+		var str = css.substr(0, css.length-1);
+		//hack off rgb(, rgba(, hsl(, hsla(
+		return str.substr( colorFnStr.length + 1, str.length).split(',');
+	}
+	function makeNumbers( digits ){
+		var i=0, l = digits.length;
+		for ( i=0; i<l; i++){
+			//cast to numbers from Strings
+			digits[i] = Number( digits[i] );
+		}
+		return digits;
+	}
+	var conversions = {
+		'#': function(){ return TColor.newHex( css.substr(1,css.length) ); },
+		'rgba': function(){
+			var vals = makeNumbers( digits( 'rgba' ) );
+			return TColor.newRGBA( vals[0]/255, vals[1]/255, vals[2]/255, vals[3] );
+		},
+		'rgb': function(){
+			var vals = makeNumbers( digits( 'rgb' ) );
+			return TColor.newRGBA( vals[0]/255, vals[1]/255, vals[2]/255, 1.0 );
+		},
+		'hsla': function( vals ){
+			vals = vals || digits( 'hsla' );
+			vals[0] = Number( vals[0] ) / 360;
+			vals[1] = Number( vals[1].substr(0, vals[1].length-1) ) / 100;
+			vals[2] = Number( vals[2].substr(0, vals[2].length-1) ) / 100;
+			vals[3] = Number( vals[3] );
+			return TColor.newHSVA( vals[0], vals[1], vals[2], vals[3] );
+		},
+		'hsl': function(){
+			var vals = digits('hsl');
+			vals.push( 1.0 );
+			return conversions.hsla( vals );
+		}
+	};
+
+	//if it was an x11 name return a copy
+	if( TColor.X11[css] !== undefined ){
+		return TColor.X11[css].copy();
+	}
+	//else get it from hex or color function
+	for( var method in conversions ){
+		if( css.indexOf(method) > -1 ){
+			return conversions[method]();
+		}
+	}
+};
+
+
+/**
+Factory method. Creates a new shade of gray + alpha.
 @param gray
 @return new color.
 */
 TColor.newGray = function(gray) {
-    return TColor.newGrayAlpha(gray, 1);
+	return TColor.newGrayAlpha(gray, 1);
 };
 
 TColor.newGrayAlpha = function(gray, alpha) {
-    var c = new TColor();
-    c.setRGB([gray, gray, gray ]);
-    c.setAlpha(alpha);
-    return c;
+	var c = new TColor();
+	c.setRGB([gray, gray, gray ]);
+	c.setAlpha(alpha);
+	return c;
 };
 
 /**
-Factory method. New color from hex string. 
+Factory method. New color from hex string.
 @param hexRGB
 @return new color
 */
 TColor.newHex = function(hexRGB) {
-    var c = new TColor();
-    c.setRGB(TColor.hexToRGB(hexRGB));
-    c.setAlpha(1);
-    return c;
+	var c = new TColor();
+	c.setRGB(TColor.hexToRGB(hexRGB));
+	c.setAlpha(1);
+	return c;
 };
 
 /**
-Factory method. New color from hsv values. 
+Factory method. New color from hsv values.
 @param h
 @param s
 @param v
 @return new color
 */
 TColor.newHSV = function(h, s, v) {
-    return TColor.newHSVA(h, s, v, 1);
+	return TColor.newHSVA(h, s, v, 1);
 };
 
 
 TColor.newHSVA = function(h, s,v,a) {
-    var c = new TColor();
-    c.setHSV(h, s, v);
-    c.setAlpha(mathUtils.clip(a, 0, 1));
-    return c;
+	var c = new TColor();
+	c.setHSV(h, s, v);
+	c.setAlpha(mathUtils.clip(a, 0, 1));
+	return c;
 };
 
 /**
-Factory method. Creates new random color. Alpha is always 1.0. 
+Factory method. Creates new random color. Alpha is always 1.0.
 @return random color
 */
 TColor.newRandom = function() {
-    return TColor.newRGBA(Math.random(), Math.random(), Math.random(), 1);
+	return TColor.newRGBA(Math.random(), Math.random(), Math.random(), 1);
 };
 
 /**
@@ -3162,18 +3237,18 @@ Factory method. Creates new color from RGB values. Alpha is set to 1.0.
 @return new color
 */
 TColor.newRGB = function(r, g, b) {
-    return TColor.newRGBA(r, g, b, 1);
+	return TColor.newRGBA(r, g, b, 1);
 };
 
 TColor.newRGBA = function( r, g, b, a) {
-    var c = new TColor();
-    c.setRGB([ r, g, b ]);
-    c.setAlpha(mathUtils.clip(a, 0, 1));
-    return c;
+	var c = new TColor();
+	c.setRGB([ r, g, b ]);
+	c.setAlpha(mathUtils.clip(a, 0, 1));
+	return c;
 };
 
 /**
-Converts the RGB values into a CMYK array. 
+Converts the RGB values into a CMYK array.
 @param r
 @param g
 @param b
@@ -3184,18 +3259,18 @@ TColor.rgbToCMYK = function(r, g, b,cmyk) {
 	if(cmyk === undefined){ cmyk = []; }
 	cmyk[0] = 1 - r;
 	cmyk[1] = 1 - g;
-    cmyk[2] = 1 - b;
-    cmyk[3] = mathUtils.min(cmyk[0], cmyk[1], cmyk[2]);
-    cmyk[0] = mathUtils.clip(cmyk[0] - cmyk[3], 0, 1);
-    cmyk[1] = mathUtils.clip(cmyk[1] - cmyk[3], 0, 1);
-    cmyk[2] = mathUtils.clip(cmyk[2] - cmyk[3], 0, 1);
-    cmyk[3] = mathUtils.clip(cmyk[3], 0, 1);
-    return cmyk;
+	cmyk[2] = 1 - b;
+	cmyk[3] = mathUtils.min(cmyk[0], cmyk[1], cmyk[2]);
+	cmyk[0] = mathUtils.clip(cmyk[0] - cmyk[3], 0, 1);
+	cmyk[1] = mathUtils.clip(cmyk[1] - cmyk[3], 0, 1);
+	cmyk[2] = mathUtils.clip(cmyk[2] - cmyk[3], 0, 1);
+	cmyk[3] = mathUtils.clip(cmyk[3], 0, 1);
+	return cmyk;
 };
 
 
 /**
-Formats the RGB float values into hex integers. 
+Formats the RGB float values into hex integers.
 @param r
 @param g
 @param b
@@ -3207,7 +3282,7 @@ TColor.rgbToHex = function(r, g, b) {
 };
 
 /**
-Converts the RGB values into an HSV array. 
+Converts the RGB values into an HSV array.
 @param r
 @param g
 @param b
@@ -3216,7 +3291,7 @@ Converts the RGB values into an HSV array.
 */
 TColor.rgbToHSV = function(r, g, b,hsv) {
 	if(hsv ===undefined){ hsv = []; }
-	var h = 0, 
+	var h = 0,
 		s = 0,
 		v = mathUtils.max(r, g, b),
 		d = v - mathUtils.min(r, g, b);
@@ -3244,7 +3319,7 @@ TColor.rgbToHSV = function(r, g, b,hsv) {
 };
 
 TColor.RED = TColor.newRGB(1, 0, 0);
-TColor.RYB_WHEEL = [ 
+TColor.RYB_WHEEL = [
 	new Vec2D(0, 0),
 	new Vec2D(15, 8), new Vec2D(30, 17), new Vec2D(45, 26),
 	new Vec2D(60, 34), new Vec2D(75, 41), new Vec2D(90, 48),
@@ -3263,12 +3338,396 @@ TColor.YELLOW = TColor.newRGB(1, 1, 0);
 TColor.BLACK = TColor.newRGB(0, 0, 0);
 TColor.WHITE = TColor.newRGB(1, 1, 1);
 
+
+//Generate a TColor for every X11 color
+TColor.X11 = {};
+ (function(){
+	//RGB values for every X11 Color Name
+	//http://en.wikipedia.org/wiki/Web_colors
+	var x11 = {
+		indianred: [205, 92, 92],
+		lightcoral: [240, 128, 128],
+		salmon: [250, 128, 114],
+		darksalmon: [233, 150, 122],
+		lightsalmon: [255, 160, 122],
+		red: [255, 0, 0],
+		crimson: [220, 20, 60],
+		fireBrick: [178, 34, 34],
+		darkred: [139, 0, 0],
+		pink: [255, 192, 203],
+		lightpink: [255, 182, 193],
+		hotpink: [255, 105, 180],
+		deeppink: [255, 20, 147],
+		mediumvioletred: [199, 21, 133],
+		palevioletred: [219, 112, 147],
+		coral: [255, 127, 80],
+		tomato: [255, 99,  71],
+		orangered: [255, 69, 0],
+		darkorange: [255, 140, 0],
+		orange: [255, 165, 0],
+		gold: [255, 215, 0],
+		yellow: [255, 255, 0],
+		lightyellow: [255, 255, 224],
+		lemonchiffon: [255, 250, 205],
+		lightgoldenrodyellow: [250, 250, 210],
+		papayawhip: [255, 239, 213],
+		moccasin: [255, 228, 181],
+		peachpuff: [255, 218, 185],
+		palegoldenrod: [238, 232, 170],
+		khaki: [240, 230, 140],
+		darkkhaki: [189, 183, 107],
+		lavender: [230, 230, 250],
+		thistle: [216, 191, 216],
+		plum: [221, 160, 221],
+		violet: [238, 130, 238],
+		orchid: [218, 112, 214],
+		fuchsia: [255, 0, 255],
+		Magenta: [255, 0, 255],
+		mediumorchid: [186,  85, 211],
+		mediumpurple: [147, 112, 219],
+		blueviolet: [138,  43, 226],
+		darkviolet: [148, 0, 211],
+		darkorchid: [153,  50, 204],
+		darkmagenta: [139, 0, 139],
+		purple: [128, 0, 128],
+		indigo: [75, 0, 130],
+		darkslateblue: [72, 61, 139],
+		slateblue: [106, 90, 205],
+		mediumslateblue: [123, 104, 238],
+		greenyellow: [173, 255, 47],
+		chartreuse: [127, 255, 0],
+		lawngreen: [124, 252, 0],
+		lime: [0, 255, 0],
+		limegreen: [50, 205, 50],
+		palegreen: [152, 251, 152],
+		lightgreen: [144, 238, 144],
+		mediumspringgreen: [0, 250, 154],
+		springgreen: [0, 255, 127],
+		mediumseagreen: [60, 179, 113],
+		seagreen: [46, 139, 87],
+		forestgreen: [34, 139, 34],
+		green: [0, 128, 0],
+		darkgreen: [0, 100, 0],
+		yellowgreen: [154, 205, 50],
+		olivedrab: [107, 142, 35],
+		olive: [128, 128, 0],
+		darkolivegreen: [85, 107, 47],
+		mediumaquamarine: [102, 205, 170],
+		darkseagreen: [143, 188, 143],
+		lightseagreen: [32, 178, 170],
+		darkcyan: [0, 139, 139],
+		teal: [0, 128, 128],
+		aqua: [0, 255, 255],
+		cyan: [0, 255, 255],
+		lightcyan: [224, 255, 255],
+		paleturquoise: [175, 238, 238],
+		aquamarine: [127, 255, 212],
+		turquoise: [64, 224, 208],
+		mediumturquoise: [72, 209, 204],
+		darkturquoise: [0, 206, 209],
+		cadetblue: [95, 158, 160],
+		steelblue: [70, 130, 180],
+		lightsteelblue: [176, 196, 222],
+		powderblue: [176, 224, 230],
+		lightblue: [173, 216, 230],
+		skyblue: [135, 206, 235],
+		lightskyblue: [135, 206, 250],
+		deepskyblue: [0, 191, 255],
+		dodgerblue: [30, 144, 255],
+		cornflowerblue: [100, 149, 237],
+		royalblue: [65, 105, 225],
+		blue: [0, 0, 255],
+		mediumblue: [0, 0, 205],
+		darkblue: [0, 0, 139],
+		navy: [0, 0, 128],
+		midnightblue: [25, 25, 112],
+		cornsilk: [255, 248, 220],
+		blanchedalmond: [255, 235, 205],
+		bisque: [255, 228, 196],
+		navajowhite: [255, 222, 173],
+		wheat: [245, 222, 179],
+		burlywood: [222, 184, 135],
+		tan: [210, 180, 140],
+		rosybrown: [188, 143, 143],
+		sandybrown: [244, 164, 96],
+		goldenrod: [218, 165, 32],
+		darkgoldenrod: [184, 134, 11],
+		Peru: [205, 133, 63],
+		chocolate: [210, 105, 30],
+		saddlebrown: [139, 69, 19],
+		sienna: [160, 82, 45],
+		brown: [165, 42, 42],
+		maroon: [128, 0, 0],
+		white: [255, 255, 255],
+		snow: [255, 250, 250],
+		honeydew: [240, 255, 240],
+		mintcream: [245, 255, 250],
+		azure: [240, 255, 255],
+		aliceblue: [240, 248, 255],
+		ghostwhite: [248, 248, 255],
+		whitesmoke: [245, 245, 245],
+		seashell: [255, 245, 238],
+		beige: [245, 245, 220],
+		oldlace: [253, 245, 230],
+		floralwhite: [255, 250, 240],
+		ivory: [255, 255, 240],
+		antiquewhite: [250, 235, 215],
+		linen: [250, 240, 230],
+		lavenderblush: [255, 240, 245],
+		mistyrose: [255, 228, 225],
+		gainsboro: [220, 220, 220],
+		lightgrey: [211, 211, 211],
+		silver: [192, 192, 192],
+		darkgray: [169, 169, 169],
+		gray: [128, 128, 128],
+		dimgray: [105, 105, 105],
+		lightslategray: [119, 136, 153],
+		slategray: [112, 128, 144],
+		darkslategray: [47, 79, 79],
+		black: [0, 0, 0]
+	};
+
+	var name, clr;
+	for( name in x11 ){
+		clr = x11[name];
+		TColor.X11[name] = TColor.newRGB( clr[0]/255, clr[1]/255, clr[2]/255 );
+	}
+}());
+
+
 module.exports = TColor;
 
 });
 
 define('toxi/color',["require", "exports", "module", "./color/TColor"], function(require, exports) {
 	exports.TColor = require('./color/TColor');
+});
+
+define('toxi/geom/Line3D',["require", "exports", "module", "../math/mathUtils"], function(require, exports, module) {
+
+var mathUtils = require('../math/mathUtils');
+
+/**
+ @class
+ @member toxi
+ */
+var Line3D = function(vec_a, vec_b) {
+    this.a = vec_a;
+    this.b = vec_b;
+};
+
+Line3D.prototype = {
+	
+	closestLineTo: function(l) {
+
+       var p43 = l.a.sub(l.b);
+       if (p43.isZeroVector()) {
+           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+       }
+
+       var p21 = this.b.sub(this.a);
+       if (p21.isZeroVector()) {
+           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+       }
+       var p13 = this.a.sub(l.a);
+
+       var d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
+       var d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
+       var d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
+       var d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
+       var d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
+
+       var denom = d2121 * d4343 - d4321 * d4321;
+       if (Math.abs(denom) < mathUtils.EPS) {
+           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+       }
+       var numer = d1343 * d4321 - d1321 * d4343;
+       var mua = numer / denom;
+       var mub = (d1343 + d4321 * mua) / d4343;
+
+       var pa = this.a.add(p21.scaleSelf(mua));
+       var pb = l.a.add(p43.scaleSelf(mub));
+       return new Line3D.LineIntersection(Line3D.LineIntersection.Type.INTERSECTING, new Line3D(pa, pb), mua,mub);
+	},
+
+   /**
+    * Computes the closest point on this line to the given one.
+    * 
+    * @param p
+    *            point to check against
+    * @return closest point on the line
+    */
+	closestPointTo: function(p) {
+       var v = this.b.sub(this.a);
+       var t = p.sub(this.a).dot(v) / v.magSquared();
+       // Check to see if t is beyond the extents of the line segment
+       if (t < 0.0) {
+           return this.a.copy();
+       } else if (t > 1.0) {
+           return this.b.copy();
+       }
+       // Return the point between 'a' and 'b'
+       return this.a.add(v.scaleSelf(t));
+	},
+
+	copy: function() {
+       return new Line3D(this.a.copy(), this.b.copy());
+	},
+
+	equals: function(obj) {
+       if (this == obj) {
+           return true;
+       }
+       if ((typeof(obj) != Line3D)) {
+           return false;
+       }
+       return (this.a.equals(obj.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
+	},
+
+   getDirection: function() {
+       return this.b.sub(this.a).normalize();
+   },
+
+   getLength: function() {
+       return this.a.distanceTo(this.b);
+   },
+
+   getLengthSquared: function() {
+       return this.a.distanceToSquared(this.b);
+   },
+
+   getMidPoint: function() {
+       return this.a.add(this.b).scaleSelf(0.5);
+   },
+
+   getNormal: function() {
+       return this.b.cross(this.a);
+   },
+
+   hasEndPoint: function(p) {
+       return this.a.equals(p) || this.b.equals(p);
+   },
+
+
+	offsetAndGrowBy: function(offset,scale,ref) {
+		var m = this.getMidPoint(),
+			d = this.getDirection(),
+			n = this.a.cross(d).normalize();
+       if (ref !== undefined && m.sub(ref).dot(n) < 0) {
+           n.invert();
+       }
+       n.normalizeTo(offset);
+       this.a.addSelf(n);
+       this.b.addSelf(n);
+       d.scaleSelf(scale);
+       this.a.subSelf(d);
+       this.b.addSelf(d);
+       return this;
+   },
+
+   set: function(vec_a, vec_b) {
+       this.a = vec_a;
+       this.b = vec_b;
+       return this;
+   },
+
+
+   splitIntoSegments: function(segments,stepLength, addFirst) {
+       return Line3D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
+   },
+
+
+  toString: function() {
+       return this.a.toString() + " -> " + this.b.toString();
+   }
+};
+
+/**
+    * Splits the line between A and B into segments of the given length,
+    * starting at point A. The tweened points are added to the given result
+    * list. The last point added is B itself and hence it is likely that the
+    * last segment has a shorter length than the step length requested. The
+    * first point (A) can be omitted and not be added to the list if so
+    * desired.
+    * 
+    * @param a
+    *            start point
+    * @param b
+    *            end point (always added to results)
+    * @param stepLength
+    *            desired distance between points
+    * @param segments
+    *            existing array list for results (or a new list, if null)
+    * @param addFirst
+    *            false, if A is NOT to be added to results
+    * @return list of result vectors
+    */
+Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst) {
+    if (segments === undefined) {
+        segments = [];
+    }
+    if (addFirst) {
+        segments.push(vec_a.copy());
+    }
+    var dist = vec_a.distanceTo(vec_b);
+    if (dist > stepLength) {
+        var pos = vec_a.copy();
+        var step = vec_b.sub(vec_a).limit(stepLength);
+        while (dist > stepLength) {
+            pos.addSelf(step);
+            segments.push(pos.copy());
+            dist -= stepLength;
+        }
+    }
+    segments.push(vec_b.copy());
+    return segments;
+};
+
+
+Line3D.LineIntersection = function(type,line,mua,mub){
+	this.type = type;
+	if(mua === undefined){ mua = 0; }
+	if(mub === undefined){ mub = 0; }
+	this.line = line;
+	this.coeff = [mua,mub];
+};
+
+Line3D.LineIntersection.prototype = {
+	
+	getCoefficient: function(){
+		return this.coeff;
+	},
+	
+	getLength: function(){
+		if(this.line === undefined){ return undefined; }
+		return this.line.getLength();
+	},
+	
+	getLine: function(){
+		if(this.line === undefined){ return undefined; }
+		return this.line.copy();
+	},
+	
+	getType: function(){
+		return this.type;
+	},
+	
+	isIntersectionInside: function(){
+		return this.type == Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
+	},
+	
+	toString: function(){
+		return "type: "+this.type+ " line: "+this.line;
+	}
+};
+	
+Line3D.LineIntersection.Type = {
+	NON_INTERSECTING: 0,
+	INTERSECTING: 1
+};
+
+module.exports = Line3D;
+
 });
 
 define('toxi/geom/Matrix4x4',["require", "exports", "module", "../math/mathUtils","./Vec3D","../internals"], function(require, exports, module) {
@@ -3877,233 +4336,6 @@ module.exports = Matrix4x4;
 
 });
 
-define('toxi/geom/Line3D',["require", "exports", "module", "../math/mathUtils"], function(require, exports, module) {
-
-var mathUtils = require('../math/mathUtils');
-
-/**
- @class
- @member toxi
- */
-var Line3D = function(vec_a, vec_b) {
-    this.a = vec_a;
-    this.b = vec_b;
-};
-
-Line3D.prototype = {
-	
-	closestLineTo: function(l) {
-
-       var p43 = l.a.sub(l.b);
-       if (p43.isZeroVector()) {
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
-       }
-
-       var p21 = this.b.sub(this.a);
-       if (p21.isZeroVector()) {
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
-       }
-       var p13 = this.a.sub(l.a);
-
-       var d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
-       var d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
-       var d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
-       var d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
-       var d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
-
-       var denom = d2121 * d4343 - d4321 * d4321;
-       if (Math.abs(denom) < mathUtils.EPS) {
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
-       }
-       var numer = d1343 * d4321 - d1321 * d4343;
-       var mua = numer / denom;
-       var mub = (d1343 + d4321 * mua) / d4343;
-
-       var pa = this.a.add(p21.scaleSelf(mua));
-       var pb = l.a.add(p43.scaleSelf(mub));
-       return new Line3D.LineIntersection(Line3D.LineIntersection.Type.INTERSECTING, new Line3D(pa, pb), mua,mub);
-	},
-
-   /**
-    * Computes the closest point on this line to the given one.
-    * 
-    * @param p
-    *            point to check against
-    * @return closest point on the line
-    */
-	closestPointTo: function(p) {
-       var v = this.b.sub(this.a);
-       var t = p.sub(this.a).dot(v) / v.magSquared();
-       // Check to see if t is beyond the extents of the line segment
-       if (t < 0.0) {
-           return this.a.copy();
-       } else if (t > 1.0) {
-           return this.b.copy();
-       }
-       // Return the point between 'a' and 'b'
-       return this.a.add(v.scaleSelf(t));
-	},
-
-	copy: function() {
-       return new Line3D(this.a.copy(), this.b.copy());
-	},
-
-	equals: function(obj) {
-       if (this == obj) {
-           return true;
-       }
-       if ((typeof(obj) != Line3D)) {
-           return false;
-       }
-       return (this.a.equals(obj.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
-	},
-
-   getDirection: function() {
-       return this.b.sub(this.a).normalize();
-   },
-
-   getLength: function() {
-       return this.a.distanceTo(this.b);
-   },
-
-   getLengthSquared: function() {
-       return this.a.distanceToSquared(this.b);
-   },
-
-   getMidPoint: function() {
-       return this.a.add(this.b).scaleSelf(0.5);
-   },
-
-   getNormal: function() {
-       return this.b.cross(this.a);
-   },
-
-   hasEndPoint: function(p) {
-       return this.a.equals(p) || this.b.equals(p);
-   },
-
-
-	offsetAndGrowBy: function(offset,scale,ref) {
-		var m = this.getMidPoint(),
-			d = this.getDirection(),
-			n = this.a.cross(d).normalize();
-       if (ref !== undefined && m.sub(ref).dot(n) < 0) {
-           n.invert();
-       }
-       n.normalizeTo(offset);
-       this.a.addSelf(n);
-       this.b.addSelf(n);
-       d.scaleSelf(scale);
-       this.a.subSelf(d);
-       this.b.addSelf(d);
-       return this;
-   },
-
-   set: function(vec_a, vec_b) {
-       this.a = vec_a;
-       this.b = vec_b;
-       return this;
-   },
-
-
-   splitIntoSegments: function(segments,stepLength, addFirst) {
-       return Line3D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
-   },
-
-
-  toString: function() {
-       return this.a.toString() + " -> " + this.b.toString();
-   }
-};
-
-/**
-    * Splits the line between A and B into segments of the given length,
-    * starting at point A. The tweened points are added to the given result
-    * list. The last point added is B itself and hence it is likely that the
-    * last segment has a shorter length than the step length requested. The
-    * first point (A) can be omitted and not be added to the list if so
-    * desired.
-    * 
-    * @param a
-    *            start point
-    * @param b
-    *            end point (always added to results)
-    * @param stepLength
-    *            desired distance between points
-    * @param segments
-    *            existing array list for results (or a new list, if null)
-    * @param addFirst
-    *            false, if A is NOT to be added to results
-    * @return list of result vectors
-    */
-Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst) {
-    if (segments === undefined) {
-        segments = [];
-    }
-    if (addFirst) {
-        segments.push(vec_a.copy());
-    }
-    var dist = vec_a.distanceTo(vec_b);
-    if (dist > stepLength) {
-        var pos = vec_a.copy();
-        var step = vec_b.sub(vec_a).limit(stepLength);
-        while (dist > stepLength) {
-            pos.addSelf(step);
-            segments.push(pos.copy());
-            dist -= stepLength;
-        }
-    }
-    segments.push(vec_b.copy());
-    return segments;
-};
-
-
-Line3D.LineIntersection = function(type,line,mua,mub){
-	this.type = type;
-	if(mua === undefined){ mua = 0; }
-	if(mub === undefined){ mub = 0; }
-	this.line = line;
-	this.coeff = [mua,mub];
-};
-
-Line3D.LineIntersection.prototype = {
-	
-	getCoefficient: function(){
-		return this.coeff;
-	},
-	
-	getLength: function(){
-		if(this.line === undefined){ return undefined; }
-		return this.line.getLength();
-	},
-	
-	getLine: function(){
-		if(this.line === undefined){ return undefined; }
-		return this.line.copy();
-	},
-	
-	getType: function(){
-		return this.type;
-	},
-	
-	isIntersectionInside: function(){
-		return this.type == Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
-	},
-	
-	toString: function(){
-		return "type: "+this.type+ " line: "+this.line;
-	}
-};
-	
-Line3D.LineIntersection.Type = {
-	NON_INTERSECTING: 0,
-	INTERSECTING: 1
-};
-
-module.exports = Line3D;
-
-});
-
 define('toxi/geom/AABB',[
 	"require",
 	"exports",
@@ -4112,7 +4344,7 @@ define('toxi/geom/AABB',[
 	"../math/mathUtils",
 	"./Vec2D",
 	"./Vec3D",
-	"./mesh/TriangleMesh"
+	"./mesh/meshCommon"
 ], function(require, exports, module) {
 
 var	internals = require('../internals'),
@@ -4508,7 +4740,7 @@ AABB.prototype.testAxis = function(a, b, fa, fb, va, vb, wa, wb, ea, eb) {
 
 AABB.prototype.toMesh = function(mesh){
 	if(mesh === undefined){
-		var TriangleMesh = require('./mesh/TriangleMesh');
+		var TriangleMesh = require('./mesh/meshCommon').TriangleMesh;
 		mesh = new TriangleMesh("aabb",8,12);
 	}
 	var a = this.min,//new Vec3D(this.min.x,this.max.y,this.max.z),
@@ -4922,162 +5154,6 @@ define('toxi/geom/mesh/Face',[
 	module.exports = Face;
 });
 
-define('toxi/geom/Sphere',[
-	"require",
-	"exports",
-	"module",
-	"../internals",
-	"./Vec3D",
-	"./mesh"
-], function(require, exports, module) {
-
-var internals, mesh, Vec3D;
-internals = require('../internals');
-mesh = require('./mesh');
-Vec3D = require('./Vec3D');
-
-
-
-/**
- * @module toxi.geom.Sphere
- * @augments toxi.geom.Vec3D
- */
-var	Sphere = function(a,b){
-	if(a === undefined){
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = 1;
-	}
-	else if( internals.tests.hasXYZ( a ) ){
-		Vec3D.apply(this,[a]);
-		if( internals.tests.isSphere( a ) ){
-			this.radius = a.radius;
-		}
-		else {
-			this.radius = b;
-		}
-	}
-	else {
-		Vec3D.apply(this,[new Vec3D()]);
-		this.radius = a;
-	}
-};
-
-internals.extend(Sphere,Vec3D);
-
-
-Sphere.prototype.containsPoint = function(p) {
-	var d = this.sub(p).magSquared();
-	return (d <= this.radius * this.radius);
-};
-
-/**
- * Alternative to {@link SphereIntersectorReflector}. Computes primary &
- * secondary intersection points of this sphere with the given ray. If no
- * intersection is found the method returns null. In all other cases, the
- * returned array will contain the distance to the primary intersection
- * point (i.e. the closest in the direction of the ray) as its first index
- * and the other one as its second. If any of distance values is negative,
- * the intersection point lies in the opposite ray direction (might be
- * useful to know). To get the actual intersection point coordinates, simply
- * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
- * 
- * @param ray
- * @return 2-element float array of intersection points or null if ray
- * doesn't intersect sphere at all.
- */
-Sphere.prototype.intersectRay = function(ray) {
-	var result, a, b, t,
-		q = ray.sub(this),
-		distSquared = q.magSquared(),
-		v = -q.dot(ray.getDirection()),
-		d = this.radius * this.radius - (distSquared - v * v);
-	if (d >= 0.0) {
-		d = Math.sqrt(d);
-		a = v + d;
-		b = v - d;
-		if (!(a < 0 && b < 0)) {
-			if (a > 0 && b > 0) {
-				if (a > b) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			} else {
-				if (b > 0) {
-					t = a;
-					a = b;
-					b = t;
-				}
-			}
-		}
-		result = [a,b];
-	}
-	return result;
-};
-
-/**
- * Considers the current vector as centre of a collision sphere with radius
- * r and checks if the triangle abc intersects with this sphere. The Vec3D p
- * The point on abc closest to the sphere center is returned via the
- * supplied result vector argument.
- * 
- * @param t
- *			triangle to check for intersection
- * @param result
- *			a non-null vector for storing the result
- * @return true, if sphere intersects triangle ABC
- */
-Sphere.prototype.intersectSphereTriangle = function(t,result) {
-	// Find Vec3D P on triangle ABC closest to sphere center
-	result.set(t.closestPointOnSurface(this));
-
-	// Sphere and triangle intersect if the (squared) distance from sphere
-	// center to Vec3D p is less than the (squared) sphere radius
-	var v = result.sub(this);
-	return v.magSquared() <= this.radius * this.radius;
-};
-
-/**
- * Calculates the normal vector on the sphere in the direction of the
- * current point.
- * 
- * @param q
- * @return a unit normal vector to the tangent plane of the ellipsoid in the
- * point.
- */
-Sphere.prototype.tangentPlaneNormalAt = function(q) {
-	return this.sub(q).normalize();
-};
-
-Sphere.prototype.toMesh = function() {
-	//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
-	//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
-
-	//if one argument is passed it can either be a Number for resolution, or an options object
-	//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
-	var opts = {
-		mesh: undefined,
-		resolution: 0
-	};
-	if(arguments.length === 1){
-		if(typeof(arguments[0]) == 'object'){ //options object
-			opts.mesh = arguments[0].mesh;
-			opts.resolution = arguments[0].res || arguments[0].resolution;
-		} else { //it was just the resolution Number
-			opts.resolution = arguments[0];
-		}
-	} else {
-		opts.mesh = arguments[0];
-		opts.resolution = arguments[1];
-	}
-
-	var builder = new mesh.SurfaceMeshBuilder(new mesh.SphereFunction(this));
-	return builder.createMesh(opts.mesh, opts.resolution, 1);
-};
-
-module.exports = Sphere;
-});
-
 define('toxi/geom/Quaternion',["require", "exports", "module", "../math/mathUtils","./Matrix4x4"], function(require, exports, module) {
 
 var mathUtils = require('../math/mathUtils'),
@@ -5456,6 +5532,216 @@ define('toxi/geom/mesh/Vertex',[
 	module.exports = Vertex;
 });
 
+define('toxi/geom/Sphere',['require','../internals','./mesh/meshCommon','./Vec3D','../math/mathUtils','./Vec3D','../internals'],function( require ) {
+
+	//2 modules defined
+	var Sphere, SphereFunction;
+
+	//Sphere
+	(function(){
+		var internals = require('../internals');
+		var meshCommon = require('./mesh/meshCommon');
+		var Vec3D = require('./Vec3D');
+		/**
+		 * @module toxi.geom.Sphere
+		 * @augments toxi.geom.Vec3D
+		 */
+		Sphere = function(a,b){
+			if(a === undefined){
+				Vec3D.apply(this,[new Vec3D()]);
+				this.radius = 1;
+			}
+			else if( internals.tests.hasXYZ( a ) ){
+				Vec3D.apply(this,[a]);
+				if( internals.tests.isSphere( a ) ){
+					this.radius = a.radius;
+				}
+				else {
+					this.radius = b;
+				}
+			}
+			else {
+				Vec3D.apply(this,[new Vec3D()]);
+				this.radius = a;
+			}
+		};
+		internals.extend(Sphere,Vec3D);
+
+		Sphere.prototype.containsPoint = function(p) {
+			var d = this.sub(p).magSquared();
+			return (d <= this.radius * this.radius);
+		};
+
+		/**
+		 * Alternative to {@link SphereIntersectorReflector}. Computes primary &
+		 * secondary intersection points of this sphere with the given ray. If no
+		 * intersection is found the method returns null. In all other cases, the
+		 * returned array will contain the distance to the primary intersection
+		 * point (i.e. the closest in the direction of the ray) as its first index
+		 * and the other one as its second. If any of distance values is negative,
+		 * the intersection point lies in the opposite ray direction (might be
+		 * useful to know). To get the actual intersection point coordinates, simply
+		 * pass the returned values to {@link Ray3D#getPointAtDistance(float)}.
+		 * @param ray
+		 * @return 2-element float array of intersection points or null if ray
+		 * doesn't intersect sphere at all.
+		 */
+		Sphere.prototype.intersectRay = function(ray) {
+			var result, a, b, t,
+				q = ray.sub(this),
+				distSquared = q.magSquared(),
+				v = -q.dot(ray.getDirection()),
+				d = this.radius * this.radius - (distSquared - v * v);
+			if (d >= 0.0) {
+				d = Math.sqrt(d);
+				a = v + d;
+				b = v - d;
+				if (!(a < 0 && b < 0)) {
+					if (a > 0 && b > 0) {
+						if (a > b) {
+							t = a;
+							a = b;
+							b = t;
+						}
+					} else {
+						if (b > 0) {
+							t = a;
+							a = b;
+							b = t;
+						}
+					}
+				}
+				result = [a,b];
+			}
+			return result;
+		};
+
+		/**
+		 * Considers the current vector as centre of a collision sphere with radius
+		 * r and checks if the triangle abc intersects with this sphere. The Vec3D p
+		 * The point on abc closest to the sphere center is returned via the
+		 * supplied result vector argument.
+		 * @param t
+		 *			triangle to check for intersection
+		 * @param result
+		 *			a non-null vector for storing the result
+		 * @return true, if sphere intersects triangle ABC
+		 */
+		Sphere.prototype.intersectSphereTriangle = function(t,result) {
+			// Find Vec3D P on triangle ABC closest to sphere center
+			result.set(t.closestPointOnSurface(this));
+
+			// Sphere and triangle intersect if the (squared) distance from sphere
+			// center to Vec3D p is less than the (squared) sphere radius
+			var v = result.sub(this);
+			return v.magSquared() <= this.radius * this.radius;
+		};
+
+		/**
+		 * Calculates the normal vector on the sphere in the direction of the
+		 * current point.
+		 * @param q
+		 * @return a unit normal vector to the tangent plane of the ellipsoid in the
+		 * point.
+		 */
+		Sphere.prototype.tangentPlaneNormalAt = function(q) {
+			return this.sub(q).normalize();
+		};
+
+		Sphere.prototype.toMesh = function() {
+			//this fn requires SurfaceMeshBuilder, loading it here to avoid circular dependency
+			//var SurfaceMeshBuilder = require('./mesh/SurfaceMeshBuilder');
+
+			//if one argument is passed it can either be a Number for resolution, or an options object
+			//if 2 parameters are passed it must be a TriangleMesh and then a Number for resolution
+			var opts = {
+				mesh: undefined,
+				resolution: 0
+			};
+			if(arguments.length === 1){
+				if(typeof(arguments[0]) == 'object'){ //options object
+					opts.mesh = arguments[0].mesh;
+					opts.resolution = arguments[0].res || arguments[0].resolution;
+				} else { //it was just the resolution Number
+					opts.resolution = arguments[0];
+				}
+			} else {
+				opts.mesh = arguments[0];
+				opts.resolution = arguments[1];
+			}
+
+			var builder = new meshCommon.SurfaceMeshBuilder(new SphereFunction(this));
+			return builder.createMesh(opts.mesh, opts.resolution, 1);
+		};
+	}());
+
+
+	//toxi.geom.mesh.SphereFunction
+	(function( Sphere ){
+		//SphereFunction
+		var mathUtils = require('../math/mathUtils'),
+			Vec3D = require('./Vec3D'),
+			internals = require('../internals');
+
+		/**
+		 * @class This implementation of a {@link SurfaceFunction} samples a given
+		 * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
+		 * @member toxi
+		 */
+		SphereFunction = function(sphere_or_radius) {
+			if(sphere_or_radius === undefined){
+				this.sphere = new Sphere(new Vec3D(),1);
+			}
+			
+			if(internals.tests.isSphere( sphere_or_radius )){
+				this.sphere = sphere_or_radius;
+			}
+			else{
+				this.sphere = new Sphere(new Vec3D(),sphere_or_radius);
+			}
+			this.phiRange = mathUtils.PI;
+			this.thetaRange = mathUtils.TWO_PI;
+		};
+
+		SphereFunction.prototype = {
+			computeVertexFor: function(p,phi,theta) {
+				phi -= mathUtils.HALF_PI;
+				var cosPhi = mathUtils.cos(phi);
+				var cosTheta = mathUtils.cos(theta);
+				var sinPhi = mathUtils.sin(phi);
+				var sinTheta = mathUtils.sin(theta);
+				var t = mathUtils.sign(cosPhi) * mathUtils.abs(cosPhi);
+				p.x = t * mathUtils.sign(cosTheta) * mathUtils.abs(cosTheta);
+				p.y = mathUtils.sign(sinPhi) * mathUtils.abs(sinPhi);
+				p.z = t * mathUtils.sign(sinTheta) * mathUtils.abs(sinTheta);
+				return p.scaleSelf(this.sphere.radius).addSelf(this.sphere);
+			},
+			getPhiRange: function() {
+				return this.phiRange;
+			},
+			getPhiResolutionLimit: function(res) {
+				return res;
+			},
+			getThetaRange: function() {
+				return this.thetaRange;
+			},
+			getThetaResolutionLimit: function(res) {
+				return res;
+			},
+			setMaxPhi: function(max) {
+				this.phiRange = mathUtils.min(max / 2, mathUtils.PI);
+			},
+			setMaxTheta: function(max) {
+				this.thetaRange = mathUtils.min(max, mathUtils.TWO_PI);
+			}
+		};
+	}( Sphere ));
+	
+	Sphere.SphereFunction = SphereFunction;
+	return Sphere;
+
+});
+
 define('toxi/geom/mesh/WingedEdge',[
 	'../../internals',
 	'../Line3D'
@@ -5559,30 +5845,286 @@ define('toxi/geom/mesh/subdiv/MidpointSubdivision',[
 
 	return MidpointSubdivison;
 });
-define('toxi/geom/mesh/TriangleMesh',[
-	"require",
-	"exports",
-	"module",
-	"../../internals",
-	"../../math/mathUtils",
-	"../Matrix4x4",
-	"./Face",
-	"../Vec3D",
-	"../AABB",
-	"../Sphere",
-	"../Triangle3D",
-	"../Quaternion",
-	"./Vertex",
-	'../Line3D',
-	'../Vec2D',
-	'./WingedEdge',
-	'./subdiv/MidpointSubdivision'
-], function(require, exports, module) {
-	//these 2 modules get defined
-	//WETriangleMesh gets exported as a property on TriangleMesh
-	var TriangleMesh, WETriangleMesh;
+define('toxi/math/Interpolation2D',["require", "exports", "module","../internals"], function(require, exports, module) {
+var internals = require("../internals");
 
-	//define TriangleMesh
+/**
+ * @class Implementations of 2D interpolation functions (currently only bilinear).
+ * @member toxi
+ * @static
+ */
+var Interpolation2D = {};
+/**
+ * @param {Number} x
+ *            x coord of point to filter (or Vec2D p)
+ * @param {Number} y
+ *            y coord of point to filter (or Vec2D p1)
+ * @param {Number} x1
+ *            x coord of top-left corner (or Vec2D p2)
+ * @param {Number} y1
+ *            y coord of top-left corner
+ * @param {Number} x2
+ *            x coord of bottom-right corner
+ * @param {Number} y2
+ *            y coord of bottom-right corner
+ * @param {Number} tl
+ *            top-left value
+ * @param {Number} tr
+ *            top-right value (do not use if first 3 are Vec2D)
+ * @param {Number} bl
+ *            bottom-left value (do not use if first 3 are Vec2D)
+ * @param {Number} br
+ *            bottom-right value (do not use if first 3 are Vec2D)
+ * @return {Number} interpolated value
+ */
+Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
+	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
+	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
+	{
+		x = _x.x;
+		y = _x.y;
+		
+		x1 = _y.x;
+		y1 = _y.y;
+		
+		x2 = _x1.x;
+		y2 = _x1.y;
+		
+		tl = _y1;
+		tr = _x2;
+		bl = _y2;
+		br = _tl;
+	} else {
+		x = _x;
+		y = _y;
+		x1 = _x1;
+		y1 = _y1;
+		x2 = _x2;
+		y2 = _y2;
+		tl = _tl;
+		tr = _tr;
+		bl = _bl;
+		br = _br;
+	}
+    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
+    var dx1 = (x - x1) * denom;
+    var dx2 = (x2 - x) * denom;
+    var dy1 = y - y1;
+    var dy2 = y2 - y;
+    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
+};
+
+module.exports = Interpolation2D;
+});
+
+define('toxi/geom/Ray3D',["require", "exports", "module", "../internals","./Vec3D","./Line3D"], function(require, exports, module) {
+
+var extend = require('../internals').extend,
+	Vec3D = require('./Vec3D'),
+	Line3D = require('./Line3D');
+
+/**
+ * @class
+ * @member toxi
+ */
+var	Ray3D = function(a,b,c,d){
+	var o, dir;
+	if(arguments.length == 4){
+		o = new Vec3D(a,b,c);
+		dir = d;
+	}
+	else if(arguments.length == 2){
+		o = a;
+		dir = b;
+	}
+	else {
+		o = new Vec3D();
+		dir = Vec3D.Y_AXIS.copy();
+	}
+	Vec3D.apply(this,[o]);
+	this.dir = dir;
+};
+
+extend(Ray3D,Vec3D);
+
+/**
+	Returns a copy of the ray's direction vector.
+	@return vector
+*/
+Ray3D.prototype.getDirection = function() {
+    return this.dir.copy();
+};
+
+/**
+	Calculates the distance between the given point and the infinite line
+	coinciding with this ray.
+	@param p
+*/
+Ray3D.prototype.getDistanceToPoint = function(p) {
+    var sp = p.sub(this);
+    return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
+};
+
+/**
+	Returns the point at the given distance on the ray. The distance can be
+	any real number.
+	@param dist
+	@return vector
+*/
+Ray3D.prototype.getPointAtDistance = function(dist) {
+    return this.add(this.dir.scale(dist));
+};
+
+/**
+  Uses a normalized copy of the given vector as the ray direction. 
+  @param d new direction
+  @return itself
+*/
+Ray3D.prototype.setDirection = function(d) {
+    this.dir.set(d).normalize();
+    return this;
+};
+
+/**
+  Converts the ray into a 3D Line segment with its start point coinciding
+  with the ray origin and its other end point at the given distance along
+  the ray.
+  
+  @param dist end point distance
+  @return line segment
+*/
+Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
+    return new Line3D(this, this.getPointAtDistance(dist));
+};
+
+Ray3D.prototype.toString = function() {
+    return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
+};
+
+module.exports = Ray3D;
+});
+
+define('toxi/geom/IsectData3D',["require", "exports", "module", "./Vec3D"], function(require, exports, module) {
+
+var Vec3D = require('./Vec3D');
+
+/**
+ * @class
+ * @member toxi
+ */
+var	IsectData3D = function(isec){
+	if(isec !== undefined){
+		this.isIntersection = isec.isIntersection;
+		this.dist = isec.dist;
+		this.pos = isec.pos.copy();
+		this.dir = isec.dir.copy();
+		this.normal = isec.normal.copy();
+	}
+	else {
+		this.clear();
+	}
+};
+
+IsectData3D.prototype = {
+	clear: function(){
+		this.isIntersection = false;
+		this.dist = 0;
+		this.pos = new Vec3D();
+		this.dir = new Vec3D();
+		this.normal = new Vec3D();
+	},
+	
+	toString: function(){
+		var s = "isec: "+this.isIntersection;
+		if(this.isIntersection){
+			s += " at:"+this.pos+ " dist:"+this.dist+" normal:"+this.normal;
+		}
+		return s;
+	}
+};
+
+module.exports = IsectData3D;
+});
+
+define('toxi/geom/TriangleIntersector',[
+	"../math/mathUtils",
+	"./Triangle3D",
+	"./Vec3D",
+	"./IsectData3D"
+], function(mathUtils, Triangle3D, Vec3D, IsectData3D) {
+
+	/**
+	 * @param {Triangle3D} [t]
+	 */
+	var TriangleIntersector = function(t){
+		this.triangle = t || new Triangle3D();
+		this.isectData = new IsectData3D();
+	};
+
+	TriangleIntersector.prototype = {
+		getIntersectionData: function(){
+			return this.isectData;
+		},
+		getTriangle: function(){
+			return this.triangle;
+		},
+		/**
+		 * @param {Ray3D} ray
+		 * @returns {Boolean}
+		 */
+		intersectsRay: function(ray){
+			this.isectData.isIntersection = false;
+			var n = this.triangle.computeNormal(),
+				dotprod = n.dot(ray.dir);
+			if(dotprod < 0){
+				var rt = ray.sub(this.triangle.a),
+					t = -(n.x * rt.x + n.y * rt.y + n.z * rt.z) / (n.x * ray.dir.x + n.y * ray.dir.y + n.z * ray.dir.z);
+				if(t >= mathUtils.EPS){
+					var pos = ray.getPointAtDistance(t);
+					//check if pos is inside triangle
+					if(this.triangle.containsPoint(pos)){
+						this.isectData.isIntersection = true;
+						this.isectData.pos = pos;
+						this.isectData.normal = n;
+						this.isectData.dist = t;
+						this.isectData.dir = this.isectData.pos.sub(ray).normalize();
+					}
+				}
+			}
+			return this.isectData.isIntersection;
+		},
+		/**
+		 * @param {Triangle3D} tri
+		 * @returns {TriangleIntersector}
+		 */
+		setTriangle: function(tri){
+			this.triangle = tri;
+			return this;
+		}
+	};
+
+	return TriangleIntersector;
+});
+
+define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','../../internals','../../math/mathUtils','../Matrix4x4','./Face','../Vec3D','../Triangle3D','../Quaternion','./Vertex','../AABB','../Sphere','../../internals','../Line3D','../Vec3D','./Vertex','./Face','./WingedEdge','./subdiv/MidpointSubdivision','../../internals','../../math/mathUtils','../../math/Interpolation2D','../Ray3D','../TriangleIntersector','../Triangle3D','../IsectData3D','../vectors','../vectors','../Vec3D','../Vec2D'],function( require, exports ){
+
+	var TriangleMesh, WETriangleMesh, Terrain, SurfaceMeshBuilder;
+
+	//private: way of generating object keys for point map in meshes
+	function vertexKeyGenerator( v ){
+		var precision = 10000;
+		var format = function( n ){
+			return Math.floor(n*precision) / precision;
+		};
+		//this will hold the ids consistently between vertex and vec3ds
+		return "[ x: "+format(v.x)+ ", y: "+format(v.y)+ ", z: "+format(v.z)+"]";
+	}
+	//private: used for tracking edges in the internals.LinkedMap
+	function edgeKeyGenerator( edge ){
+		return require('../Line3D').prototype.toString.call( edge );
+	}
+
+	//#TriangleMesh
 	(function(){
 		var	internals = require('../../internals'),
 			mathUtils = require('../../math/mathUtils'),
@@ -5592,16 +6134,6 @@ define('toxi/geom/mesh/TriangleMesh',[
 			Triangle3D = require('../Triangle3D'),
 			Quaternion = require('../Quaternion'),
 			Vertex = require('./Vertex');
-
-
-		function vertexKeyGenerator( v ){
-			var precision = 10000;
-			var format = function( n ){
-				return Math.floor(n*precision) / precision;
-			};
-			//this will hold the ids consistently between vertex and vec3ds
-			return "[ x: "+format(v.x)+ ", y: "+format(v.y)+ ", z: "+format(v.z)+"]";
-		}
 
 		/**
 		 * @class
@@ -6319,12 +6851,10 @@ define('toxi/geom/mesh/TriangleMesh',[
 				return this;
 			}
 		};
-
-		TriangleMesh.__vertexKeyGenerator = vertexKeyGenerator;
 	}());
 
 	//define WETriangleMesh
-	(function(){
+	(function( TriangleMesh ){
 		//dependenecies
 		var internals = require('../../internals');
 		var Line3D = require('../Line3D');
@@ -6336,10 +6866,6 @@ define('toxi/geom/mesh/TriangleMesh',[
 		
 		//locals
 		var proto;
-		//used for tracking edges in the internals.LinkedMap
-		function edgeKeyGenerator( edge ){
-			return Line3D.prototype.toString.call( edge );
-		}
 		//constructor
 		WETriangleMesh = function( name ){
 			name = name || "untitled";
@@ -6431,7 +6957,7 @@ define('toxi/geom/mesh/TriangleMesh',[
 			//if vertices have moved / transformed a new vertexMap and edgeMap must be made
 			//in order to have updated string keys of new positions
 			//newVertexDictionary[{String}] = {Vertex}
-			var newVertexMap = new internals.LinkedMap( TriangleMesh.__vertexKeyGenerator );
+			var newVertexMap = new internals.LinkedMap( vertexKeyGenerator );
 			var newEdgeMap = new internals.LinkedMap( edgeKeyGenerator );
 
 			this.vertexMap.each(function( vertex ){
@@ -6627,7 +7153,7 @@ define('toxi/geom/mesh/TriangleMesh',[
 		};
 
 		proto.updateEdge = function( va, vb, face ){
-			//dictionary key is va.toString() + vb.toString() 
+			//dictionary key is va.toString() + vb.toString()
 			//because Line3D toString would be different than WingedEdge toString()
 			this.__edgeCheck.set( va, vb );
 			var e = this.edgeMap.get( this.__edgeCheck );
@@ -6641,11 +7167,389 @@ define('toxi/geom/mesh/TriangleMesh',[
 			}
 			face.addEdge( e );
 		};
-	}());
+	}( TriangleMesh ));
 
-	TriangleMesh.WETriangleMesh = WETriangleMesh;
-	module.exports = TriangleMesh;
 
+	//Terrain
+	(function( TriangleMesh ){
+		var internals = require('../../internals'),
+			mathUtils = require('../../math/mathUtils'),
+			Interpolation2D = require('../../math/Interpolation2D'),
+			Ray3D = require('../Ray3D'),
+			TriangleIntersector = require('../TriangleIntersector'),
+			Triangle3D = require('../Triangle3D'),
+			IsectData3D = require('../IsectData3D'),
+			Vec2D = require('../vectors').Vec2D,
+			Vec3D = require('../vectors').Vec3D;
+		/**
+		* Constructs a new and initially flat terrain of the given size in the XZ
+		* plane, centred around the world origin.
+		*
+		* @param {Number} width
+		* @param {Number} depth
+		* @param {toxi.geom.Vec2D | Number} scale
+		*/
+		Terrain = function(width, depth, scale){
+			this.width = width;
+			this._depth = depth;
+			if(!internals.hasProperties(scale,['x','y'])){
+				this.scale = new Vec2D(scale,scale);
+			} else {
+				this.scale = scale;
+			}
+			this.elevation = [];
+			var i = 0,
+				len = width * depth;
+			for(i=0; i<len; i++){
+				this.elevation[i] = 0;
+			}
+
+			this.__elevationLength = this.width * this._depth;
+			this.vertices = [];
+			var offset = new Vec3D(parseInt(this.width / 2,10), 0, parseInt(this._depth / 2,10)),
+				scaleXZ = this.scale.to3DXZ();
+			i=0;
+			for(var z = 0; z < this._depth; z++){
+				for(var x = 0; x < this.width; x++){
+					this.vertices[i++] = new Vec3D(x,0,z).subSelf(offset).scaleSelf(scaleXZ);
+				}
+			}
+		};
+
+		Terrain.prototype = {
+			/**
+			* @return number of grid cells along the Z axis.
+			*/
+			getDepth: function(){
+				return this._depth;
+			},
+			getElevation: function(){
+				return this.elevation;
+			},
+			/**
+			* @param {Number} x
+			* @param {Number} z
+			* @return the elevation at grid point
+			*/
+			getHeightAtCell: function(x,z){
+				//console.log("["+x+","+z+"]");
+				return this.elevation[this._getIndex(x,z)];
+			},
+			/**
+			* Computes the elevation of the terrain at the given 2D world coordinate
+			* (based on current terrain scale).
+			*
+			* @param {Number} x scaled world coord x
+			* @param {Number} z scaled world coord z
+			* @return {Number} interpolated elevation
+			*/
+			getHeightAtPoint: function(x,z){
+				var xx = x / this.scale.x + this.width * 0.5,
+					zz = z / this.scale.y + this._depth * 0.5,
+					y = 0,
+					fl = {
+						xx: parseInt(xx,10),
+						zz: parseInt(zz,10)
+					};
+				if(xx >= 0 & xx < this.width && zz >= 0 && zz < this._depth){
+					
+					var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1), 10),
+						z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1), 10);
+
+					var	a = this.getHeightAtCell(fl.xx, fl.zz),
+						b = this.getHeightAtCell(x2, fl.zz),
+						c = this.getHeightAtCell(fl.xx, z2),
+						d = this.getHeightAtCell(x2, z2);
+					
+					y = Interpolation2D.bilinear(xx,zz, fl.xx, fl.zz, x2, z2, a, b, c, d);
+				}
+				return y;
+			},
+			/**
+			* Computes the array index for the given cell coords & checks if they're in
+			* bounds. If not an {@link IndexOutOfBoundsException} is thrown.
+			* @param {Number} x
+			* @param {Number} z
+			* @return {Number} array index
+			*/
+			_getIndex: function(x,z){
+				var idx = z * this.width + x;
+				if(idx < 0 || idx > this.__elevationLength){
+					throw new Error("the given terrain cell is invalid: "+x+ ";"+z);
+				}
+				return idx;
+			},
+			/**
+			 * @return {Vec2D} the scale
+			 */
+			getScale: function(){
+				return this.scale;
+			},
+
+			getVertexAtCell: function(x,z){
+				return this.vertices[this._getIndex(x,z)];
+			},
+			/**
+			 * @return {Number} number of grid cells along X axis
+			 */
+			getWidth: function(){
+				return this.width;
+			},
+			/**
+			* Computes the 3D position (with elevation) and normal vector at the given
+			* 2D location in the terrain. The position is in scaled world coordinates
+			* based on the given terrain scale. The returned data is encapsulated in a
+			* {@link toxi.geom.IsectData3D} instance.
+			* @param {Number} x
+			* @param {Number} z
+			* @return {IsectData3D} intersection data parcel
+			*/
+			intersectAtPoint: function(x,z){
+				var xx = x / this.scale.x + this.width * 0.5,
+					zz = z / this.scale.y + this._depth * 0.5,
+					isec = new IsectData3D();
+				if(xx >= 0 && xx < this.width && zz >= 0 && zz < this._depth){
+					var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1),10),
+						z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1),10),
+						fl = {
+							xx: parseInt(xx,10),
+							zz: parseInt(zz,10)
+						},
+						a = this.getVertexAtCell(fl.xx,fl.zz),
+						b = this.getVertexAtCell(x2, fl.zz),
+						c = this.getVertexAtCell(x2,z2),
+						d = this.getVertexAtCell(fl.xx,z2),
+						r = new Ray3D(new Vec3D(x, 10000, z), new Vec3D(0, -1, 0)),
+						i = new TriangleIntersector(new Triangle3D(a, b, d));
+
+					if(i.intersectsRay(r)){
+						isec = i.getIntersectionData();
+					} else {
+						i.setTriangle(new Triangle3D(b, c, d));
+						i.intersectsRay(r);
+						isec = i.getIntersectionData();
+					}
+				}
+				return isec;
+			},
+			/**
+			* Sets the elevation of all cells to those of the given array values.
+			* @param {Array} elevation array of height values
+			* @return itself
+			*/
+			setElevation: function(elevation){
+				if(this.__elevationLength == elevation.length){
+					for(var i = 0, len = elevation.length; i<len; i++){
+						this.vertices[i].y = this.elevation[i] = elevation[i];
+					}
+				} else {
+					throw new Error("the given elevation array size does not match terrain");
+				}
+				return this;
+			},
+			/**
+			* Sets the elevation for a single given grid cell.
+			* @param {Number} x
+			* @param {Number} z
+			* @param {Number} h new elevation value
+			* @return itself
+			*/
+			setHeightAtCell: function(x,z,h){
+				var index = this._getIndex(x,z);
+				this.elevation[index] = h;
+				this.vertices[index].y = h;
+				return this;
+			},
+			setScale: function(scale){
+				if(!internals.hasProperties(scale,['x','y'])){
+					this.scale = new Vec2D(scale,scale);
+				} else {
+					this.scale = scale;
+				}
+			},
+			toMesh: function(){
+				var opts = {
+					mesh: undefined,
+					minX: 0,
+					minZ: 0,
+					maxX: this.width,
+					maxZ: this._depth
+				};
+
+				var v = this.vertices,
+					w = this.width,
+					d = this._depth;
+
+				if(arguments.length == 1 && typeof arguments[0] == 'object'){
+					//options object
+					var args = arguments[0];
+					opts.mesh = args.mesh || new TriangleMesh("terrain");
+					opts.minX = args.minX || opts.minX;
+					opts.minZ = args.minZ || opts.minZ;
+					opts.maxX = args.maxX || opts.maxX;
+					opts.maxZ = args.maxZ || opts.maxZ;
+				} else if(arguments.length >= 5){
+					opts.mesh = arguments[0];
+					opts.minX = arguments[1];
+					opts.minZ = arguments[2];
+					opts.maxX  = arguments[3];
+					opts.maxZ = arguments[4];
+				}
+
+				opts.mesh = opts.mesh || new TriangleMesh("terrain");
+				opts.minX = mathUtils.clip(opts.minX, 0, w - 1);
+				opts.maxX = mathUtils.clip(opts.maxX, 0, w);
+				opts.minZ = mathUtils.clip(opts.minZ, 0, d-1);
+				opts.maxZ = mathUtils.clip(opts.maxZ, 0, d);
+				opts.minX++;
+				opts.minZ++;
+
+
+				for(var z = opts.minZ, idx = opts.minX * w; z < opts.maxZ; z++, idx += w){
+					for(var x = opts.minX; x < opts.maxX; x++){
+						opts.mesh.addFace(v[idx - w + x - 1], v[idx - w + x], v[idx + x - 1]);
+						opts.mesh.addFace(v[idx - w + x], v[idx + x], v[idx + x - 1]);
+					}
+				}
+				return opts.mesh;
+			}
+		};
+			
+	}( TriangleMesh ));
+
+
+	//SurfaceMeshBuilder
+	(function( TriangleMesh ){
+		var Vec3D = require('../Vec3D'),
+			Vec2D = require('../Vec2D');
+
+		/**
+		 * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface
+		 * functions using spherical coordinates. In order to create mesh, you'll need
+		 * to supply a {@link SurfaceFunction} implementation to the builder.
+		 * @member toxi
+		 */
+		SurfaceMeshBuilder = function(func) {
+			this.func = func;
+		};
+
+		SurfaceMeshBuilder.prototype = {
+			/*
+				create a mesh from a surface,
+				parameter options:
+					1 - Object options
+					1 - Number resolution
+					3 - TriangleMesh mesh, Number resolution, Number size
+					4 - TriangleMesh mesh, Number resolution, Number size, boolean isClosed
+			*/
+			createMesh: function() {
+				var opts = {
+					mesh: undefined,
+					resolution: 0,
+					size: 1,
+					isClosed: true
+				};
+				if(arguments.length == 1){
+					if(typeof arguments[0] == 'object'){ //options object
+						var arg = arguments[0];
+						//if a mesh was provided as an option, use it, otherwise make one
+						opts.mesh = arg.mesh;
+						opts.resolution = arg.res || arg.resoultion || 0;
+						if(arg.size !== undefined){
+							opts.size = arg.size;
+						}
+						if(arg.isClosed !== undefined){
+							opts.isClosed = arg.isClosed;
+						}
+					} else { //resolution Number
+						opts.resolution = arguments[0];
+					}
+				} else if(arguments.length > 2){
+					opts.mesh = arguments[0];
+					opts.resolution = arguments[1];
+					opts.size = arguments[2];
+					if(arguments.length == 4){
+						opts.isClosed = arguments[3];
+					}
+				}
+				var mesh = opts.mesh;
+				if(mesh === undefined || mesh === null){
+					mesh = new TriangleMesh();
+				}
+				
+				var a = new Vec3D(),
+					b = new Vec3D(),
+					pa = new Vec3D(),
+					pb = new Vec3D(),
+					a0 = new Vec3D(),
+					b0 = new Vec3D(),
+					phiRes = this.func.getPhiResolutionLimit(opts.resolution),
+					phiRange = this.func.getPhiRange(),
+					thetaRes = this.func.getThetaResolutionLimit(opts.resolution),
+					thetaRange = this.func.getThetaRange(),
+					pres = 1.0 / phiRes, //(1 == opts.resolution % 2 ? opts.resolution - 0 : opts.resolution);
+					tres = 1.0 / thetaRes,
+					ires = 1.0 / opts.resolution,
+					pauv = new Vec2D(),
+					pbuv = new Vec2D(),
+					auv = new Vec2D(),
+					buv = new Vec2D();
+
+				for (var p = 0; p < phiRes; p++) {
+					var phi = p * phiRange * ires;
+					var phiNext = (p + 1) * phiRange * ires;
+					for (var t = 0; t <= thetaRes; t++) {
+						var theta = t * thetaRange * ires;
+						var func = this.func;
+						a =	func.computeVertexFor(a, phiNext, theta).scaleSelf(opts.size);
+						auv.set( t * tres, 1 - (p + 1) * pres);
+						b = func.computeVertexFor(b, phi, theta).scaleSelf(opts.size);
+						buv.set( t * tres, 1 - p * pres );
+						if (b.equalsWithTolerance(a, 0.0001) ) {
+							b.set(a);
+						}
+						if (t > 0) {
+							if (t == thetaRes && opts.isClosed) {
+								a.set(a0);
+								b.set(b0);
+							}
+							mesh.addFace(pa, pb, a, pauv.copy(), pbuv.copy(), auv.copy());
+							mesh.addFace(pb, b, a, pbuv.copy(), buv.copy(), auv.copy());
+						} else {
+							a0.set(a);
+							b0.set(b);
+						}
+						pa.set(a);
+						pb.set(b);
+						pauv.set(auv);
+						pbuv.set(buv);
+					}
+				}
+				return mesh;
+			},
+			
+			
+			/**
+			@return the function
+			*/
+			getFunction: function() {
+				return this.func;
+			},
+
+			setFunction: function(func) {
+				this.func = func;
+			}
+		};
+	}( TriangleMesh ));
+
+	exports.TriangleMesh = TriangleMesh;
+	exports.WETriangleMesh = WETriangleMesh;
+	exports.Terrain = Terrain;
+	exports.SurfaceMeshBuilder = SurfaceMeshBuilder;
+
+});
+define('toxi/geom/mesh/TriangleMesh',['require','./meshCommon'],function( require ){
+	return require('./meshCommon').TriangleMesh;
 });
 
 define('toxi/geom/mesh/BezierPatch',["require", "exports", "module", "../Vec3D","./TriangleMesh"], function(require, exports, module) {
@@ -7062,74 +7966,8 @@ PlaneSelector.prototype.selectVertices = function() {
 module.exports = PlaneSelector;
 });
 
-define('toxi/geom/mesh/SphereFunction',["require", "exports", "module", "../../math/mathUtils","../Vec3D","../Sphere"], function(require, exports, module) {
-
-var mathUtils = require('../../math/mathUtils'),
-	Vec3D = require('../Vec3D'),
-	internals = require('../../internals'),
-	Sphere = require('../Sphere');
-
-/**
- * @class This implementation of a {@link SurfaceFunction} samples a given
- * {@link Sphere} instance when called by the {@link SurfaceMeshBuilder}.
- * @member toxi
- */
-var	SphereFunction = function(sphere_or_radius) {
-	if(sphere_or_radius === undefined){
-		this.sphere = new Sphere(new Vec3D(),1);
-	}
-	
-	if(internals.tests.isSphere( sphere_or_radius )){
-		this.sphere = sphere_or_radius;
-	}
-	else{
-		this.sphere = new Sphere(new Vec3D(),sphere_or_radius);
-	}
-	this.phiRange = mathUtils.PI;
-	this.thetaRange = mathUtils.TWO_PI;
-};
-
-SphereFunction.prototype = {
-	
-	computeVertexFor: function(p,phi,theta) {
-	    phi -= mathUtils.HALF_PI;
-	    var cosPhi = mathUtils.cos(phi);
-	    var cosTheta = mathUtils.cos(theta);
-	    var sinPhi = mathUtils.sin(phi);
-	    var sinTheta = mathUtils.sin(theta);
-	    var t = mathUtils.sign(cosPhi) * mathUtils.abs(cosPhi);
-	    p.x = t * mathUtils.sign(cosTheta) * mathUtils.abs(cosTheta);
-	    p.y = mathUtils.sign(sinPhi) * mathUtils.abs(sinPhi);
-	    p.z = t * mathUtils.sign(sinTheta) * mathUtils.abs(sinTheta);
-	    return p.scaleSelf(this.sphere.radius).addSelf(this.sphere);
-	},
-	
-	getPhiRange: function() {
-	    return this.phiRange;
-	},
-	
-	getPhiResolutionLimit: function(res) {
-	    return res;
-	},
-	
-	getThetaRange: function() {
-	    return this.thetaRange;
-	},
-	
-	getThetaResolutionLimit: function(res) {
-	    return res;
-	},
-	
-	setMaxPhi: function(max) {
-	    this.phiRange = mathUtils.min(max / 2, mathUtils.PI);
-	},
-	
-	setMaxTheta: function(max) {
-	    this.thetaRange = mathUtils.min(max, mathUtils.TWO_PI);
-	}
-};
-
-module.exports = SphereFunction;
+define('toxi/geom/mesh/SphereFunction',['require','../Sphere'],function( require ){
+	return require('../Sphere').SphereFunction;
 });
 
 define('toxi/geom/mesh/SphericalHarmonics',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
@@ -7181,131 +8019,8 @@ SphericalHarmonics.prototype = {
 module.exports = SphericalHarmonics;
 });
 
-define('toxi/geom/mesh/SurfaceMeshBuilder',["require", "exports", "module", "./TriangleMesh","../Vec3D","../Vec2D"], function(require, exports, module) {
-
-var Vec3D = require('../Vec3D'),
-	Vec2D = require('../Vec2D'),
-	TriangleMesh = require('./TriangleMesh');
-
-/**
- * @class An extensible builder class for {@link TriangleMesh}es based on 3D surface
- * functions using spherical coordinates. In order to create mesh, you'll need
- * to supply a {@link SurfaceFunction} implementation to the builder.
- * @member toxi
- */
-var	SurfaceMeshBuilder = function(func) {
-	this.func = func;
-};
-
-SurfaceMeshBuilder.prototype = {
-	/*
-		create a mesh from a surface,
-		parameter options:
-			1 - Object options
-			1 - Number resolution
-			3 - TriangleMesh mesh, Number resolution, Number size
-			4 - TriangleMesh mesh, Number resolution, Number size, boolean isClosed
-	*/
-	createMesh: function() {
-		var opts = {
-			mesh: undefined,
-			resolution: 0,
-			size: 1,
-			isClosed: true
-		};
-		if(arguments.length == 1){
-			if(typeof arguments[0] == 'object'){ //options object
-				var arg = arguments[0];
-				//if a mesh was provided as an option, use it, otherwise make one
-				opts.mesh = arg.mesh;
-				opts.resolution = arg.res || arg.resoultion || 0;
-				if(arg.size !== undefined){
-					opts.size = arg.size;
-				}
-				if(arg.isClosed !== undefined){
-					opts.isClosed = arg.isClosed;
-				}
-			} else { //resolution Number
-				opts.resolution = arguments[0];
-			}
-		} else if(arguments.length > 2){
-			opts.mesh = arguments[0];
-			opts.resolution = arguments[1];
-			opts.size = arguments[2];
-			if(arguments.length == 4){
-				opts.isClosed = arguments[3];
-			}
-		}
-		var mesh = opts.mesh;
-		if(mesh === undefined || mesh === null){
-			mesh = new TriangleMesh(); 
-		}
-		
-		var a = new Vec3D(),
-			b = new Vec3D(),
-			pa = new Vec3D(),
-			pb = new Vec3D(),
-			a0 = new Vec3D(),
-			b0 = new Vec3D(),
-			phiRes = this.func.getPhiResolutionLimit(opts.resolution),
-			phiRange = this.func.getPhiRange(),
-			thetaRes = this.func.getThetaResolutionLimit(opts.resolution),
-			thetaRange = this.func.getThetaRange(),
-			pres = 1.0 / phiRes, //(1 == opts.resolution % 2 ? opts.resolution - 0 : opts.resolution);
-			tres = 1.0 / thetaRes,
-			ires = 1.0 / opts.resolution,
-			pauv = new Vec2D(),
-			pbuv = new Vec2D(),
-			auv = new Vec2D(),
-			buv = new Vec2D();
-
-		for (var p = 0; p < phiRes; p++) {
-			var phi = p * phiRange * ires;
-			var phiNext = (p + 1) * phiRange * ires;
-			for (var t = 0; t <= thetaRes; t++) {
-				var theta = t * thetaRange * ires;
-				var func = this.func;
-				a =	func.computeVertexFor(a, phiNext, theta).scaleSelf(opts.size);
-				auv.set( t * tres, 1 - (p + 1) * pres);
-				b = func.computeVertexFor(b, phi, theta).scaleSelf(opts.size);
-				buv.set( t * tres, 1 - p * pres );
-				if (b.equalsWithTolerance(a, 0.0001) ) {
-					b.set(a);
-				}
-				if (t > 0) {
-					if (t == thetaRes && opts.isClosed) {
-						a.set(a0);
-						b.set(b0);
-					}
-					mesh.addFace(pa, pb, a, pauv.copy(), pbuv.copy(), auv.copy());
-					mesh.addFace(pb, b, a, pbuv.copy(), buv.copy(), auv.copy());
-				} else {
-					a0.set(a);
-					b0.set(b);
-				}
-				pa.set(a);
-				pb.set(b);
-				pauv.set(auv);
-				pbuv.set(buv);
-			}
-		}
-		return mesh;
-	},
-	
-	
-	/**
-	@return the function
-	*/
-	getFunction: function() {
-		return this.func;
-	},
-
-	setFunction: function(func) {
-		this.func = func;
-	}
-};
-exports.SurfaceMeshBuilder = SurfaceMeshBuilder;
-module.exports = SurfaceMeshBuilder;
+define('toxi/geom/mesh/SurfaceMeshBuilder',['require','./meshCommon'],function( require ){
+	return require('./meshCommon').SurfaceMeshBuilder;
 });
 
 define('toxi/geom/mesh/SuperEllipsoid',["require", "exports", "module", "../../math/mathUtils","./TriangleMesh"], function(require, exports, module) {
@@ -7358,528 +8073,17 @@ SuperEllipsoid.prototype = {
 module.exports = SuperEllipsoid;
 });
 
-define('toxi/math/Interpolation2D',["require", "exports", "module","../internals"], function(require, exports, module) {
-var internals = require("../internals");
-
-/**
- * @class Implementations of 2D interpolation functions (currently only bilinear).
- * @member toxi
- * @static
- */
-var Interpolation2D = {};
-/**
- * @param {Number} x
- *            x coord of point to filter (or Vec2D p)
- * @param {Number} y
- *            y coord of point to filter (or Vec2D p1)
- * @param {Number} x1
- *            x coord of top-left corner (or Vec2D p2)
- * @param {Number} y1
- *            y coord of top-left corner
- * @param {Number} x2
- *            x coord of bottom-right corner
- * @param {Number} y2
- *            y coord of bottom-right corner
- * @param {Number} tl
- *            top-left value
- * @param {Number} tr
- *            top-right value (do not use if first 3 are Vec2D)
- * @param {Number} bl
- *            bottom-left value (do not use if first 3 are Vec2D)
- * @param {Number} br
- *            bottom-right value (do not use if first 3 are Vec2D)
- * @return {Number} interpolated value
- */
-Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
-	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
-	{
-		x = _x.x;
-		y = _x.y;
-		
-		x1 = _y.x;
-		y1 = _y.y;
-		
-		x2 = _x1.x;
-		y2 = _x1.y;
-		
-		tl = _y1;
-		tr = _x2;
-		bl = _y2;
-		br = _tl;
-	} else {
-		x = _x;
-		y = _y;
-		x1 = _x1;
-		y1 = _y1;
-		x2 = _x2;
-		y2 = _y2;
-		tl = _tl;
-		tr = _tr;
-		bl = _bl;
-		br = _br;
-	}
-    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
-    var dx1 = (x - x1) * denom;
-    var dx2 = (x2 - x) * denom;
-    var dy1 = y - y1;
-    var dy2 = y2 - y;
-    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
-};
-
-module.exports = Interpolation2D;
-});
-
-define('toxi/geom/Ray3D',["require", "exports", "module", "../internals","./Vec3D","./Line3D"], function(require, exports, module) {
-
-var extend = require('../internals').extend,
-	Vec3D = require('./Vec3D'),
-	Line3D = require('./Line3D');
-
-/**
- * @class
- * @member toxi
- */
-var	Ray3D = function(a,b,c,d){
-	var o, dir;
-	if(arguments.length == 4){
-		o = new Vec3D(a,b,c);
-		dir = d;
-	}
-	else if(arguments.length == 2){
-		o = a;
-		dir = b;
-	}
-	else {
-		o = new Vec3D();
-		dir = Vec3D.Y_AXIS.copy();
-	}
-	Vec3D.apply(this,[o]);
-	this.dir = dir;
-};
-
-extend(Ray3D,Vec3D);
-
-/**
-	Returns a copy of the ray's direction vector.
-	@return vector
-*/
-Ray3D.prototype.getDirection = function() {
-    return this.dir.copy();
-};
-
-/**
-	Calculates the distance between the given point and the infinite line
-	coinciding with this ray.
-	@param p
-*/
-Ray3D.prototype.getDistanceToPoint = function(p) {
-    var sp = p.sub(this);
-    return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
-};
-
-/**
-	Returns the point at the given distance on the ray. The distance can be
-	any real number.
-	@param dist
-	@return vector
-*/
-Ray3D.prototype.getPointAtDistance = function(dist) {
-    return this.add(this.dir.scale(dist));
-};
-
-/**
-  Uses a normalized copy of the given vector as the ray direction. 
-  @param d new direction
-  @return itself
-*/
-Ray3D.prototype.setDirection = function(d) {
-    this.dir.set(d).normalize();
-    return this;
-};
-
-/**
-  Converts the ray into a 3D Line segment with its start point coinciding
-  with the ray origin and its other end point at the given distance along
-  the ray.
-  
-  @param dist end point distance
-  @return line segment
-*/
-Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
-    return new Line3D(this, this.getPointAtDistance(dist));
-};
-
-Ray3D.prototype.toString = function() {
-    return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
-};
-
-module.exports = Ray3D;
-});
-
-define('toxi/geom/IsectData3D',["require", "exports", "module", "./Vec3D"], function(require, exports, module) {
-
-var Vec3D = require('./Vec3D');
-
-/**
- * @class
- * @member toxi
- */
-var	IsectData3D = function(isec){
-	if(isec !== undefined){
-		this.isIntersection = isec.isIntersection;
-		this.dist = isec.dist;
-		this.pos = isec.pos.copy();
-		this.dir = isec.dir.copy();
-		this.normal = isec.normal.copy();
-	}
-	else {
-		this.clear();
-	}
-};
-
-IsectData3D.prototype = {
-	clear: function(){
-		this.isIntersection = false;
-		this.dist = 0;
-		this.pos = new Vec3D();
-		this.dir = new Vec3D();
-		this.normal = new Vec3D();
-	},
-	
-	toString: function(){
-		var s = "isec: "+this.isIntersection;
-		if(this.isIntersection){
-			s += " at:"+this.pos+ " dist:"+this.dist+" normal:"+this.normal;
-		}
-		return s;
-	}
-};
-
-module.exports = IsectData3D;
-});
-
-define('toxi/geom/TriangleIntersector',[
-	"../math/mathUtils",
-	"./Triangle3D",
-	"./Vec3D",
-	"./IsectData3D"
-], function(mathUtils, Triangle3D, Vec3D, IsectData3D) {
-
-	/**
-	 * @param {Triangle3D} [t]
-	 */
-	var TriangleIntersector = function(t){
-		this.triangle = t || new Triangle3D();
-		this.isectData = new IsectData3D();
-	};
-
-	TriangleIntersector.prototype = {
-		getIntersectionData: function(){
-			return this.isectData;
-		},
-		getTriangle: function(){
-			return this.triangle;
-		},
-		/**
-		 * @param {Ray3D} ray
-		 * @returns {Boolean}
-		 */
-		intersectsRay: function(ray){
-			this.isectData.isIntersection = false;
-			var n = this.triangle.computeNormal(),
-				dotprod = n.dot(ray.dir);
-			if(dotprod < 0){
-				var rt = ray.sub(this.triangle.a),
-					t = -(n.x * rt.x + n.y * rt.y + n.z * rt.z) / (n.x * ray.dir.x + n.y * ray.dir.y + n.z * ray.dir.z);
-				if(t >= mathUtils.EPS){
-					var pos = ray.getPointAtDistance(t);
-					//check if pos is inside triangle
-					if(this.triangle.containsPoint(pos)){
-						this.isectData.isIntersection = true;
-						this.isectData.pos = pos;
-						this.isectData.normal = n;
-						this.isectData.dist = t;
-						this.isectData.dir = this.isectData.pos.sub(ray).normalize();
-					}
-				}
-			}
-			return this.isectData.isIntersection;
-		},
-		/**
-		 * @param {Triangle3D} tri
-		 * @returns {TriangleIntersector}
-		 */
-		setTriangle: function(tri){
-			this.triangle = tri;
-			return this;
-		}
-	};
-
-	return TriangleIntersector;
-});
-
 /**
  * Implementation of a 2D grid based heightfield with basic intersection
  * features and conversion to {@link TriangleMesh}. The terrain is always
  * located in the XZ plane with the positive Y axis as up vector.
  */
-define('toxi/geom/mesh/Terrain',[
-	'../../internals',
-	'../../math/mathUtils',
-	'../../math/Interpolation2D',
-	'../Ray3D',
-	'../TriangleIntersector',
-	'../Triangle3D',
-	'../IsectData3D',
-	'../../geom/Vec2D',
-	'../../geom/Vec3D',
-	'./TriangleMesh'
-], function(internals, mathUtils, Interpolation2D, Ray3D, TriangleIntersector, Triangle3D, IsectData3D, Vec2D, Vec3D, TriangleMesh){
-
-	/**
-	* Constructs a new and initially flat terrain of the given size in the XZ
-	* plane, centred around the world origin.
-	* 
-	* @param {Number} width
-	* @param {Number} depth
-	* @param {toxi.geom.Vec2D | Number} scale
-	*/
-	var Terrain = function(width, depth, scale){
-		this.width = width;
-		this._depth = depth;
-		if(!internals.hasProperties(scale,['x','y'])){
-			this.scale = new Vec2D(scale,scale);
-		} else {
-			this.scale = scale;
-		}
-		this.elevation = [];
-		var i = 0,
-			len = width * depth;
-		for(i=0; i<len; i++){
-			this.elevation[i] = 0;
-		}
-
-		this.__elevationLength = this.width * this._depth;
-		this.vertices = [];
-		var offset = new Vec3D(parseInt(this.width / 2,10), 0, parseInt(this._depth / 2,10)),
-			scaleXZ = this.scale.to3DXZ();
-		for(var z = 0, i =0; z < this._depth; z++){
-			for(var x = 0; x < this.width; x++){
-				this.vertices[i++] = new Vec3D(x,0,z).subSelf(offset).scaleSelf(scaleXZ);
-			}
-		}
-	};
-
-	Terrain.prototype = {
-		/**
-		* @return number of grid cells along the Z axis.
-		*/
-		getDepth: function(){
-			return this._depth;
-		},
-		getElevation: function(){
-			return this.elevation;
-		},
-		/**
-		* @param {Number} x
-		* @param {Number} z
-		* @return the elevation at grid point
-		*/
-		getHeightAtCell: function(x,z){
-			//console.log("["+x+","+z+"]");
-			return this.elevation[this._getIndex(x,z)];
-		},
-		/**
-		* Computes the elevation of the terrain at the given 2D world coordinate
-		* (based on current terrain scale).
-		* 
-		* @param {Number} x scaled world coord x
-		* @param {Number} z scaled world coord z
-		* @return {Number} interpolated elevation
-		*/
-		getHeightAtPoint: function(x,z){
-			var xx = x / this.scale.x + this.width * 0.5,
-				zz = z / this.scale.y + this._depth * 0.5,
-				y = 0,
-				fl = {
-					xx: parseInt(xx,10),
-					zz: parseInt(zz,10)
-				};
-			if(xx >= 0 & xx < this.width && zz >= 0 && zz < this._depth){
-				
-				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1), 10),
-					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1), 10);
-
-				var	a = this.getHeightAtCell(fl.xx, fl.zz),
-					b = this.getHeightAtCell(x2, fl.zz),
-					c = this.getHeightAtCell(fl.xx, z2),
-					d = this.getHeightAtCell(x2, z2);
-				
-				y = Interpolation2D.bilinear(xx,zz, fl.xx, fl.zz, x2, z2, a, b, c, d);
-			}
-			return y;
-		},
-		/**
-		* Computes the array index for the given cell coords & checks if they're in
-		* bounds. If not an {@link IndexOutOfBoundsException} is thrown.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @return {Number} array index
-		*/
-		_getIndex: function(x,z){
-			var idx = z * this.width + x;
-			if(idx < 0 || idx > this.__elevationLength){
-				throw new Error("the given terrain cell is invalid: "+x+ ";"+z);
-			}
-			return idx;
-		},
-		/**
-		 * @return {Vec2D} the scale
-		 */
-		getScale: function(){
-			return this.scale;
-		},
-
-		getVertexAtCell: function(x,z){
-			return this.vertices[this._getIndex(x,z)];
-		},
-		/**
-		 * @return {Number} number of grid cells along X axis
-		 */
-		getWidth: function(){
-			return this.width;
-		},
-		/**
-		* Computes the 3D position (with elevation) and normal vector at the given
-		* 2D location in the terrain. The position is in scaled world coordinates
-		* based on the given terrain scale. The returned data is encapsulated in a
-		* {@link toxi.geom.IsectData3D} instance.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @return {IsectData3D} intersection data parcel
-		*/
-		intersectAtPoint: function(x,z){
-			var xx = x / this.scale.x + this.width * 0.5,
-				zz = z / this.scale.y + this._depth * 0.5,
-				isec = new IsectData3D();
-			if(xx >= 0 && xx < this.width && zz >= 0 && zz < this._depth){
-				var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1),10),
-					z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1),10),
-					fl = {
-						xx: parseInt(xx,10),
-						zz: parseInt(zz,10)
-					},
-					a = this.getVertexAtCell(fl.xx,fl.zz),
-					b = this.getVertexAtCell(x2, fl.zz),
-					c = this.getVertexAtCell(x2,z2),
-					d = this.getVertexAtCell(fl.xx,z2),
-					r = new Ray3D(new Vec3D(x, 10000, z), new Vec3D(0, -1, 0)),
-					i = new TriangleIntersector(new Triangle3D(a, b, d));
-
-				if(i.intersectsRay(r)){
-					isec = i.getIntersectionData();
-				} else {
-					i.setTriangle(new Triangle3D(b, c, d));
-					i.intersectsRay(r);
-					isec = i.getIntersectionData();
-				}
-			}
-			return isec;
-		},
-		/**
-		* Sets the elevation of all cells to those of the given array values.
-		* 
-		* @param {Array} elevation array of height values
-		* @return itself
-		*/
-		setElevation: function(elevation){
-			if(this.__elevationLength == elevation.length){
-				for(var i = 0, len = elevation.length; i<len; i++){
-					this.vertices[i].y = this.elevation[i] = elevation[i];
-				}
-			} else {
-				throw new Error("the given elevation array size does not match terrain");
-			}
-			return this;
-		},
-		/**
-		* Sets the elevation for a single given grid cell.
-		* 
-		* @param {Number} x
-		* @param {Number} z
-		* @param {Number} h new elevation value
-		* @return itself
-		*/
-		setHeightAtCell: function(x,z,h){
-			var index = this._getIndex(x,z);
-			this.elevation[index] = h;
-			this.vertices[index].y = h;
-			return this;
-		},
-		setScale: function(scale){
-			if(!internals.hasProperties(scale,['x','y'])){
-				this.scale = new Vec2D(scale,scale);
-			} else {
-				this.scale = scale;
-			}
-		},
-		toMesh: function(){
-			var opts = {
-				mesh: undefined,
-				minX: 0,
-				minZ: 0,
-				maxX: this.width,
-				maxZ: this._depth
-			};
-
-			var v = this.vertices,
-				w = this.width,
-				d = this._depth;
-
-			if(arguments.length == 1 && typeof arguments[0] == 'object'){
-				//options object
-				var args = arguments[0];
-				opts.mesh = args.mesh || new TriangleMesh("terrain");
-				opts.minX = args.minX || opts.minX;
-				opts.minZ = args.minZ || opts.minZ;
-				opts.maxX = args.maxX || opts.maxX;
-				opts.maxZ = args.maxZ || opts.maxZ;
-			} else if(arguments.length >= 5){
-				opts.mesh = arguments[0];
-				opts.minX = arguments[1];
-				opts.minZ = arguments[2];
-				opts.maxX  = arguments[3];
-				opts.maxZ = arguments[4];
-			}
-
-			opts.mesh = opts.mesh || new TriangleMesh("terrain");
-			opts.minX = mathUtils.clip(opts.minX, 0, w - 1);
-			opts.maxX = mathUtils.clip(opts.maxX, 0, w);
-			opts.minZ = mathUtils.clip(opts.minZ, 0, d-1);
-			opts.maxZ = mathUtils.clip(opts.maxZ, 0, d);
-			opts.minX++;
-			opts.minZ++;
-
-
-			for(var z = opts.minZ, idx = opts.minX * w; z < opts.maxZ; z++, idx += w){
-				for(var x = opts.minX; x < opts.maxX; x++){
-					opts.mesh.addFace(v[idx - w + x - 1], v[idx - w + x], v[idx + x - 1]);
-					opts.mesh.addFace(v[idx - w + x], v[idx + x], v[idx + x - 1]);
-				}
-			}
-			return opts.mesh;
-		}
-	};
-
-	return	Terrain;
+define('toxi/geom/mesh/Terrain',['require','./meshCommon'],function(require){
+	//toxi.geom.mesh.Terrain is in meshCommon to avoid circular dependencies
+	return require('./meshCommon').Terrain;
 });
-define('toxi/geom/mesh/WETriangleMesh',['./TriangleMesh'], function( TriangleMesh ){
-	//WETriangleMesh is defined in toxi/geom/mesh/TriangleMesh
-	//this is to avoid circular dependecy
-	return TriangleMesh.WETriangleMesh;
+define('toxi/geom/mesh/WETriangleMesh',['require','./meshCommon'],function( require ){
+	return require('./meshCommon').WETriangleMesh;
 });
 define('toxi/geom/mesh/subdiv/DisplacementSubdivision',[
 	'../../../internals',
@@ -7943,7 +8147,7 @@ define('toxi/geom/mesh/subdiv/DualSubdivision',[
 	};
 	internals.extend( DualSubdivision, SubdivisionStrategy );
 	DualSubdivision.prototype.computeSplitPoints = function( edge ){
-		return [ edge.a.interpolateTo(edge.b, 0.3333), edge.a.interpolateTo(edge.b, 0.6666) ];
+		return [ edge.a.interpolateTo(edge.b, 0.3333333333333333), edge.a.interpolateTo(edge.b, 0.6666666666666666) ];
 	};
 	return DualSubdivision;
 });
@@ -8039,25 +8243,7 @@ define('toxi/geom/mesh/subdiv',[
 	exports.SubdivisionStrategy = require('./subdiv/SubdivisionStrategy');
 	exports.TriSubdivision = require('./subdiv/TriSubdivision');
 });
-define('toxi/geom/mesh',[
-	"require",
-	"exports",
-	"./mesh/BezierPatch",
-	"./mesh/BoxSelector",
-	"./mesh/DefaultSelector",
-	"./mesh/Face",
-	"./mesh/OBJWriter","./mesh/PlaneSelector",
-	"./mesh/SphereFunction",
-	"./mesh/SphericalHarmonics",
-	"./mesh/SurfaceMeshBuilder",
-	"./mesh/SuperEllipsoid",
-	"./mesh/TriangleMesh",
-	"./mesh/Vertex",
-	"./mesh/VertexSelector",
-	"./mesh/Terrain",
-	"./mesh/WETriangleMesh",
-	"./mesh/subdiv"
-], function(require, exports) {
+define('toxi/geom/mesh',['require','exports','module','./mesh/TriangleMesh','./mesh/BezierPatch','./mesh/BoxSelector','./mesh/DefaultSelector','./mesh/Face','./mesh/OBJWriter','./mesh/PlaneSelector','./mesh/SphereFunction','./mesh/SphericalHarmonics','./mesh/SurfaceMeshBuilder','./mesh/SuperEllipsoid','./mesh/Terrain','./mesh/TriangleMesh','./mesh/Vertex','./mesh/VertexSelector','./mesh/WETriangleMesh','./mesh/subdiv'],function(require, exports) {
 	exports.TriangleMesh = require('./mesh/TriangleMesh');
 	exports.BezierPatch = require('./mesh/BezierPatch');
 	exports.BoxSelector = require('./mesh/BoxSelector');
@@ -10638,76 +10824,15 @@ ZoomLensInterpolation.prototype = {
 module.exports = ZoomLensInterpolation;
 });
 
-define('toxi/math/noise/PerlinNoise',["require", "exports", "module", "../SinCosLUT"], function(require, exports, module) {
+define('toxi/math/noise/PerlinNoise',['require','../SinCosLUT'],function(require ) {
 
 var SinCosLUT = require('../SinCosLUT');
 
 /*
 Using David Bau's seedrandom.js for PerlinNoise#noiseSeed functionality
-
  seedrandom.js version 2.0.
  Author: David Bau 4/2/2011
-
- Defines a method Math.seedrandom() that, when called, substitutes
- an explicitly seeded RC4-based algorithm for Math.random().  Also
- supports automatic seeding from local or network sources of entropy.
-
- Usage:
-
-   <script src=http:davidbau.com/encode/seedrandom-min.js></script>
-
-   Math.seedrandom('yipee'); Sets Math.random to a function that is
-                             initialized using the given explicit seed.
-
-   Math.seedrandom();        Sets Math.random to a function that is
-                             seeded using the current time, dom state,
-                             and other accumulated local entropy.
-                             The generated seed string is returned.
-
-   Math.seedrandom('yowza', true);
-                             Seeds using the given explicit seed mixed
-                             together with accumulated entropy.
-
-   <script src="http:bit.ly/srandom-512"></script>
-                             Seeds using physical random bits downloaded
-                             from random.org.
-
-   <script src="https:jsonlib.appspot.com/urandom?callback=Math.seedrandom">
-   </script>                 Seeds using urandom bits from call.jsonlib.com,
-                             which is faster than random.org.
-
- Examples:
-
-   Math.seedrandom("hello");             Use "hello" as the seed.
-   document.write(Math.random());        Always 0.5463663768140734
-   document.write(Math.random());        Always 0.43973793770592234
-   var rng1 = Math.random;               Remember the current prng.
-
-   var autoseed = Math.seedrandom();     New prng with an automatic seed.
-   document.write(Math.random());        Pretty much unpredictable.
-
-   Math.random = rng1;                   Continue "hello" prng sequence.
-   document.write(Math.random());        Always 0.554769432473455
-
-   Math.seedrandom(autoseed);            Restart at the previous seed.
-   document.write(Math.random());        Repeat the 'unpredictable' value.
-
- Notes:
-
- Each time seedrandom('arg') is called, entropy from the passed seed
- is accumulated in a pool to help generate future seeds for the
- zero-argument form of Math.seedrandom, so entropy can be injected over
- time by calling seedrandom with explicit data repeatedly.
-
- On speed - This javascript implementation of Math.random() is about
- 3-10x slower than the built-in Math.random() because it is not native
- code, but this is typically fast enough anyway.  Seeding is more expensive,
- especially if you use auto-seeding.  Some details (timings on Chrome 4):
-
- Our Math.random()            - avg less than 0.002 milliseconds per call
- seedrandom('explicit')       - avg less than 0.5 milliseconds per call
- seedrandom('explicit', true) - avg less than 2 milliseconds per call
- seedrandom()                 - avg about 38 milliseconds per call
+ http://davidbau.com/encode/seedrandom-min.js
 
  LICENSE (BSD):
 
@@ -10716,16 +10841,16 @@ Using David Bau's seedrandom.js for PerlinNoise#noiseSeed functionality
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
  
-   1. Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
+	1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
 
-   2. Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
+	2. Redistributions in binary form must reproduce the above copyright
+			notice, this list of conditions and the following disclaimer in the
+			documentation and/or other materials provided with the distribution.
  
-   3. Neither the name of this module nor the names of its contributors may
-      be used to endorse or promote products derived from this software
-      without specific prior written permission.
+	3. Neither the name of this module nor the names of its contributors may
+			be used to endorse or promote products derived from this software
+			without specific prior written permission.
  
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -10743,7 +10868,7 @@ Using David Bau's seedrandom.js for PerlinNoise#noiseSeed functionality
 /**
  * All code is in an anonymous closure to keep the global namespace clean.
  *
- * @param {number=} overflow 
+ * @param {number=} overflow
  * @param {number=} startdenom
  * @api private
  */
@@ -10755,113 +10880,113 @@ Using David Bau's seedrandom.js for PerlinNoise#noiseSeed functionality
 
 /*
 	seedrandom()
- 	This is the seedrandom function described above.
+	This is the seedrandom function described above.
 */
 math['seedrandom'] = function seedrandom(seed, use_entropy) {
-  var key = [];
-  var arc4;
+	var key = [];
+	var arc4;
 
-  // Flatten the seed string or build one from local entropy if needed.
-  seed = mixkey(flatten(
-    use_entropy ? [seed, pool] :
-    arguments.length ? seed :
-    [new Date().getTime(), pool, window], 3), key);
+	// Flatten the seed string or build one from local entropy if needed.
+	seed = mixkey(flatten(
+		use_entropy ? [seed, pool] :
+		arguments.length ? seed :
+		[new Date().getTime(), pool, window], 3), key);
 
-  // Use the seed to initialize an ARC4 generator.
-  arc4 = new ARC4(key);
+	// Use the seed to initialize an ARC4 generator.
+	arc4 = new ARC4(key);
 
-  // Mix the randomness into accumulated entropy.
-  mixkey(arc4.S, pool);
+	// Mix the randomness into accumulated entropy.
+	mixkey(arc4.S, pool);
 
-  // Override Math.random
+	// Override Math.random
 
-  // This function returns a random double in [0, 1) that contains
-  // randomness in every bit of the mantissa of the IEEE 754 value.
+	// This function returns a random double in [0, 1) that contains
+	// randomness in every bit of the mantissa of the IEEE 754 value.
 
-  math['random'] = function random() {  // Closure to return a random double:
-    var n = arc4.g(chunks);             // Start with a numerator n < 2 ^ 48
-    var d = startdenom;                 //   and denominator d = 2 ^ 48.
-    var x = 0;                          //   and no 'extra last byte'.
-    while (n < significance) {          // Fill up all significant digits by
-      n = (n + x) * width;              //   shifting numerator and
-      d *= width;                       //   denominator and generating a
-      x = arc4.g(1);                    //   new least-significant-byte.
-    }
-    while (n >= overflow) {             // To avoid rounding up, before adding
-      n /= 2;                           //   last byte, shift everything
-      d /= 2;                           //   right using integer math until
-      x >>>= 1;                         //   we have exactly the desired bits.
-    }
-    return (n + x) / d;                 // Form the number within [0, 1).
-  };
+	math['random'] = function random() {  // Closure to return a random double:
+		var n = arc4.g(chunks);             // Start with a numerator n < 2 ^ 48
+		var d = startdenom;                 //   and denominator d = 2 ^ 48.
+		var x = 0;                          //   and no 'extra last byte'.
+		while (n < significance) {          // Fill up all significant digits by
+			n = (n + x) * width;              //   shifting numerator and
+			d *= width;                       //   denominator and generating a
+			x = arc4.g(1);                    //   new least-significant-byte.
+		}
+		while (n >= overflow) {             // To avoid rounding up, before adding
+			n /= 2;                           //   last byte, shift everything
+			d /= 2;                           //   right using integer math until
+			x >>>= 1;                         //   we have exactly the desired bits.
+		}
+		return (n + x) / d;                 // Form the number within [0, 1).
+	};
 
-  // Return the seed that was used
-  return seed;
+	// Return the seed that was used
+	return seed;
 };
 
 /** @constructor */
 function ARC4(key) {
-  var t, u, me = this, keylen = key.length;
-  var i = 0, j = me.i = me.j = me.m = 0;
-  me.S = [];
-  me.c = [];
+	var t, u, me = this, keylen = key.length;
+	var i = 0, j = me.i = me.j = me.m = 0;
+	me.S = [];
+	me.c = [];
 
-  // The empty key [] is treated as [0].
-  if (!keylen) { key = [keylen++]; }
+	// The empty key [] is treated as [0].
+	if (!keylen) { key = [keylen++]; }
 
-  // Set up S using the standard key scheduling algorithm.
-  while (i < width) { me.S[i] = i++; }
-  for (i = 0; i < width; i++) {
-    t = me.S[i];
-    j = lowbits(j + t + key[i % keylen]);
-    u = me.S[j];
-    me.S[i] = u;
-    me.S[j] = t;
-  }
+	// Set up S using the standard key scheduling algorithm.
+	while (i < width) { me.S[i] = i++; }
+	for (i = 0; i < width; i++) {
+		t = me.S[i];
+		j = lowbits(j + t + key[i % keylen]);
+		u = me.S[j];
+		me.S[i] = u;
+		me.S[j] = t;
+	}
 
-  // The "g" method returns the next (count) outputs as one number.
-  me.g = function getnext(count) {
-    var s = me.S;
-    var i = lowbits(me.i + 1); var t = s[i];
-    var j = lowbits(me.j + t); var u = s[j];
-    s[i] = u;
-    s[j] = t;
-    var r = s[lowbits(t + u)];
-    while (--count) {
-      i = lowbits(i + 1); t = s[i];
-      j = lowbits(j + t); u = s[j];
-      s[i] = u;
-      s[j] = t;
-      r = r * width + s[lowbits(t + u)];
-    }
-    me.i = i;
-    me.j = j;
-    return r;
-  };
-  // For robust unpredictability discard an initial batch of values.
-  // See http://www.rsa.com/rsalabs/node.asp?id=2009
-  me.g(width);
+	// The "g" method returns the next (count) outputs as one number.
+	me.g = function getnext(count) {
+		var s = me.S;
+		var i = lowbits(me.i + 1); var t = s[i];
+		var j = lowbits(me.j + t); var u = s[j];
+		s[i] = u;
+		s[j] = t;
+		var r = s[lowbits(t + u)];
+		while (--count) {
+			i = lowbits(i + 1); t = s[i];
+			j = lowbits(j + t); u = s[j];
+			s[i] = u;
+			s[j] = t;
+			r = r * width + s[lowbits(t + u)];
+		}
+		me.i = i;
+		me.j = j;
+		return r;
+	};
+	// For robust unpredictability discard an initial batch of values.
+	// See http://www.rsa.com/rsalabs/node.asp?id=2009
+	me.g(width);
 }
 
 //
 // flatten()
 // Converts an object tree to nested arrays of strings.
 //
-/** @param {Object=} result 
-  * @param {string=} prop
-  * @param {string=} typ 
-*/
+/** @param {Object=} result
+	* @param {string=} prop
+	* @param {string=} typ
+	*/
 function flatten(obj, depth, result, prop, typ) {
-  result = [];
-  typ = typeof(obj);
-  if (depth && typ == 'object') {
-    for (prop in obj) {
-      if (prop.indexOf('S') < 5) {    // Avoid FF3 bug (local/sessionStorage)
-        try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
-      }
-    }
-  }
-  return (result.length ? result : obj + (typ != 'string' ? '\0' : ''));
+	result = [];
+	typ = typeof(obj);
+	if (depth && typ == 'object') {
+		for (prop in obj) {
+			if (prop.indexOf('S') < 5) {    // Avoid FF3 bug (local/sessionStorage)
+				try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
+			}
+		}
+	}
+	return (result.length ? result : obj + (typ != 'string' ? '\0' : ''));
 }
 
 //
@@ -10869,18 +10994,18 @@ function flatten(obj, depth, result, prop, typ) {
 // Mixes a string seed into a key that is an array of integers, and
 // returns a shortened string seed that is equivalent to the result key.
 //
-/** @param {number=} smear 
-  * @param {number=} j */
+/** @param {number=} smear
+	* @param {number=} j */
 function mixkey(seed, key, smear, j) {
-  seed += '';                         // Ensure the seed is a string
-  smear = 0;
-  for (j = 0; j < seed.length; j++) {
-    key[lowbits(j)] =
-      lowbits((smear ^= key[lowbits(j)] * 19) + seed.charCodeAt(j));
-  }
-  seed = '';
-  for (j in key) { seed += String.fromCharCode(key[j]); }
-  return seed;
+	seed += '';                         // Ensure the seed is a string
+	smear = 0;
+	for (j = 0; j < seed.length; j++) {
+		key[lowbits(j)] =
+			lowbits((smear ^= key[lowbits(j)] * 19) + seed.charCodeAt(j));
+	}
+	seed = '';
+	for (j in key) { seed += String.fromCharCode(key[j]); }
+	return seed;
 }
 
 //
@@ -10900,172 +11025,170 @@ mixkey(math.random(), pool);
 
 // End anonymous scope, and pass initial values.
 })(
-  [],   // pool: entropy pool starts empty
-  internalMath, // math: package containing random, pow, and seedrandom
-  256,  // width: each RC4 output is 0 <= x < 256
-  6,    // chunks: at least six RC4 outputs for each double
-  52    // significance: there are 52 significant digits in a double
+	[],   // pool: entropy pool starts empty
+	internalMath, // math: package containing random, pow, and seedrandom
+	256,  // width: each RC4 output is 0 <= x < 256
+	6,    // chunks: at least six RC4 outputs for each double
+	52    // significance: there are 52 significant digits in a double
 );
 //end seed
 
 
-
-/*
-	PERLIN NOISE taken from the
-	[toxi 040903]
-	octaves and amplitude amount per octave are now user controlled
-	via the noiseDetail() function.
-	[toxi 030902]
-	cleaned up code and now using bagel's cosine table to speed up
-	[toxi 030901]
-	implementation by the german demo group farbrausch
-	as used in their demo "art": http://www.farb-rausch.de/fr010src.zip
-*/
-
-var PERLIN_YWRAPB = 4,
-	PERLIN_YWRAP = 1 << PERLIN_YWRAPB,
-	PERLIN_ZWRAPB = 8,
-	PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB,
-	PERLIN_SIZE = 4095,
-	PERLIN_MIN_AMPLITUDE = 0.001;
-/** @api private */
-var	_noise_fsc = function(self, i){
+	/*
+		PERLIN NOISE taken from the
+		[toxi 040903]
+		octaves and amplitude amount per octave are now user controlled
+		via the noiseDetail() function.
+		[toxi 030902]
+		cleaned up code and now using bagel's cosine table to speed up
+		[toxi 030901]
+		implementation by the german demo group farbrausch
+		as used in their demo "art": http://www.farb-rausch.de/fr010src.zip
+	*/
+	var PERLIN_YWRAPB = 4,
+		PERLIN_YWRAP = 1 << PERLIN_YWRAPB,
+		PERLIN_ZWRAPB = 8,
+		PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB,
+		PERLIN_SIZE = 4095,
+		PERLIN_MIN_AMPLITUDE = 0.001;
+	/** @api private */
+	var	_noise_fsc = function(self, i){
 		var index = ((i + 0.5) * self._perlin_PI) % self._perlin_TWOPI;
 		return 0.5 * (1.0 - self._perlin_cosTable[index]);
 	};
 
-/**
- * @module toxi/math/noise/PerlinNoise
- * @api public
- */
-var	PerlinNoise = function(){
-	this._perlin_octaves = 4; // default to medium smooth
-	this._perlin_amp_falloff = 0.5; // 50% reduction/octave
-};
-
-PerlinNoise.prototype = {
 	/**
-	 noise
-	 @api public
-	 @param [x=0] x is optional
-	 @param [y=0] y is optional
-	 @param [z=0] z is optional
+	 * @module toxi/math/noise/PerlinNoise
+	 * @api public
 	 */
-	noise: function(x,y,z){
-		var i = 0,
-			x = x || 0,
-			y = y || 0,
+	var	PerlinNoise = function(){
+		this._perlin_octaves = 4; // default to medium smooth
+		this._perlin_amp_falloff = 0.5; // 50% reduction/octave
+	};
+
+	PerlinNoise.prototype = {
+		/**
+		noise
+		@api public
+		@param [x=0] x is optional
+		@param [y=0] y is optional
+		@param [z=0] z is optional
+		*/
+		noise: function(x,y,z){
+			var i = 0;
+			x = x || 0;
+			y = y || 0;
 			z = z || 0;
 
-		if(!this._perlin){
-			this._perlin = [];
-			var length = PERLIN_SIZE - 1;
-			for(i = 0;i < PERLIN_SIZE + 1; i++){
-				this._perlin[i] = internalMath.random();
+			if(!this._perlin){
+				this._perlin = [];
+				var length = PERLIN_SIZE - 1;
+				for(i = 0;i < PERLIN_SIZE + 1; i++){
+					this._perlin[i] = internalMath.random();
+				}
 			}
-		}
 
-		this._perlin_cosTable = SinCosLUT.getDefaultInstance().getSinLUT();
-		this._perlin_TWOPI = this._perlin_PI = SinCosLUT.getDefaultInstance().getPeriod();
-		this._perlin_PI >>= 1;
+			this._perlin_cosTable = SinCosLUT.getDefaultInstance().getSinLUT();
+			this._perlin_TWOPI = this._perlin_PI = SinCosLUT.getDefaultInstance().getPeriod();
+			this._perlin_PI >>= 1;
 
-		if (x < 0) {
-			x = -x;
-		}
-		if (y < 0) {
-			y = -y;
-		}
-		if (z < 0) {
-			z = -z;
-		}
-		
-		var xi = x, 
-			yi = y,
-			zi = z,
-			xf = (x - xi),
-			yf = (y - yi),
-			zf = (z - zi),
-			rxf, 
-			ryf,
-			r = 0,
-			ampl = 0.5,
-			n1, 
-			n2, 
-			n3,
-			of;
-		for(i = 0; i < this._perlin_octaves; i++){
-			of = xi + (yi << PERLIN_YWRAPB) + (zi << PERLIN_ZWRAPB);
-			rxf = _noise_fsc(this,xf);
-			ryf = _noise_fsc(this,yf);
-
-			n1 = this._perlin[of & PERLIN_SIZE];
-			n1 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n1);
-			n2 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
-			n2 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n2);
-			n1 += ryf * (n2 - n1);
-
-			of += PERLIN_ZWRAP;
-			n2 = this._perlin[of & PERLIN_SIZE];
-			n2 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n2);
-			n3 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
-			n3 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n3);
-			n2 += ryf * (n3 - n2);
-
-			n1 += _noise_fsc(this,zf) * (n2 - n1);
+			if (x < 0) {
+				x = -x;
+			}
+			if (y < 0) {
+				y = -y;
+			}
+			if (z < 0) {
+				z = -z;
+			}
 			
-			r += n1 * ampl;
-			ampl *= this._perlin_amp_falloff;
+			var xi = x,
+				yi = y,
+				zi = z,
+				xf = (x - xi),
+				yf = (y - yi),
+				zf = (z - zi),
+				rxf,
+				ryf,
+				r = 0,
+				ampl = 0.5,
+				n1,
+				n2,
+				n3,
+				of;
+			for(i = 0; i < this._perlin_octaves; i++){
+				of = xi + (yi << PERLIN_YWRAPB) + (zi << PERLIN_ZWRAPB);
+				rxf = _noise_fsc(this,xf);
+				ryf = _noise_fsc(this,yf);
 
-			// break if amp has no more impact
-			if (ampl < PERLIN_MIN_AMPLITUDE) {
-				break;
-			}
+				n1 = this._perlin[of & PERLIN_SIZE];
+				n1 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n1);
+				n2 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
+				n2 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n2);
+				n1 += ryf * (n2 - n1);
 
-			xi <<= 1;
-			xf *= 2;
-			yi <<= 1;
-			yf *= 2;
-			zi <<= 1;
-			zf *= 2;
+				of += PERLIN_ZWRAP;
+				n2 = this._perlin[of & PERLIN_SIZE];
+				n2 += rxf * (this._perlin[(of + 1) & PERLIN_SIZE] - n2);
+				n3 = this._perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE];
+				n3 += rxf * (this._perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n3);
+				n2 += ryf * (n3 - n2);
 
-			if (xf >= 1.0) {
-				xi++;
-				xf--;
+				n1 += _noise_fsc(this,zf) * (n2 - n1);
+				
+				r += n1 * ampl;
+				ampl *= this._perlin_amp_falloff;
+
+				// break if amp has no more impact
+				if (ampl < PERLIN_MIN_AMPLITUDE) {
+					break;
+				}
+
+				xi <<= 1;
+				xf *= 2;
+				yi <<= 1;
+				yf *= 2;
+				zi <<= 1;
+				zf *= 2;
+
+				if (xf >= 1.0) {
+					xi++;
+					xf--;
+				}
+				if (yf >= 1.0) {
+					yi++;
+					yf--;
+				}
+				if (zf >= 1.0) {
+					zi++;
+					zf--;
+				}
 			}
-			if (yf >= 1.0) {
-				yi++;
-				yf--;
+			return r;
+		},
+		/**
+		@api public
+		@param {Number} lod
+		@param {Number} falloff
+		*/
+		noiseDetail: function(lod, falloff){
+			if(lod > 0){
+				this._perlin_octaves = lod;
 			}
-			if (zf >= 1.0) {
-				zi++;
-				zf--;
+			if(falloff && falloff > 0){
+				this._perlin_amp_falloff = falloff;
 			}
+		},
+		/**
+		@api public
+		@param {Number} [what] the random seed
+		*/
+		noiseSeed: function(what){
+			internalMath.seedrandom(what);
 		}
-		return r;
-	},
-	/**
-	 @api public
-	 @param {Number} lod
-	 @param {Number} falloff
-	 */
-	noiseDetail: function(lod, falloff){
-		if(lod > 0){
-			this._perlin_octaves = lod;
-		}
-		if(falloff && falloff > 0){
-			this._perlin_amp_falloff = falloff;
-		}
-	},
-	/**
-	 @api public
-	 @param {Number} [what] the random seed
-	 */
-	noiseSeed: function(what){
-		internalMath.seedrandom(what);
-	}
-};
+	};
 
-module.exports = PerlinNoise;
+	return PerlinNoise;
 });
 
 define('toxi/math/noise/simplexNoise',["require", "exports", "module", "../../internals"], function(require, exports, module) {
@@ -13754,9 +13877,9 @@ module.exports = {
 
 define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module", "../internals"], function(require, exports, module) {
 /**
- * @author Kyle Phillips  / haptic-data.com<
+ * @author Kyle Phillips  / haptic-data.com
  * Intended to be a bridge between Toxiclibs.js and Three.js
- * 
+ *
  * Three.js does type-checking to ensure that vectors, vertices and faces are of THREE's types
  * this helps to do that conversion process.
  */

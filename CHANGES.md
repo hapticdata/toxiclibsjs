@@ -1,5 +1,9 @@
 #Toxiclibs.js CHANGES
 ##v0.1.3
+*	added docs/sugar.md to explain the added features of toxiclibs.js
+*	added toxi.color.TColor#toInt for numbers in integer form, such as in three.js
+*	added toxi.color.TColor#newCSS to ease converting any css color to TColor
+*	bugfix toxi.color.TColor#addSelf
 *	bugfix toxi.geom.mesh.TriangleMesh#computeVertexNormals returning NaN
 *	bugfix toxi.geom.mesh.TriangleMesh#updateVertex
 *	Updated toxi.THREE.ToxiclibsSupport to remove used of deprecated THREE.Vertex
