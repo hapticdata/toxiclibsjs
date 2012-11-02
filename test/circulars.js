@@ -1,5 +1,5 @@
 /*global describe, it*/
-var toxi = require('../../index');
+var toxi = require('../index');
 var requirejs = require('requirejs');
 var assert = require('assert');
 

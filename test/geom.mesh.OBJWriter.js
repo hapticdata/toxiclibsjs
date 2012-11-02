@@ -1,5 +1,5 @@
-/*global describe,it,console*/
-var toxi = require('../../index'),
+/*global describe,it*/
+var toxi = require('../index'),
 	assert = require('assert');
 
 function outputOBJ( mesh, name ){
@@ -9,9 +9,9 @@ function outputOBJ( mesh, name ){
 	var objBody = objWriter.getOutput();
 	it('should output an OBJ', function(){
 		assert.equal( objBody.length > 1, true );
-		require('fs').writeFile('./'+name+'.obj', objBody, function( err ){
+		/*require('fs').writeFile('./'+name+'.obj', objBody, function( err ){
 			if( err ) throw err;
-		});
+		});*/
 	});
 }
 
@@ -38,7 +38,7 @@ describe('toxi.geom.mesh.OBJWriter', function(){
 			}
 			var res = 75;
 			var sh = new toxi.geom.mesh.SphericalHarmonics(m);
-			var builder = new toxi.geom.mesh.SurfaceMeshBuilder( sh ); 
+			var builder = new toxi.geom.mesh.SurfaceMeshBuilder( sh );
 			var mesh = builder.createMesh(new toxi.geom.mesh.TriangleMesh(),res,1,true);
 			mesh.setName('sphericalHarmonics-'+m.toString());
 			mesh.computeVertexNormals();
@@ -49,7 +49,6 @@ describe('toxi.geom.mesh.OBJWriter', function(){
 	describe('SuperEllipsoid', function(){
 		var modX = new toxi.math.waves.SineWave(0, Math.PI/5, 2.5, 2.5);
 		var modY = new toxi.math.waves.SineWave(Math.PI,Math.PI/5, 2.5, 2.5);
-		function rand(){ return Math.sin( Math.random() * (Math.PI*2) ) * 2.5; }
 		for(var i=0; i<10; i++){
 			var x = modX.update();
 			var y = modY.update();

@@ -1,5 +1,5 @@
-/*global describe,it, console*/
-var toxi = require('../../index'),
+/*global describe,it*/
+var toxi = require('../index'),
 	assert = require('assert');
 
 describe('TriangleMesh', function(){
@@ -37,7 +37,7 @@ describe('TriangleMesh', function(){
 			instance.vertices.forEach(function( v ){
 				['x','y','z'].forEach(function( axis ){
 					if( v[axis] !== (-extentNumber+pos[axis]) && v[axis] !== (extentNumber+pos[axis])){
-						console.log('v['+axis+'] = '+ v[axis]);
+						//console.log('v['+axis+'] = '+ v[axis]);
 						passed = false;
 					}
 				});

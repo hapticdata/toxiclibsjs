@@ -85,7 +85,18 @@ Constructor function has been overloaded to accept a parameter object:
 		thetaOffset: Math.PI/6
 	});
 
-##toxi.geom.Cone#toMesh()
+##toxi.geom.Cone
+constructor supports parameter object:
+
+	cone = new toxi.geom.Cone({
+		position: new toxi.geom.Vec3D(),
+		direction: new toxi.geom.Vec3D(1,0,0),
+		radiusNorth: 4,
+		radiusSouth: 3,
+		length: 8
+	});
+
+###toMesh()
 `toMesh()` accepts a parameter object:
 
 	cone.toMesh({

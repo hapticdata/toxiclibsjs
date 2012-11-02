@@ -1,5 +1,6 @@
 #Toxiclibs.js CHANGES
 ##v0.1.3
+*	wrote new unit tests for TColor, and ported all qunit unit tests to mocha
 *	added docs/sugar.md to explain the added features of toxiclibs.js
 *	added toxi.color.TColor#toInt for numbers in integer form, such as in three.js
 *	added toxi.color.TColor#newCSS to ease converting any css color to TColor

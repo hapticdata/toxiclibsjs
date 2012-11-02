@@ -1,5 +1,5 @@
-/*global describe,it,console*/
-var toxi = require('../../index'),
+/*global describe,it*/
+var toxi = require('../index'),
 	assert = require('assert');
 
 
@@ -14,6 +14,9 @@ describe('toxi.geom.Sphere', function(){
 
 		it('should create a mesh', function(){
 			mesh = sphere.toMesh({ resolution: 20 });
+			assert.ok( mesh instanceof toxi.geom.mesh.TriangleMesh );
+			assert.ok( Array.isArray( mesh.vertices ) );
+			assert.ok( Array.isArray( mesh.faces ) );
 		});
 	});
 });

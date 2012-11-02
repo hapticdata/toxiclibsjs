@@ -893,7 +893,7 @@ define('toxi/geom/vectors',[
 			if( hasXY( a ) && hasXY( b ) ){
 				this.x = mathUtils.clip(this.x, a.x, b.x);
 				this.y = mathUtils.clip(this.y, a.y, b.y);
-			} else if( isRect( a ) ){
+			} else if( isRect( a ) ){	
 				this.x = mathUtils.clip(this.x, a.x, a.x + a.width);
 				this.y = mathUtils.clip(this.y, a.y, a.y + a.height);
 			}
@@ -3242,7 +3242,7 @@ TColor.newRGB = function(r, g, b) {
 
 TColor.newRGBA = function( r, g, b, a) {
 	var c = new TColor();
-	c.setRGB([ r, g, b ]);
+	c.setRGB( r, g, b );
 	c.setAlpha(mathUtils.clip(a, 0, 1));
 	return c;
 };
@@ -7192,11 +7192,10 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 		Terrain = function(width, depth, scale){
 			this.width = width;
 			this._depth = depth;
-			if(!internals.hasProperties(scale,['x','y'])){
-				this.scale = new Vec2D(scale,scale);
-			} else {
-				this.scale = scale;
+			if( !internals.tests.hasXY(scale) ){
+				scale = new Vec2D(scale,scale);
 			}
+			this.setScale( scale );
 			this.elevation = [];
 			var i = 0,
 				len = width * depth;
@@ -7207,7 +7206,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 			this.__elevationLength = this.width * this._depth;
 			this.vertices = [];
 			var offset = new Vec3D(parseInt(this.width / 2,10), 0, parseInt(this._depth / 2,10)),
-				scaleXZ = this.scale.to3DXZ();
+				scaleXZ = this.getScale().to3DXZ();
 			i=0;
 			for(var z = 0; z < this._depth; z++){
 				for(var x = 0; x < this.width; x++){
@@ -7244,8 +7243,8 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 			* @return {Number} interpolated elevation
 			*/
 			getHeightAtPoint: function(x,z){
-				var xx = x / this.scale.x + this.width * 0.5,
-					zz = z / this.scale.y + this._depth * 0.5,
+				var xx = x / this._scale.x + this.width * 0.5,
+					zz = z / this._scale.y + this._depth * 0.5,
 					y = 0,
 					fl = {
 						xx: parseInt(xx,10),
@@ -7283,7 +7282,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 			 * @return {Vec2D} the scale
 			 */
 			getScale: function(){
-				return this.scale;
+				return this._scale;
 			},
 
 			getVertexAtCell: function(x,z){
@@ -7305,8 +7304,8 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 			* @return {IsectData3D} intersection data parcel
 			*/
 			intersectAtPoint: function(x,z){
-				var xx = x / this.scale.x + this.width * 0.5,
-					zz = z / this.scale.y + this._depth * 0.5,
+				var xx = x / this._scale.x + this.width * 0.5,
+					zz = z / this._scale.y + this._depth * 0.5,
 					isec = new IsectData3D();
 				if(xx >= 0 && xx < this.width && zz >= 0 && zz < this._depth){
 					var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1),10),
@@ -7361,11 +7360,10 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				return this;
 			},
 			setScale: function(scale){
-				if(!internals.hasProperties(scale,['x','y'])){
-					this.scale = new Vec2D(scale,scale);
-				} else {
-					this.scale = scale;
+				if(!internals.tests.hasXY(scale) ){
+					scale = new Vec2D(scale,scale);
 				}
+				this._scale = scale;
 			},
 			toMesh: function(){
 				var opts = {
@@ -8306,9 +8304,16 @@ var extend = require('../internals').extend,
 	Line2D = require('./Line2D');
 
 /**
- * @class
- * @member toxi
- */
+* Ray2D accepts 2 formats for its constructor
+* Option 1:
+* @param {Number} x,
+* @param {Number} y,
+* @param {toxi.geom.Vec2D} direction
+*
+* Option 2:
+* @param {toxi.geom.Vec2D} position
+* @param {toxi.geom.Vec2D} direction
+*/
 var	Ray2D = function(a,b,d){
 	var o, dir;
 	if(arguments.length == 3){
@@ -9166,12 +9171,32 @@ var extend = require('../internals').extend,
  * @param len
  *            length of the cone
  */
+
+function err( param ){
+	throw Error("Missing parameter: " + param);
+}
 var	Cone = function(pos,dir,rNorth, rSouth,len) {
-	Vec3D.apply(this,[pos]);
-	this.dir = dir.getNormalized();
-	this.radiusNorth = rNorth;
-	this.radiusSouth = rSouth;
-	this.length = len;
+	//if its a parameter object
+	var self = this;
+	if ( typeof pos === 'object' && arguments.length === 1 ){
+		console.log( 'object' );
+		process(
+			pos.pos || pos.position || new Vec3D(),
+			pos.dir || pos.direction || err( "direction" ),
+			pos.rNorth || pos.radiusNorth || err("radiusNorth"),
+			pos.rSouth || pos.radiusSouth || err("radiusSouth"),
+			pos.len || pos.length || err("length")
+		);
+	} else {
+		process( pos, dir, rNorth, rSouth, len );
+	}
+	function process( pos, dir, radiusNorth, radiusSouth, length ){
+		Vec3D.apply(self,[pos]);
+		self.dir = dir.getNormalized();
+		self.radiusNorth = radiusNorth;
+		self.radiusSouth = radiusSouth;
+		self.length = length;
+	}
 };
 
 extend(Cone,Vec3D);
@@ -11199,14 +11224,12 @@ var Int32Array = require('../../internals').Int32Array;
 /**
  * Simplex Noise in 2D, 3D and 4D. Based on the example code of this paper:
  * http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
- * 
- * @author Stefan Gustavson, Linkping University, Sweden (stegu at itn dot liu dot se) 
+ * @author Stefan Gustavson, Linkping University, Sweden (stegu at itn dot liu dot se)
  * Slight optimizations & restructuring by
  * @author Karsten Schmidt (info at toxi dot co dot uk)
  * javascript by
  * @author Kyle Phillips (kyle at haptic-data dot com)
 */
-var numFrame = 0;
 
 var _SQRT3 = Math.sqrt(3.0),
 	_SQRT5 = Math.sqrt(5.0);
@@ -11234,17 +11257,17 @@ var	_F2 = 0.5 * (_SQRT3 - 1.0),
 	 * cube)
 	 */
 var	_grad3 = [
-		new Int32Array([1, 1, 0 ]), 
+		new Int32Array([1, 1, 0 ]),
 		new Int32Array([ -1, 1, 0 ]),
-		new Int32Array([ 1, -1, 0 ]), 
-		new Int32Array([ -1, -1, 0 ]), 
-		new Int32Array([ 1, 0, 1 ]), 
+		new Int32Array([ 1, -1, 0 ]),
+		new Int32Array([ -1, -1, 0 ]),
+		new Int32Array([ 1, 0, 1 ]),
 		new Int32Array([ -1, 0, 1 ]),
-		new Int32Array([ 1, 0, -1 ]), 
-		new Int32Array([ -1, 0, -1 ]), 
-		new Int32Array([0, 1, 1 ]), 
+		new Int32Array([ 1, 0, -1 ]),
+		new Int32Array([ -1, 0, -1 ]),
+		new Int32Array([0, 1, 1 ]),
 		new Int32Array([0, -1, 1 ]),
-		new Int32Array([ 0, 1, -1 ]), 
+		new Int32Array([ 0, 1, -1 ]),
 		new Int32Array([ 0, -1, -1 ])
 	];
 
@@ -11253,38 +11276,38 @@ var	_grad3 = [
 	 * hypercube)
 	 */
 var	_grad4 = [
-		new Int32Array([ 0, 1, 1, 1 ]), 
+		new Int32Array([ 0, 1, 1, 1 ]),
 		new Int32Array([ 0, 1, 1, -1 ]),
-		new Int32Array([ 0, 1, -1, 1 ]), 
-		new Int32Array([ 0, 1, -1, -1 ]), 
+		new Int32Array([ 0, 1, -1, 1 ]),
+		new Int32Array([ 0, 1, -1, -1 ]),
 		new Int32Array([ 0, -1, 1, 1 ]),
-		new Int32Array([ 0, -1, 1, -1 ]), 
-		new Int32Array([ 0, -1, -1, 1 ]), 
+		new Int32Array([ 0, -1, 1, -1 ]),
+		new Int32Array([ 0, -1, -1, 1 ]),
 		new Int32Array([ 0, -1, -1, -1 ]),
-		new Int32Array([ 1, 0, 1, 1 ]), 
-		new Int32Array([ 1, 0, 1, -1 ]), 
-		new Int32Array([ 1, 0, -1, 1 ]), 
+		new Int32Array([ 1, 0, 1, 1 ]),
+		new Int32Array([ 1, 0, 1, -1 ]),
+		new Int32Array([ 1, 0, -1, 1 ]),
 		new Int32Array([ 1, 0, -1, -1 ]),
-		new Int32Array([ -1, 0, 1, 1 ]), 
-		new Int32Array([ -1, 0, 1, -1 ]), 
+		new Int32Array([ -1, 0, 1, 1 ]),
+		new Int32Array([ -1, 0, 1, -1 ]),
 		new Int32Array([ -1, 0, -1, 1 ]),
-		new Int32Array([ -1, 0, -1, -1 ]), 
-		new Int32Array([ 1, 1, 0, 1 ]), 
+		new Int32Array([ -1, 0, -1, -1 ]),
+		new Int32Array([ 1, 1, 0, 1 ]),
 		new Int32Array([ 1, 1, 0, -1 ]),
-		new Int32Array([ 1, -1, 0, 1 ]), 
-		new Int32Array([ 1, -1, 0, -1 ]), 
+		new Int32Array([ 1, -1, 0, 1 ]),
+		new Int32Array([ 1, -1, 0, -1 ]),
 		new Int32Array([ -1, 1, 0, 1 ]),
-		new Int32Array([ -1, 1, 0, -1 ]), 
-		new Int32Array([ -1, -1, 0, 1 ]), 
+		new Int32Array([ -1, 1, 0, -1 ]),
+		new Int32Array([ -1, -1, 0, 1 ]),
 		new Int32Array([ -1, -1, 0, -1 ]),
-		new Int32Array([ 1, 1, 1, 0 ]), 
-		new Int32Array([ 1, 1, -1, 0 ]), 
-		new Int32Array([ 1, -1, 1, 0 ]), 
+		new Int32Array([ 1, 1, 1, 0 ]),
+		new Int32Array([ 1, 1, -1, 0 ]),
+		new Int32Array([ 1, -1, 1, 0 ]),
 		new Int32Array([ 1, -1, -1, 0 ]),
-		new Int32Array([ -1, 1, 1, 0 ]), 
-		new Int32Array([ -1, 1, -1, 0 ]), 
+		new Int32Array([ -1, 1, 1, 0 ]),
+		new Int32Array([ -1, 1, -1, 0 ]),
 		new Int32Array([ -1, -1, 1, 0 ]),
-		new Int32Array([ -1, -1, -1, 0 ]) 
+		new Int32Array([ -1, -1, -1, 0 ])
 	];
 
 	/**
@@ -11308,7 +11331,7 @@ var	_p = new Int32Array([
 		193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249,
 		14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
 		176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222,
-		114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180 
+		114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
 	]);
 
 	/**
@@ -11328,7 +11351,7 @@ var	_perm = (function(){
 	 * A lookup table to traverse the simplex around a given point in 4D.
 	 * Details can be found where this table is used, in the 4D noise method.
 	 */
-var	_simplex = [ 
+var	_simplex = [
 		new Int32Array([ 0, 1, 2, 3 ]), new Int32Array([ 0, 1, 3, 2 ]),
 		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 2, 3, 1 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
 		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 2, 3, 0 ]), new Int32Array([ 0, 2, 1, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
@@ -11345,7 +11368,7 @@ var	_simplex = [
 		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 0, 1, 2 ]), new Int32Array([ 3, 0, 2, 1 ]),
 		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 2, 0 ]), new Int32Array([ 2, 1, 0, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
 		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 0, 2 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 3, 2, 0, 1 ]), new Int32Array([ 3, 2, 1, 0 ]) 
+		new Int32Array([ 3, 2, 0, 1 ]), new Int32Array([ 3, 2, 1, 0 ])
 	];
 
 	/**
@@ -11371,7 +11394,6 @@ var	_dot = function(g, x, y, z, w) {
 
 	/**
 	*This method is a *lot* faster than using (int)Math.floor(x).
-	* 
 	* @param {Number} x value to be floored
 	* @return {Number}
 	* @api private
@@ -11383,12 +11405,11 @@ var	_fastfloor = function(x) {
 
 	/**
 	 * @module toxi/math/noise/simplexNoise
- 	 * @api public
+	 * @api public
 	 */
 var	SimplexNoise = { //SimplexNoise only consists of static methods
 	/**
 	* Computes 4D Simplex Noise.
-	* 
 	* @param {Number} [x] coordinate
 	* @param {Number} [y]  coordinate
 	* @param {Number} [z] coordinate
@@ -11427,7 +11448,7 @@ var	SimplexNoise = { //SimplexNoise only consists of static methods
 					return (i + j) * _G2;
 					case 3:
 					return (i + j + k) * _G3;
-					case 4: 
+					case 4:
 					return (i + j + k + l) * _G4;
 				}
 			})(),
@@ -11438,7 +11459,7 @@ var	SimplexNoise = { //SimplexNoise only consists of static methods
 
 			//Determine which simplex we are in
 			if(numArgs == 2){
-				//for the 2d case, the simplex shape is an equilateral triangle.	
+				//for the 2d case, the simplex shape is an equilateral triangle.
 				return (function(){
 					var i1, j1, //offsets for scond (middle) corner of simplex (i,j)
 						x1, y1,
@@ -11477,7 +11498,7 @@ var	SimplexNoise = { //SimplexNoise only consists of static methods
 						n0 = t0 * t0 * _dot(_grad3[gi0], x0, y0); // (x,y) of grad3 used for
 						// 2D gradient
 					}
-					t1 = 0.5 - x1 * x1 - y1 * y1;
+					var t1 = 0.5 - x1 * x1 - y1 * y1;
 					if (t1 > 0) {
 						t1 *= t1;
 						gi1 = _perm[ii + i1 + _perm[jj + j1]] % 12;
@@ -12904,16 +12925,16 @@ ConstantForceBehavior.prototype = {
 module.exports = ConstantForceBehavior;
 });
 
-define('toxi/physics2d/behaviors/GravityBehavior',["require", "exports", "module", "../../internals","./ConstantForceBehavior"], function(require, exports, module) {
+define('toxi/physics2d/behaviors/GravityBehavior',['require','exports','module','../../internals','./ConstantForceBehavior'],function(require, exports, module) {
 
-var lib = require('../../internals'),
+var internals = require('../../internals'),
 	ConstantForceBehavior = require('./ConstantForceBehavior');
 
 var	GravityBehavior = function(gravityVec){
-	ConstantForceBehavior.apply(this,[gravityVec]);
+	ConstantForceBehavior.call(this,gravityVec);
 };
 
-lib.extend(GravityBehavior,ConstantForceBehavior);
+internals.extend(GravityBehavior,ConstantForceBehavior);
 
 GravityBehavior.prototype.configure = function(timeStep){
 	this.timeStep = timeStep;
@@ -12923,229 +12944,225 @@ GravityBehavior.prototype.configure = function(timeStep){
 module.exports = GravityBehavior;
 });
 
-define('toxi/physics2d/VerletPhysics2D',["require", "exports", "module", "../internals","./behaviors/GravityBehavior","../geom/Rect","../geom/Vec2D"], function(require, exports, module) {
+define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../internals','./behaviors/GravityBehavior','../geom/Rect','../geom/Vec2D'],function(require, exports, module) {
 
-var internals = require('../internals'),
-	GravityBehavior = require('./behaviors/GravityBehavior'),
-	Rect = require('../geom/Rect'),
-	Vec2D = require('../geom/Vec2D');
+	var internals = require('../internals'),
+		GravityBehavior = require('./behaviors/GravityBehavior'),
+		Rect = require('../geom/Rect'),
+		Vec2D = require('../geom/Vec2D');
+	var id = 0;
 
-var	VerletPhysics2D = function(gravity, numIterations, drag, timeStep){
-	var opts = {
+	var	VerletPhysics2D = function(gravity, numIterations, drag, timeStep) {
+		var opts = {
 			numIterations: 50,
 			drag: 0,
 			timeStep: 1
-		},
-		args;
-	if(arguments.length == 1 && (arguments[0].gravity || arguments[0].numIterations || arguments[0].timeStep || arguments[0].drag)){ //options object literal
-		args = arguments[0];
-		if(args.gravity !== undefined){
-			gravity = args.gravity;
+		};
+		var a;
+		if( arguments.length == 1 && (arguments[0].gravity || arguments[0].numIterations || arguments[0].timeStep || arguments[0].drag) ){ //options object literal
+			a = arguments[0];
+			opts.gravity = a.gravity;
+			opts.numIterations = a.numIterations || opts.numIterations;
+			opts.drag = a.drag || opts.drag;
+			opts.timeStep = a.timeStep || opts.timeStep;
+		} else if( arguments.length == 1){
+			opts.gravity = gravity; //might be Vec2D, will get handled below
+		} else if( arguments.length == 4 ){
+			opts.gravity = gravity;
+			opts.numIterations = numIterations;
+			opts.drag = drag;
+			opts.timeStep = timeStep;
 		}
-		if(args.numIterations !== undefined){
-			opts.numIterations = args.gravity;
-		}
-		if(args.drag !== undefined){
-			opts.drag = args.drag;
-		}
-		if(args.timeStep !== undefined){
-			opts.timeStep = args.timeStep;
-		}
-	}
-	this.behaviors = [];
-	this.particles = [];
-	this.springs = [];
-	this.numIterations = opts.numIterations;
-	this.timeStep = opts.timeStep;
-	this.setDrag(opts.drag);
-	
-	if(gravity){
-		if( internals.tests.isParticleBehavior( gravity ) ){
-			this.addBehavior(gravity);
-		} else if( internals.tests.hasXY( gravity ) ){
-			this.addBehavior(
-				new GravityBehavior(
-					new Vec2D(gravity)
-				)
-			);
-		}
-	}
-};
 
-VerletPhysics2D.addConstraintToAll = function(c, list){
-	for(var i=0;i<list.length;i++){
-		list[i].addConstraint(c);
-	}
-};
-
-VerletPhysics2D.removeConstraintFromAll = function(c,list){
-	for(var i=0;i<list.length;i++){
-		list[i].removeConstraint(c);
-	}
-};
-
-VerletPhysics2D.prototype = {
-	
-	addBehavior: function(behavior){
-		behavior.configure(this.timeStep);
-		this.behaviors.push(behavior);
-	},
-	
-	addParticle: function(p){
-		this.particles.push(p);
-		return this;
-	},
-	
-	addSpring: function(s){
-		if(this.getSpring(s.a,s.b) === undefined){
-			this.springs.push(s);
-		}
-		return this;
-	},
-	
-	clear: function(){
+		this.behaviors = [];
 		this.particles = [];
 		this.springs = [];
-		return this;
-	},
-	
-	constrainToBounds: function(){ //protected
-		var p,
-			i = 0;
-		for(i=0;i<this.particles.length;i++){
-			p = this.particles[i];
-			if(p.bounds !== undefined){
-				p.constrain(p.bounds);
+		this.numIterations = opts.numIterations;
+		this.timeStep = opts.timeStep;
+		this.setDrag(opts.drag);
+		if( opts.gravity ){
+			if( internals.tests.hasXY( opts.gravity ) ){
+				opts.gravity = new GravityBehavior( new Vec2D(opts.gravity) );
 			}
+			this.addBehavior( opts.gravity );
 		}
-		if(this.worldBounds !== undefined){
+		this.id = id++;
+	};
+
+	VerletPhysics2D.addConstraintToAll = function(c, list){
+		for(var i=0;i<list.length;i++){
+			list[i].addConstraint(c);
+		}
+	};
+
+	VerletPhysics2D.removeConstraintFromAll = function(c,list){
+		for(var i=0;i<list.length;i++){
+			list[i].removeConstraint(c);
+		}
+	};
+
+	VerletPhysics2D.prototype = {
+		
+		addBehavior: function(behavior){
+			behavior.configure(this.timeStep);
+			this.behaviors.push(behavior);
+		},
+		
+		addParticle: function(p){
+			this.particles.push(p);
+			return this;
+		},
+		
+		addSpring: function(s){
+			if(this.getSpring(s.a,s.b) === undefined){
+				this.springs.push(s);
+			}
+			return this;
+		},
+		
+		clear: function(){
+			this.particles = [];
+			this.springs = [];
+			return this;
+		},
+		
+		constrainToBounds: function(){ //protected
+			var p,
+				i = 0;
 			for(i=0;i<this.particles.length;i++){
 				p = this.particles[i];
-				p.constrain(this.worldBounds);
+				if(p.bounds !== undefined){
+					p.constrain(p.bounds);
+				}
 			}
-		}
-	},
-	
-	getCurrentBounds: function(){
-		var min = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
-		var max = new Vec2D(Number.MIN_VALUE, Number.MIN_VALUE);
-		var i = 0,
-			p;
-		for(i = 0;i<this.particles.length;i++){
-			p = this.particles[i];
-			min.minSelf(p);
-			max.maxSelf(p);
-		}
-		return new Rect(min,max);
-	},
-	
-	getDrag: function() {
-		return 1 - this.drag;
-	},
-	
-	getNumIterations: function(){
-		return this.numIterations;
-	},
-	
-	getSpring: function(a,b){
-		var i = 0;
-		for(i = 0;i<this.springs.length;i++){
-			var s = this.springs[i];
-			if((s.a === a && s.b === b) || (s.a === b && s.b === b)){
-				return s;
+			if(this.worldBounds !== undefined){
+				for(i=0;i<this.particles.length;i++){
+					p = this.particles[i];
+					p.constrain(this.worldBounds);
+				}
 			}
-		}
-		return undefined;
-	},
-	
-	getTimeStep: function(){
-		return this.timeStep;
-	},
-	
-	getWorldBounds: function(){
-		return this.worldBounds;
-	},
-	
-	removeBehavior: function(c){
-		return internals.removeItemFrom(c,this.behaviors);
-	},
-	
-	removeParticle: function(p){
-		return internals.removeItemFrom(p,this.particles);
-	},
-	
-	removeSpring: function(s) {
-		return internals.removeItemFrom(s,this.springs);
-	},
-	
-	removeSpringElements: function(s){
-		if(this.removeSpring(s) !== undefined){
-			return (this.removeParticle(s.a) && this.removeParticle(s.b));
-		}
-		return false;
-	},
-	
-	setDrag: function(drag){
-		this.drag = 1 - drag;
-	},
-	
-	setNumIterations: function(numIterations){
-		this.numIterations = numIterations;
-	},
-	
-	setTimeStep: function(timeStep){
-		this.timeStep = timeStep;
-		var i =0;
-		for(i = 0;i<this.behaviors.length;i++){
-			var b = this.behaviors[i];
-			b.configure(timeStep);
-		}
-	},
-	
-	setWorldBounds: function(world){
-		this.worldBounds = world;
-		return this;
-	},
-	
-	update: function(){
-		this.updateParticles();
-		this.updateSprings();
-		this.constrainToBounds();
-		return this;
-	},
-	
-	updateParticles: function(){
-		var i = 0,
-			j = 0,
-			b,
-			p;
-		for(i = 0;i<this.behaviors.length;i++){
-			b = this.behaviors[i];
+		},
+		
+		getCurrentBounds: function(){
+			var min = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
+			var max = new Vec2D(Number.MIN_VALUE, Number.MIN_VALUE);
+			var i = 0,
+				p;
+			for(i = 0;i<this.particles.length;i++){
+				p = this.particles[i];
+				min.minSelf(p);
+				max.maxSelf(p);
+			}
+			return new Rect(min,max);
+		},
+		
+		getDrag: function() {
+			return 1 - this.drag;
+		},
+		
+		getNumIterations: function(){
+			return this.numIterations;
+		},
+		
+		getSpring: function(a,b){
+			var i = 0;
+			for(i = 0;i<this.springs.length;i++){
+				var s = this.springs[i];
+				if((s.a === a && s.b === b) || (s.a === b && s.b === b)){
+					return s;
+				}
+			}
+			return undefined;
+		},
+		
+		getTimeStep: function(){
+			return this.timeStep;
+		},
+		
+		getWorldBounds: function(){
+			return this.worldBounds;
+		},
+		
+		removeBehavior: function(c){
+			return internals.removeItemFrom(c,this.behaviors);
+		},
+		
+		removeParticle: function(p){
+			return internals.removeItemFrom(p,this.particles);
+		},
+		
+		removeSpring: function(s) {
+			return internals.removeItemFrom(s,this.springs);
+		},
+		
+		removeSpringElements: function(s){
+			if(this.removeSpring(s) !== undefined){
+				return (this.removeParticle(s.a) && this.removeParticle(s.b));
+			}
+			return false;
+		},
+		
+		setDrag: function(drag){
+			this.drag = 1 - drag;
+		},
+		
+		setNumIterations: function(numIterations){
+			this.numIterations = numIterations;
+		},
+		
+		setTimeStep: function(timeStep){
+			this.timeStep = timeStep;
+			var i =0, l = this.behaviors.length;
+			for(i = 0; i<l; i++){
+				var b = this.behaviors[i];
+				b.configure(timeStep);
+			}
+		},
+		
+		setWorldBounds: function(world){
+			this.worldBounds = world;
+			return this;
+		},
+		
+		update: function(){
+			this.updateParticles();
+			this.updateSprings();
+			this.constrainToBounds();
+			return this;
+		},
+		
+		updateParticles: function(){
+			var i = 0,
+				j = 0,
+				b,
+				p;
+			for(i = 0;i<this.behaviors.length;i++){
+				b = this.behaviors[i];
+				for(j = 0;j<this.particles.length;j++){
+					p = this.particles[j];
+					b.applyBehavior(p);
+				}
+			}
 			for(j = 0;j<this.particles.length;j++){
 				p = this.particles[j];
-				b.applyBehavior(p);
+				p.scaleVelocity(this.drag);
+				p.update();
+			}
+		},
+		
+		updateSprings: function(){
+			var i = 0,
+				j = 0;
+			for(i = this.numIterations; i > 0; i--){
+				for(j = 0;j<this.springs.length;j++){
+					var s = this.springs[j];
+					s.update(i === 1);
+				}
 			}
 		}
-		for(j = 0;j<this.particles.length;j++){
-			p = this.particles[j];
-			p.scaleVelocity(this.drag);
-			p.update();
-		}
-	},
-	
-	updateSprings: function(){
-		var i = 0,
-			j = 0;
-		for(i = this.numIterations; i > 0; i--){
-			for(j = 0;j<this.springs.length;j++){
-				var s = this.springs[j];
-				s.update(i === 1);
-			}
-		}
-	}
-};
+	};
 
-module.exports = VerletPhysics2D;
+	module.exports = VerletPhysics2D;
 });
 
 define('toxi/physics2d/behaviors/AttractionBehavior',["require", "exports", "module"], function(require, exports, module) {
@@ -13213,13 +13230,11 @@ module.exports = AttractionBehavior;
 
 });
 
-define('toxi/physics2d/behaviors',["require", "exports", "module", "./behaviors/AttractionBehavior","./behaviors/ConstantForceBehavior","./behaviors/GravityBehavior"], function(require, exports, module) {
+define('toxi/physics2d/behaviors',['require','exports','module','./behaviors/AttractionBehavior','./behaviors/ConstantForceBehavior','./behaviors/GravityBehavior'],function( require, exports ){
 /** @module toxi/physics2d/behaviors */
-module.exports = {
-	AttractionBehavior: require('./behaviors/AttractionBehavior'),
-	ConstantForceBehavior: require('./behaviors/ConstantForceBehavior'),
-	GravityBehavior: require('./behaviors/GravityBehavior')
-};
+exports.AttractionBehavior = require('./behaviors/AttractionBehavior');
+exports.ConstantForceBehavior = require('./behaviors/ConstantForceBehavior');
+exports.GravityBehavior = require('./behaviors/GravityBehavior');
 });
 
 define('toxi/physics2d/constraints/AngularConstraint',["require", "exports", "module", "../../math/mathUtils","../../geom/Vec2D"], function(require, exports, module) {

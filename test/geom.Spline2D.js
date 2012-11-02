@@ -1,4 +1,5 @@
-var toxi = require('../../index'),
+/*global describe, it*/
+var toxi = require('../index'),
 	assert = require('assert');
 //tests for toxi.geom.Spline2D
 //TODO: test Spline2D#getDecimatedVertices()
@@ -58,7 +59,7 @@ describe("Spline2D", function(){
 
 	function getNVec2D( n ){
 		var points = [];
-		for(var i=0; i<n; i++){ 
+		for(var i=0; i<n; i++){
 			points.push( toxi.geom.Vec2D.randomVector() );
 		}
 		return points;

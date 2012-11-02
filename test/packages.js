@@ -1,4 +1,4 @@
-var t = require('../../index'),
+var t = require('../index'),
 	assert = require('assert');
 
 //test that all modules are functions
@@ -11,7 +11,7 @@ function createFunctionTests( pkg, excludeList ){
 			if(excludeList.indexOf(module) < 0){
 				(function( m ){
 					it(m + ' is function', function(){
-						console.log(classes.length + ' ' +m);
+						//console.log(classes.length + ' ' +m);
 						assert.equal(typeof pkg[m],'function');
 						classes.push( m );
 					});
