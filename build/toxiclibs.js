@@ -7834,66 +7834,6 @@ define('toxi/geom/mesh/DefaultSelector',['require','exports','module','../../int
 	module.exports = DefaultSelector;
 });
 
-define('toxi/geom/mesh/LaplacianSmooth',['../../internals','../Vec3D', './DefaultSelector', './meshCommon'], function( internals, Vec3D, DefaultSelector, meshCommon ){
-	
-
-	var LaplacianSmooth = function(){};
-	LaplacianSmooth.prototype = { filter: filter };
-
-	//@param {VertexSelector | WETriangleMesh } selector or mesh
-	//@param {Number} numIterations
-	function filter( selector, numIterations ) {
-		var selection, mesh, filtered;
-		var v, laplacian, neighbors;
-		var i,j,k,l, nl, fl;
-
-		//used below for matching a filtered vertex to the mesh
-		function updateMeshVertexMap( v, key ){
-			var changedVertex = mesh.vertexMap.get( key );
-			if( changedVertex === undefined ){
-				console.log("missing vertex");
-			} else {
-				changedVertex.set( v );
-			}
-		}
-
-		//this means it was a WETriangleMesh not a selector
-		if( typeof selector.addFace === 'function' ) {
-			selector = new DefaultSelector( selector ).selectVertices();
-		}
-		selection = selector.getSelection();
-		mesh = selector.getMesh();
-		if ( typeof mesh.subdivide !== 'function' ) {
-			throw Error( 'This filter requires a WETriangleMesh' );
-		}
-		l = selection.length;
-		for ( i=0; i<numIterations; i++ ) {
-			//it is very important to use TriangleMesh's keyGenerator for matching
-			filtered = new internals.LinkedMap( meshCommon.TriangleMesh.__vertexKeyGenerator );
-			for ( j=0; j<l; j++ ){
-				v = selection[i];
-				laplacian = new Vec3D();
-				neighbors = v.getNeighbors();
-				nl = neighbors.length;
-				console.log("neighbors.length: "+nl);
-				for ( k=0; k<nl; k++ ){
-					laplacian.addSelf( neighbors[k] );
-				}
-				laplacian.scaleSelf( 1 / nl );
-				filtered.put( v, laplacian );
-			}
-			fl = filtered.size();
-			filtered.each( updateMeshVertexMap );
-			mesh.rebuildIndex();
-		}
-		mesh.computeFaceNormals();
-		mesh.computeVertexNormals();
-	}
-
-	//adding this to the object for sugar, no need for this to be an instance
-	LaplacianSmooth.filter = filter;
-	return LaplacianSmooth;
-});
 define('toxi/geom/mesh/OBJWriter',[
 	'../../internals'
 ], function( internals ){
@@ -8146,171 +8086,13 @@ define('toxi/geom/mesh/Terrain',['require','./meshCommon'],function(require){
 define('toxi/geom/mesh/WETriangleMesh',['require','./meshCommon'],function( require ){
 	return require('./meshCommon').WETriangleMesh;
 });
-define('toxi/geom/mesh/subdiv/DisplacementSubdivision',[
-	'../../../internals',
-	'./SubdivisionStrategy'
-], function ( internals, SubdivisionStrategy ){
-	//Abstract class
-	var DisplacementSubdivision, proto;
-	DisplacementSubdivision = function( amp ){
-		SubdivisionStrategy.call(this);
-		this.amp = amp;
-	};
-	internals.extend( DisplacementSubdivision, SubdivisionStrategy );
-	proto = DisplacementSubdivision.prototype;
-
-	proto.getAmp = function(){ return this.amp; };
-	proto.invertAmp = function(){
-		this.amp *= -1;
-		return this;
-	};
-	proto.scaleAmp = function( scale ){
-		this.amp *= scale;
-		return this;
-	};
-	proto.setAmp = function( amp ){
-		this.amp = amp;
-		return this;
-	};
-
-	return DisplacementSubdivision;
-});
-    
-define('toxi/geom/mesh/subdiv/DualDisplacementSubdivision',[
-	'../../../internals',
-	'./SubdivisionStrategy'
-], function ( internals, SubdivisionStrategy ){
-	
-	var DualDisplacementSubdivision = function( centroid, ampA, ampB ){
-		this.centroid = centroid;
-		this.ampA = ampA;
-		this.ampB = ampB;
-	};
-	internals.extend( DualDisplacementSubdivision, SubdivisionStrategy );
-	DualDisplacementSubdivision.prototype.computeSplitPoints = function( edge ){
-		var len = ege.getLength(), a, b;
-		a = edge.a.interpolateTo( edge.b, 0.33333333333 );
-		a.addSelf( a.sub(this.centroid).normalizeTo(this.ampA*len) );
-		b = edge.a.interpolateTo( edge.b, 0.66666666666 );
-		b.addSelf( b.sub(this.centroid).normalizeTo(this.ampB*len) );
-		return [a, b];
-	};
-	return DualDisplacementSubdivision;
-});
-    
-define('toxi/geom/mesh/subdiv/DualSubdivision',[
-	'../../../internals',
-	'./SubdivisionStrategy'
-], function( internals, SubdivisionStrategy ){
-
-	var DualSubdivision = function(){
-		SubdivisionStrategy.call(this);
-	};
-	internals.extend( DualSubdivision, SubdivisionStrategy );
-	DualSubdivision.prototype.computeSplitPoints = function( edge ){
-		return [ edge.a.interpolateTo(edge.b, 0.3333333333333333), edge.a.interpolateTo(edge.b, 0.6666666666666666) ];
-	};
-	return DualSubdivision;
-});
-define('toxi/geom/mesh/subdiv/FaceCountComparator',[],function(){
-	
-	var FaceCountComparator = function(){};
-	FaceCountComparator.prototype.compare = function( edge1, edge2 ){
-		return -(edge1.faces.length - edge2.faces.length);
-	};
-	return FaceCountComparator;
-
-});
-define('toxi/geom/mesh/subdiv/MidpointDisplacementSubdivision',[
-	'../../../internals',
-	'./DisplacementSubdivision'
-], function ( internals, DisplacementSubdivision ){
-	
-	var MidpointDisplacementSubdivision = function( centroid, amount ){
-		DisplacementSubdivision.call(this, amount);
-		this.centroid = centroid;
-	};
-	internals.extend( MidpointDisplacementSubdivision, DisplacementSubdivision );
-	MidpointDisplacementSubdivision.prototype.computeSplitPoints = function( edge ){
-		var mid = edge.getMidPoint(),
-			n = mid.sub( this.centroid ).normalizeTo( this.amp * edge.getLength() );
-		return [ mid.addSelf(n) ];
-	};
-	return MidpointDisplacementSubdivision;
-});
-    
-define('toxi/geom/mesh/subdiv/NormalDisplacementSubdivision',[
-	'../../../internals',
-	'./DisplacementSubdivision'
-], function( internals, DisplacementSubdivision ){
-
-	var NormalDisplacementSubdivision = function( amp ){
-		DisplacementSubdivision.call( this, amp );
-	};
-	internals.extend( NormalDisplacementSubdivision, DisplacementSubdivision );
-	NormalDisplacementSubdivision.prototype.computeSplitPoints = function( edge ){
-		var mid = edge.getMidPoint(),
-			n = edge.faces[0].normal;
-
-		if( edge.faces.length > 1 ){
-			n.addSelf( edge.faces[1].normal );
-		}
-		n.normalizeTo( this.amp * edge.getLength() );
-		return [ mid.addSelf(n) ];
-	};
-	return NormalDisplacementSubdivision;
-});
-define('toxi/geom/mesh/subdiv/TriSubdivision',[
-	'../../../internals',
-	'./SubdivisionStrategy'
-], function ( internals, SubdivisionStrategy ){
-	
-	var TriSubdivision = function(){
-		SubdivisionStrategy.call(this);
-	};
-	internals.extend( TriSubdivision, SubdivisionStrategy );
-	TriSubdivision.prototype.computeSplitPoints = function( edge ){
-		return [
-			edge.a.interpolateTo(edge.b, 0.25),
-			edge.a.interpolateTo(edge.b, 0.5),
-			edge.a.interpolateTo(edge.b, 0.75)
-		];
-	};
-	return TriSubdivision;
-});
-    
-define('toxi/geom/mesh/subdiv',[
-	'require',
-	'exports',
-	'./subdiv/SubdivisionStrategy',
-	'./subdiv/DisplacementSubdivision',
-	'./subdiv/DualDisplacementSubdivision',
-	'./subdiv/DualSubdivision',
-	'./subdiv/EdgeLengthComparator',
-	'./subdiv/FaceCountComparator',
-	'./subdiv/MidpointDisplacementSubdivision',
-	'./subdiv/MidpointSubdivision',
-	'./subdiv/NormalDisplacementSubdivision',
-	'./subdiv/TriSubdivision'
-], function( require, exports ){
-	exports.DisplacementSubdivision = require('./subdiv/DisplacementSubdivision');
-	exports.DualDisplacementSubdivision = require('./subdiv/DualDisplacementSubdivision');
-	exports.DualSubdivision = require('./subdiv/DualSubdivision');
-	exports.EdgeLengthComparator = require('./subdiv/EdgeLengthComparator');
-	exports.FaceCountComparator = require('./subdiv/FaceCountComparator');
-	exports.MidpointDisplacementSubdivision = require('./subdiv/MidpointDisplacementSubdivision');
-	exports.MidpointSubdivision = require('./subdiv/MidpointSubdivision');
-	exports.NormalDisplacementSubdivision = require('./subdiv/NormalDisplacementSubdivision');
-	exports.SubdivisionStrategy = require('./subdiv/SubdivisionStrategy');
-	exports.TriSubdivision = require('./subdiv/TriSubdivision');
-});
-define('toxi/geom/mesh',['require','exports','module','./mesh/TriangleMesh','./mesh/BezierPatch','./mesh/BoxSelector','./mesh/DefaultSelector','./mesh/Face','./mesh/LaplacianSmooth','./mesh/OBJWriter','./mesh/PlaneSelector','./mesh/SphereFunction','./mesh/SphericalHarmonics','./mesh/SurfaceMeshBuilder','./mesh/SuperEllipsoid','./mesh/Terrain','./mesh/TriangleMesh','./mesh/Vertex','./mesh/VertexSelector','./mesh/WETriangleMesh','./mesh/subdiv'],function(require, exports) {
+define('toxi/geom/mesh',['require','exports','module','./mesh/TriangleMesh','./mesh/BezierPatch','./mesh/BoxSelector','./mesh/DefaultSelector','./mesh/Face','./mesh/OBJWriter','./mesh/PlaneSelector','./mesh/SphereFunction','./mesh/SphericalHarmonics','./mesh/SurfaceMeshBuilder','./mesh/SuperEllipsoid','./mesh/Terrain','./mesh/TriangleMesh','./mesh/Vertex','./mesh/VertexSelector','./mesh/WETriangleMesh'],function(require, exports) {
 	exports.TriangleMesh = require('./mesh/TriangleMesh');
 	exports.BezierPatch = require('./mesh/BezierPatch');
 	exports.BoxSelector = require('./mesh/BoxSelector');
 	exports.DefaultSelector = require('./mesh/DefaultSelector');
 	exports.Face = require('./mesh/Face');
-	exports.LaplacianSmooth = require('./mesh/LaplacianSmooth');
+	//exports.LaplacianSmooth = require('./mesh/LaplacianSmooth');
 	exports.OBJWriter = require('./mesh/OBJWriter');
 	exports.PlaneSelector = require('./mesh/PlaneSelector');
 	exports.SphereFunction = require('./mesh/SphereFunction');
@@ -8322,7 +8104,7 @@ define('toxi/geom/mesh',['require','exports','module','./mesh/TriangleMesh','./m
 	exports.Vertex = require('./mesh/Vertex');
 	exports.VertexSelector = require('./mesh/VertexSelector');
 	exports.WETriangleMesh = require('./mesh/WETriangleMesh');
-	exports.subdiv = require('./mesh/subdiv');
+	//exports.subdiv = require('./mesh/subdiv');
 });
 
 define('toxi/geom/BernsteinPolynomial',["require", "exports", "module"], function(require, exports, module) {
