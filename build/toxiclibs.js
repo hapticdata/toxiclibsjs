@@ -6112,7 +6112,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 
 	//private: way of generating object keys for point map in meshes
 	function vertexKeyGenerator( v ){
-		var precision = 10000;
+		var precision = 1000000;
 		var format = function( n ){
 			return Math.floor(n*precision) / precision;
 		};
@@ -6121,7 +6121,8 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 	}
 	//private: used for tracking edges in the internals.LinkedMap
 	function edgeKeyGenerator( edge ){
-		return require('../Line3D').prototype.toString.call( edge );
+		var Line3D = require('../Line3D');
+		return Line3D.prototype.toString.call( edge );//"{ a: "+vertexKeyGenerator(edge.a)+", b: "+vertexKeyGenerator(edge.b)+" }";
 	}
 
 	//#TriangleMesh
@@ -6146,6 +6147,8 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 			this.init( name );
 			return this;
 		};
+
+		TriangleMesh.__vertexKeyGenerator = vertexKeyGenerator;
 
 
 		//statics
@@ -7810,7 +7813,7 @@ module.exports = BoxSelector;
 
 });
 
-define('toxi/geom/mesh/DefaultSelector',["require", "exports", "module", "../../internals","./VertexSelector"], function(require, exports, module) {
+define('toxi/geom/mesh/DefaultSelector',['require','exports','module','../../internals','./VertexSelector'],function(require, exports, module) {
 	var extend = require('../../internals').extend,
 		VertexSelector = require('./VertexSelector');
 	/**
@@ -7819,7 +7822,7 @@ define('toxi/geom/mesh/DefaultSelector',["require", "exports", "module", "../../
 	 * @augments toxi.VertexSelector
 	 */
 	var DefaultSelector = function(mesh){
-		VertexSelector.apply(this,[mesh]);
+		VertexSelector.call(this,mesh);
 	};
 	extend(DefaultSelector,VertexSelector);
 	DefaultSelector.prototype.selectVertices = function(){
@@ -7831,6 +7834,66 @@ define('toxi/geom/mesh/DefaultSelector',["require", "exports", "module", "../../
 	module.exports = DefaultSelector;
 });
 
+define('toxi/geom/mesh/LaplacianSmooth',['../../internals','../Vec3D', './DefaultSelector', './meshCommon'], function( internals, Vec3D, DefaultSelector, meshCommon ){
+	
+
+	var LaplacianSmooth = function(){};
+	LaplacianSmooth.prototype = { filter: filter };
+
+	//@param {VertexSelector | WETriangleMesh } selector or mesh
+	//@param {Number} numIterations
+	function filter( selector, numIterations ) {
+		var selection, mesh, filtered;
+		var v, laplacian, neighbors;
+		var i,j,k,l, nl, fl;
+
+		//used below for matching a filtered vertex to the mesh
+		function updateMeshVertexMap( v, key ){
+			var changedVertex = mesh.vertexMap.get( key );
+			if( changedVertex === undefined ){
+				console.log("missing vertex");
+			} else {
+				changedVertex.set( v );
+			}
+		}
+
+		//this means it was a WETriangleMesh not a selector
+		if( typeof selector.addFace === 'function' ) {
+			selector = new DefaultSelector( selector ).selectVertices();
+		}
+		selection = selector.getSelection();
+		mesh = selector.getMesh();
+		if ( typeof mesh.subdivide !== 'function' ) {
+			throw Error( 'This filter requires a WETriangleMesh' );
+		}
+		l = selection.length;
+		for ( i=0; i<numIterations; i++ ) {
+			//it is very important to use TriangleMesh's keyGenerator for matching
+			filtered = new internals.LinkedMap( meshCommon.TriangleMesh.__vertexKeyGenerator );
+			for ( j=0; j<l; j++ ){
+				v = selection[i];
+				laplacian = new Vec3D();
+				neighbors = v.getNeighbors();
+				nl = neighbors.length;
+				console.log("neighbors.length: "+nl);
+				for ( k=0; k<nl; k++ ){
+					laplacian.addSelf( neighbors[k] );
+				}
+				laplacian.scaleSelf( 1 / nl );
+				filtered.put( v, laplacian );
+			}
+			fl = filtered.size();
+			filtered.each( updateMeshVertexMap );
+			mesh.rebuildIndex();
+		}
+		mesh.computeFaceNormals();
+		mesh.computeVertexNormals();
+	}
+
+	//adding this to the object for sugar, no need for this to be an instance
+	LaplacianSmooth.filter = filter;
+	return LaplacianSmooth;
+});
 define('toxi/geom/mesh/OBJWriter',[
 	'../../internals'
 ], function( internals ){
@@ -8241,12 +8304,13 @@ define('toxi/geom/mesh/subdiv',[
 	exports.SubdivisionStrategy = require('./subdiv/SubdivisionStrategy');
 	exports.TriSubdivision = require('./subdiv/TriSubdivision');
 });
-define('toxi/geom/mesh',['require','exports','module','./mesh/TriangleMesh','./mesh/BezierPatch','./mesh/BoxSelector','./mesh/DefaultSelector','./mesh/Face','./mesh/OBJWriter','./mesh/PlaneSelector','./mesh/SphereFunction','./mesh/SphericalHarmonics','./mesh/SurfaceMeshBuilder','./mesh/SuperEllipsoid','./mesh/Terrain','./mesh/TriangleMesh','./mesh/Vertex','./mesh/VertexSelector','./mesh/WETriangleMesh','./mesh/subdiv'],function(require, exports) {
+define('toxi/geom/mesh',['require','exports','module','./mesh/TriangleMesh','./mesh/BezierPatch','./mesh/BoxSelector','./mesh/DefaultSelector','./mesh/Face','./mesh/LaplacianSmooth','./mesh/OBJWriter','./mesh/PlaneSelector','./mesh/SphereFunction','./mesh/SphericalHarmonics','./mesh/SurfaceMeshBuilder','./mesh/SuperEllipsoid','./mesh/Terrain','./mesh/TriangleMesh','./mesh/Vertex','./mesh/VertexSelector','./mesh/WETriangleMesh','./mesh/subdiv'],function(require, exports) {
 	exports.TriangleMesh = require('./mesh/TriangleMesh');
 	exports.BezierPatch = require('./mesh/BezierPatch');
 	exports.BoxSelector = require('./mesh/BoxSelector');
 	exports.DefaultSelector = require('./mesh/DefaultSelector');
 	exports.Face = require('./mesh/Face');
+	exports.LaplacianSmooth = require('./mesh/LaplacianSmooth');
 	exports.OBJWriter = require('./mesh/OBJWriter');
 	exports.PlaneSelector = require('./mesh/PlaneSelector');
 	exports.SphereFunction = require('./mesh/SphereFunction');
