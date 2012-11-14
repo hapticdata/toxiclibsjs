@@ -1,8 +1,8 @@
-#Sugar - additional features in Toxiclib.js
+#Additional features in Toxiclib.js
 Toxiclibs.js' top priority is to match the API and functionality of the original library. With that in mind features specific to this javascript version have been added for convenience and to be more idiomatic. Below are some examples.
 
 ##No `instanceof` tests
-**Toxiclibs.js never uses `instanceof` tests**, instead it relies on property and method detection, this allows for work between iframes, and work between libraries. For example, below works:
+**Toxiclibs.js never uses `instanceof` tests**, instead it relies on property and method detection, this allows for work between iframes, and work between libraries. For example, the example below works:
 
 	var vec, threeVector3 = new THREE.Vector3( 10, 15, 20 );
 	vec = toxi.geom.Vec3D.randomVector().addSelf( threeVector3 ); // or
@@ -16,6 +16,7 @@ Because file system access is complicated on the web, `getOutput()` has been add
 	objContents = obj.getOutput();
 
 ##toxi.color.TColor
+Several features have been added to `TColor` to improve interoperability with the browser. Including full integration of CSS colors.
 ###TColor.X11
 Color values for [every color name in X11](http://en.wikipedia.org/wiki/Web_colors), as used in CSS:
 	
@@ -40,7 +41,7 @@ convert your color into a string suitable for CSS
 	color.toRGBCSS() // "rgb(191,127,63)"
 
 ###toInt()
-convert the TColor into an integer, I have found this particularly useful in three.js
+convert the `TColor` into an integer, I have found this particularly useful in three.js
 	
 	toxi.color.TColor.newHex("ff00ff").toInt() //16711935
 

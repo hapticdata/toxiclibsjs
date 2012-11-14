@@ -28,17 +28,15 @@ Toxiclibs.js can be used in the following ways:
 *	As [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) modules that can be loaded independently or in packages, via [RequireJS](http://requirejs.org)
 *	In [Node.js](http://nodejs.org) applications, as AMD modules that require the 'requirejs' library for Node.js.
 
-To use as a single javascript file:
+To use as a single javascript file, copy the file `build/toxiclibs.js`:
 
-	//copy the file build/toxiclibs.js into your javascript folder
 	<script type="text/javascript" src="js/toxiclibs.js"></script>
 	<script type="text/javascript">
 		var myVector = new toxi.geom.Vec2D(window.innerWidth,window.innerHeight).scaleSelf(0.5);
 		var myColor = toxi.color.TColor.newRGB(128/255,64/255,32/255);
 	</script>
-To use with [RequireJS](http://requirejs.org):
+To use with [RequireJS](http://requirejs.org), copy the contents of `lib/`:
 
-	//copy the lib/ contents into your projects folder for loading modules
 	require(['toxi/geom/Vec2D', toxi/color/TColor], function(Vec2D, TColor){
 		var myVector = new Vec2D(window.innerWidth,window.innerHeight).scaleSelf(0.5);
 		var myColor = TColor.newRGB(128/255,64/255,32/255);
@@ -72,7 +70,7 @@ The following objects are returned when loading the entire library
 
 
 
-[http://haptic-data.com/toxiclibsjs](Toxiclibs.js) was initiated on 1/5/2011 by Kyle Phillips [http://haptic-data.com](http://haptic-data.com)
+[Toxiclibs.js](http://haptic-data.com/toxiclibsjs) was initiated on 1/5/2011 by Kyle Phillips [http://haptic-data.com](http://haptic-data.com)
 
 
 
