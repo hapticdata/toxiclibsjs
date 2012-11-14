@@ -36,7 +36,7 @@ pkg('color',t.color);
 pkg('geom',t.geom,['mesh']);
 //toxi.geom.mesh
 pkg('geom.mesh',t.geom.mesh, ['subdiv']);
-pkg('geom.mesh.subdiv', t.geom.mesh.subdiv);
+//pkg('geom.mesh.subdiv', t.geom.mesh.subdiv);
 //toxi.math
 pkg('math', t.math, ['mathUtils', 'MathUtils','Interpolation2D','waves','noise']);
 pkg('math.waves', t.math.waves);
