@@ -27,12 +27,7 @@
 		</style>
 	</head>
 	<body>
-		<!--<header>
-			<hgroup>
-				<h1>Sphere</h1><h2>w/ <a href="http://github.com/mrdoob/three.js">Three.js</a> <em>(not using WebGL)</em></h2>
-			</hgroup>
-		</header>-->
-			<div id="threejs_container"></div>
+			<div id="example-container"></div>
 			<div id="about"><p><strong>Spherical Harmonics Mesh Builder</strong> demonstrates how to use the SurfaceMeshBuilder class in conjunction with a spherical harmonics function to dynamically create a variety of organic looking forms. The function is described in detail on <a href="http://paulbourke.net/geometry/sphericalh/">Paul Bourke's website</a>.<br> This example also demonstrates new features within <a href="http://haptic-data.com/toxiclibsjs">Toxiclibs.js</a> that help support working within <a href="https://github.com/mrdoob/three.js">Three.js</a>.</p>
 			<p>Example and port by <a href="http://haptic-data.com">Kyle Phillips</a>,<br> original lib by <a href="http://postspectacular.com">Karsten Schmidt</a></p>
 			<div id="m"></div>
@@ -48,151 +43,136 @@
 	-->
 		<script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>
 		<script type="text/javascript" src="../build/toxiclibs.js"></script>
-		<script type="text/javascript" src="js/Three.js"></script> 
-		<script type="text/javascript" src="/~me/libs/three.js/src/extras/controls/TrackballControls.js"></script>
-		<script src="js/Detector.js"></script>
-		<script src="js/RequestAnimationFrame.js"></script>
+		<script type="text/javascript" src="js/three.js"></script> 
 		<!--<script src="js/Stats.js"></script>-->
 		<script src="js/DAT.GUI.min.js"></script>
 		<script type="text/javascript">
 			
-			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-			
-			var container = document.getElementById('threejs_container'),
-				$m = $("#m"),
-				mouse = new toxi.geom.Vec2D(),
-				cameraSensitivity = 1.2,
-				stage = new toxi.geom.Vec2D(window.innerWidth,window.innerHeight),
-				canRotateWorld = true,
-				camera = new THREE.PerspectiveCamera( 45, stage.x / stage.y, 1, 2000),
-					/*{
-					fov: 45, 
-					aspect: stage.x / stage.y,
-					near: 1,
-					far: 2000,
-					rotateSpeed: 1.0,
-					noPan: true,
-					noZoom: false,
-					staticMoving: false,
-					dynamicDampingFactor: 0.05
-				}),*/
-				scene = new THREE.Scene(),
-				renderer = new THREE.WebGLRenderer({antiaalised: true}),
-				//stats = new Stats(),
-				objectRadius = 65,
-				meshResolution = 100,
-				m = [],
-				changeHarmonics = true,
-				toxiToThreeSupport = new toxi.THREE.ToxiclibsSupport(scene),
-				threeMesh = undefined; //<--we'll put the converted mesh here
-			
-			camera.position.z = 800;
+		//#Spherical Harmonics Mesh Builder
+		//Demonstrates how to use the `toxi.geom.mesh.SurfaceMeshBuilder` class
+		//in conjunction with a spherical harmonics function to dynamically create a variety
+		//of organic looking forms. The function is described in detail on
+		//[Paul Bourke's website](http://paulbourke.net/geometry/sphericalh/).
 
-			scene.add( camera );
-			var controls = new THREE.TrackballControls( camera );
-			controls.rotateSpeed = 1.0;
-			controls.zoomSpeed = 1.2;
-			controls.panSpeed = 0.2;
+		//I like this one [4, 2, 4, 6, 4, 0, 1, 1]
+		var container = document.getElementById('example-container'),
+			$m = $("<div>"),
+			stage = new toxi.geom.Vec2D(window.innerWidth,window.innerHeight),
+			camera = new THREE.PerspectiveCamera( 45, stage.x / stage.y, 1, 2000),
+			scene = new THREE.Scene(),
+			renderer = new THREE.WebGLRenderer({ antialias: true }),
+			options,
+			material,
+			threeMesh; //<--we'll put the converted mesh here
 
-			controls.noZoom = false;
-			controls.noPan = false;
+		//set the scene
+		container.style.backgroundColor = "black";
+		camera.position.z = 800;
+		scene.add( camera );
+		renderer.setSize(stage.x,stage.y);
+		container.appendChild(renderer.domElement);
+		//add the rotation controls
+		var controls = new THREE.TrackballControls( camera, renderer.domElement );
+		controls.rotateSpeed = 1.0;
+		controls.zoomSpeed = 1.2;
+		controls.panSpeed = 0.2;
+		controls.noZoom = false;
+		controls.noPan = false;
+		controls.staticMoving = false;
+		controls.dynamicDampingFactor = 0.1;
 
-			controls.staticMoving = false;
-			controls.dynamicDampingFactor = 0.1;
-			
-			renderer.setSize(stage.x,stage.y);
-			container.appendChild(renderer.domElement);
-			
-			/*stats.domElement.style.position = 'absolute';
-			stats.domElement.style.top = '0px';
-			container.appendChild( stats.domElement );*/
-			
-			///the stuff more unique to this sketch
-			var material = new THREE.MeshNormalMaterial({color: 0xBAE8E6, opacity: 1.0});
-			//randomizeHarmonics();
-			m = [5,8,3,1,7,3,3,7];
-			//GUI
-			var gui = new DAT.GUI();
-			$("#guidat").find(".guidat").prepend('<div id="guiAbout">'+$("#about").html()+"</div>")
-			
-			gui.add(this,"objectRadius").name("Mesh Scale").min(10).max(300).onChange(function(){
-				threeMesh.scale = new THREE.Vector3(objectRadius,objectRadius,objectRadius);
-			});
-			gui.add(material,"wireframe");
-			gui.add(this,"meshResolution").name("Mesh Resolution").min(10).max(250).step(1);
-			gui.add(this,"changeHarmonics").name("New Random Parameters");
-			gui.add(this,"changeMesh").name("Generate New Mesh!");
-			
-			function animate() { 
-				requestAnimationFrame( animate );
-				render();
-				//stats.update();
-			}
+		material = new THREE.MeshNormalMaterial({color: 0xBAE8E6, opacity: 1.0});
+		material.side = THREE.DoubleSide;
 
-			function render() {
-				/*if(canRotateWorld){
-					camera.position.x += ( (mouse.x*cameraSensitivity) - camera.position.x ) * 0.05;
-					camera.position.y += ( - ( mouse.y * cameraSensitivity) - camera.position.y ) * 0.05;
-				}*/
-				controls.update();
-				renderer.render( scene, camera );
-			}
-			
-			animate();
-			
-			function randomizeHarmonics(){
-				m = [];
+
+		options = {
+			objectRadius: 81,
+			meshResolution: 100,
+			changeHarmonics: true,
+			m: [5,8,3,1,7,3,3,7],
+			randomizeHarmonics: function(){
+				options.m = [];
 				for(var i=0; i<8; i++) {
-				  m.push(parseInt(Math.random()*9));
+					options.m.push( parseInt(Math.random()*9, 10) );
 				}
 				$m.remove();
-				$m = $('<div id="m">m: ['+m+']'+'</div>');
-				$("#guiAbout").append($m)
-			}
-			
-			
-
-			function changeMesh(res){
+				$m = $("<div id=\"m\">m: ["+options.m+"]"+"</div>");
+				$("#guiAbout").append($m);
+			},
+			updateMesh: function(res){
+				var sh, builder, toxiMesh, threeGeometry;
 				if(res === undefined){
-					res = meshResolution;
+					res = options.meshResolution;
 				}
 				if(threeMesh !== undefined) {
 					scene.remove(threeMesh);
 				}
-				if(changeHarmonics) {
-					randomizeHarmonics();
+				if(options.changeHarmonics) {
+					options.randomizeHarmonics();
 				}
-				var sh = new toxi.geom.mesh.SphericalHarmonics(m);
-				var mesh = new toxi.geom.mesh.SurfaceMeshBuilder( sh ); 
-				var toxiMesh = mesh.createMesh(new toxi.geom.mesh.TriangleMesh(),res,1,true);
-				threeMesh = toxiToThreeSupport.addMesh(toxiMesh,material);
-				//threeMesh = new THREE.Mesh(toxiToThreeSupport.createGeometry(toxiMesh),material);
-				threeMesh.scale = new THREE.Vector3(objectRadius,objectRadius,objectRadius);
-				threeMesh.doubleSided = true;
-				//console.log(threeMesh);
+				//get the model
+				sh = new toxi.geom.mesh.SphericalHarmonics( options.m );
+				//build the surface
+				builder = new toxi.geom.mesh.SurfaceMeshBuilder( sh );
+				//make it into a toxiclibs TriangleMesh
+				toxiMesh = builder.createMesh(new toxi.geom.mesh.TriangleMesh(),res,1,true);
+				//turn the mesh into THREE.Geometry
+				threeGeometry = toxi.THREE.ToxiclibsSupport.createMeshGeometry( toxiMesh );
+				threeMesh = new THREE.Mesh( threeGeometry, material );
+				threeMesh.scale.set(options.objectRadius,options.objectRadius,options.objectRadius);
 				scene.add(threeMesh);
-			};
-			
-			
-			document.onmousemove = (function(){
-				var halfWindow = stage.scale(0.5);
-				return 	function (event) {
-					mouse.x = ( event.clientX - halfWindow.x );
-					mouse.y = ( event.clientY - halfWindow.y );
-				}
-			})();
-			
-			//create first mesh
-			changeMesh(meshResolution);
+			}
+		};
+
+
+		//GUI
+		var gui = new DAT.GUI();
+		$("#guidat")
+			.find(".guidat")
+			.prepend("<div id=\"guiAbout\">"+$("#about").html()+"</div>");
+
+		gui.add(options,"objectRadius")
+			.name("Mesh Scale").min(10).max(300)
+			.onChange(function(){
+				threeMesh.scale.set(options.objectRadius,options.objectRadius,options.objectRadius);
+			});
+		gui.add(material,"wireframe");
+		gui.add(options,"meshResolution")
+			.name("Mesh Resolution").min(10).max(250).step(1);
+		gui.add(options,"changeHarmonics")
+			.name("New Random Parameters");
+		gui.add(options,"updateMesh")
+			.name("Generate New Mesh!");
+
+
+		(function addParticles(){
 			var positions = [];
 			for(var k=0;k<500;k++){
-				var p = positions.push(toxi.geom.Vec3D.randomVector().scale(200+Math.random()*300));
+				positions.push(toxi.geom.Vec3D.randomVector().scale(200+Math.random()*300));
 			}
-			toxiToThreeSupport.addParticles(positions, new THREE.ParticleBasicMaterial({
+			var particleMaterial = new THREE.ParticleBasicMaterial({
 				color: 0xffff00,
 				transparent: true,
 				blending: THREE.AdditiveBlending
-			}));
+			});
+			//if you construct a new toxi.THREE.ToxiclibsSupport
+			//and pass it the THREE.Scene it can add things for you
+			new toxi.THREE.ToxiclibsSupport( scene ).addParticles(positions, particleMaterial );
+		}());
+
+		//create first mesh
+		options.updateMesh();
+		//start the animation loop
+		animate();
+		function animate() {
+			requestAnimationFrame( animate );
+			render();
+		}
+
+		function render() {
+			controls.update();
+			renderer.render( scene, camera );
+		}
 		</script>
 	</body>
 </html>
