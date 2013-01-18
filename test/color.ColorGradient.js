@@ -11,18 +11,18 @@ describe('ColorGradient', function(){
 
 	it('should be a ColorGradient', function(){
 		assert.ok( cg instanceof toxi.color.ColorGradient );
-		assert.ok( Array.isArray( cg._gradient ) );
+		assert.ok( Array.isArray( cg.gradient ) );
 		assert.equal( typeof cg.calcGradient, 'function' );
 	});
 
-	describe('#addColorAt', function(){
+	describe('#addColorAt()', function(){
 		it('should add red to _gradient', function(){
-			cg.addColorAt( 0, red );
+			cg.addColorAt( 1, red );
 			assert.equal( cg.getGradientPoints().length, 1 );
 		});
 
 		it('should add green to _gradient at 0.5', function(){
-			cg.addColorAt( 1, green );
+			cg.addColorAt( 2, green );
 			var gp = cg.getGradientPoints();
 			assert.equal( gp.length, 2);
 			assert.ok( green.equals(gp[gp.length-1].color) );
@@ -35,17 +35,24 @@ describe('ColorGradient', function(){
 		});
 	});
 
-	describe('#calcGradient', function(){
-		it('should return a ColorList', function(){
+	describe('#calcGradient()', function(){
+		it('w/ no params, should return a ColorList', function(){
 			console.log( cg.getGradientPoints().length );
 			var colorList = cg.calcGradient( );
 			assert.ok( colorList instanceof toxi.color.ColorList );
-			console.log( colorList );
 			assert.ok( colorList.contains( red ) );
 			assert.ok( colorList.contains( green ) );
-			assert.ok( colorList.contains( blue ) );
-			//assert.equal( colorList.size(), 10 );
+			//assert.ok( colorList.contains( blue ) );
+			assert.equal( colorList.size(), 9 );
 		});
+
+        //This part is confusing to me, it matches java version,
+        //but not what I would've expected for behavior
+        it('w/ pos, width, should return a ColorList', function(){
+            var colorList = cg.calcGradient( 3, 10 );
+            assert.equal( colorList.contains( red ), false );
+            assert.equal( colorList.size(), 10 );
+        });
 	});
 	
 

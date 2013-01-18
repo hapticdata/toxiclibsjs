@@ -4,3 +4,5 @@
 site/*
 TODO.md
 node_modules
+
+/.idea/

@@ -2,9 +2,17 @@
 var toxi = require('../index'),
 	assert = require('assert');
 
-
 describe('TColor', function(){
 	describe('static factories', function(){
+        describe('rgbToHSV', function(){
+            it('should create 0.16667 0 0 ', function(){
+               var hsv = toxi.color.TColor.rgbToHSV( 1, 1, 0 );
+               assert.ok( hsv[0] > 0.16 && hsv[0] < 0.17 );
+                assert.equal( hsv[1], 1 );
+                assert.equal( hsv[2], 1 );
+            });
+        });
+
 		describe('newRGBA', function(){
 			var c = toxi.color.TColor.newRGBA(0.75,0.5,0.25,1.0);
 			it('should have correct rgba values', function(){
@@ -109,7 +117,7 @@ describe('TColor', function(){
 				assert.equal( hex, "bf7f3f" );
 			});
 		});
-
+console.log
 		describe("#toHSVAArray([])", function(){
 			var hsva = c.toHSVAArray([]);
 			//values confirmed in java
