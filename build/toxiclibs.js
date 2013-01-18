@@ -1,4 +1,4 @@
-//v0.1.3 toxiclibs.js (http://haptic-data.com/toxiclibsjs)
+//v0.1.3-feature-color toxiclibs.js (http://haptic-data.com/toxiclibsjs)
 var toxi = {};
 (function(){
 
@@ -321,6 +321,407 @@ define("../utils/almond", function(){});
 define.unordered = true;
 define("../utils/almond.settings", function(){});
 
+define('toxi/internals',["require", "exports"], function(require, exports) {
+/**
+ * @module toxi/libUtils
+ * contains the helper functions for the library,
+ * these are intended as 'protected', you can use them but it isnt
+ * intended to be used directly outside of the library.
+ */
+
+
+
+var ifUndefinedElse = function(_if,_else){
+	return (typeof _if !== 'undefined') ? _if : _else;
+};
+
+exports.extend = function(childClass,superClass){
+	if(typeof childClass !== 'function'){
+		throw Error("childClass was not function, possible circular: ", childClass);
+	} else if( typeof superClass !== 'function'){
+		throw Error("superClass was not function, possible circular: ", superClass);
+	}
+	childClass.prototype = Object.create( superClass.prototype );//new superClass();
+	childClass.constructor = childClass;
+	childClass.prototype.parent = superClass.prototype;
+};
+
+
+ //allow the library to assume Array.isArray has been implemented
+var isArray = Array.isArray || function(a){
+	return a.toString() == '[object Array]';
+};
+exports.isArray = isArray;
+
+var hasProperties = function(subject,properties){
+	if(subject === undefined || typeof subject != 'object'){
+		return false;
+	}
+	var i = 0,
+		len = properties.length,
+		prop;
+	for(i = 0; i < len; i++){
+		prop = properties[i];
+		if(!(prop in subject)){
+			return false;
+		}
+	}
+	return true;
+};
+
+exports.hasProperties = hasProperties;
+exports.tests = {
+	hasXY: function( o ){
+		return hasProperties(o, ['x','y']);
+	},
+	hasXYZ: function( o ){
+		return hasProperties(o, ['x','y','z']);
+	},
+	hasXYWidthHeight: function( o ){
+		return hasProperties( o, ['x','y','width','height']);
+	},
+	isArray: isArray,
+	isAABB: function ( o ){
+		return hasProperties(o, ['setExtent','getNormalForPoint']);
+	},
+	isCircle: function( o ){
+		return hasProperties( o, ['getCircumference','getRadius','intersectsCircle']);
+	},
+	isLine2D: function( o ){
+		return hasProperties(o, ['closestPointTo','intersectLine','getLength']);
+	},
+	isMatrix4x4: function( o ){
+		return hasProperties( o, ['identity', 'invert', 'setFrustrum']);
+	},
+	isRect: function( o ){
+		return hasProperties(o, ['x','y','width','height','getArea','getCentroid','getDimensions']);
+	},
+	isSphere: function( o ){
+		return hasProperties(o, ['x','y','z','radius','toMesh']);
+	},
+	isTColor: function( o ){
+		return hasProperties(o, ['rgb','cmyk','hsv']);
+	},
+	isParticleBehavior: function( o ){
+		return hasProperties(o, ['applyBehavior','configure']);
+	},
+	isVerletParticle2D: function( o ){
+		return hasProperties(o, ['x','y','weight']);
+	}
+};
+
+//from Underscore.js
+//(c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
+//basic forEach, use native implementation is available
+var breaker = {};
+exports.each = function(obj, iterator, context) {
+	if (obj == null) return;
+	if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
+		obj.forEach(iterator, context);
+	} else if (obj.length === +obj.length) {
+		for (var i = 0, l = obj.length; i < l; i++) {
+			if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
+		}
+	} else {
+		for (var key in obj) {
+			if (hasOwnProperty.call(obj, key)) {
+				if (iterator.call(context, obj[key], key, obj) === breaker) return;
+			}
+		}
+	}
+};
+
+var ctor = {};
+exports.bind = function(func, context) {
+	var args, bound;
+	var FP = Function.prototype;
+	var slice = Array.prototype.slice;
+	if (func.bind === FP.bind && FP.bind) return FP.bind.apply(func, slice.call(arguments, 1));
+	args = slice.call(arguments, 2);
+	return bound = function() {
+		if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+			ctor.prototype = func.prototype;
+			var self = new ctor();
+			ctor.prototype = null;
+			var result = func.apply(self, args.concat(slice.call(arguments)));
+			if (Object(result) === result) return result;
+			return self;
+		};
+  };
+
+exports.filter = function(obj, iterator, context) {
+	var results = [];
+	if (obj == null) return results;
+	if (Array.prototype.filter && obj.filter === Array.prototype.filter) return obj.filter(iterator, context);
+	exports.each(obj, function(value, index, list) {
+		if (iterator.call(context, value, index, list)) results[results.length] = value;
+	});
+	return results;
+};
+
+//
+
+exports.removeItemFrom = function(item,array){
+	var index = array.indexOf(item);
+	if(index > -1){
+		return array.splice(index,1);
+	}
+	return undefined;
+};
+//basic mixin function, copy over object properties to provided object
+exports.mixin = function(destination,source){
+	exports.each(source,function(val,key){
+		destination[key] = val;
+	});
+};
+
+exports.numberCompare = function(f1,f2){
+	if(f1 == f2) return 0;
+	if(f1 < f2) return -1;
+	if(f1 > f2) return 1;
+};
+
+//set up for use with typed-arrays
+exports.Int32Array = (typeof Int32Array !== 'undefined') ? Int32Array : Array;
+exports.Float32Array = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
+	//imitate the basic functionality of a Java Iterator
+	(function(){
+		var ArrayIterator = function(collection){
+			this.__it = collection.slice(0);
+		};
+		ArrayIterator.prototype = {
+			hasNext: function(){
+				return this.__it.length > 0;
+			},
+			next: function(){
+				return this.__it.shift();
+			}
+		};
+		var ObjectIterator = function(object){
+			this.__obj = {};
+			this.__keys = [];
+			for(var prop in object){
+				this.__obj[prop] = object[prop];
+				this.__keys.push(prop);
+			}
+			this.__it = new ArrayIterator(this.__keys);
+		};
+		ObjectIterator.prototype = {
+			hasNext: function(){
+				return this.__it.hasNext();
+			},
+			next: function(){
+				var key = this.__it.next();
+				return this.__obj[key];
+			}
+		};
+
+		var Iterator = function(collection){
+			if(exports.isArray(collection)){
+				return new ArrayIterator(collection);
+			}
+			return new ObjectIterator(collection);
+		};
+
+		exports.Iterator = Iterator;
+	}());
+
+	(function(){
+		// {Function} keyGeneratorFunction - key to use to return the identifier
+		var LinkedMap = function( keyGeneratorFunction ){
+			this.__list = [];
+			this.__map = {};
+			this.__inverseMap = {};
+			if( typeof keyGeneratorFunction === 'function' ){
+				this.generateKey = keyGeneratorFunction;
+			}
+		};
+
+		LinkedMap.prototype = {
+			each: function( fn ){
+				exports.each(this.__map, fn);
+			},
+			get: function( id_or_val ){
+				var self = this;
+				var checkBoth = function(){
+					if( self.__inverseMap[id_or_val] !== undefined ){
+						return id_or_val;
+					}
+					return self.__map[id_or_val];
+				};
+
+				var result = checkBoth();
+				
+				if( result === undefined ){
+					id_or_val = this.generateKey( id_or_val );
+					result = checkBoth();
+				}
+				return result;
+			},
+			generateKey: function( key ){ return key.toString(); },
+			getArray: function(){
+				return this.__list;
+			},
+			has: function( id_or_val ){
+				var self = this;
+				var _has = function( id ){
+					return ( self.__map[ id ] !== undefined || self.__inverseMap[ id ] !== undefined );
+				};
+				if( _has( id_or_val ) ){
+					return true;
+				}
+				return _has( this.generateKey( id_or_val ) ); 
+			},
+			put: function( id, val ){
+				id = this.generateKey( id );
+				this.__map[id] = val;
+				this.__inverseMap[val] = id;
+				this.__list.push( val );
+			},
+			remove: function( val ){
+				val = this.get( val );
+				var id = this.__inverseMap[val];
+				delete this.__inverseMap[val];
+				delete this.__map[id];
+				return this.__list.splice( this.__list.indexOf(val), 1)[0];
+			},
+			size: function(){
+				return this.__list.length;
+			}
+		};
+
+		exports.LinkedMap = LinkedMap;
+	}());
+
+});
+
+define('toxi/color/accessors',['require','exports','module','../internals','../internals'],function( require, exports, module ){
+
+	var numberCompare = require('../internals').numberCompare,
+		bind = require('../internals').bind;
+
+	//this will attach proper exported objects for each accessor
+	function make( type, setters ){
+		var name = type + 'Accessor', arry = type.toLowerCase(); //make HSV hsv etc
+		exports[name] = function( comp ){
+			this.component = comp;
+			//compare() could easily be used in incorrect scope, bind it
+			this.compare = bind( this.compare, this );
+		};
+
+		exports[name].prototype.compare = function( a, b ){
+			var ca = a[arry][this.component],
+				cb = b[arry][this.component];
+			return numberCompare( ca, cb );
+		};
+
+		exports[name].prototype.getComponentValueFor = function( col ){
+			return col[arry][this.component];
+		};
+
+		exports[name].prototype.setComponentValueFor = function( col, val ){
+			col[ 'set'+setters[this.component] ]( val );
+		};
+
+	}
+	
+	make('RGB',['Red','Green','Blue']);
+	make('HSV',['Hue','Saturation','Brightness']);
+	make('CMYK',['Cyan','Magenta','Yellow','Black']);
+
+	var LuminanceAccessor = function(){};
+	LuminanceAccessor.prototype.compare = function( a, b ){
+		return numberCompare( a.luminance(), b.luminance() );
+	};
+	LuminanceAccessor.prototype.getComponentValueFor = function( col ){
+		return col.luminance();
+	};
+	LuminanceAccessor.prototype.setComponentValueFor = function(){};
+
+	var AlphaAccessor = function(){};
+	AlphaAccessor.prototype.compare = function(a,b){
+		return numberCompare( a.alpha(), b.alpha() );
+	};
+	AlphaAccessor.prototype.getComponentValueFor = function(col){
+		return col.alpha();
+	};
+	AlphaAccessor.prototype.setComponentValueFor = function(col, value){
+		col.setAlpha(value);
+	};
+
+	exports.LuminanceAccessor = LuminanceAccessor;
+	exports.AlphaAccessor = AlphaAccessor;
+
+});
+define('toxi/color/HSVAccessor',['require','./accessors'],function( require ) {
+	return require('./accessors').HSVAccessor;
+});
+
+define('toxi/color/RGBAccessor',['require','./accessors'],function( require ) {
+	return require('./accessors').RGBAccessor;
+});
+
+define('toxi/color/CMYKAccessor',['require','./accessors'],function( require ) {
+	return require('./accessors').CMYKAccessor;
+});
+
+define('toxi/color/AlphaAccessor',['require','./accessors'],function( require ) {
+	return require('./accessors').AlphaAccessor;
+});
+
+define('toxi/color/LuminanceAccessor',['require','./accessors'],function( require ) {
+	return require('./accessors').LuminanceAccessor;
+});
+
+define('toxi/color/AccessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
+
+
+var HSVAccessor = require('./HSVAccessor'),
+	RGBAccessor = require('./RGBAccessor'),
+	CMYKAccessor = require('./CMYKAccessor'),
+	AlphaAccessor = require('./AlphaAccessor'),
+	LuminanceAccessor = require('./LuminanceAccessor');
+/**
+* Defines standard color component access criterias and associated comparators
+* used to sort colors based on component values. If a new custom accessor is
+* needed (e.g. for sub-classes TColor's), then simply sub-class this class and
+* implement the {@link Comparator} interface and the 2 abstract getter & setter
+* methods defined by this class.
+*/
+exports.HUE = new HSVAccessor(0),
+exports.SATURATION = new HSVAccessor(1),
+exports.BRIGHTNESS = new HSVAccessor(2),
+
+exports.RED = new RGBAccessor(0),
+exports.GREEN = new RGBAccessor(1),
+exports.BLUE = new RGBAccessor(2),
+
+exports.CYAN = new CMYKAccessor(0),
+exports.MAGENTA = new CMYKAccessor(1),
+exports.YELLOW = new CMYKAccessor(2),
+exports.BLACK = new CMYKAccessor(3),
+
+exports.ALPHA = new AlphaAccessor(),
+exports.LUMINANCE = new LuminanceAccessor();
+
+});
+
+define('toxi/color/distanceProxies',['require','exports','module'],function( require, exports ){
+	function makeProxy( type ){
+		var name = type + 'DistanceProxy';
+		exports[name] = function(){};
+		exports[name].prototype.distanceBetween = function( a, b ){
+			//a.distanceToHSV( b );
+			return a['distanceTo'+type]( b );
+		};
+	}
+	makeProxy('HSV');
+	makeProxy('RGB');
+	makeProxy('CMYK');
+});
+define('toxi/color/CMYKDistanceProxy',['require','./distanceProxies'],function( require ){
+	return require('./distanceProxies').CMYKDistanceProxy;
+});
 define('toxi/math/mathUtils',["require", "exports", "module"], function(require, exports, module) {
 /**
  * @class
@@ -458,12 +859,12 @@ MathUtils.floorPowerOf2 = function(x) {
 };
 
 MathUtils.max =  function(a, b, c) {
-	if(!c) return Math.max(a,b);
+	if(c===undefined) return Math.max(a,b);
     return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
 };
 
 MathUtils.min = function(a, b, c) {
-	if(!c)return Math.min(a,b);
+	if(c===undefined)return Math.min(a,b);
     return (a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c);
 };
 
@@ -521,247 +922,22 @@ module.exports = MathUtils;
 
 });
 
-define('toxi/internals',["require", "exports"], function(require, exports) {
+define('toxi/math/LinearInterpolation',["require", "exports", "module"], function(require, exports, module) {
 /**
- * @module toxi/libUtils
- * contains the helper functions for the library,
- * these are intended as 'protected', you can use them but it isnt
- * intended to be used directly outside of the library.
+ * @class Implementation of the linear interpolation function
+ * 
+ * i = a + ( b - a ) * f
+ * @member toxi
  */
+var	LinearInterpolation = function(){};
 
-
-
-var ifUndefinedElse = function(_if,_else){
-	return (typeof _if !== 'undefined') ? _if : _else;
-};
-
-exports.extend = function(childClass,superClass){
-	if(typeof childClass !== 'function'){
-		throw Error("childClass was not function, possible circular: ", childClass);
-	} else if( typeof superClass !== 'function'){
-		throw Error("superClass was not function, possible circular: ", superClass);
-	}
-	childClass.prototype = Object.create( superClass.prototype );//new superClass();
-	childClass.constructor = childClass;
-	childClass.prototype.parent = superClass.prototype;
-};
-
-
- //allow the library to assume Array.isArray has been implemented
-var isArray = Array.isArray || function(a){
-	return a.toString() == '[object Array]';
-};
-exports.isArray = isArray;
-
-var hasProperties = function(subject,properties){
-	if(subject === undefined || typeof subject != 'object'){
-		return false;
-	}
-	var i = 0,
-		len = properties.length,
-		prop;
-	for(i = 0; i < len; i++){
-		prop = properties[i];
-		if(!(prop in subject)){
-			return false;
-		}
-	}
-	return true;
-};
-
-exports.hasProperties = hasProperties;
-exports.tests = {
-	hasXY: function( o ){
-		return hasProperties(o, ['x','y']);
-	},
-	hasXYZ: function( o ){
-		return hasProperties(o, ['x','y','z']);
-	},
-	hasXYWidthHeight: function( o ){
-		return hasProperties( o, ['x','y','width','height']);
-	},
-	isArray: isArray,
-	isAABB: function ( o ){
-		return hasProperties(o, ['setExtent','getNormalForPoint']);
-	},
-	isCircle: function( o ){
-		return hasProperties( o, ['getCircumference','getRadius','intersectsCircle']);
-	},
-	isLine2D: function( o ){
-		return hasProperties(o, ['closestPointTo','intersectLine','getLength']);
-	},
-	isMatrix4x4: function( o ){
-		return hasProperties( o, ['identity', 'invert', 'setFrustrum']);
-	},
-	isRect: function( o ){
-		return hasProperties(o, ['x','y','width','height','getArea','getCentroid','getDimensions']);
-	},
-	isSphere: function( o ){
-		return hasProperties(o, ['x','y','z','radius','toMesh']);
-	},
-	isTColor: function( o ){
-		return hasProperties(o, ['rgb','cmyk','hsv']);
-	},
-	isParticleBehavior: function( o ){
-		return hasProperties(o, ['applyBehavior','configure']);
-	},
-	isVerletParticle2D: function( o ){
-		return hasProperties(o, ['x','y','weight']);
+LinearInterpolation.prototype = {
+	interpolate: function(a, b, f) {
+        return a + (b - a) * f;
 	}
 };
 
-//basic forEach, use native implementation is available
-//from Underscore.js
-var breaker = {};
-exports.each = function(obj, iterator, context) {
-    if (obj == null) return;
-	if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
-		obj.forEach(iterator, context);
-	} else if (obj.length === +obj.length) {
-		for (var i = 0, l = obj.length; i < l; i++) {
-			if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
-		}
-	} else {
-		for (var key in obj) {
-			if (hasOwnProperty.call(obj, key)) {
-				if (iterator.call(context, obj[key], key, obj) === breaker) return;
-			}
-		}
-	}
-};
-
-exports.removeItemFrom = function(item,array){
-	var index = array.indexOf(item);
-	if(index > -1){
-		return array.splice(index,1);
-	}
-	return undefined;
-};
-//basic mixin function, copy over object properties to provided object
-exports.mixin = function(destination,source){
-	exports.each(source,function(val,key){
-		destination[key] = val;
-	});
-};
-
-exports.numberCompare = function(f1,f2){
-	if(f1 == f2) return 0;
-	if(f1 < f2) return -1;
-	if(f1 > f2) return 1;
-};
-
-//set up for use with typed-arrays
-exports.Int32Array = (typeof Int32Array !== 'undefined') ? Int32Array : Array;
-exports.Float32Array = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
-	//imitate the basic functionality of a Java Iterator
-	(function(){
-		var ArrayIterator = function(collection){
-			this.__it = collection.slice(0);
-		};
-		ArrayIterator.prototype = {
-			hasNext: function(){
-				return this.__it.length > 0;
-			},
-			next: function(){
-				return this.__it.shift();
-			}
-		};
-		var ObjectIterator = function(object){
-			this.__obj = {};
-			this.__keys = [];
-			for(var prop in object){
-				this.__obj[prop] = object[prop];
-				this.__keys.push(prop);
-			}
-			this.__it = new ArrayIterator(this.__keys);
-		};
-		ObjectIterator.prototype = {
-			hasNext: function(){
-				return this.__it.hasNext();
-			},
-			next: function(){
-				var key = this.__it.next();
-				return this.__obj[key];
-			}
-		};
-
-		var Iterator = function(collection){
-			if(exports.isArray(collection)){
-				return new ArrayIterator(collection);
-			}
-			return new ObjectIterator(collection);
-		};
-
-		exports.Iterator = Iterator;
-	}());
-
-	(function(){
-		// {Function} keyGeneratorFunction - key to use to return the identifier
-		var LinkedMap = function( keyGeneratorFunction ){
-			this.__list = [];
-			this.__map = {};
-			this.__inverseMap = {};
-			if( typeof keyGeneratorFunction === 'function' ){
-				this.generateKey = keyGeneratorFunction;
-			}
-		};
-
-		LinkedMap.prototype = {
-			each: function( fn ){
-				exports.each(this.__map, fn);
-			},
-			get: function( id_or_val ){
-				var self = this;
-				var checkBoth = function(){
-					if( self.__inverseMap[id_or_val] !== undefined ){
-						return id_or_val;
-					}
-					return self.__map[id_or_val];
-				};
-
-				var result = checkBoth();
-				
-				if( result === undefined ){
-					id_or_val = this.generateKey( id_or_val );
-					result = checkBoth();
-				}
-				return result;
-			},
-			generateKey: function( key ){ return key.toString(); },
-			getArray: function(){
-				return this.__list;
-			},
-			has: function( id_or_val ){
-				var self = this;
-				var _has = function( id ){
-					return ( self.__map[ id ] !== undefined || self.__inverseMap[ id ] !== undefined );
-				};
-				if( _has( id_or_val ) ){
-					return true;
-				}
-				return _has( this.generateKey( id_or_val ) ); 
-			},
-			put: function( id, val ){
-				id = this.generateKey( id );
-				this.__map[id] = val;
-				this.__inverseMap[val] = id;
-				this.__list.push( val );
-			},
-			remove: function( val ){
-				val = this.get( val );
-				var id = this.__inverseMap[val];
-				delete this.__inverseMap[val];
-				delete this.__map[id];
-				return this.__list.splice( this.__list.indexOf(val), 1)[0];
-			},
-			size: function(){
-				return this.__list.length;
-			}
-		};
-
-		exports.LinkedMap = LinkedMap;
-	}());
-
+module.exports = LinearInterpolation;
 });
 
 define('toxi/geom/vectors',[
@@ -2405,7 +2581,7 @@ TColor.prototype = {
 		this.rgb[0] += (crgb[0] - this.rgb[0]) * t;
 		this.rgb[1] += (crgb[1] - this.rgb[1]) * t;
 		this.rgb[2] += (crgb[2] - this.rgb[2]) * t;
-		this._alpha += (c.alpha() - this._alpha) * t;
+		this._alpha += (c._alpha - this._alpha) * t;
 		return this.setRGB(this.rgb);
 	},
 	
@@ -2461,10 +2637,8 @@ TColor.prototype = {
 	distanceToHSV: function(c) {
 		var hue = this.hsv[0] * mathUtils.TWO_PI;
 		var hue2 = c.hue() * mathUtils.TWO_PI;
-		var v1 = new Vec3D((Math.cos(hue) * this.hsv[1]),
-			(Math.sin(hue) * this.hsv[1]), this.hsv[2]);
-		var v2 = new Vec3D((Math.cos(hue2) * c.saturation()),
-			(Math.sin(hue2) * c.saturation()), c.brightness());
+		var v1 = new Vec3D((mathUtils.cos(hue) * this.hsv[1]), (mathUtils.sin(hue) * this.hsv[1]), this.hsv[2]);
+		var v2 = new Vec3D((mathUtils.cos(hue2) * c.saturation()), (mathUtils.sin(hue2) * c.saturation()), c.brightness());
 		return v1.distanceTo(v2);
 	},
 	
@@ -2719,7 +2893,7 @@ TColor.prototype = {
 			hue++;
 		}
 		this.hsv[0] = hue;
-		this.setHSV(this.hsv);
+		return this.setHSV(this.hsv);
 	},
 	
 	setMagenta: function(val) {
@@ -3300,9 +3474,9 @@ TColor.rgbToHSV = function(r, g, b,hsv) {
 		s = d / v;
 	}
 	if (s !== 0) {
-		if (r == v) {
+        if( internals.numberCompare( r, v ) === 0 ){
 			h = (g - b) / d;
-		} else if (g == v) {
+		} else if ( internals.numberCompare( g, v ) === 0 ) {
 			h = 2 + (b - r) / d;
 		} else {
 			h = 4 + (r - g) / d;
@@ -3499,7 +3673,679 @@ module.exports = TColor;
 
 });
 
-define('toxi/color',["require", "exports", "module", "./color/TColor"], function(require, exports) {
+define('toxi/color/HSVDistanceProxy',['require','./distanceProxies'],function( require ){
+	return require('./distanceProxies').HSVDistanceProxy;
+});
+define('toxi/color/RGBDistanceProxy',['require','./distanceProxies'],function( require ){
+	return require('./distanceProxies').RGBDistanceProxy;
+});
+define('toxi/color/ProximityComparator',['require'],function( require ){
+	var ProximityComparator = function( col, proxy ){
+		this.col = col;
+		this.proxy = proxy;
+	};
+	ProximityComparator.prototype.compare = function( a, b ){
+		var da = this.proxy.distanceBetween( this.col, a );
+		var db = this.proxy.distanceBetween( this.col, b );
+		return da < db ? -1 : da > db ? 1 : 0;
+	};
+	return ProximityComparator;
+});
+define('toxi/color/ColorList',['require','exports','module','../internals','../math/mathUtils','./TColor','./HSVDistanceProxy','./RGBDistanceProxy','./ProximityComparator','./AccessCriteria'],function(require, exports, module) {
+
+var internals = require('../internals'),
+	mathUtils = require('../math/mathUtils'),
+	TColor = require('./TColor'),
+	HSVDistanceProxy = require('./HSVDistanceProxy'),
+	RGBDistanceProxy = require('./RGBDistanceProxy'),
+	ProximityComparator = require('./ProximityComparator'),
+	//ColorTheoryRegistry = require('./ColorTheoryRegistry'),
+	AccessCriteria = require('./AccessCriteria');
+
+/**
+ * A container class of concrete colors. ColorLists can be built manually and
+ * are also created when working with {@link ColorRange}s. The class has various
+ * methods to manipulate all colors in the list in parallel, as well as sort
+ * them by various criteria.
+ * @see ColorRange
+ * @see AccessCriteria
+ */
+
+
+/**
+ @memberOf toxi.color
+ @class Creates a ColorList by wrapping the given ArrayList of colors. No copies
+ of the given colors are created (shallow copy only).
+ @param {TColor[]} colors
+*/
+var ColorList = function(colors){
+	if(arguments.length > 1){
+		return ColorList.call(this,arguments);
+	}
+	this.colors = [];
+	if(colors !== undefined){
+		this.addAll(colors);
+	}
+};
+
+ColorList.prototype = {
+	constructor: ColorList,
+	/**
+	* Adds a copy of the given color to the list
+	* @param {TColor} c
+	* @return itself
+	*/
+	add: function(c){
+		this.colors.push(c.copy());
+		return this;
+	},
+	/**
+	* Adds all entries of the TColor collection to the list (shallow copy only,
+	* manipulating the new list will modify the original colors).
+	* @param {Array} collection
+	* @return itself
+	*/
+	addAll:	function(collection){
+		var self = this;
+		internals.each(collection,function(color){
+			self.colors.push(color);
+		});
+		return this;
+	},
+	/**
+	* Adjusts the brightness component of all list colors by the given amount.
+	* @param step adjustment value
+	* @return itself
+	*/
+	adjustBrightness: function(step){
+		internals.each(this.colors,function(c){
+			c.lighten(step);
+		});
+		return this;
+	},
+	/**
+	 * Adjusts the saturation component of all list colors by the given amount.
+		 * @param step
+	 *            adjustment value
+	 * @return itself
+	 */
+	adjustSaturation: function(step){
+		internals.each(this.colors,function(c){
+			c.saturate(step);
+		});
+		return this;
+	},
+	/**
+	* Sorts the list based on two criteria to create clusters/segments within
+	* the list.
+	* @param clusterCriteria main sort criteria
+	* @param subClusterCriteria secondary sort criteria
+	* @param numClusters number of clusters
+	* @param isReversed true, if reversed sort
+	* @return itself
+	*/
+	clusterSort: function(clusterCriteria, subClusterCriteria, numClusters, isReversed){
+		var sorted = this.colors.slice(0),
+			clusters = [],
+			d = 1,
+			i = 0,
+			num = sorted.length,
+			slice;
+
+		sorted.sort( clusterCriteria.compare ).reverse();
+		for(var j=0;j<num;j++){
+			var c = sorted[j];
+			if(c.getComponentValue(clusterCriteria) < d){
+				slice = sorted.slice(i, j);
+				slice.sort( subClusterCriteria.compare );
+				clusters.push.apply(clusters,slice);
+				d -= 1.0 / numClusters;
+				i = j;
+			}
+		}
+		slice = [];
+		Array.prototype.push.apply(slice,sorted.slice(i,sorted.length));
+		slice.sort( subClusterCriteria.compare );
+		clusters.push.apply(clusters,slice);
+		if(isReversed){
+			clusters.reverse();
+		}
+		this.colors = clusters;
+		return this;
+	},
+	/**
+	* Switches all list colors to their complementary color.
+	* @return itself
+	*/
+	complement: function(){
+		this.each(function(c){
+			c.complement();
+		});
+		return this;
+	},
+	/**
+	* Checks if the given color is part of the list. Check is done by value,
+	* not instance.
+	* @param color
+	* @return true, if the color is present.
+	*/
+	contains: function(color){
+		for( var i=0, l= this.colors.length; i<l; i++){
+			if( this.colors[i].equals( color ) ){
+				return true;
+			}
+		}
+		return false;
+	},
+	each: function( fn ){
+		internals.each( this.colors, fn );
+		return this;
+	},
+	/**
+	* Returns the color at the given index. This function follows Python
+	* convention, in that if the index is negative, it is considered relative
+	* to the list end. Therefore the color at index -1 is the last color in the
+	* list.
+	* @param i
+	*            index
+	* @return color
+	*/
+	get: function(i){
+		if(i < 0){
+			i += this.colors.length;
+		}
+		return this.colors[i];
+	},
+	/**
+	* Calculates and returns the average color of the list.
+	* @return average color or null, if there're no entries yet.
+	*/
+	getAverage: function(){
+		var r = 0,
+			g = 0,
+			b = 0,
+			a = 0;
+
+		this.each(function(c){
+			r += c.rgb[0];
+			g += c.rgb[1];
+			b += c.rgb[2];
+			a += c.alpha();
+		});
+
+		var num = this.colors.length;
+		if(num > 0){
+			return TColor.newRGBA(r / num, g / num, b / num, a / num);
+		}
+		return undefined;
+	},
+	/**
+	* Creates a new ColorList by blending all colors in the list with each
+	* other (successive indices only)
+	* @param amount
+	*            blend amount
+	* @return new color list
+	*/
+	getBlended: function(amount){
+		var clrs = [],
+			len = this.colors.length;
+		for(var i=0; i< len; i++){
+			var index = i > 0 ? i -1 : clrs.length - 1,
+				c = this.colors[index];
+			clrs.push(this.colors[i].getBlended(c,amount));
+		}
+		return new ColorList(clrs);
+	},
+	/**
+	* Finds and returns the darkest color of the list.
+	* @return darkest color or null if there're no entries yet.
+	*/
+	getDarkest: function(){
+		var darkest,
+			minBrightness = Number.MAX_VALUE;
+		this.each(function(c){
+			var luma = c.luminance();
+			if(luma < minBrightness){
+				darkest = c;
+				minBrightness = luma;
+			}
+		});
+		return darkest;
+	},
+	/**
+	* Finds and returns the lightest (luminance) color of the list.
+	* @return lightest color or null, if there're no entries yet.
+	*/
+	getLightest: function(){
+		var lightest,
+			maxBrightness = Number.MIN_VALUE;
+		this.each(function(c){
+			var luma = c.luminance();
+			if(luma > maxBrightness){
+				lightest = c;
+				maxBrightness = luma;
+			}
+		});
+		return lightest;
+	},
+
+	getRandom: function(){
+		var index = Math.floor(mathUtils.random(this.colors.length));
+		return this.colors[index];
+	},
+
+	getReverse: function(){
+		return new ColorList(this.colors).reverse();
+	},
+
+	invert: function(){
+		this.each(function(c){
+			c.invert();
+		});
+		return this;
+	},
+
+	iterator: function(){
+		return new internals.Iterator(this.colors);
+	},
+
+	reverse: function(){
+		this.colors.reverse();
+		return this;
+	},
+
+	rotateRYB: function(theta, isRadians){
+		var angle;
+		if(theta !== Math.floor(theta) || isRadians){
+			angle = mathUtils.degrees(theta);
+		} else {
+			angle = theta;
+		}
+		this.each(function(c){
+			c.rotateRYB(angle);
+		});
+		return this;
+	},
+
+	size: function(){
+		return this.colors.length;
+	},
+
+	sort: function(){
+		return this.sortByCriteria(AccessCriteria.HUE, false);
+	},
+	/**
+	* Sorts the list using the given comparator.
+	* @param comp
+	*            comparator
+	* @param isReversed
+	*            true, if reversed sort
+	* @return itself
+	*/
+	sortByComparator: function(comp, isReversed){
+        //if a normal ( a, b ) sort function instead of an AccessCriteria,
+        //wrap it so it can be invoked the same
+        if( typeof comp === 'function' && typeof comp.compare === 'undefined' ){
+            comp = { compare: comp };
+        }
+		this.colors.sort( comp.compare );
+		if(isReversed){
+			this.colors.reverse();
+		}
+		return this;
+	},
+	/**
+	* Sorts the list using the given {@link AccessCriteria}.
+	* @param criteria
+	*            sort criteria
+	* @param isReversed
+	*            true, if reversed sort
+	* @return itself
+	*/
+	sortByCriteria: function(criteria, isReversed){
+		return this.sortByComparator(criteria, isReversed);
+	},
+	/**
+	* Sorts the list by relative distance to each predecessor, starting with
+	* the darkest color in the list.
+	* @param isReversed
+	*            true, if list is to be sorted in reverse.
+	* @return itself
+	*/
+
+	sortByDistance: function(proxy, isReversed){
+		if(arguments.length === 1){
+			isReversed = arguments[0];
+			proxy = new HSVDistanceProxy();
+		}
+		
+		if(this.colors.length === 0){
+			return this;
+		}
+
+		// Remove the darkest color from the stack,
+		// put it in the sorted list as starting element.
+		var root = this.getDarkest(),
+			stack = this.colors.slice(0),
+			sorted = [];
+
+		stack.splice(stack.indexOf(root),1);
+		sorted.push(root);
+
+		// Now find the color in the stack closest to that color.
+		// Take this color from the stack and add it to the sorted list.
+		// Now find the color closest to that color, etc.
+		var sortedCount = 0;
+		while(stack.length > 1){
+			var closest = stack[0],
+				lastSorted = sorted[sortedCount],
+				distance = proxy.distanceBetween(closest, lastSorted);
+			
+			for(var i = stack.length - 1; i >= 0; i--){
+				var c = stack[i],
+					d = proxy.distanceBetween(c, lastSorted);
+				if(d < distance){
+					closest = c;
+					distance = d;
+				}
+			}
+			stack.splice(stack.indexOf(closest),1);
+			sorted.push(closest);
+			sortedCount++;
+		}
+		sorted.push(stack[0]);
+		if(isReversed){
+			sorted.reverse();
+		}
+		this.colors = sorted;
+		return this;
+	},
+	/**
+	* Sorts the list by proximity to the given target color (using RGB distance
+	* metrics).
+	* @see #sortByProximityTo(ReadonlyTColor, DistanceProxy, boolean)
+	* @param target
+	*            color
+	* @param isReversed
+	*            true, if reverse sorted
+	* @return sorted list
+	*/
+	sortByProximityTo: function(target, proxy, isReversed){
+		if(arguments.length == 2){
+			target = arguments[0];
+			proxy = new RGBDistanceProxy();
+			isReversed = arguments[1];
+		}
+		return this.sortByComparator(new ProximityComparator(target,proxy), isReversed);
+	},
+
+	toARGBArray: function(){
+		var array = [];
+		this.each(function(c){
+			array.push(c.toARGB());
+		});
+		return array;
+	}
+};
+
+/**
+ * Factory method. Creates a new ColorList of colors randomly sampled from
+ * the given ARGB image array. If the number of samples equals or exceeds
+ * the number of pixels in the source image and no unique colors are
+ * required, the function will simply return the same as
+ * {@link #ColorList(int[])}.
+ * @param pixels
+ *            int array of ARGB pixels
+ * @param num
+ *            number of colors samples (clipped automatically to number of
+ *            pixels in the image)
+ * @param uniqueOnly
+ *            flag if only unique samples are to be taken (doesn't guarantee
+ *            unique colors though)
+ * @param maxIterations (optional)
+ *            max number of attempts to find a unique color. If no more
+ *            unique colors can be found the search is terminated.
+ * @return new color list of samples
+ */
+ ColorList.createFromARGBArray = function(pixels, num, uniqueOnly, maxIterations){
+	maxIterations = maxIterations || 100;
+	num = mathUtils.min(num, pixels.length);
+	if(!uniqueOnly && num == pixels.length){
+		return new ColorList(pixels);
+	}
+
+	var colors = [],
+		temp = TColor.BLACK.copy(),
+		i = 0,
+		isUnique = true,
+		numTries = 0,
+		idx;
+	for(i=0;i<num;i++){
+		if(uniqueOnly){
+			isUnique = true;
+			numTries = 0;
+			do {
+				idx = mathUtils.random(pixels.length);
+				temp.setARGB(pixels[idx]);
+				isUnique = !(colors.indexOf(temp) >= 0);
+			} while (!isUnique && ++numTries < maxIterations);
+			if(numTries < maxIterations) {
+				colors.push(temp.copy());
+			} else {
+				break;
+			}
+		} else {
+			idx = mathUtils.random(pixels.length);
+			colors.push(TColor.newARGB(pixels[idx]));
+		}
+	}
+	return new ColorList(colors);
+ };
+
+/**
+* Factory method. Creates a new ColorList based on the given
+* {@link ColorTheoryStrategy} instance and the given source color. The
+* number of colors returned will vary with the strategy chosen.
+* @param strategy
+* @param c
+* @return new list
+*/
+/* TODO implement ColorTheoryRegistry
+ColorList.createUsingStrategy = function(strategy, c){
+	if(typeof strategy == 'string'){
+		strategy = ColorTheoryRegistry.getStrategyForName(strategy);
+	}
+	var list;
+	if(strategy !== undefined){
+		list = strategy.createListFromColor(c);
+	}
+	return list;
+};
+*/
+
+module.exports = ColorList;
+});
+
+define('toxi/color/ColorGradient',['require','exports','module','../internals','../internals','../math/mathUtils','../math/LinearInterpolation','./ColorList'],function(require, exports, module) {
+
+
+var filter = require('../internals').filter,
+	numberCompare = require('../internals').numberCompare,
+	mathUtils = require('../math/mathUtils'),
+	LinearInterpolation = require('../math/LinearInterpolation'),
+	ColorList = require('./ColorList');
+
+//a protected object for every point on the gradient
+var _GradPoint = function(p, c){
+	this.pos = p;
+	this.color = c;
+};
+
+_GradPoint.prototype = {
+	compareTo: function(p){
+		if(numberCompare(p.pos,this.pos) === 0){
+			return 0;
+		}
+		return this.pos < p.pos ? -1 : 1;
+	},
+	getColor: function(){
+		return this.color;
+	},
+	getPosition: function(){
+		return this.pos;
+	}
+};
+
+var ColorGradient = function(){
+	this.gradient = [];
+	this.interpolator = new LinearInterpolation();
+	this.maxDither = 0;
+};
+
+ColorGradient.prototype = {
+	/**
+	* Adds a new color at specified position.
+	* @param {Number} p position in the gradient
+	* @param {toxi.color.TColor} c color to add
+	*/
+	addColorAt: function(p, c){
+		this.gradient.push(new _GradPoint(p,c));
+	},
+	/**
+	* Calculates the gradient from specified position.
+	* @param pos
+	* @param width
+	* @return list of interpolated gradient colors
+	*/
+	calcGradient: function(pos, width){
+		if( arguments.length === 0 ){
+			pos = this.gradient[0].getPosition();
+			var last = this.gradient[this.gradient.length-1].getPosition();
+			width = Math.floor(last - pos);
+		}
+
+		var result = new ColorList();
+		if( this.gradient.length === 0 ){
+			return result;
+		}
+
+		var frac = 0,
+			currPoint, nextPoint,
+			endPos = pos + width,
+			i = 0,
+			l = this.gradient.length;
+
+		for( i=0; i<l; i++ ){
+			if( this.gradient[i].pos < pos ){
+				currPoint = this.gradient[i];
+			}
+		}
+
+		var isPremature = (currPoint===undefined),
+			activeGradient;
+		if( !isPremature ){
+			activeGradient = filter(this.gradient, function( g ){ return g.pos >= currPoint.pos; });
+		} else {
+			//start position is before 1st gradient color, so use whole
+			activeGradient = this.gradient;
+			currPoint = this.gradient[0];
+		}
+
+		var currWidth = 0;
+		//start over with i, and use it to iterate
+		i = 0;
+		l = activeGradient.length;
+		if( currPoint !== activeGradient[l-1] ){
+			nextPoint = activeGradient[i];
+			if( isPremature ){
+				var d = currPoint.pos - pos;
+				currWidth = mathUtils.abs( d ) > 0 ? 1 / d : 1;
+			} else {
+				if( nextPoint.pos - currPoint.pos > 0 ) {
+					currWidth = 1 / (nextPoint.pos - currPoint.pos);
+				}
+			}
+		}
+		while( pos < endPos ){
+			if( isPremature ){
+				frac = 1 - (currPoint.pos - pos) * currWidth;
+			} else {
+				frac = (pos - currPoint.pos) * currWidth;
+			}
+			//switch to next color?
+			if( frac > 1.0 ){
+				currPoint = nextPoint;
+				isPremature = false;
+				i++;
+				if( i < activeGradient.length ){
+					nextPoint = activeGradient[i];
+					if( currPoint !== activeGradient[l-1] ){
+						currWidth = 1 / (nextPoint.pos - currPoint.pos);
+					} else {
+						currWidth = 0;
+					}
+					frac = (pos - currPoint.pos) * currWidth;
+				}
+			}
+			if( currPoint  !== activeGradient[l-1] ){
+				var ditheredFrac = mathUtils.clip( frac+mathUtils.normalizedRandom() * this.maxDither, 0, 1 );
+				ditheredFrac = this.interpolator.interpolate( 0, 1, ditheredFrac );
+				result.add( currPoint.color.getBlended(nextPoint.color, ditheredFrac) );
+			} else {
+				result.add( currPoint.color.copy() );
+			}
+			pos++;
+		}
+		return result;
+		
+	},
+	getGradientPoints: function(){
+		return this.gradient;
+	},
+	/**
+	* @return the interpolator
+	*/
+	getInterpolator: function(){
+		return this.interpolator;
+	},
+	/**
+	* @return the maximum dither amount.
+	*/
+	getMaxDither: function(){
+		return this.maxDither;
+	},
+	/**
+	* @param interpolator the interpolator to set
+	*/
+	setInterpolator: function(interpolator){
+		this.interpolator = interpolator;
+	},
+	/**
+	* Sets the maximum dither amount. Setting this to values >0 will jitter the
+	* interpolated colors in the calculated gradient. The value range for this
+	* parameter is 0.0 (off) to 1.0 (100%).
+	* @param {Number} maxDither
+	*/
+	setMaxDither: function(maxDither){
+		this.maxDither = mathUtils.clip(maxDither, 0, 1);
+	}
+};
+	module.exports = ColorGradient;
+});
+
+define('toxi/color',['require','exports','module','./color/AccessCriteria','./color/AlphaAccessor','./color/CMYKAccessor','./color/CMYKDistanceProxy','./color/ColorGradient','./color/ColorList','./color/HSVAccessor','./color/HSVDistanceProxy','./color/LuminanceAccessor','./color/ProximityComparator','./color/RGBAccessor','./color/RGBDistanceProxy','./color/TColor'],function(require, exports) {
+	exports.AccessCriteria = require('./color/AccessCriteria');
+	exports.AlphaAccessor = require('./color/AlphaAccessor');
+	exports.CMYKAccessor = require('./color/CMYKAccessor');
+	exports.CMYKDDistanceProxy = require('./color/CMYKDistanceProxy');
+	exports.ColorGradient = require('./color/ColorGradient');
+	exports.ColorList = require('./color/ColorList');
+	exports.HSVAccessor = require('./color/HSVAccessor');
+	exports.HSVDistanceProxy = require('./color/HSVDistanceProxy');
+	exports.LuminanceAccessor = require('./color/LuminanceAccessor');
+	exports.ProximityComparator = require('./color/ProximityComparator');
+	exports.RGBAccessor = require('./color/RGBAccessor');
+	exports.RGBDistanceProxy = require('./color/RGBDistanceProxy');
 	exports.TColor = require('./color/TColor');
 });
 
@@ -9025,7 +9871,6 @@ var	Cone = function(pos,dir,rNorth, rSouth,len) {
 	//if its a parameter object
 	var self = this;
 	if ( typeof pos === 'object' && arguments.length === 1 ){
-		console.log( 'object' );
 		process(
 			pos.pos || pos.position || new Vec3D(),
 			pos.dir || pos.direction || err( "direction" ),
@@ -9543,6 +10388,9 @@ Rect.prototype = {
 	},
 	
 	setDimensions: function(dim){
+		if( arguments.length == 2 ){
+			dim = { x: arguments[0], y: arguments[1] };
+		}
 		this.width = dim.x;
 		this.height = dim.y;
 		return this;
@@ -10296,24 +11144,6 @@ CosineInterpolation.prototype = {
 };
 
 module.exports = CosineInterpolation;
-});
-
-define('toxi/math/LinearInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Implementation of the linear interpolation function
- * 
- * i = a + ( b - a ) * f
- * @member toxi
- */
-var	LinearInterpolation = function(){};
-
-LinearInterpolation.prototype = {
-	interpolate: function(a, b, f) {
-        return a + (b - a) * f;
-	}
-};
-
-module.exports = LinearInterpolation;
 });
 
 define('toxi/math/DecimatedInterpolation',["require", "exports", "module", "./LinearInterpolation"], function(require, exports, module) {
