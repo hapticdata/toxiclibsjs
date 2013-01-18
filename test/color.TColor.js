@@ -77,6 +77,15 @@ describe('TColor', function(){
 	
 	describe("prototype functions", function(){
 		var c = toxi.color.TColor.newRGBA(0.75,0.5,0.25,1.0);
+
+		describe('#equals()', function(){
+			it('should return that the colors were equal', function(){
+				var c1 = toxi.color.TColor.newRGBA( 0, 1.0, 0, 1.0 );
+				var c2 = c1.copy();
+				assert.ok( c1.equals( c2 ) );
+			});
+		});
+
 		describe('#toARGB()', function(){
 			it('should return proper packed integer', function(){
 				assert.equal( c.toARGB(), -4227265 );
