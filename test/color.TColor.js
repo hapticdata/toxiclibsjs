@@ -2,9 +2,17 @@
 var toxi = require('../index'),
 	assert = require('assert');
 
-
 describe('TColor', function(){
 	describe('static factories', function(){
+        describe('rgbToHSV', function(){
+            it('should create 0.16667 0 0 ', function(){
+               var hsv = toxi.color.TColor.rgbToHSV( 1, 1, 0 );
+               assert.ok( hsv[0] > 0.16 && hsv[0] < 0.17 );
+                assert.equal( hsv[1], 1 );
+                assert.equal( hsv[2], 1 );
+            });
+        });
+
 		describe('newRGBA', function(){
 			var c = toxi.color.TColor.newRGBA(0.75,0.5,0.25,1.0);
 			it('should have correct rgba values', function(){
@@ -77,6 +85,15 @@ describe('TColor', function(){
 	
 	describe("prototype functions", function(){
 		var c = toxi.color.TColor.newRGBA(0.75,0.5,0.25,1.0);
+
+		describe('#equals()', function(){
+			it('should return that the colors were equal', function(){
+				var c1 = toxi.color.TColor.newRGBA( 0, 1.0, 0, 1.0 );
+				var c2 = c1.copy();
+				assert.ok( c1.equals( c2 ) );
+			});
+		});
+
 		describe('#toARGB()', function(){
 			it('should return proper packed integer', function(){
 				assert.equal( c.toARGB(), -4227265 );
@@ -100,7 +117,7 @@ describe('TColor', function(){
 				assert.equal( hex, "bf7f3f" );
 			});
 		});
-
+console.log
 		describe("#toHSVAArray([])", function(){
 			var hsva = c.toHSVAArray([]);
 			//values confirmed in java
