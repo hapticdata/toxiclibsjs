@@ -42,4 +42,5 @@ describe('LineStrip3D', function(){
 			}
 		});
 	});
+
 });

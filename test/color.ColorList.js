@@ -36,11 +36,15 @@ describe('ColorList', function(){
     describe('#clusterSort()', function(){
        it('should organize by red, then green', function(){
            cl.clusterSort( toxi.color.AccessCriteria.RED, toxi.color.AccessCriteria.GREEN, 3, false );
-           console.log( cl );
+           var last = cl.colors[0].red();
+           cl.each(function( c ){
+              assert.ok( c.red() <= last );
+              last = c.red();
+           });
        });
     });
 
-    describe('#getDarkets()', function(){
+    describe('#getDarkest()', function(){
        it('should return the darkest color', function(){
            var darkest = cl.getDarkest();
 
