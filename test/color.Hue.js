@@ -3,7 +3,7 @@ var toxi = require('../index'),
     assert = require('assert');
 
 
-describe('Hue', function(){
+describe('toxi.color.Hue', function(){
     var hueVal = 20 / 360.0,
         hueName = "myHue",
         h = new toxi.color.Hue( hueName, hueVal);
