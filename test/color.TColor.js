@@ -31,6 +31,22 @@ describe('TColor', function(){
 				assert.equal( c.alpha(), 1.0 );
 			});
 		});
+        describe('newHSVA', function(){
+            var c = toxi.color.TColor.newHSVA( 0.9, 0.75, 0.5, 0.25 );
+            it('should have correct hsva values', function(){
+                assert.equal( c.hue(), 0.9);
+                assert.equal( c.saturation(), 0.75);
+                assert.equal( c.brightness(), 0.5);
+                assert.equal( c.alpha(), 0.25);
+            });
+            it('should modulate hue and clip saturation, brightness + alpha values',function(){
+                var c = toxi.color.TColor.newHSVA( 1, 1.5, 2, 1 );
+                assert.equal( c.hue(), 0 );
+                assert.equal( c.saturation(), 1.0 );
+                assert.equal( c.brightness(), 1 );
+                assert.equal( c.alpha(), 1);
+            });
+        });
 		describe('newCSS', function(){
 			describe('width X11 css name', function(){
 				//case-insensitive
