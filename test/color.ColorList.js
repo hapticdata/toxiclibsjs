@@ -36,7 +36,6 @@ describe('ColorList', function(){
     describe('#clusterSort()', function(){
        it('should organize by red, then green', function(){
            cl.clusterSort( toxi.color.AccessCriteria.RED, toxi.color.AccessCriteria.GREEN, 3, false );
-           console.log( cl );
        });
     });
 
