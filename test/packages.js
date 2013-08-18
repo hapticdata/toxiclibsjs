@@ -31,7 +31,8 @@ function pkg( id, obj, excludes ){
 }
 
 //toxi.color
-pkg('color',t.color, ['AccessCriteria','NamedColor']);
+pkg('color',t.color, ['AccessCriteria','NamedColor','theory']);
+pkg('color.theory', t.color.theory, ['ColorTheoryRegistry']);
 //toxi.geom
 pkg('geom',t.geom,['mesh']);
 //toxi.geom.mesh
