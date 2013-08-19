@@ -66,7 +66,9 @@ describe('ColorList', function(){
         });
     });
 
-
-
-
+    describe('.createUsingStrategy( )', function(){
+        it('should throw an error', function(){
+            assert.throws( toxi.color.ColorList.createUsingStrategy, Error );
+        });
+    });
 });
