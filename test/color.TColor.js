@@ -76,7 +76,7 @@ describe('TColor', function(){
 					assert.equal(color.alpha(), 0.5);
 				});
 			});
-			
+
 			describe('with rgb() string', function(){
 				var color = toxi.color.TColor.newCSS( 'rgb(128,   128, 128)' );
 				it('should return 50% gray', function(){
@@ -98,9 +98,20 @@ describe('TColor', function(){
 			});
 		});
 	});
-	
+
 	describe("prototype functions", function(){
 		var c = toxi.color.TColor.newRGBA(0.75,0.5,0.25,1.0);
+
+
+        describe('#getClosestHue( primaryOnly )', function(){
+            var c1 = toxi.color.TColor.newHSV(toxi.color.Hue.LIME.getHue()+0.01, 1.0, 1.0);
+            it('should return the closest Hue', function(){
+                assert.equal( c1.getClosestHue(), toxi.color.Hue.LIME );
+            });
+            it('should return the closest primary hue', function(){
+                assert.equal( c1.getClosestHue( true ), toxi.color.Hue.GREEN );
+            });
+        });
 
 		describe('#equals()', function(){
 			it('should return that the colors were equal', function(){
@@ -133,7 +144,6 @@ describe('TColor', function(){
 				assert.equal( hex, "bf7f3f" );
 			});
 		});
-console.log
 		describe("#toHSVAArray([])", function(){
 			var hsva = c.toHSVAArray([]);
 			//values confirmed in java
