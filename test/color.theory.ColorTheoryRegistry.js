@@ -49,9 +49,9 @@ describe('toxi.color.theory.ColorTheoryRegistry', function(){
         });
     });
 
-    describe('each strategies #createListFromColor', function(){
-        it('should return a color list', function(){
-            ColorTheoryRegistry.getRegisteredStrategies().forEach(function(strategy){
+    ColorTheoryRegistry.getRegisteredStrategies().forEach(function(strategy){
+        describe(strategy.getName() +' strategies #createListFromColor', function(){
+            it('should return a color list', function(){
                 var cl = strategy.createListFromColor( NamedColor.LIME );
                 assert.ok( cl instanceof ColorList );
                 assert.ok( cl.size() >= 1 );

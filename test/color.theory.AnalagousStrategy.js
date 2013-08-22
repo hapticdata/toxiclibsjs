@@ -34,5 +34,9 @@ describe('toxi.color.theory.AnalagousStrategy', function(){
             assert.ok( list instanceof ColorList );
             assert.equal( list.size(), 5 );
         });
+
+        it('should error when it doesnt receive a tcolor', function(){
+            assert.throws(new AnalagousStrategy().createListFromColor, Error);
+        });
     });
 });
