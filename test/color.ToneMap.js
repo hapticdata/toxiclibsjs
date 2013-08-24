@@ -75,4 +75,56 @@ describe('toxi.color.ToneMap', function(){
             assert.deepEqual( tm.map.mapFunction, sig );
         });
     });
+
+    describe('#getToneMappedArray( src, pixels, offset )', function(){
+        var ensureValidReturn = function( pixels ){
+            pixels.forEach(function(p){
+                assert.equal( typeof p, 'number' );
+            });
+            //convert to TColors
+            pixels = pixels.map(toxi.color.TColor.newARGB);
+            pixels.forEach(function(p){
+                assert.ok( p instanceof toxi.color.TColor );
+                ['red','green','blue','hue','saturation','brightness'].forEach(function(method){
+                    assert.ok( p[method]() <= 1.0 );
+                    assert.ok( p[method]() >= 0.0 );
+                });
+            });
+        };
+
+        var src = [];
+        for( var i=0; i<10; i++){
+            src.push( Math.random() );
+        }
+        describe('accept a source array', function(){
+            it('should return an Array of ARGB values', function(){
+                var pixels = tm.getToneMappedArray( src );
+                assert.ok( pixels instanceof Array );
+                assert.equal( pixels.length, src.length );
+                ensureValidReturn( pixels );
+            });
+        });
+        describe('accept a source array and a destination array', function(){
+            it('should return and ARGB values', function(){
+                var pixels = [];
+                var pixels2 = tm.getToneMappedArray( src, pixels );
+                assert.equal( src.length, pixels.length );
+                //should be the same object
+                assert.deepEqual( pixels, pixels2 );
+                ensureValidReturn( pixels2 );
+            });
+        });
+        describe('accepts a source array, destination array, and an offset', function(){
+            if('should reutrn an Array of ARGB values starting at the provided offset', function(){
+                var pixels = [], offset = 6;
+                for( var i=0; i<offset; i++){
+                    pixels.push( toxi.color.TColor.newRandom().toARGB() );
+                }
+                var pixels2 = tm.getToneMappedArray( src, pixels, offset );
+                assert.equal( src.length+offset, pixels2.length );
+                assert.deepEqual( pixels, pixels2 );
+                ensureValidReturn( pixels2 );
+            });
+        });
+    });
 });
