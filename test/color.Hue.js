@@ -7,12 +7,12 @@ describe('toxi.color.Hue', function(){
     var hueVal = 20 / 360.0,
         hueName = "myHue",
         h = new toxi.color.Hue( hueName, hueVal);
-    
+
     //add extra hues that it should search through
     new toxi.color.Hue("closest", 65 / 360.0 );
     new toxi.color.Hue("closestPrimary", 64, 360.0, true );
-    new toxi.color.Hue("further", 75 / 360.0, true );
-    
+    new toxi.color.Hue("further", 125 / 360.0, false );
+
     it('should have `static` predefined Hues', function(){
         ['RED','ORANGE','YELLOW','LIME','GREEN','TEAL','CYAN','AZURE',
         'BLUE','INDIGO','PURPLE','PINK'].forEach(function(color){
@@ -25,7 +25,7 @@ describe('toxi.color.Hue', function(){
     });
 
     describe('toxi.color.Hue.getClosest( hue, primaryOnly )', function(){
-        //searches out of all Hues included    
+        //searches out of all Hues included
         it('should return the "closest" hue', function(){
             var c = toxi.color.Hue.getClosest( 66 / 360.0, false );
             assert.ok( c instanceof toxi.color.Hue );
@@ -63,7 +63,7 @@ describe('toxi.color.Hue', function(){
             assert.equal( toxi.color.Hue.isPrimary( 36 / 360, 2/360 ), false );
         });
     });
-    
+
     describe('construct', function(){
         it('should be a hue object', function(){
             assert.ok( h instanceof toxi.color.Hue );
