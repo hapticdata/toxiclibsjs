@@ -4,6 +4,7 @@ Ported to JavaScript by [Kyle Phillips](http://haptic-data.com) original library
 * [TColor](#) - floating point color datatype in 3 simultaneous spaces: RGB, HSV, CMYK
 * [NamedColor](#) - named color presets/constants
 * [ColorTheme](#) - weighted color theme generator
+* [ColorRange](#) - constrain ranges of hue, saturation, brightness, alpha and use them as creation rules for new colors 
 * [Strategies - toxi.color.theory.*](#) - color theory strategies
 * [ColorList](#) - color list
 * [Accessors and Distance Proxies](#) - extensive color sorting features
@@ -50,6 +51,16 @@ ColorTheme [(source)](http://raw) is a weighted collection of ColorRange's used 
 
 	//make a theme
 	var theme = new toxi.color.ColorTheme("myTheme");
+	theme.addRange("soft salmon", 0.25);
+	theme.addRange("warm indianred", 0.5);
+	theme.addRange("intense yellow", 0.25);
+	theme.addRange("fresh aquamarine", 0.25);
+	//add a range with a random tcolor
+	theme.addRange( toxi.color.ColorRange.BRIGHT, toxi.color.TColor.newRandom(), 0.25 );
+	//create a 200-color palette
+	var list = theme.getColors(200);
+
+	
 
 ### TODO examples
 
@@ -90,6 +101,16 @@ ColorList [(source)](http://raw) is a collection of colors. You can simply `#add
 	
 	var aquamarine = list.get(1);
 	var rand = list.getRandom();
+	
+	
+##ColorRange
+
+	var list = new toxi.color.createUsingStrategy("rightSplitComplementary", toxi.color.NamedColor.LIME);
+	range = new toxi.color.ColorRange(list).addBrightnessRange(0,1);
+	var longList = range.getColors(100);
+	//specify a custom variance, getColors( [tcolor], [numToGenerate], [variance] );
+	var customVarianceList = range.getColors( undefined, 100, 0.5);
+	
 
 ##Access Criteria and Distance Proxies
 AccessCriteria [(source)](#) includes a single instance of each of the different ways to compare colors: _AlphaAccessor, CMYKAccessor, HSVAccessor, LuminanceAccessor, RGBAccessor_
@@ -121,17 +142,21 @@ ColorGradient [(source)](#) models a multi-color gradient and allows you to rece
 	//list.length => 20
 	list = grad.calcGradient(10, 20);
 
-### examples
 
 ##ToneMap
 
-
-var colors = ['black','red','yellow','white'].map( toxi.color.NamedColor.getForName );
+ToneMap [(source)](#) allows you to map a numerical input range to a gradient of colors. In the following example the colors of a flame are mapped to a sine wave:
 
 
 	var grad = new toxi.color.ColorGradient();
-	//add these colors to the gradient, evenly spaced
-	['black','red','yellow','white'].forEach(function(name, i, arr){
-		grad.addColorAt( i/(arr.length-1), toxi.color.NamedColor.getForName(name) );
+	//add these colors to the gradient, at the specified locations
+	[[0,'black'],[128,'red'],[196,'yellow'],[255,'white']].forEach(function(stop, i, arr){
+		grad.addColorAt( stop[0], toxi.color.NamedColor.getForName(stop[1]) );
 	});
-	
+	//map the gradient to the sine wave's values between 0.0-1.0
+	var toneMap = new toxi.color.ToneMap( 0.0, 1.0, grad)
+	var wave = new toxi.math.SineWave(0, 0.01);
+	for( var i=0; i<freq; i++{
+		color = toneMap.getToneFor( wave.update() );
+		//do something with color
+	}
