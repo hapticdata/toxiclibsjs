@@ -108,6 +108,30 @@ The distance proxies, _CMYKDistanceProxy, HSVDistanceProxy, RGBDistanceProxy_ al
 ##ColorGradient
 ColorGradient [(source)](#) models a multi-color gradient and allows you to receive a `ColorList` of the gradient at any resolution and with custom [interpolators](#).
 
+	var grad = new toxi.color.ColorGradient(),
+		numColors = 10;
+	for( var i=0; i<numColor; i++){
+		grad.addColorAt( i, toxi.color.TColor.newHSV(i/numColors, 1.0, 1.0) );
+	}
+	//get a colorlist of the original gradient
+	var list = grad.calcGradient();
+	//list.length => 10
+	//get a gradient with the colors blended into a resolution of 20
+	list = grad.calcGradient(0, 20);
+	//list.length => 20
+	list = grad.calcGradient(10, 20);
+
 ### examples
 
 ##ToneMap
+
+
+var colors = ['black','red','yellow','white'].map( toxi.color.NamedColor.getForName );
+
+
+	var grad = new toxi.color.ColorGradient();
+	//add these colors to the gradient, evenly spaced
+	['black','red','yellow','white'].forEach(function(name, i, arr){
+		grad.addColorAt( i/(arr.length-1), toxi.color.NamedColor.getForName(name) );
+	});
+	
