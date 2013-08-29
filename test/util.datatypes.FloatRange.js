@@ -3,7 +3,7 @@ var toxi = require('../index'),
     assert = require('assert');
 
 
-var FloatRange = toxi.utils.datatypes.FloatRange,
+var FloatRange = toxi.util.datatypes.FloatRange,
     MathUtils = toxi.math.MathUtils;
 
 
@@ -60,7 +60,7 @@ describe('toxi.util.datatypes.FloatRange', function(){
             var f = new FloatRange(1, 105);
             assert.ok( Math.abs(f.getAt(0.5) - f.getMedian()) < 0.1);
         });
-        
+
         it('should return out of range number for percents beyond 1.0', function(){
             var f = new FloatRange(1, 105);
             assert.ok( f.getAt(2.0) > f.max );

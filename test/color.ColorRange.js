@@ -9,16 +9,16 @@ describe('toxi.color.ColorRange', function(){
         ColorList = toxi.color.ColorList,
         Hue = toxi.color.Hue,
         TColor = toxi.color.TColor,
-        FloatRange = toxi.utils.datatypes.FloatRange;
-    
+        FloatRange = toxi.util.datatypes.FloatRange;
+
     it('should have a DEFAULT_VARIANCE property', function(){
         assert.equal( ColorRange.DEFAULT_VARIANCE, 0.035);
     });
-    
+
     describe('pre-defined colors',function(){
         var colors = ['LIGHT','DARK','BRIGHT','WEAK','NEUTRAL','FRESH','SOFT','HARD',
        'WARM','COOL','INTENSE'];
-       
+
         it('should be in ColorRange object',function(){
             colors.forEach(function(name){
                 assert.ok( ColorRange[name] instanceof ColorRange );
@@ -64,7 +64,7 @@ describe('toxi.color.ColorRange', function(){
                 assert.equal(cr.hueConstraint.length, 3 );
                 assert.equal(cr.saturationConstraint.length, 4);
             });
-            
+
         });
         describe('with a TColor', function(){
             var c = TColor.newRGBA(1,0,0,1);
@@ -82,7 +82,7 @@ describe('toxi.color.ColorRange', function(){
             });
             it('should constrain the hue', testForSingleHueConstraint(cr, hue.getHue()));
         });
-        
+
         describe('with hue, saturation, brightness constraints and a name',function(){
             var briC = new FloatRange( 0, 0.125), //brightness
                 satC = new FloatRange( 0, 0.25), //saturation
@@ -124,11 +124,11 @@ describe('toxi.color.ColorRange', function(){
             });
         });
     });
-    
+
     describe('#add',function(){
         it('should receive ColorRange and merge into constraints',function(){
             var cr = new ColorRange(TColor.newRGBA(1,0,0,1));
-            cr.add( new ColorRange( 
+            cr.add( new ColorRange(
                 new ColorList([
                     TColor.newRGBA(0,1,0,1),
                     TColor.newRGBA(0,0,1,1)
@@ -166,7 +166,7 @@ describe('toxi.color.ColorRange', function(){
             assert.equal( cr.brightnessConstraint.length, 2);
         });
     });
-    
+
     describe('#addHue( hue )', function(){
         it('should add a hueConstraint', function(){
             var cr = new ColorRange( TColor.newRGBA( 1, 0, 0, 1) );
@@ -204,7 +204,7 @@ describe('toxi.color.ColorRange', function(){
         });
     });
 
-    describe('#copy( [c], [variance] )', function(){ 
+    describe('#copy( [c], [variance] )', function(){
         var range,
             c = {
                 h: new FloatRange(0.8,1),
@@ -309,7 +309,7 @@ describe('toxi.color.ColorRange', function(){
             assert.ok( cl instanceof ColorList );
             assert.equal( cl.colors.length, num );
             cl.each(function(color){
-                var abs =  Math.abs( c.hue() - color.hue() ); 
+                var abs =  Math.abs( c.hue() - color.hue() );
                 assert.ok( abs <= 0.1 || abs > 0.9 );
             });
         });
@@ -340,7 +340,7 @@ describe('toxi.color.ColorRange', function(){
             assert.equal( r.getName(), "myCustom" );
         });
     });
-    
+
     describe('#getSum( colorrange )',function(){
         var r1 = new ColorRange(
             new FloatRange(0.5,0.8),
@@ -361,7 +361,7 @@ describe('toxi.color.ColorRange', function(){
             assert.equal( r2.hueConstraint[0], r3.hueConstraint[1] );
         });
     });
-    
+
     describe('protected #isValueInConstraint( val, rangeSet )',function(){
         var r = new ColorRange(
             new FloatRange(0.5,0.8),
