@@ -4,6 +4,7 @@ Ported to JavaScript by [Kyle Phillips](http://haptic-data.com) original library
 * [TColor](#tcolor) - floating point color datatype in 3 simultaneous spaces: RGB, HSV, CMYK
 * [NamedColor](#namedcolor) - named color presets/constants
 * [ColorTheme](#colortheme) - weighted color theme generator
+* [ColorRange](#) - constrain ranges of hue, saturation, brightness, alpha and use them as creation rules for new colors 
 * [Strategies - toxi.color.theory.*](#strategies---toxicolortheory) - color theory strategies
 * [ColorList](#colorlist) - color list
 * [Accessors and Distance Proxies](#access-criteria-and-distance-proxies) - extensive color sorting features
@@ -59,6 +60,7 @@ ColorTheme [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/
 		.addRange("intense indianred", 1)
 		.addRange( toxi.color.ColorRange.BRIGHT, toxi.color.NamedColor.GOLD, 0.5);
 		
+	theme.addRange( toxi.color.ColorRange.BRIGHT, toxi.color.TColor.newRandom(), 0.25 );
 	//get a ColorList with 200 colors
 	var list = theme.getColors(200);
 	//get a random color that is within the theme
@@ -103,6 +105,16 @@ ColorList [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/t
 	
 	var aquamarine = list.get(1);
 	var rand = list.getRandom();
+	
+	
+##ColorRange
+
+	var list = new toxi.color.createUsingStrategy("rightSplitComplementary", toxi.color.NamedColor.LIME);
+	range = new toxi.color.ColorRange(list).addBrightnessRange(0,1);
+	var longList = range.getColors(100);
+	//specify a custom variance, getColors( [tcolor], [numToGenerate], [variance] );
+	var customVarianceList = range.getColors( undefined, 100, 0.5);
+	
 
 ##Access Criteria and Distance Proxies
 AccessCriteria [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/AccessCriteria.js) includes a single instance of each of the different ways to compare colors: _AlphaAccessor, CMYKAccessor, HSVAccessor, LuminanceAccessor, RGBAccessor_
@@ -121,7 +133,34 @@ The distance proxies, _CMYKDistanceProxy, HSVDistanceProxy, RGBDistanceProxy_ al
 ##ColorGradient
 ColorGradient [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/ColorGradient.js) models a multi-color gradient and allows you to receive a `ColorList` of the gradient at any resolution and with custom [interpolators](#).
 
-### examples
+	var grad = new toxi.color.ColorGradient(),
+		numColors = 10;
+	for( var i=0; i<numColor; i++){
+		grad.addColorAt( i, toxi.color.TColor.newHSV(i/numColors, 1.0, 1.0) );
+	}
+	//get a colorlist of the original gradient
+	var list = grad.calcGradient();
+	//list.length => 10
+	//get a gradient with the colors blended into a resolution of 20
+	list = grad.calcGradient(0, 20);
+	//list.length => 20
+	list = grad.calcGradient(10, 20);
+
 
 ##ToneMap
-ToneMap [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/ToneMap.js) allows you to specify a numerical input range and map it a list of colors.
+
+ToneMap [(source)](#) allows you to map a numerical input range to a gradient of colors. In the following example the colors of a flame are mapped to a sine wave:
+
+
+	var grad = new toxi.color.ColorGradient();
+	//add these colors to the gradient, at the specified locations
+	[[0,'black'],[128,'red'],[196,'yellow'],[255,'white']].forEach(function(stop, i, arr){
+		grad.addColorAt( stop[0], toxi.color.NamedColor.getForName(stop[1]) );
+	});
+	//map the gradient to the sine wave's values between 0.0-1.0
+	var toneMap = new toxi.color.ToneMap( 0.0, 1.0, grad)
+	var wave = new toxi.math.SineWave(0, 0.01);
+	for( var i=0; i<freq; i++{
+		color = toneMap.getToneFor( wave.update() );
+		//do something with color
+	}
