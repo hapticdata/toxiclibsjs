@@ -4,7 +4,10 @@
 	"description" : "toxiclibsjs is an open-source library for computational design tasks with JavaScript.",
 	"keywords" : [ "design", "geometry", "mesh", "math", "graphics" ],
 	"main" : "../index",
-	"engines" : { "node" : ">=0.4" },
+    "scripts": {
+        "test": "make test"
+    },
+	"engines" : { "node" : ">=0.8" },
 	"maintainers" : [
 		{ "name" : "Kyle Phillips", "email" : "kyle@haptic-data.com" }
 	],
@@ -15,13 +18,11 @@
 	"licenses" : [
 		{ "type" : "GNU", "url" : "http://www.gnu.org/licenses/lgpl-2.1.html" }
 	],
-	"repositories" : [
-		{ "type" : "git", "url" : "http://github.com/hapticdata/toxiclibsjs" }
-	],
+	"repository" : { "type" : "git", "url" : "http://github.com/hapticdata/toxiclibsjs" },
 	"dependencies" : {
-		"requirejs" : ">=1.0.0"
+		"requirejs" : ">=2.0.0"
 	},
 	"devDependencies": {
-		"mocha" : "*"
+		"mocha" : ">=v1.12.0"
 	}
 }
