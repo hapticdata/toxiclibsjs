@@ -11,10 +11,10 @@ var toxi = require('../index'),
 
 		function testConeConstructor( cone ){
 			it('should inherit Vec3D', function(){
-				assert.equal( true, toxi.internals.tests.hasXYZ( cone ) );
+				assert.equal( true, toxi.internals.has.XYZ( cone ) );
 			});
 			it('should have its unique properties', function(){
-				assert.equal( true, toxi.internals.tests.hasXYZ( cone.dir ) );
+				assert.equal( true, toxi.internals.has.XYZ( cone.dir ) );
 				assert.equal( cone.radiusNorth, 4 );
 				assert.equal( cone.radiusSouth, 3 );
 				assert.equal( cone.length, 12 );
@@ -61,7 +61,7 @@ var toxi = require('../index'),
 					thetaOffset: Math.PI
 				}));
 			});
-			
+
 		});
 
 	});

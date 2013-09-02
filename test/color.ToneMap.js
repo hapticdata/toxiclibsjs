@@ -6,10 +6,10 @@ var ToneMap = toxi.color.ToneMap,
     TColor = toxi.color.TColor,
     ColorList = toxi.color.ColorList,
     ColorGradient = toxi.color.ColorGradient,
-    isColorList = toxi.internals.tests.isColorList,
-    isColorGradient = toxi.internals.tests.isColorGradient,
-    isTColor = toxi.internals.tests.isTColor,
-    isScaleMap = toxi.internals.tests.isScaleMap;
+    isColorList = toxi.internals.is.ColorList,
+    isColorGradient = toxi.internals.is.ColorGradient,
+    isTColor = toxi.internals.is.TColor,
+    isScaleMap = toxi.internals.is.ScaleMap;
 
 
 describe('toxi.color.ToneMap', function(){

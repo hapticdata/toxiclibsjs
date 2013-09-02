@@ -22,16 +22,16 @@ describe('toxi/geom/Sphere.js', function(){
 
 	it('should return an AABB', function(){
 		var aabb = mesh.getBoundingBox();
-		assert.equal( toxi.internals.tests.isAABB( aabb ), true);
+		assert.equal( toxi.internals.is.AABB( aabb ), true);
 	});
 
 	it('should return a Sphere', function(){
 		var sphere = mesh.getBoundingSphere();
-		assert.equal( toxi.internals.tests.isSphere( sphere ), true );
+		assert.equal( toxi.internals.is.Sphere( sphere ), true );
 	});
 	it('should return bounds AABB', function(){
 		var aabb = mesh.center( toxi.geom.Vec3D.randomVector() );
-		assert.equal( toxi.internals.tests.isAABB( aabb ), true);
+		assert.equal( toxi.internals.is.AABB( aabb ), true);
 	});
 });
 
@@ -44,11 +44,11 @@ describe('requirejs toxi/geom/mesh/TriangleMesh', function(){
 		});
 		it('should create an AABB', function(){
 			var bounds = cylMesh.getBoundingBox();
-			assert.equal(internals.tests.isAABB( bounds ), true);
+			assert.equal(internals.is.AABB( bounds ), true);
 		});
 		it('should create a Sphere', function(){
 			var sphere = cylMesh.getBoundingSphere();
-			assert.equal(internals.tests.isSphere( sphere ), true);
+			assert.equal(internals.is.Sphere( sphere ), true);
 		});
 
 	});
