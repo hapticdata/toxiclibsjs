@@ -1,7 +1,9 @@
 #[Toxiclibsjs](http://haptic-data.com/toxiclibsjs) 
 ##an open-source library for computational design tasks with JavaScript. 
 
-Toxiclibs.js is a port of [Karsten Schmidt's Toxiclibs](http://toxiclibs.org) for Java and [Processing](http://processing.org). Toxiclibs.js works great with any DOM element, such as Canvas and SVG. The library is also available for use with [Node.js](http://nodejs.org) for desktop applications and servers. Examples pair with such fine libraries as: [Processing.js](http://processingjs.org), [Three.js](http://github.com/mrdoob/three.js), or [Raphael.js](http://raphaeljs.com) for SVG.
+Toxiclibs.js is a port of [Karsten Schmidt's Toxiclibs](http://toxiclibs.org) for Java and [Processing](http://processing.org). Toxiclibs.js provides powerful datatypes for the _browser_ and _node_. It works well for manipulating any DOM element, including Canvas and SVG.
+
+The plethora of examples demonstrate its use for geometry and color manipulation as well as physics, automata and more. The examples pair with such fine libraries as: [Processing.js](http://processingjs.org), [Three.js](http://github.com/mrdoob/three.js), [D3.js](http://github.com/mbostock/d3) or [Raphael.js](http://raphaeljs.com).
 
 ##What it is…
 -	2D/3D geometry

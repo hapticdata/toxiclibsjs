@@ -17,7 +17,9 @@
 *	bugfix `toxi.math.MathUtils#random()` if one parameter is passed and its an integer, return an integer
 *	updated node dependencies to `require.js >= 2.0`, `almond ~0.2.6` and `mocha >=1.12.0`, no longer requiring global mocha
 *	produced new builds with latest
-*	removed
+*	removed `utils/` contents used for old builds
+*	moved project build tasks into `grunt >= 0.4.0`
+*	developed build process for creating custom-builds that only including requested modules
 
 ##v0.1.3
 *	wrote new unit tests for TColor, and ported all qunit unit tests to mocha
