@@ -1,4 +1,24 @@
 #Toxiclibs.js CHANGES
+##v0.2.0
+*	**completed _100%_ of _colorutils_** - `toxi.color` and `toxi.color.theory` packages with thorough test coverage
+*	completed `toxi.geom.Spline3D` and corresponding unit tests
+*	completed `toxi.geom.LineStrip3D` and corresponding unit tests
+*	completed `toxi.geom.SutherlandHodgemanClipper` and unit tests
+*	`toxi.THREE.ToxiclibsSupport` now uses toxiclibs` normals
+*	renamed `toxi.utils` to `toxi.util` for consistency
+*	`toxi.geom.Polygon2D` renamed `#containsPoly()` to `#containsPolygon()`
+*	new methods for `toxi.geom.Polygon2D` post toxiclibs 0020 release, including  `#center()`, `#get()`, 
+`#getBoundingCircle()`, `#getClosestPointTo()`, `#getClosestVertexTo()`, `#getNumVertices (deprecated #getNumPoints() )`,
+`#getRandomPoint()`,`#increaseVertexCount()`, `#intersectsPolygon()`, `#removeDuplicates()`,`Polygon2D.fromBaseEdge()`,
+`Polygon2D.fromEdgeLength()`, `Polygon2D.getRadiusForEdgeLength()`
+*	bugfix `toxi.geom.Polygon2D#translate()`
+*	bugfix for `toxi.math.MathUtils`'s `#max()` and `#min()` receiving 0 as falsey 3rd param
+*	bugfix `toxi.geomVec2D#equalsWithTolerance()` if vector is null should return false
+*	bugfix `toxi.math.MathUtils#random()` if one parameter is passed and its an integer, return an integer
+*	updated node dependencies to `require.js >= 2.0`, `almond ~0.2.6` and `mocha >=1.12.0`, no longer requiring global mocha
+*	produced new builds with latest
+*	removed
+
 ##v0.1.3
 *	wrote new unit tests for TColor, and ported all qunit unit tests to mocha
 *	added docs/sugar.md to explain the added features of toxiclibs.js
