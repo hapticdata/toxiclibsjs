@@ -69,6 +69,20 @@ The following objects are returned when loading the entire library
 * **utils** - the utils package
 
 
+## Contributing
+Contributions to toxiclibs.js are appreciated, please [read more here](https://github.com/hapticdata/toxiclibsjs/blob/master/docs/contributing.md)
+
+## Roadmap
+Toxiclibs.js will reach `v1.0` when it has achieved stable compliance with `toxiclibs 0020`. Post-0020 features will continue to be ported as well to represent that latest state of the library. Some of the near-future goals are:
+
+* complete WingedEdge Mesh and the rest of `toxi.geom.mesh.*` and `toxi.geom.mesh.subdiv.*` packages
+* complete `toxi.physics3d.*`
+* complete system for easily generating custom builds
+* move unit-test assertions to [chai](http://chaijs.com/)
+* implement CI system.
+
+
+
 
 
 

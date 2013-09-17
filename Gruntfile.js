@@ -1,6 +1,4 @@
-/*global module:false, __dirname:false, require:false, process:false*/
-
-var build = require('./build');
+var bConfig = require('./build').config;
 
 module.exports = function (grunt){
 
@@ -16,20 +14,26 @@ module.exports = function (grunt){
 				' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> \n*/'
 		},
 		requirejs: {
-            all: build('toxi', {
+            'physics2d': bConfig([
+                'toxi/geom/Vec2D',
+                'toxi/physics2d',
+                'toxi/color/TColor'],{
+                out: './build/toxiclibs-physic2d.js'
+            }),
+            all: bConfig('toxi', {
                 out: './build/toxiclibs.js'
             }),
-            'all-min': build('toxi', {
+            'all-min': bConfig('toxi', {
                 optimize: 'uglify2',
                 preserveLicenseComments: false,
                 out: './build/toxiclibs.min.js'
             }),
-            'color-min': build('toxi/color', {
-                optimize: 'uglify2',
+            'color-min': bConfig('toxi/color', {
+                optimize: 'none',
                 preserveLicenseComments: false,
                 out: './build/toxiclibs-color.min.js'
             }),
-            core: build([
+            core: bConfig([
                 'toxi/geom',
                 'toxi/math',
                 'toxi/util'
@@ -38,12 +42,16 @@ module.exports = function (grunt){
                 preserveLicenseComments: false,
                 out: './build/toxiclibs-core.min.js'
             })
-		}
+		},
+        build: {
+            custom: {}
+        }
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.registerTask('build', function(){
+    grunt.registerMultiTask('build', 'build a compressed bundle',function(){
         console.log( grunt.option('include') );
+        grunt.log.writeln(this.target + ': ' + this.data);
     });
     grunt.registerTask('default', 'build');
 

@@ -1,6 +1,6 @@
 /*!
 * toxiclibsjs - v0.2.0
-* Date: 2013-09-03
+* Date: 2013-09-15
 * http://haptic-data.com/toxiclibsjs
 * (c) 2013 Kyle Phillips; Licensed GNU 
 */
@@ -845,7 +845,7 @@ define('toxi/color/LuminanceAccessor',['require','./accessors'],function( requir
 	return require('./accessors').LuminanceAccessor;
 });
 
-define('toxi/color/AccessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
+define('toxi/color/accessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
 
 
 var HSVAccessor = require('./HSVAccessor'),
@@ -1123,19 +1123,20 @@ define('toxi/geom/vectors',[
 	"exports",
 	"module",
 	"../math/mathUtils",
-	"../internals"
+	"../internals/has",
+    "../internals/is"
 ], function(require, exports, module) {
 
 	var	mathUtils = require('../math/mathUtils');
-	var internals = require('../internals');
+    var has = require('../internals/has'),
+        is = require('../internals/is');
 
-	var hasXY = internals.has.XY;
-	var isRect = internals.is.Rect;
+	var hasXY = has.XY;
+	var isRect = is.Rect;
 
 	/**
-	@member toxi
 	@class a two-dimensional vector class
-	 */
+	*/
 	var	Vec2D = function(a,b){
 		if( hasXY( a ) ){
 			b = a.y;
@@ -1768,7 +1769,7 @@ define('toxi/geom/vectors',[
 	 * @param {Number} z the z
 	 */
 	var Vec3D = function(x, y, z){
-		if( internals.has.XYZ( x ) ){
+		if( has.XYZ( x ) ){
 			this.x = x.x;
 			this.y = x.y;
 			this.z = x.z;
@@ -1793,7 +1794,7 @@ define('toxi/geom/vectors',[
 		},
 
 		add: function(a,b,c){
-			if( internals.has.XYZ( a ) ){
+			if( has.XYZ( a ) ){
 				return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
 			}
 			return new Vec3D(this.x+a,this.y+b,this.z+c);
@@ -1856,7 +1857,7 @@ define('toxi/geom/vectors',[
 		 */
 		constrain: function(box_or_min, max){
 			var min;
-			if( internals.is.AABB( box_or_min ) ){
+			if( is.AABB( box_or_min ) ){
 				max = box_or_min.getMax();
 				min = box_or_min.getMin();
 			} else {
@@ -1929,7 +1930,7 @@ define('toxi/geom/vectors',[
 		},
 
 		equals: function(vec){
-			if( internals.has.XYZ( vec ) ){
+			if( has.XYZ( vec ) ){
 				return this.x == vec.x && this.y == vec.y && this.z == vec.z;
 			}
 			return false;
@@ -2340,7 +2341,7 @@ define('toxi/geom/vectors',[
 		},
 
 		scale:function(a,b,c) {
-			if( internals.has.XYZ( a ) ) { //if it was a vec3d that was passed
+			if( has.XYZ( a ) ) { //if it was a vec3d that was passed
 				return new Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
 			}
 			else if(b === undefined || c === undefined) { //if only one float was passed
@@ -2350,7 +2351,7 @@ define('toxi/geom/vectors',[
 		},
 
 		scaleSelf: function(a,b,c) {
-			if( internals.has.XYZ( a ) ){
+			if( has.XYZ( a ) ){
 				this.x *= a.x;
 				this.y *= a.y;
 				this.z *= a.z;
@@ -2365,7 +2366,7 @@ define('toxi/geom/vectors',[
 		},
 
 		set: function(a,b,c){
-			if( internals.has.XYZ( a ) )
+			if( has.XYZ( a ) )
 			{
 				this.x = a.x;
 				this.y = a.y;
@@ -2426,7 +2427,7 @@ define('toxi/geom/vectors',[
 		},
 
 		sub: function(a,b,c){
-			if( internals.has.XYZ( a ) ){
+			if( has.XYZ( a ) ){
 				return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 			} else if(b === undefined || c === undefined) {
 				b = c = a;
@@ -2435,7 +2436,7 @@ define('toxi/geom/vectors',[
 		},
 
 		subSelf: function(a,b,c){
-			if( internals.has.XYZ( a ) ){
+			if( has.XYZ( a ) ){
 				this.x -= a.x;
 				this.y -= a.y;
 				this.z -= a.z;
@@ -2629,9 +2630,12 @@ define('toxi/geom/vectors',[
 	exports.Vec3D = Vec3D;
 });
 
-define('toxi/color/Hue',['../internals'], function( internals ){
+define('toxi/color/Hue',[
+    '../internals/LinkedMap',
+    '../internals/each'
+], function( LinkedMap, each ){
 
-    var namedHues = new internals.LinkedMap(),
+    var namedHues = new LinkedMap(),
         primaryHues = [],
         Hue;
     /*
@@ -2672,7 +2676,7 @@ define('toxi/color/Hue',['../internals'], function( internals ){
     //allows for easy look-up
     Hue.PRESETS = {};
     //add the basic hues
-    internals.each([
+    each([
         ['red', true],
         ['orange', true],
         ['yellow', true],
@@ -2709,7 +2713,7 @@ define('toxi/color/Hue',['../internals'], function( internals ){
         var dist = Number.MAX_VALUE,
             closest,
             hues = primaryOnly ? primaryHues : namedHues.getArray();
-        internals.each(hues, function(h){
+        each(hues, function(h){
             var d = Math.min( Math.abs(h.getHue() - hue), Math.abs(1 + h.getHue() - hue) );
             if( d < dist ) {
                 dist = d;
@@ -3997,6 +4001,39 @@ define('toxi/color/ProximityComparator',['require'],function( require ){
 	};
 	return ProximityComparator;
 });
+define('toxi/color/AccessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
+
+
+var HSVAccessor = require('./HSVAccessor'),
+	RGBAccessor = require('./RGBAccessor'),
+	CMYKAccessor = require('./CMYKAccessor'),
+	AlphaAccessor = require('./AlphaAccessor'),
+	LuminanceAccessor = require('./LuminanceAccessor');
+/**
+* Defines standard color component access criterias and associated comparators
+* used to sort colors based on component values. If a new custom accessor is
+* needed (e.g. for sub-classes TColor's), then simply sub-class this class and
+* implement the {@link Comparator} interface and the 2 abstract getter & setter
+* methods defined by this class.
+*/
+exports.HUE = new HSVAccessor(0),
+exports.SATURATION = new HSVAccessor(1),
+exports.BRIGHTNESS = new HSVAccessor(2),
+
+exports.RED = new RGBAccessor(0),
+exports.GREEN = new RGBAccessor(1),
+exports.BLUE = new RGBAccessor(2),
+
+exports.CYAN = new CMYKAccessor(0),
+exports.MAGENTA = new CMYKAccessor(1),
+exports.YELLOW = new CMYKAccessor(2),
+exports.BLACK = new CMYKAccessor(3),
+
+exports.ALPHA = new AlphaAccessor(),
+exports.LUMINANCE = new LuminanceAccessor();
+
+});
+
 define('toxi/color/ColorList',['require','exports','module','../internals/is','../internals/each','../internals/Iterator','../math/mathUtils','./TColor','./HSVDistanceProxy','./RGBDistanceProxy','./ProximityComparator','./AccessCriteria'],function(require, exports, module) {
 
 var is = require('../internals/is'),
@@ -5783,9 +5820,97 @@ define('toxi/color/Histogram',['require','../internals','../internals','./HistEn
 
 	return Histogram;
 });
-define('toxi/color/theory',['require','exports','module','./theory/AnalagousStrategy','./theory/ColorTheoryRegistry','./theory/ComplementaryStrategy','./theory/CompoundTheoryStrategy','./theory/LeftSplitComplementaryStrategy','./theory/MonochromeTheoryStrategy','./theory/RightSplitComplementaryStrategy','./theory/SingleComplementStrategy','./theory/SplitComplementaryStrategy','./theory/TetradTheoryStrategy','./theory/TriadTheoryStrategy','./theory/strategies'],function( require, exports ){
+define('toxi/color/namedColor',[
+    './TColor',
+    '../internals',
+    'exports'
+], function( TColor, internals, exports ){
+    var each = internals.each,
+        names = [],
+        //kept private, used for `getForName`
+        namedColorMap = {};
+
+    //attach every one of the X11 colors to NamedColor
+    //make all names uppercase
+    each(TColor.X11, function( value, key ){
+        var upkey = key.toUpperCase();
+        names.push(upkey);
+        namedColorMap[upkey] = value;
+        namedColorMap[key] = value;
+        exports[upkey] = value;
+    });
+
+
+    /**
+     * Returns the color for the given name
+     * @param {String} name
+     * @return color or undefined if name not found
+     */
+    exports.getForName = function( name ){
+        //return the color, and if it was sent like "springGreen", lowercase it to be nice :)
+        return namedColorMap[name] || namedColorMap[name.toLowerCase()];
+    };
+
+    /**
+     * Return the names of all defined colors
+     * @return list of names
+     */
+    exports.getNames = function(){
+        return names.slice(0);
+    };
+
+});
+
+define('toxi/color/theory/colorTheoryRegistry',['require','exports','module','../../internals','./SingleComplementStrategy','./ComplementaryStrategy','./SplitComplementaryStrategy','./LeftSplitComplementaryStrategy','./RightSplitComplementaryStrategy','./AnalagousStrategy','./MonochromeTheoryStrategy','./TriadTheoryStrategy','./TetradTheoryStrategy','./CompoundTheoryStrategy'],function( require, exports ){
+
+    var internals = require('../../internals'),
+        each = internals.each,
+        keys = internals.keys,
+        values = internals.values,
+        implementations = {};
+
+    var strats = {
+        SINGLE_COMPLEMENT: require('./SingleComplementStrategy'),
+        COMPLEMENTARY: require('./ComplementaryStrategy'),
+        SPLIT_COMPLEMENTARY: require('./SplitComplementaryStrategy'),
+        LEFT_SPLIT_COMPLEMENTARY: require('./LeftSplitComplementaryStrategy'),
+        RIGHT_SPLIT_COMPLEMENTARY: require('./RightSplitComplementaryStrategy'),
+        ANALAGOUS: require('./AnalagousStrategy'),
+        MONOCHROME: require('./MonochromeTheoryStrategy'),
+        TRIAD: require('./TriadTheoryStrategy'),
+        TETRAD: require('./TetradTheoryStrategy'),
+        COMPOUND: require('./CompoundTheoryStrategy')
+    };
+
+    exports.getRegisteredNames = function(){
+        return keys(implementations);
+    };
+
+    exports.getRegisteredStrategies = function(){
+        return values(implementations);
+    };
+
+    exports.getStrategyForName = function( id ){
+        return implementations[id];
+    };
+
+    exports.registerImplementation = function( impl ){
+        implementations[ impl.getName() ] = impl;
+    };
+
+    each(strats, function( Constructor, type ){
+        exports[type] = new (strats[type])();
+        exports.registerImplementation( exports[type] );
+    });
+});
+
+
+
+define('toxi/color/theory',['require','exports','module','./theory/AnalagousStrategy','./theory/colorTheoryRegistry','./theory/ComplementaryStrategy','./theory/CompoundTheoryStrategy','./theory/LeftSplitComplementaryStrategy','./theory/MonochromeTheoryStrategy','./theory/RightSplitComplementaryStrategy','./theory/SingleComplementStrategy','./theory/SplitComplementaryStrategy','./theory/TetradTheoryStrategy','./theory/TriadTheoryStrategy','./theory/strategies'],function( require, exports ){
     exports.AnalagousStrategy = require('./theory/AnalagousStrategy');
-    exports.ColorTheoryRegistry = require('./theory/ColorTheoryRegistry');
+    exports.colorTheoryRegistry = require('./theory/colorTheoryRegistry');
+    //keep it uppercase also
+    exports.ColorTheoryRegistry = exports.colorTheoryRegistry;
     exports.ComplementartyStrategy = require('./theory/ComplementaryStrategy');
     exports.CompoundTheoryStrategy = require('./theory/CompoundTheoryStrategy');
     exports.LeftSplitComplementaryStrategy = require('./theory/LeftSplitComplementaryStrategy');
@@ -6055,8 +6180,10 @@ define('toxi/color/ToneMap',[
 
 });
 
-define('toxi/color',['require','exports','module','./color/AccessCriteria','./color/AlphaAccessor','./color/CMYKAccessor','./color/CMYKDistanceProxy','./color/ColorGradient','./color/ColorList','./color/ColorRange','./color/ColorTheme','./color/createListUsingStrategy','./color/HistEntry','./color/Histogram','./color/HSVAccessor','./color/HSVDistanceProxy','./color/Hue','./color/LuminanceAccessor','./color/NamedColor','./color/ProximityComparator','./color/RGBAccessor','./color/RGBDistanceProxy','./color/TColor','./color/theory','./color/ToneMap'],function(require, exports) {
-	exports.AccessCriteria = require('./color/AccessCriteria');
+define('toxi/color',['require','exports','module','./color/accessCriteria','./color/AlphaAccessor','./color/CMYKAccessor','./color/CMYKDistanceProxy','./color/ColorGradient','./color/ColorList','./color/ColorRange','./color/ColorTheme','./color/createListUsingStrategy','./color/HistEntry','./color/Histogram','./color/HSVAccessor','./color/HSVDistanceProxy','./color/Hue','./color/LuminanceAccessor','./color/namedColor','./color/ProximityComparator','./color/RGBAccessor','./color/RGBDistanceProxy','./color/TColor','./color/theory','./color/ToneMap'],function(require, exports) {
+	exports.accessCriteria = require('./color/accessCriteria');
+    //keep it uppercase also
+    exports.AccessCriteria = exports.accessCriteria;
 	exports.AlphaAccessor = require('./color/AlphaAccessor');
 	exports.CMYKAccessor = require('./color/CMYKAccessor');
 	exports.CMYKDDistanceProxy = require('./color/CMYKDistanceProxy');
@@ -6071,7 +6198,8 @@ define('toxi/color',['require','exports','module','./color/AccessCriteria','./co
 	exports.HSVDistanceProxy = require('./color/HSVDistanceProxy');
     exports.Hue = require('./color/Hue');
 	exports.LuminanceAccessor = require('./color/LuminanceAccessor');
-    exports.NamedColor = require('./color/NamedColor');
+    exports.namedColor = require('./color/namedColor');
+    exports.NamedColor = exports.namedColor;
 	exports.ProximityComparator = require('./color/ProximityComparator');
 	exports.RGBAccessor = require('./color/RGBAccessor');
 	exports.RGBDistanceProxy = require('./color/RGBDistanceProxy');
@@ -11496,12 +11624,28 @@ Polygon2D.getRadiusForEdgeLength = function( len, res ){
 module.exports = Polygon2D;
 });
 
-define('toxi/geom/Ellipse',["require", "exports", "module", "../internals","../math/mathUtils","./Vec2D","./Polygon2D"], function(require, exports, module) {
-var	internals = require('../internals'),
+define('toxi/geom/Ellipse',[
+    'require',
+    'exports',
+    'module',
+    '../internals/extend',
+    '../internals/has',
+    '../internals/is',
+    '../math/mathUtils',
+    './Vec2D',
+    './Polygon2D'
+], function(require, exports, module) {
+
+var extend = require('../internals/extend'),
+    has = require('../internals/has'),
+    is = require('../internals/is'),
 	mathUtils = require('../math/mathUtils'),
 	Vec2D = require('./Vec2D'),
 	Polygon2D = require('./Polygon2D');
 
+
+//declared in this module
+var Ellipse, Circle;
 
 /**
  * @class defines a 2D ellipse and provides several utility methods for it.
@@ -11509,14 +11653,14 @@ var	internals = require('../internals'),
  * @augments Vec2D
  */
 
-var	Ellipse = function(a,b,c,d) {
+Ellipse = function(a,b,c,d) {
 	this.radius = new Vec2D();
 	if(arguments.length === 0){
 		Vec2D.apply(this,[0,0]);
 		this.setRadii(1,1);
-	} else if( internals.has.XY( a ) ) {
+	} else if( has.XY( a ) ) {
 		Vec2D.apply(this,[a.x,a.y]);
-		if( internals.has.XY( b ) ){
+		if( has.XY( b ) ){
 			this.setRadii(b.x,b.y);
 		} else {
 			this.setRadii(b,c);
@@ -11537,7 +11681,7 @@ var	Ellipse = function(a,b,c,d) {
 	}
 };
 
-internals.extend(Ellipse,Vec2D);
+extend(Ellipse,Vec2D);
 
 Ellipse.prototype.containsPoint = function(p) {
     var foci = this.getFoci();
@@ -11602,7 +11746,7 @@ Ellipse.prototype.getRadii = function() {
  * @return itself
  */
 Ellipse.prototype.setRadii = function(rx,ry) {
-	if( internals.has.XY( rx ) ){
+	if( has.XY( rx ) ){
 		ry = rx.y;
 		rx = rx.x;
 	}
@@ -11630,29 +11774,19 @@ Ellipse.prototype.toPolygon2D = function(res) {
 };
 
 
-module.exports = Ellipse;
-
-});
-
-define('toxi/geom/Circle',["require", "exports", "module", "../internals","../math/mathUtils",'./Ellipse','./Vec2D'], function(require, exports, module) {
-var internals, mathUtils;
-
-
-internals = require('../internals');
-mathUtils = require('../math/mathUtils');
-var Ellipse = require('./Ellipse');
-var Vec2D = require('./Vec2D');
+exports = module.exports = Ellipse;
 
 /**
+ * Circle
  * @class This class overrides {@link Ellipse} to define a 2D circle and provides
  * several utility methods for it, including factory methods to construct
  * circles from points.
  * @member toxi
  * @augments Ellipse
  */
-var	Circle = function(a,b,c) {
+Circle = function(a,b,c) {
 	if(arguments.length == 1){
-		if( internals.is.Circle( a ) ){
+		if( is.Circle( a ) ){
 			Ellipse.apply(this,[a,a.radius.x]);
 		} else {
 			Ellipse.apply(this,[0,0,a]);
@@ -11664,7 +11798,7 @@ var	Circle = function(a,b,c) {
 	}
 };
 
-internals.extend(Circle,Ellipse);
+extend(Circle,Ellipse);
 
 
 
@@ -11787,9 +11921,17 @@ Circle.prototype.setRadius = function(r) {
 };
 
 
-module.exports = Circle;
+exports.Circle = Circle;
 
+});
 
+define('toxi/geom/Circle',[
+    'require',
+    'exports',
+    'module',
+    './Ellipse'
+], function(require, exports, module) {
+    module.exports = require('./Ellipse').Circle;
 });
 
 define('toxi/geom/CircleIntersector',["require", "exports", "module"], function(require, exports, module) {
@@ -16995,6 +17137,7 @@ ToxiclibsSupport.createMeshGeometry = function(triangleMesh, geometry){
 	}
 
 	geometry.computeCentroids();
+    //using toxiclibsjs normals
 	//geometry.computeFaceNormals();
 	geometry.computeVertexNormals();
 
@@ -17018,15 +17161,12 @@ ToxiclibsSupport.createParticle = function(position, materials){
 };
 
 ToxiclibsSupport.prototype = {
-	addLine: function(line3d, material,holdInDictionary){
+	addLine: function(line3d, material){
 		if(material === undefined){
 			material = new THREE.LineBasicMaterial();
 		}
 		var geom = ToxiclibsSupport.createLineGeometry(line3d);
 		var line = new THREE.Line(geom,material);
-		if(holdInDictionary){
-			this.objectDictionary[line3d] = line;
-		}
 		this.scene.add(line);
 		return line;
 	},
@@ -17040,9 +17180,8 @@ ToxiclibsSupport.prototype = {
      * @param {boolean} [obj_or_mesh.holdInDictionary] should ToxiclibsSupport hold a reference?
      * --
      * @param {THREE.Material} [threeMaterials] the three.js material for the mesh
-     * @param {booealn} [holdInDictionary] should ToxiclibsSupport hold a reference?
      */
-	addMesh: function(obj_or_mesh,threeMaterials,holdInDictionary){
+	addMesh: function(obj_or_mesh,threeMaterials){
 		var toxiTriangleMesh;
 		if(arguments.length == 1){ //it needs to be an param object
 			toxiTriangleMesh = obj_or_mesh.geometry;
@@ -17052,13 +17191,10 @@ ToxiclibsSupport.prototype = {
 			toxiTriangleMesh = obj_or_mesh;
 		}
 		var threeMesh = this.createMesh(toxiTriangleMesh,threeMaterials);
-		if(holdInDictionary){
-			this.objectDictionary[toxiTriangleMesh] = threeMesh;
-		}
 		this.scene.add(threeMesh);
 		return threeMesh;
 	},
-	addParticles: function(positions, material, holdInDictionary){
+	addParticles: function(positions, material){
 		if(material === undefined){
 			material = new THREE.ParticleBasicMaterial();
 		}
@@ -17066,9 +17202,6 @@ ToxiclibsSupport.prototype = {
 		var particle = new THREE.Geometry();
 		for(var i=0,len = positions.length;i<len;i++){
 			v3(particle,positions[i]);
-		}
-		if(holdInDictionary){
-			this.objectDictionary[positions] = particle;
 		}
 		var particleSystem = new THREE.ParticleSystem(particle,material);
 		this.scene.add(particleSystem);
@@ -17079,13 +17212,6 @@ ToxiclibsSupport.prototype = {
 	},
 	createMesh: function(triangleMesh,material){
 		return ToxiclibsSupport.createMesh(triangleMesh,material);
-	},
-	removeObject: function(toxiObject){
-		var threeMesh = this.objectDictionary[toxiObject];
-		this.scene.remove(threeMesh);
-		if( this.objectDictionary[toxiObject] ){
-			delete this.objectDictionary[toxiObject];
-		}
 	}
 };
 
@@ -17356,6 +17482,5 @@ define('toxi',["./toxi/main"], function(toxi) {
 });
 
 define.unordered = true;
-toxi = require('toxi');
-toxi.VERSION = "0.2.0";
+toxi = require("toxi");toxi.VERSION = "0.2.0";
 })();

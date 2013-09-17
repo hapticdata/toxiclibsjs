@@ -2,7 +2,8 @@ var _ = require('underscore'),
     toxi = require('./index'),
     requirejs = require('requirejs'),
     defaults,
-    wrap;
+    wrap,
+    buildPackageRequires;
 
 requirejs.config({
     baseUrl: 'lib',
@@ -16,10 +17,11 @@ wrap = {
     endPost: "toxi.VERSION = \"<%= pkg.version %>\";\n})();\n"
 };
 
-
+//The default configuration
 defaults = {
     baseUrl: "./lib/",
     optimize: 'none',
+    out: './build/toxiclibs-custom.js',
     //findNestedDependencies: true,
     paths: {
         almond: '../node_modules/almond/almond'
@@ -27,66 +29,89 @@ defaults = {
     include: ['../node_modules/almond/almond']
 };
 
-var traverse = function(packages){
-    //if the top-level object is anywhere in the packges, thats all we need
+/**
+ * @private
+ * build a string for the end-wrap that requires all of the included modules
+ * @param {Array} packages
+ * @return {String}
+ */
+var buildPackageRequires = function(packages){
+    var tree = {},
+        requires;
+    //if the top-level 'toxi' object is anywhere in the packges, thats all we need
     if( packages.indexOf('toxi') >= 0 ){
         return 'toxi = require("toxi");';
     }
-    if( typeof packages === 'string' ){
-        packages = packages.split(' ');
-    }
-    //create the packages on a mock object so we know what has already been created
-    var mock = {};
-    //for every package
-    var requires = packages.map(function(pkg){
-        var namespaces = pkg.split('/');
+    //get nested array of packages split as namespaces and toxi removed
+    var namespaces = packages.map(function(pkg){
+        var namespaces = pkg.replace('.','/').split('/');
         if( namespaces[0] === 'toxi' ){
             namespaces.shift();
         }
-
-        var c;
+        return namespaces;
+    });
+    //create the packages on a mock object so we know what has already been created
+    namespaces.forEach(function(namespaces){
+        //create objects on `tree` for every package a module belongs to
         if( namespaces.length > 1 ){
-            var o = _.reduce(namespaces, function( mem, nm, i, list ){
+            _.reduce(namespaces, function( mem, nm, i, list ){
                 if( i < list.length-1 ){
-                return mem[nm] || (mem[nm] = {});
+                    return mem[nm] || (mem[nm] = {});
                 }
-                return mock;
-            }, mock);
+                return tree;
+            }, tree);
         }
-
-        var pkgStr = _.reduce(namespaces, function( mem, nm, i, list ){
+    });
+    //process namespaces into array of strings for require()'s
+    requires = namespaces.map(function(namespaces){
+        return _.reduce(namespaces, function( mem, nm, i, list ){
             mem += '.'+nm;
             if( i ===  list.length-1 ){
-                return mem+ ' = require("'+pkg+'");';
+                return mem+ ' = require("toxi/'+list.join('/')+'");';
             }
             return mem;
         }, 'toxi');
-
-        return pkgStr;
     });
-    var str = '';
-    str += "toxi = "+ JSON.stringify(mock) +";\n";
-    str += requires.join('\n')+'\n';
-    return str;
+
+    return [
+        "toxi = "+ JSON.stringify(tree) +";",
+        requires.join('\n')
+    ].join('\n')+'\n';
 };
 
-
-module.exports = function( packages, options ){
+/**
+ * returns a require.js build profile for the optimizer
+ * @param {Array|String} packages an array or space-delimited string of the modules to include
+ * @param {Object} [options] override any config defaults, such as 'out' or 'optimize'
+ * @return {Object} the config object
+ */
+exports.config = function( packages, options ){
     if( typeof packages === 'string' ){
         packages = packages.split(' ');
     }
     //throw an error if one of these doesnt exist
     packages.forEach(requirejs);
     options = _.defaults(options||{}, defaults);
-    options.include = options.include.concat(packages);
     _.tap(options, function(o){
+        o.include = options.include.concat(packages);
         o.wrap = {};
         o.wrap.start = wrap.start;
         o.wrap.end = wrap.endPre;
-        o.wrap.end += traverse(packages);
+        o.wrap.end += buildPackageRequires(packages);
         o.wrap.end += wrap.endPost;
     });
     return {
         options: options
     };
+};
+
+/**
+ * produce an optimized build with require.js
+ * @param {Array|String} packages array or string-delimited list of modules to inculde
+ * @param {Object} [options] optionally provide config properties such as 'out' or 'optimize'
+ * @param {Function} [callBack] the `requirejs.optimize` callback
+ * @param {Function} [errBack] the `requirejs.optimize` error callback
+ */
+exports.optimize = function( packages, options, callBack, errBack ){
+    requirejs.optimize( exports.config(packages, options), callBack, errBack );
 };
