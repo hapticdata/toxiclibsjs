@@ -3,15 +3,26 @@ var _ = require('underscore'),
     requirejs = require('requirejs'),
     defaults,
     wrap,
+    banner,
     buildPackageRequires;
 
+
+//Build a comment for the beginning of the built file
+banner = _.template('/*!\n'+
+    '* <%= pkg.name %> - v<%= pkg.version %>\n' +
+    '* <%= pkg.homepage %>\n' +
+    '* Created by [Kyle Phillips](http://haptic-data.com),\n' +
+    '* based on original work by [Karsten Schmidt](http://toxiclibs.org).\n' +
+    '* Licensed [<%= pkg.licenses[0].type %>](<%= pkg.licenses[0].url %>) \n*/'
+)({ _: _, pkg: require('./package.json') });
+//configure the r.js build
 requirejs.config({
     baseUrl: 'lib',
     nodeRequire: require
 });
 
 wrap = {
-    start: "<%= meta.banner %>\nvar toxi;\n(function(){\n",
+    start: banner+"\nvar toxi;\n(function(){\n",
     endPre: "\ndefine.unordered = true;\n",
     requires: "toxi = require('toxi');\n",
     endPost: "toxi.VERSION = \"<%= pkg.version %>\";\n})();\n"
@@ -24,9 +35,9 @@ defaults = {
     out: './build/toxiclibs-custom.js',
     //findNestedDependencies: true,
     paths: {
-        almond: '../node_modules/almond/almond'
+        'almond': '../node_modules/almond/almond'
     },
-    include: ['../node_modules/almond/almond']
+    include: ['almond']
 };
 
 /**
@@ -100,9 +111,7 @@ exports.config = function( packages, options ){
         o.wrap.end += buildPackageRequires(packages);
         o.wrap.end += wrap.endPost;
     });
-    return {
-        options: options
-    };
+    return options;
 };
 
 /**
@@ -113,5 +122,18 @@ exports.config = function( packages, options ){
  * @param {Function} [errBack] the `requirejs.optimize` error callback
  */
 exports.optimize = function( packages, options, callBack, errBack ){
+    if( typeof packages === 'object' ){
+        errBack = callback;
+        callBack = options;
+        options = packages;
+        packages = '';
+        if( options.include ){
+            packages = options.include;
+            delete options.include;
+        }
+    }
+    if( !packages ){
+        packages = 'toxi';
+    }
     requirejs.optimize( exports.config(packages, options), callBack, errBack );
 };

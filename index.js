@@ -10,5 +10,4 @@ requirejs.config({
     nodeRequire: require
 });
 //load our entire API
-module.exports = requirejs('toxi/main');
-
+exports = module.exports = requirejs('toxi/main');

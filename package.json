@@ -19,7 +19,7 @@
   ],
   "licenses": [
     {
-      "type": "GNU",
+      "type": "GPLv2",
       "url": "http://www.gnu.org/licenses/lgpl-2.1.html"
     }
   ],
@@ -30,6 +30,9 @@
   "main": "../index",
   "scripts": {
     "test": "make test"
+  },
+  "bin": {
+    "toxiclibsjs": "./bin/toxiclibsjs"
   },
   "engines": {
     "node": ">=0.4"
@@ -50,7 +53,6 @@
   "devDependencies": {
     "mocha": ">=v1.12.0",
     "almond": "~0.2.6",
-    "grunt": "~0.4.1",
-    "grunt-contrib-requirejs": "~0.4.1"
+    "underscore": "~1.5.2"
   }
 }

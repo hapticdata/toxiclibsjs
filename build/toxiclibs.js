@@ -1,8 +1,9 @@
 /*!
 * toxiclibsjs - v0.2.0
-* Date: 2013-09-15
 * http://haptic-data.com/toxiclibsjs
-* (c) 2013 Kyle Phillips; Licensed GNU 
+* Created by [Kyle Phillips](http://haptic-data.com),
+* based on original work by [Karsten Schmidt](http://toxiclibs.org).
+* Licensed [GPLv2](http://www.gnu.org/licenses/lgpl-2.1.html) 
 */
 var toxi;
 (function(){
@@ -418,7 +419,7 @@ var requirejs, require, define;
     };
 }());
 
-define("../node_modules/almond/almond", function(){});
+define("almond", function(){});
 
 define('toxi/internals/has',['require','exports','module'],function( require, exports ){
 
@@ -17482,5 +17483,5 @@ define('toxi',["./toxi/main"], function(toxi) {
 });
 
 define.unordered = true;
-toxi = require("toxi");toxi.VERSION = "0.2.0";
+toxi = require("toxi");toxi.VERSION = "<%= pkg.version %>";
 })();

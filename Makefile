@@ -1,11 +1,15 @@
 REPORTER ?= list
-RJS ?="./node_modules/requirejs/bin/r.js"
-build-dev:
-	node $(RJS) -o utils/build_profiles/app.build.js
-build-min:
-	node $(RJS) -o utils/build_profiles/app.build.min.js
-build: build-dev build-min
-test:
-	./node_modules/mocha/bin/mocha --reporter $(REPORTER) test/*.js
+MOCHA_OPTS= --check-leaks
 
-.PHONY: all build build-min build-dev test
+all: toxiclibs.js toxiclibs.min.js
+toxiclibs.js:
+	./bin/toxiclibsjs --out "./build/toxiclibs.js"
+toxiclibs.min.js:
+	./bin/toxiclibsjs --out "./build/toxiclibs.min.js" --minify
+toxiclibs-color.min.js:
+	./bin/toxiclibsjs --include "toxi/color" --out "./build/toxiclibs-color.min.js" --minify
+
+test:
+	./node_modules/mocha/bin/mocha --reporter $(REPORTER) test/*.js $(MOCHA_OPTS)
+
+.PHONY: test
