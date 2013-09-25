@@ -37,7 +37,6 @@ describe('ColorGradient', function(){
 
 	describe('#calcGradient()', function(){
 		it('w/ no params, should return a ColorList', function(){
-			console.log( cg.getGradientPoints().length );
 			var colorList = cg.calcGradient( );
 			assert.ok( colorList instanceof toxi.color.ColorList );
 			assert.ok( colorList.contains( red ) );
@@ -54,7 +53,7 @@ describe('ColorGradient', function(){
             assert.equal( colorList.size(), 10 );
         });
 	});
-	
+
 
 
 });

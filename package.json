@@ -1,27 +1,58 @@
 {
-	"name" : "toxiclibsjs",
-	"version" : "0.1.3",
-	"description" : "toxiclibsjs is an open-source library for computational design tasks with JavaScript.",
-	"keywords" : [ "design", "geometry", "mesh", "math", "graphics" ],
-	"main" : "../index",
-	"engines" : { "node" : ">=0.4" },
-	"maintainers" : [
-		{ "name" : "Kyle Phillips", "email" : "kyle@haptic-data.com" }
-	],
-	"bugs": {
-       "mail": "kyle@haptic-data.com",
-       "url": "https://github.com/hapticdata/toxiclibsjs/issues" 
-   },
-	"licenses" : [
-		{ "type" : "GNU", "url" : "http://www.gnu.org/licenses/lgpl-2.1.html" }
-	],
-	"repositories" : [
-		{ "type" : "git", "url" : "http://github.com/hapticdata/toxiclibsjs" }
-	],
-	"dependencies" : {
-		"requirejs" : ">=1.0.0"
-	},
-	"devDependencies": {
-		"mocha" : "*"
-	}
+  "name": "toxiclibsjs",
+  "version": "0.2.0",
+  "homepage": "http://haptic-data.com/toxiclibsjs",
+  "author": {
+    "name": "Kyle Phillips",
+    "email": "kyle@haptic-data.com",
+    "url": "http://haptic-data.com"
+  },
+  "description": "toxiclibsjs is an open-source library for computational design tasks with JavaScript.",
+  "keywords": [
+    "design",
+    "geometry",
+    "mesh",
+    "math",
+    "graphics",
+    "color",
+    "physics"
+  ],
+  "licenses": [
+    {
+      "type": "GPLv2",
+      "url": "http://www.gnu.org/licenses/lgpl-2.1.html"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/hapticdata/toxiclibsjs.git"
+  },
+  "main": "../index",
+  "scripts": {
+    "test": "make test"
+  },
+  "bin": {
+    "toxiclibsjs": "./bin/toxiclibsjs"
+  },
+  "engines": {
+    "node": ">=0.4"
+  },
+  "maintainers": [
+    {
+      "name": "Kyle Phillips",
+      "email": "kyle@haptic-data.com"
+    }
+  ],
+  "bugs": {
+    "mail": "kyle@haptic-data.com",
+    "url": "https://github.com/hapticdata/toxiclibsjs/issues"
+  },
+  "dependencies": {
+    "requirejs": ">=2.0.0"
+  },
+  "devDependencies": {
+    "mocha": ">=v1.12.0",
+    "almond": "~0.2.6",
+    "underscore": "~1.5.2"
+  }
 }

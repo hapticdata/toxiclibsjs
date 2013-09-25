@@ -1,9 +1,15 @@
-//v0.1.3-feature-color toxiclibs.js (http://haptic-data.com/toxiclibsjs)
-var toxi = {};
+/*!
+* toxiclibsjs - v0.2.0
+* http://haptic-data.com/toxiclibsjs
+* Created by [Kyle Phillips](http://haptic-data.com),
+* based on original work by [Karsten Schmidt](http://toxiclibs.org).
+* Licensed [GPLv2](http://www.gnu.org/licenses/lgpl-2.1.html) 
+*/
+var toxi;
 (function(){
 
 /**
- * almond 0.1.1 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
+ * almond 0.2.6 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/almond for details
  */
@@ -14,12 +20,17 @@ var toxi = {};
 
 var requirejs, require, define;
 (function (undef) {
-    var defined = {},
+    var main, req, makeMap, handlers,
+        defined = {},
         waiting = {},
         config = {},
         defining = {},
-        aps = [].slice,
-        main, req;
+        hasOwn = Object.prototype.hasOwnProperty,
+        aps = [].slice;
+
+    function hasProp(obj, prop) {
+        return hasOwn.call(obj, prop);
+    }
 
     /**
      * Given a relative module name, like ./something, normalize it to
@@ -30,10 +41,11 @@ var requirejs, require, define;
      * @returns {String} normalized name
      */
     function normalize(name, baseName) {
-        var baseParts = baseName && baseName.split("/"),
+        var nameParts, nameSegment, mapValue, foundMap,
+            foundI, foundStarMap, starI, i, j, part,
+            baseParts = baseName && baseName.split("/"),
             map = config.map,
-            starMap = (map && map['*']) || {},
-            nameParts, nameSegment, mapValue, foundMap, i, j, part;
+            starMap = (map && map['*']) || {};
 
         //Adjust any relative paths.
         if (name && name.charAt(0) === ".") {
@@ -51,7 +63,8 @@ var requirejs, require, define;
                 name = baseParts.concat(name.split("/"));
 
                 //start trimDots
-                for (i = 0; (part = name[i]); i++) {
+                for (i = 0; i < name.length; i += 1) {
+                    part = name[i];
                     if (part === ".") {
                         name.splice(i, 1);
                         i -= 1;
@@ -63,7 +76,7 @@ var requirejs, require, define;
                             //no path mapping for a path starting with '..'.
                             //This can still fail, but catches the most reasonable
                             //uses of ..
-                            return true;
+                            break;
                         } else if (i > 0) {
                             name.splice(i - 1, 2);
                             i -= 2;
@@ -73,6 +86,10 @@ var requirejs, require, define;
                 //end trimDots
 
                 name = name.join("/");
+            } else if (name.indexOf('./') === 0) {
+                // No baseName, so this is ID is resolved relative
+                // to baseUrl, pull off the leading dot.
+                name = name.substring(2);
             }
         }
 
@@ -96,19 +113,34 @@ var requirejs, require, define;
                             if (mapValue) {
                                 //Match, update name to the new value.
                                 foundMap = mapValue;
+                                foundI = i;
                                 break;
                             }
                         }
                     }
                 }
 
-                foundMap = foundMap || starMap[nameSegment];
-
                 if (foundMap) {
-                    nameParts.splice(0, i, foundMap);
-                    name = nameParts.join('/');
                     break;
                 }
+
+                //Check for a star map match, but just hold on to it,
+                //if there is a shorter segment match later in a matching
+                //config, then favor over this star map.
+                if (!foundStarMap && starMap && starMap[nameSegment]) {
+                    foundStarMap = starMap[nameSegment];
+                    starI = i;
+                }
+            }
+
+            if (!foundMap && foundStarMap) {
+                foundMap = foundStarMap;
+                foundI = starI;
+            }
+
+            if (foundMap) {
+                nameParts.splice(0, foundI, foundMap);
+                name = nameParts.join('/');
             }
         }
 
@@ -137,17 +169,30 @@ var requirejs, require, define;
     }
 
     function callDep(name) {
-        if (waiting.hasOwnProperty(name)) {
+        if (hasProp(waiting, name)) {
             var args = waiting[name];
             delete waiting[name];
             defining[name] = true;
             main.apply(undef, args);
         }
 
-        if (!defined.hasOwnProperty(name)) {
+        if (!hasProp(defined, name) && !hasProp(defining, name)) {
             throw new Error('No ' + name);
         }
         return defined[name];
+    }
+
+    //Turns a plugin!resource to [plugin, resource]
+    //with the plugin being undefined if the name
+    //did not have a plugin prefix.
+    function splitPrefix(name) {
+        var prefix,
+            index = name ? name.indexOf('!') : -1;
+        if (index > -1) {
+            prefix = name.substring(0, index);
+            name = name.substring(index + 1, name.length);
+        }
+        return [prefix, name];
     }
 
     /**
@@ -155,16 +200,20 @@ var requirejs, require, define;
      * for normalization if necessary. Grabs a ref to plugin
      * too, as an optimization.
      */
-    function makeMap(name, relName) {
-        var prefix, plugin,
-            index = name.indexOf('!');
+    makeMap = function (name, relName) {
+        var plugin,
+            parts = splitPrefix(name),
+            prefix = parts[0];
 
-        if (index !== -1) {
-            prefix = normalize(name.slice(0, index), relName);
-            name = name.slice(index + 1);
+        name = parts[1];
+
+        if (prefix) {
+            prefix = normalize(prefix, relName);
             plugin = callDep(prefix);
+        }
 
-            //Normalize according
+        //Normalize according
+        if (prefix) {
             if (plugin && plugin.normalize) {
                 name = plugin.normalize(name, makeNormalize(relName));
             } else {
@@ -172,15 +221,22 @@ var requirejs, require, define;
             }
         } else {
             name = normalize(name, relName);
+            parts = splitPrefix(name);
+            prefix = parts[0];
+            name = parts[1];
+            if (prefix) {
+                plugin = callDep(prefix);
+            }
         }
 
         //Using ridiculous property names for space reasons
         return {
             f: prefix ? prefix + '!' + name : name, //fullName
             n: name,
+            pr: prefix,
             p: plugin
         };
-    }
+    };
 
     function makeConfig(name) {
         return function () {
@@ -188,10 +244,32 @@ var requirejs, require, define;
         };
     }
 
+    handlers = {
+        require: function (name) {
+            return makeRequire(name);
+        },
+        exports: function (name) {
+            var e = defined[name];
+            if (typeof e !== 'undefined') {
+                return e;
+            } else {
+                return (defined[name] = {});
+            }
+        },
+        module: function (name) {
+            return {
+                id: name,
+                uri: '',
+                exports: defined[name],
+                config: makeConfig(name)
+            };
+        }
+    };
+
     main = function (name, deps, callback, relName) {
-        var args = [],
-            usingExports,
-            cjsModule, depName, ret, map, i;
+        var cjsModule, depName, ret, map, i,
+            args = [],
+            usingExports;
 
         //Use name if no relName
         relName = relName || name;
@@ -203,31 +281,28 @@ var requirejs, require, define;
             //values to the callback.
             //Default to [require, exports, module] if no deps
             deps = !deps.length && callback.length ? ['require', 'exports', 'module'] : deps;
-            for (i = 0; i < deps.length; i++) {
+            for (i = 0; i < deps.length; i += 1) {
                 map = makeMap(deps[i], relName);
                 depName = map.f;
 
                 //Fast path CommonJS standard dependencies.
                 if (depName === "require") {
-                    args[i] = makeRequire(name);
+                    args[i] = handlers.require(name);
                 } else if (depName === "exports") {
                     //CommonJS module spec 1.1
-                    args[i] = defined[name] = {};
+                    args[i] = handlers.exports(name);
                     usingExports = true;
                 } else if (depName === "module") {
                     //CommonJS module spec 1.1
-                    cjsModule = args[i] = {
-                        id: name,
-                        uri: '',
-                        exports: defined[name],
-                        config: makeConfig(name)
-                    };
-                } else if (defined.hasOwnProperty(depName) || waiting.hasOwnProperty(depName)) {
+                    cjsModule = args[i] = handlers.module(name);
+                } else if (hasProp(defined, depName) ||
+                           hasProp(waiting, depName) ||
+                           hasProp(defining, depName)) {
                     args[i] = callDep(depName);
                 } else if (map.p) {
                     map.p.load(map.n, makeRequire(relName, true), makeLoad(depName), {});
                     args[i] = defined[depName];
-                } else if (!defining[depName]) {
+                } else {
                     throw new Error(name + ' missing ' + depName);
                 }
             }
@@ -239,7 +314,7 @@ var requirejs, require, define;
                 //favor that over return value and exports. After that,
                 //favor a non-undefined return value over exports use.
                 if (cjsModule && cjsModule.exports !== undef &&
-                    cjsModule.exports !== defined[name]) {
+                        cjsModule.exports !== defined[name]) {
                     defined[name] = cjsModule.exports;
                 } else if (ret !== undef || !usingExports) {
                     //Use the return value from the function.
@@ -253,8 +328,12 @@ var requirejs, require, define;
         }
     };
 
-    requirejs = require = req = function (deps, callback, relName, forceSync) {
+    requirejs = require = req = function (deps, callback, relName, forceSync, alt) {
         if (typeof deps === "string") {
+            if (handlers[deps]) {
+                //callback in this case is really relName
+                return handlers[deps](callback);
+            }
             //Just return the module wanted. In this scenario, the
             //deps arg is the module name, and second arg (if passed)
             //is just the relName.
@@ -277,13 +356,26 @@ var requirejs, require, define;
         //Support require(['a'])
         callback = callback || function () {};
 
+        //If relName is a function, it is an errback handler,
+        //so remove it.
+        if (typeof relName === 'function') {
+            relName = forceSync;
+            forceSync = alt;
+        }
+
         //Simulate async callback;
         if (forceSync) {
             main(undef, deps, callback, relName);
         } else {
+            //Using a non-zero value because of concern for what old browsers
+            //do, and latest browsers "upgrade" to 4 if lower value is used:
+            //http://www.whatwg.org/specs/web-apps/current-work/multipage/timers.html#dom-windowtimers-settimeout:
+            //If want a value immediately, use require('id') instead -- something
+            //that works in almond on the global level, but not guaranteed and
+            //unlikely to work in other AMD implementations.
             setTimeout(function () {
                 main(undef, deps, callback, relName);
-            }, 15);
+            }, 4);
         }
 
         return req;
@@ -295,8 +387,16 @@ var requirejs, require, define;
      */
     req.config = function (cfg) {
         config = cfg;
+        if (config.deps) {
+            req(config.deps, config.callback);
+        }
         return req;
     };
+
+    /**
+     * Expose module registry for debugging and tooling
+     */
+    requirejs._defined = defined;
 
     define = function (name, deps, callback) {
 
@@ -309,295 +409,367 @@ var requirejs, require, define;
             deps = [];
         }
 
-        waiting[name] = [name, deps, callback];
+        if (!hasProp(defined, name) && !hasProp(waiting, name)) {
+            waiting[name] = [name, deps, callback];
+        }
     };
 
     define.amd = {
         jQuery: true
     };
 }());
-define("../utils/almond", function(){});
 
-define.unordered = true;
-define("../utils/almond.settings", function(){});
+define("almond", function(){});
 
-define('toxi/internals',["require", "exports"], function(require, exports) {
+define('toxi/internals/has',['require','exports','module'],function( require, exports ){
+
+    var all = function(subject,properties){
+        if(subject === undefined || typeof subject != 'object'){
+            return false;
+        }
+        var i = 0,
+            len = properties.length,
+            prop;
+        for(i = 0; i < len; i++){
+            prop = properties[i];
+            if(!(prop in subject)){
+                return false;
+            }
+        }
+        return true;
+    };
+
+    var apply = function( properties ){
+        return function( o ){
+            return all(o, properties);
+        };
+    };
+    exports.property = function(obj, key) {
+        return hasOwnProperty.call(obj, key);
+    };
+    exports.all = all;
+    exports.XY = apply(['x','y']);
+	exports.XYZ = apply(['x','y','z']);
+	exports.XYWidthHeight = apply(['x','y','width','height']);
+});
+
+define('toxi/internals/is',['./has','exports'],function( has, exports ){
+
+    var apply = function(properties){
+        return function( o ){
+            return has.all(o, properties);
+        };
+    };
+
+    exports.Array = Array.isArray || function(a){
+        return a.toString() == '[object Array]';
+    };
+    exports.Object = function(a){
+        return typeof a === 'object';
+    };
+    exports.undef = function(a){
+        return a === void 0;
+    };
+    //determines if a value is undefined or null
+    exports.existy = function(a){
+        return a != null;
+    };
+    exports.String = function(a){
+        return typeof a === 'string';
+    };
+    exports.Number = function(a){
+        return typeof a === 'number';
+    };
+    exports.Function = function(a){
+        return typeof a === 'function';
+    };
+	exports.AABB = apply(['setExtent','getNormalForPoint']);
+    exports.ColorGradient = apply(['gradient','interpolator','maxDither','addColorAt','calcGradient']);
+    exports.ColorList = apply(['add','addAll','adjustBrightness','adjustSaturation']);
+    exports.ColorRange = apply(['add', 'addAlphaRange','addBrightnessRange','addHueRange']);
+    exports.Circle = apply(['getCircumference','getRadius','intersectsCircle']);
+    exports.FloatRange = apply(['min','max','adjustCurrentBy','getMedian']);
+    exports.Hue = apply(['getHue','isPrimary']);
+	exports.Line2D = apply(['closestPointTo','intersectLine','getLength']);
+	exports.Matrix4x4 = apply(['identity', 'invert', 'setFrustrum']);
+	exports.Rect = apply(['x','y','width','height','getArea','getCentroid','getDimensions']);
+	exports.Sphere = apply(['x','y','z','radius','toMesh']);
+    exports.ScaleMap = apply(['mapFunction','setInputRange','setOutputRange','getMappedValueFor']);
+	exports.TColor = apply(['rgb','cmyk','hsv']);
+	exports.ParticleBehavior = apply(['applyBehavior','configure']);
+	exports.VerletParticle2D = apply(['x','y','weight']);
+});
+
+define('toxi/internals/extend',['require'],function( require ){
+    return function(childClass,superClass){
+        if(typeof childClass !== 'function'){
+            throw Error("childClass was not function, possible circular: ", childClass);
+        } else if( typeof superClass !== 'function'){
+            throw Error("superClass was not function, possible circular: ", superClass);
+        }
+        childClass.prototype = Object.create( superClass.prototype );//new superClass();
+        childClass.constructor = childClass;
+        childClass.prototype.parent = superClass.prototype;
+    };
+});
+
+define('toxi/internals/each',['require'],function( require ){
+    //from Underscore.js
+    //(c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
+    //basic forEach, use native implementation is available
+    var breaker = {};
+    return function(obj, iterator, context) {
+        if (obj == null) return;
+        if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
+            obj.forEach(iterator, context);
+        } else if (obj.length === +obj.length) {
+            for (var i = 0, l = obj.length; i < l; i++) {
+                if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
+            }
+        } else {
+            for (var key in obj) {
+                if (hasOwnProperty.call(obj, key)) {
+                    if (iterator.call(context, obj[key], key, obj) === breaker) return;
+                }
+            }
+        }
+    };
+});
+
+define('toxi/internals/bind',['require'],function( require ){
+    //bind a function to a scope
+    var ctor = {};
+    return function(func, context) {
+        var args, bound;
+        var FP = Function.prototype;
+        var slice = Array.prototype.slice;
+        if (func.bind === FP.bind && FP.bind) return FP.bind.apply(func, slice.call(arguments, 1));
+        args = slice.call(arguments, 2);
+        return bound = function() {
+            if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+            ctor.prototype = func.prototype;
+            var self = new ctor();
+            ctor.prototype = null;
+            var result = func.apply(self, args.concat(slice.call(arguments)));
+            if (Object(result) === result) return result;
+            return self;
+        };
+    };
+});
+
+define('toxi/internals/keys',['require'],function( require ){
+    return Object.keys || function(obj) {
+        if (obj !== Object(obj)) throw new TypeError('Invalid object');
+        var keys = [];
+        for (var key in obj) if (exports.has(obj, key)) keys.push(key);
+        return keys;
+    };
+});
+
+define('toxi/internals/values',['./has'],function(has){
+    return function(obj) {
+        var values = [];
+        for (var key in obj) if (has.property(obj, key)) values.push(obj[key]);
+        return values;
+    };
+});
+
+define('toxi/internals/filter',[],function(){
+    return function(obj, iterator, context) {
+        var results = [];
+        if (obj == null) return results;
+        if (Array.prototype.filter && obj.filter === Array.prototype.filter) return obj.filter(iterator, context);
+        exports.each(obj, function(value, index, list) {
+            if (iterator.call(context, value, index, list)) results[results.length] = value;
+        });
+        return results;
+    };
+});
+
+define('toxi/internals/mixin',['./each'],function( each ){
+    //basic mixin function, copy over object properties to provided object
+    return function(destination,source){
+        each(source,function(val,key){
+            destination[key] = val;
+        });
+        return destination;
+    };
+});
+
+define('toxi/internals/Iterator',['./is'],function( is ){
+	//imitate the basic functionality of a Java Iterator
+    var ArrayIterator = function(collection){
+        this.__it = collection.slice(0);
+    };
+    ArrayIterator.prototype = {
+        hasNext: function(){
+            return this.__it.length > 0;
+        },
+        next: function(){
+            return this.__it.shift();
+        }
+    };
+    var ObjectIterator = function(object){
+        this.__obj = {};
+        this.__keys = [];
+        for(var prop in object){
+            this.__obj[prop] = object[prop];
+            this.__keys.push(prop);
+        }
+        this.__it = new ArrayIterator(this.__keys);
+    };
+    ObjectIterator.prototype = {
+        hasNext: function(){
+            return this.__it.hasNext();
+        },
+        next: function(){
+            var key = this.__it.next();
+            return this.__obj[key];
+        }
+    };
+
+    var Iterator = function(collection){
+        if(is.array(collection)){
+            return new ArrayIterator(collection);
+        }
+        return new ObjectIterator(collection);
+    };
+
+    return Iterator;
+});
+
+define('toxi/internals/LinkedMap',['./each'],function(each){
+    // {Function} keyGeneratorFunction - key to use to return the identifier
+    var LinkedMap = function( keyGeneratorFunction ){
+        this.__list = [];
+        this.__map = {};
+        this.__inverseMap = {};
+        if( typeof keyGeneratorFunction === 'function' ){
+            this.generateKey = keyGeneratorFunction;
+        }
+    };
+
+    LinkedMap.prototype = {
+        each: function( fn ){
+            each(this.__map, fn);
+        },
+        get: function( id_or_val ){
+            var self = this;
+            var checkBoth = function(){
+                if( self.__inverseMap[id_or_val] !== undefined ){
+                    return id_or_val;
+                }
+                return self.__map[id_or_val];
+            };
+
+            var result = checkBoth();
+
+            if( result === undefined ){
+                id_or_val = this.generateKey( id_or_val );
+                result = checkBoth();
+            }
+            return result;
+        },
+        generateKey: function( key ){ return key.toString(); },
+        getArray: function(){
+            return this.__list;
+        },
+        has: function( id_or_val ){
+            var self = this;
+            var _has = function( id ){
+                return ( self.__map[ id ] !== undefined || self.__inverseMap[ id ] !== undefined );
+            };
+            if( _has( id_or_val ) ){
+                return true;
+            }
+            return _has( this.generateKey( id_or_val ) );
+        },
+        put: function( id, val ){
+            id = this.generateKey( id );
+            this.__map[id] = val;
+            this.__inverseMap[val] = id;
+            this.__list.push( val );
+        },
+        remove: function( val ){
+            val = this.get( val );
+            var id = this.__inverseMap[val];
+            delete this.__inverseMap[val];
+            delete this.__map[id];
+            return this.__list.splice( this.__list.indexOf(val), 1)[0];
+        },
+        size: function(){
+            return this.__list.length;
+        },
+        values: function(){
+            return this.getArray().slice(0);
+        }
+    };
+
+    return LinkedMap;
+});
+
+define('toxi/internals/numberComparator',[],function(){
+    return function(f1,f2){
+        if(f1 == f2) return 0;
+        if(f1 < f2) return -1;
+        if(f1 > f2) return 1;
+    };
+});
+
+define('toxi/internals/Int32Array',[],function(){
+    return (typeof Int32Array !== 'undefined') ? Int32Array : Array;
+});
+
+define('toxi/internals/Float32Array',[],function(){
+   return (typeof Float32Array !== 'undefined') ? Float32Array : Array;
+});
+
+define('toxi/internals/removeItemFrom',[],function( ){
+    return function(item,array){
+        var index = array.indexOf(item);
+        if(index > -1){
+            return array.splice(index,1);
+        }
+        return undefined;
+    };
+});
+
+define('toxi/internals',['require','exports','module','./internals/is','./internals/has','./internals/extend','./internals/each','./internals/bind','./internals/keys','./internals/values','./internals/filter','./internals/mixin','./internals/Iterator','./internals/LinkedMap','./internals/numberComparator','./internals/Int32Array','./internals/Float32Array','./internals/removeItemFrom'],function(require, exports) {
 /**
- * @module toxi/libUtils
- * contains the helper functions for the library,
- * these are intended as 'protected', you can use them but it isnt
- * intended to be used directly outside of the library.
+ * @namespace contains helper functions used internally
+ * THESE MODULES ARE NOT ALLOWED TO HAVE DEPENDENCIES OUTSIDE
+ * THE `internals` PACKAGE
  */
 
-
-
-var ifUndefinedElse = function(_if,_else){
-	return (typeof _if !== 'undefined') ? _if : _else;
-};
-
-exports.extend = function(childClass,superClass){
-	if(typeof childClass !== 'function'){
-		throw Error("childClass was not function, possible circular: ", childClass);
-	} else if( typeof superClass !== 'function'){
-		throw Error("superClass was not function, possible circular: ", superClass);
-	}
-	childClass.prototype = Object.create( superClass.prototype );//new superClass();
-	childClass.constructor = childClass;
-	childClass.prototype.parent = superClass.prototype;
-};
-
-
- //allow the library to assume Array.isArray has been implemented
-var isArray = Array.isArray || function(a){
-	return a.toString() == '[object Array]';
-};
-exports.isArray = isArray;
-
-var hasProperties = function(subject,properties){
-	if(subject === undefined || typeof subject != 'object'){
-		return false;
-	}
-	var i = 0,
-		len = properties.length,
-		prop;
-	for(i = 0; i < len; i++){
-		prop = properties[i];
-		if(!(prop in subject)){
-			return false;
-		}
-	}
-	return true;
-};
-
-exports.hasProperties = hasProperties;
-exports.tests = {
-	hasXY: function( o ){
-		return hasProperties(o, ['x','y']);
-	},
-	hasXYZ: function( o ){
-		return hasProperties(o, ['x','y','z']);
-	},
-	hasXYWidthHeight: function( o ){
-		return hasProperties( o, ['x','y','width','height']);
-	},
-	isArray: isArray,
-	isAABB: function ( o ){
-		return hasProperties(o, ['setExtent','getNormalForPoint']);
-	},
-	isCircle: function( o ){
-		return hasProperties( o, ['getCircumference','getRadius','intersectsCircle']);
-	},
-	isLine2D: function( o ){
-		return hasProperties(o, ['closestPointTo','intersectLine','getLength']);
-	},
-	isMatrix4x4: function( o ){
-		return hasProperties( o, ['identity', 'invert', 'setFrustrum']);
-	},
-	isRect: function( o ){
-		return hasProperties(o, ['x','y','width','height','getArea','getCentroid','getDimensions']);
-	},
-	isSphere: function( o ){
-		return hasProperties(o, ['x','y','z','radius','toMesh']);
-	},
-	isTColor: function( o ){
-		return hasProperties(o, ['rgb','cmyk','hsv']);
-	},
-	isParticleBehavior: function( o ){
-		return hasProperties(o, ['applyBehavior','configure']);
-	},
-	isVerletParticle2D: function( o ){
-		return hasProperties(o, ['x','y','weight']);
-	}
-};
-
-//from Underscore.js
-//(c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
-//basic forEach, use native implementation is available
-var breaker = {};
-exports.each = function(obj, iterator, context) {
-	if (obj == null) return;
-	if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
-		obj.forEach(iterator, context);
-	} else if (obj.length === +obj.length) {
-		for (var i = 0, l = obj.length; i < l; i++) {
-			if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
-		}
-	} else {
-		for (var key in obj) {
-			if (hasOwnProperty.call(obj, key)) {
-				if (iterator.call(context, obj[key], key, obj) === breaker) return;
-			}
-		}
-	}
-};
-
-var ctor = {};
-exports.bind = function(func, context) {
-	var args, bound;
-	var FP = Function.prototype;
-	var slice = Array.prototype.slice;
-	if (func.bind === FP.bind && FP.bind) return FP.bind.apply(func, slice.call(arguments, 1));
-	args = slice.call(arguments, 2);
-	return bound = function() {
-		if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-			ctor.prototype = func.prototype;
-			var self = new ctor();
-			ctor.prototype = null;
-			var result = func.apply(self, args.concat(slice.call(arguments)));
-			if (Object(result) === result) return result;
-			return self;
-		};
-  };
-
-exports.filter = function(obj, iterator, context) {
-	var results = [];
-	if (obj == null) return results;
-	if (Array.prototype.filter && obj.filter === Array.prototype.filter) return obj.filter(iterator, context);
-	exports.each(obj, function(value, index, list) {
-		if (iterator.call(context, value, index, list)) results[results.length] = value;
-	});
-	return results;
-};
-
-//
-
-exports.removeItemFrom = function(item,array){
-	var index = array.indexOf(item);
-	if(index > -1){
-		return array.splice(index,1);
-	}
-	return undefined;
-};
-//basic mixin function, copy over object properties to provided object
-exports.mixin = function(destination,source){
-	exports.each(source,function(val,key){
-		destination[key] = val;
-	});
-};
-
-exports.numberCompare = function(f1,f2){
-	if(f1 == f2) return 0;
-	if(f1 < f2) return -1;
-	if(f1 > f2) return 1;
-};
-
+//do type-tests to detect properties on objects
+exports.is = require('./internals/is');
+//test if objects have properties
+exports.has = require('./internals/has');
+//extend the prototype of a class
+exports.extend = require('./internals/extend');
+exports.each = require('./internals/each');
+exports.bind = require('./internals/bind');
+exports.keys = require('./internals/keys');
+exports.values = require('./internals/values');
+exports.filter = require('./internals/filter');
+//receives an object of properties to set on source object
+exports.mixin = require('./internals/mixin');
+//imitates java-style Iterator
+exports.Iterator = require('./internals/Iterator');
+//used for keeping HashMap-like collections
+exports.LinkedMap = require('./internals/LinkedMap');
+//simport sort comparator for numbers
+exports.numberComparator = require('./internals/numberComparator');
 //set up for use with typed-arrays
-exports.Int32Array = (typeof Int32Array !== 'undefined') ? Int32Array : Array;
-exports.Float32Array = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
-	//imitate the basic functionality of a Java Iterator
-	(function(){
-		var ArrayIterator = function(collection){
-			this.__it = collection.slice(0);
-		};
-		ArrayIterator.prototype = {
-			hasNext: function(){
-				return this.__it.length > 0;
-			},
-			next: function(){
-				return this.__it.shift();
-			}
-		};
-		var ObjectIterator = function(object){
-			this.__obj = {};
-			this.__keys = [];
-			for(var prop in object){
-				this.__obj[prop] = object[prop];
-				this.__keys.push(prop);
-			}
-			this.__it = new ArrayIterator(this.__keys);
-		};
-		ObjectIterator.prototype = {
-			hasNext: function(){
-				return this.__it.hasNext();
-			},
-			next: function(){
-				var key = this.__it.next();
-				return this.__obj[key];
-			}
-		};
-
-		var Iterator = function(collection){
-			if(exports.isArray(collection)){
-				return new ArrayIterator(collection);
-			}
-			return new ObjectIterator(collection);
-		};
-
-		exports.Iterator = Iterator;
-	}());
-
-	(function(){
-		// {Function} keyGeneratorFunction - key to use to return the identifier
-		var LinkedMap = function( keyGeneratorFunction ){
-			this.__list = [];
-			this.__map = {};
-			this.__inverseMap = {};
-			if( typeof keyGeneratorFunction === 'function' ){
-				this.generateKey = keyGeneratorFunction;
-			}
-		};
-
-		LinkedMap.prototype = {
-			each: function( fn ){
-				exports.each(this.__map, fn);
-			},
-			get: function( id_or_val ){
-				var self = this;
-				var checkBoth = function(){
-					if( self.__inverseMap[id_or_val] !== undefined ){
-						return id_or_val;
-					}
-					return self.__map[id_or_val];
-				};
-
-				var result = checkBoth();
-				
-				if( result === undefined ){
-					id_or_val = this.generateKey( id_or_val );
-					result = checkBoth();
-				}
-				return result;
-			},
-			generateKey: function( key ){ return key.toString(); },
-			getArray: function(){
-				return this.__list;
-			},
-			has: function( id_or_val ){
-				var self = this;
-				var _has = function( id ){
-					return ( self.__map[ id ] !== undefined || self.__inverseMap[ id ] !== undefined );
-				};
-				if( _has( id_or_val ) ){
-					return true;
-				}
-				return _has( this.generateKey( id_or_val ) ); 
-			},
-			put: function( id, val ){
-				id = this.generateKey( id );
-				this.__map[id] = val;
-				this.__inverseMap[val] = id;
-				this.__list.push( val );
-			},
-			remove: function( val ){
-				val = this.get( val );
-				var id = this.__inverseMap[val];
-				delete this.__inverseMap[val];
-				delete this.__map[id];
-				return this.__list.splice( this.__list.indexOf(val), 1)[0];
-			},
-			size: function(){
-				return this.__list.length;
-			}
-		};
-
-		exports.LinkedMap = LinkedMap;
-	}());
+exports.Int32Array = require('./internals/Int32Array');
+exports.Float32Array = require('./internals/Float32Array');
+exports.removeItemFrom = require('./internals/removeItemFrom');
 
 });
 
 define('toxi/color/accessors',['require','exports','module','../internals','../internals'],function( require, exports, module ){
 
-	var numberCompare = require('../internals').numberCompare,
+	var numberComparator = require('../internals').numberComparator,
 		bind = require('../internals').bind;
 
 	//this will attach proper exported objects for each accessor
@@ -612,7 +784,7 @@ define('toxi/color/accessors',['require','exports','module','../internals','../i
 		exports[name].prototype.compare = function( a, b ){
 			var ca = a[arry][this.component],
 				cb = b[arry][this.component];
-			return numberCompare( ca, cb );
+			return numberComparator( ca, cb );
 		};
 
 		exports[name].prototype.getComponentValueFor = function( col ){
@@ -624,14 +796,14 @@ define('toxi/color/accessors',['require','exports','module','../internals','../i
 		};
 
 	}
-	
+
 	make('RGB',['Red','Green','Blue']);
 	make('HSV',['Hue','Saturation','Brightness']);
 	make('CMYK',['Cyan','Magenta','Yellow','Black']);
 
 	var LuminanceAccessor = function(){};
 	LuminanceAccessor.prototype.compare = function( a, b ){
-		return numberCompare( a.luminance(), b.luminance() );
+		return numberComparator( a.luminance(), b.luminance() );
 	};
 	LuminanceAccessor.prototype.getComponentValueFor = function( col ){
 		return col.luminance();
@@ -640,7 +812,7 @@ define('toxi/color/accessors',['require','exports','module','../internals','../i
 
 	var AlphaAccessor = function(){};
 	AlphaAccessor.prototype.compare = function(a,b){
-		return numberCompare( a.alpha(), b.alpha() );
+		return numberComparator( a.alpha(), b.alpha() );
 	};
 	AlphaAccessor.prototype.getComponentValueFor = function(col){
 		return col.alpha();
@@ -653,6 +825,7 @@ define('toxi/color/accessors',['require','exports','module','../internals','../i
 	exports.AlphaAccessor = AlphaAccessor;
 
 });
+
 define('toxi/color/HSVAccessor',['require','./accessors'],function( require ) {
 	return require('./accessors').HSVAccessor;
 });
@@ -673,7 +846,7 @@ define('toxi/color/LuminanceAccessor',['require','./accessors'],function( requir
 	return require('./accessors').LuminanceAccessor;
 });
 
-define('toxi/color/AccessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
+define('toxi/color/accessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
 
 
 var HSVAccessor = require('./HSVAccessor'),
@@ -882,7 +1055,13 @@ MathUtils.radians = function(degrees) {
 };
 
 MathUtils.random = function(rand,min,max) {
-  if(arguments.length == 2) {
+  if( arguments.length === 1 ){
+    //if its an int
+    if( parseInt( arguments[0], 10 ) === arguments[0] ){
+      return parseInt( Math.random() * arguments[0], 10 );
+    }
+    return Math.random() * arguments[0];
+  } else if(arguments.length == 2) {
     max = min;
     min = rand;
     rand = Math.random;
@@ -945,19 +1124,20 @@ define('toxi/geom/vectors',[
 	"exports",
 	"module",
 	"../math/mathUtils",
-	"../internals"
+	"../internals/has",
+    "../internals/is"
 ], function(require, exports, module) {
 
 	var	mathUtils = require('../math/mathUtils');
-	var internals = require('../internals');
+    var has = require('../internals/has'),
+        is = require('../internals/is');
 
-	var hasXY = internals.tests.hasXY;
-	var isRect = internals.tests.isRect;
+	var hasXY = has.XY;
+	var isRect = is.Rect;
 
 	/**
-	@member toxi
 	@class a two-dimensional vector class
-	 */
+	*/
 	var	Vec2D = function(a,b){
 		if( hasXY( a ) ){
 			b = a.y;
@@ -1011,7 +1191,7 @@ define('toxi/geom/vectors',[
 			v.y += this.y;
 			return v;
 		},
-		
+
 		/**
 		 * Adds vector {a,b,c} and overrides coordinates with result.
 		 *
@@ -1041,14 +1221,14 @@ define('toxi/geom/vectors',[
 
 		/**
 		 * Sets all vector components to 0.
-		 * 
+		 *
 		 * @return itself
 		 */
 		clear: function() {
 			this.x = this.y = 0;
 			return this;
 		},
-		
+
 		compareTo: function(vec) {
 			if (this.x == vec.x && this.y == vec.y) {
 				return 0;
@@ -1058,7 +1238,7 @@ define('toxi/geom/vectors',[
 
 		/**
 		 * Forcefully fits the vector in the given rectangle.
-		 * 
+		 *
 		 * @param a
 		 *		either a Rectangle by itself or the Vec2D min
 		 * @param b
@@ -1069,13 +1249,13 @@ define('toxi/geom/vectors',[
 			if( hasXY( a ) && hasXY( b ) ){
 				this.x = mathUtils.clip(this.x, a.x, b.x);
 				this.y = mathUtils.clip(this.y, a.y, b.y);
-			} else if( isRect( a ) ){	
+			} else if( isRect( a ) ){
 				this.x = mathUtils.clip(this.x, a.x, a.x + a.width);
 				this.y = mathUtils.clip(this.y, a.y, a.y + a.height);
 			}
 			return this;
 		},
-		
+
 		copy: function() {
 			return new Vec2D(this);
 		},
@@ -1109,13 +1289,16 @@ define('toxi/geom/vectors',[
 		},
 
 		equals: function(obj) {
-			if ( hasXY( obj ) ) {
-				return this.x == obj.x && this.y == obj.y;
+			if ( !hasXY( obj ) ) {
+				return false;
 			}
-			return false;
+			return this.x == obj.x && this.y == obj.y;
 		},
 
 		equalsWithTolerance: function(v, tolerance) {
+			if( !hasXY( v ) ){
+				return false;
+			}
 			if (mathUtils.abs(this.x - v.x) < tolerance) {
 				if (mathUtils.abs(this.y - v.y) < tolerance) {
 					return true;
@@ -1207,11 +1390,11 @@ define('toxi/geom/vectors',[
 		getSignum: function() {
 			return new Vec2D(this).signum();
 		},
-		
+
 		heading: function() {
 			return Math.atan2(this.y, this.x);
 		},
-		
+
 		interpolateTo: function(v, f, s) {
 			if(s === undefined){
 				return new Vec2D(this.x + (v.x -this.x) * f, this.y + (v.y - this.y) * f);
@@ -1224,7 +1407,7 @@ define('toxi/geom/vectors',[
 		/**
 		 * Interpolates the vector towards the given target vector, using linear
 		 * interpolation
-		 * 
+		 *
 		 * @param v
 		 *            target vector
 		 * @param f
@@ -1294,7 +1477,7 @@ define('toxi/geom/vectors',[
 		/**
 		 * Adds random jitter to the vector in the range -j ... +j using the default
 		 * {@link Random} generator of {@link MathUtils}.
-		 * 
+		 *
 		 * @param a
 		 *            maximum x jitter or  Vec2D
 		 * @param b
@@ -1345,7 +1528,7 @@ define('toxi/geom/vectors',[
 
 		/**
 		 * Normalizes the vector so that its magnitude = 1
-		 * 
+		 *
 		 * @return itself
 		 */
 		normalize: function() {
@@ -1360,7 +1543,7 @@ define('toxi/geom/vectors',[
 
 		/**
 		 * Normalizes the vector to the given length.
-		 * 
+		 *
 		 * @param len
 		 *            desired length
 		 * @return itself
@@ -1381,7 +1564,7 @@ define('toxi/geom/vectors',[
 			this.y = t;
 			return this;
 		},
-		
+
 		positiveHeading: function() {
 			var dist = Math.sqrt(this.x * this.x + this.y * this.y);
 			if (this.y >= 0){
@@ -1402,7 +1585,7 @@ define('toxi/geom/vectors',[
 
 		/**
 		 * Rotates the vector by the given angle around the Z axis.
-		 * 
+		 *
 		 * @param theta
 		 * @return itself
 		 */
@@ -1449,10 +1632,10 @@ define('toxi/geom/vectors',[
 			this.y = v.y;
 			return this;
 		},
-		
+
 		setComponent: function(id, val) {
 			if(typeof id == 'number')
-			{			
+			{
 				id = (id === 0) ? Vec2D.Axis.X : Vec2D.Axis.Y;
 			}
 			if(id === Vec2D.Axis.X){
@@ -1462,12 +1645,12 @@ define('toxi/geom/vectors',[
 			}
 			return this;
 		},
-		
+
 		/**
 		 * Replaces all vector components with the signum of their original values.
 		 * In other words if a components value was negative its new value will be
 		 * -1, if zero => 0, if positive => +1
-		 * 
+		 *
 		 * @return itself
 		 */
 		signum: function() {
@@ -1480,10 +1663,10 @@ define('toxi/geom/vectors',[
 			var v = _getXY(a,b);
 			return new Vec2D(this.x -v.x,this.y - v.y);
 		},
-		
+
 		/**
 		 * Subtracts vector {a,b,c} and overrides coordinates with result.
-		 * 
+		 *
 		 * @param a
 		 *            X coordinate
 		 * @param b
@@ -1505,10 +1688,10 @@ define('toxi/geom/vectors',[
 
 			return new Vec2D(p.x / xr2, p.y / yr2).normalize();
 		},
-		
+
 
 		//to3D** methods are in Vec2D_post.js
-		
+
 		toArray: function() {
 			return [this.x,this.y];
 		},
@@ -1531,7 +1714,7 @@ define('toxi/geom/vectors',[
 			var s = "{x:"+this.x+", y:"+this.y+"}";
 			return s;
 		}
-		
+
 	};
 
 	//these requires are in the functions because of a circular dependency
@@ -1558,8 +1741,8 @@ define('toxi/geom/vectors',[
 		return new Vec3D(0, this.x, this.y);
 	};
 
-	Vec2D.X_AXIS = new Vec2D(1,0); 
-	Vec2D.Y_AXIS = new Vec2D(0,1); 
+	Vec2D.X_AXIS = new Vec2D(1,0);
+	Vec2D.Y_AXIS = new Vec2D(0,1);
 	Vec2D.ZERO = new Vec2D();
 	Vec2D.MIN_VALUE = new Vec2D(Number.MIN_VALUE,Number.MIN_VALUE);
 	Vec2D.MAX_VALUE = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
@@ -1587,7 +1770,7 @@ define('toxi/geom/vectors',[
 	 * @param {Number} z the z
 	 */
 	var Vec3D = function(x, y, z){
-		if( internals.tests.hasXYZ( x ) ){
+		if( has.XYZ( x ) ){
 			this.x = x.x;
 			this.y = x.y;
 			this.z = x.z;
@@ -1601,26 +1784,26 @@ define('toxi/geom/vectors',[
 			this.z = z;
 		}
 	};
-		
+
 	Vec3D.prototype = {
-		
+
 		abs: function(){
 			this.x = Math.abs(this.x);
 			this.y = Math.abs(this.y);
 			this.z = Math.abs(this.z);
 			return this;
 		},
-		
+
 		add: function(a,b,c){
-			if( internals.tests.hasXYZ( a ) ){
+			if( has.XYZ( a ) ){
 				return new Vec3D(this.x+a.x,this.y+a.y,this.z+a.z);
 			}
 			return new Vec3D(this.x+a,this.y+b,this.z+c);
-			
+
 		},
 		/**
 		 * Adds vector {a,b,c} and overrides coordinates with result.
-		 * 
+		 *
 		 * @param a
 		 *            X coordinate
 		 * @param b
@@ -1641,7 +1824,7 @@ define('toxi/geom/vectors',[
 			}
 			return this;
 		},
-		
+
 		angleBetween: function(vec, faceNormalizeBool){
 			var theta;
 			if(faceNormalizeBool){
@@ -1651,13 +1834,13 @@ define('toxi/geom/vectors',[
 			}
 			return Math.acos(theta);
 		},
-		
-		
+
+
 		clear: function(){
 			this.x = this.y = this.z = 0;
 			return this;
 		},
-		
+
 		compareTo: function(vec){
 			if(this.x == vec.x && this.y == vec.y && this.z == vec.z){
 				return 0;
@@ -1667,7 +1850,7 @@ define('toxi/geom/vectors',[
 		/**
 		 * Forcefully fits the vector in the given AABB specified by the 2 given
 		 * points.
-		 * 
+		 *
 		 * @param box_or_min
 		 *		either the AABB box by itself, or your min Vec3D with accompanying max
 		 * @param max
@@ -1675,7 +1858,7 @@ define('toxi/geom/vectors',[
 		 */
 		constrain: function(box_or_min, max){
 			var min;
-			if( internals.tests.isAABB( box_or_min ) ){
+			if( is.AABB( box_or_min ) ){
 				max = box_or_min.getMax();
 				min = box_or_min.getMin();
 			} else {
@@ -1686,15 +1869,15 @@ define('toxi/geom/vectors',[
 			this.z = mathUtils.clip(this.z, min.z, max.z);
 		   return this;
 		},
-		
+
 		copy: function(){
 			return new Vec3D(this);
 		},
-		
+
 		cross: function(vec){
 			return new Vec3D(this.y*vec.z - vec.y * this.z, this.z * vec.x - vec.z * this.x,this.x * vec.y - vec.x * this.y);
 		},
-		
+
 		crossInto: function(vec, vecResult){
 			var vx = vec.x;
 			var vy = vec.y;
@@ -1708,10 +1891,10 @@ define('toxi/geom/vectors',[
 		 * Calculates cross-product with vector v. The resulting vector is
 		 * perpendicular to both the current and supplied vector and overrides the
 		 * current.
-		 * 
+		 *
 		 * @param v
 		 *            the v
-		 * 
+		 *
 		 * @return itself
 		 */
 		crossSelf: function(vec){
@@ -1722,7 +1905,7 @@ define('toxi/geom/vectors',[
 			this.x = cx;
 			return this;
 		},
-		
+
 		distanceTo: function(vec){
 			if(vec !== undefined){
 				var dx = this.x - vec.x;
@@ -1732,7 +1915,7 @@ define('toxi/geom/vectors',[
 			}
 			return NaN;
 		},
-		
+
 		distanceToSquared: function(vec){
 			if(vec !== undefined){
 				var dx = this.x - vec.x;
@@ -1742,18 +1925,18 @@ define('toxi/geom/vectors',[
 			}
 			return NaN;
 		},
-		
+
 		dot: function(vec){
 			return this.x * vec.x + this.y * vec.y + this.z * vec.z;
 		},
-		
+
 		equals: function(vec){
-			if( internals.tests.hasXYZ( vec ) ){
+			if( has.XYZ( vec ) ){
 				return this.x == vec.x && this.y == vec.y && this.z == vec.z;
 			}
 			return false;
 		},
-		
+
 		equalsWithTolerance: function(vec,tolerance){
 			if(Math.abs(this.x-vec.x) < tolerance){
 				if(Math.abs(this.y - vec.y) < tolerance){
@@ -1764,7 +1947,7 @@ define('toxi/geom/vectors',[
 			}
 			return false;
 		},
-		
+
 		floor: function(){
 			this.x = Math.floor(this.x);
 			this.y = Math.floor(this.y);
@@ -1774,7 +1957,7 @@ define('toxi/geom/vectors',[
 		/**
 		 * Replaces the vector components with the fractional part of their current
 		 * values.
-		 * 
+		 *
 		 * @return itself
 		 */
 		frac: function(){
@@ -1783,15 +1966,15 @@ define('toxi/geom/vectors',[
 			this.z -= Math.floor(this.z);
 			return this;
 		},
-		
+
 		getAbs: function(){
 			return new Vec3D(this).abs();
 		},
-		
+
 		getComponent: function(id){
 			if(typeof(id) == 'number'){
 				if(id === Vec3D.Axis.X){
-					id = 0; 
+					id = 0;
 				} else if(id === Vec3D.Axis.Y){
 					id = 1;
 				} else {
@@ -1807,90 +1990,90 @@ define('toxi/geom/vectors',[
 				return this.z;
 			}
 		},
-		
+
 		getConstrained: function(box){
 			return new Vec3D(this).constrain(box);
 		},
-		
+
 		getFloored: function(){
 			return new Vec3D(this).floor();
 		},
-		
+
 		getFrac: function(){
 			return new Vec3D(this).frac();
 		},
-		
+
 		getInverted: function(){
 			return new Vec3D(-this.x,-this.y,-this.z);
 		},
-		
+
 		getLimited: function(limit){
 			if(this.magSquared() > limit * limit){
 				return this.getNormalizedTo(limit);
 			}
 			return new Vec3D(this);
 		},
-		
+
 		getNormalized: function(){
 			return new Vec3D(this).normalize();
 		},
-		
+
 		getNormalizedTo: function(length){
 			return new Vec3D(this).normalizeTo(length);
 		},
-		
+
 		getReciprocal: function(){
 			return this.copy().reciprocal();
 		},
-		
+
 		getReflected: function(normal){
 			return this.copy().reflect(normal);
 		},
-		
+
 		getRotatedAroundAxis: function(vec_axis,theta){
 			return new Vec3D(this).rotateAroundAxis(vec_axis,theta);
 		},
-		
+
 		getRotatedX: function(theta){
 			return new Vec3D(this).rotateX(theta);
 		},
-		
+
 		getRotatedY: function(theta){
 			return new Vec3D(this).rotateY(theta);
 		},
-		
+
 		getRotatedZ: function(theta){
 			return new Vec3D(this).rotateZ(theta);
 		},
-		
+
 		getSignum: function(){
 			return new Vec3D(this).signum();
 		},
-		
+
 		headingXY: function(){
 			return Math.atan2(this.y,this.x);
 		},
-		
+
 		headingXZ: function(){
 			return Math.atan2(this.z,this.x);
 		},
-		
+
 		headingYZ: function(){
 			return Math.atan2(this.y,this.z);
 		},
-		
+
 		immutable: function(){
 			return this; //cant make read-only in javascript, implementing to avoid error
 		},
-		
+
 		interpolateTo: function(v,f,s) {
 			if(s === undefined){
 				return new Vec3D(this.x + (v.x - this.x)*f, this.y + (v.y - this.y) * f, this.z + (v.z - this.z)*f);
 			}
 			return new Vec3D(s.interpolate(this.y,v.y,f),s.interpolate(this.y,v.y,f),s.interpolate(this.z,v.z,f));
-			
+
 		},
-		
+
 		interpolateToSelf: function(v,f,s){
 			if(s === undefined){
 				this.x += (v.x-this.x)*f;
@@ -1903,16 +2086,16 @@ define('toxi/geom/vectors',[
 			}
 			return this;
 		},
-		
-		
-		
+
+
+
 		invert: function(){
 			this.x *= -1;
 			this.y *= -1;
 			this.z *= -1;
 			return this;
 		},
-		
+
 		isInAABB: function(box_or_origin, boxExtent){
 			if(boxExtent) {
 				var w = boxExtent.x;
@@ -1928,9 +2111,9 @@ define('toxi/geom/vectors',[
 					return false;
 				}
 			}
-			return true;	
+			return true;
 		},
-		
+
 		isMajorAxis: function(tol){
 			var ax = mathUtils.abs(this.x);
 			var ay = mathUtils.abs(this.y);
@@ -1955,14 +2138,14 @@ define('toxi/geom/vectors',[
 		isZeroVector: function(){
 			return Math.abs(this.x) < mathUtils.EPS && Math.abs(this.y) < mathUtils.EPS && mathUtils.abs(this.z) < mathUtils.EPS;
 		},
-	  
+
 		/**
 		 * Add random jitter to the vector in the range -j ... +j using the default
 		 * {@link Random} generator of {@link MathUtils}.
-		 * 
+		 *
 		 * @param j
 		 *            the j
-		 * 
+		 *
 		 * @return the vec3 d
 		 */
 		jitter: function(a,b,c){
@@ -1974,36 +2157,36 @@ define('toxi/geom/vectors',[
 			this.z += mathUtils.normalizedRandom()*c;
 			return this;
 		},
-		
+
 		limit: function(lim){
 			if(this.magSquared() > lim * lim){
 				return this.normalize().scaleSelf(lim);
 			}
 			return this;
 		},
-		
+
 		magnitude: function(){
 			return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
 		},
-		
+
 		magSquared: function(){
 			return this.x*this.x+this.y*this.y+this.z*this.z;
 		},
-		
+
 		maxSelf: function(vec){
 			this.x = Math.max(this.x,vec.x);
 			this.y = Math.max(this.y,vec.y);
 			this.z = Math.max(this.z,vec.z);
 			return this;
 		},
-		
+
 		minSelf: function(vec){
 			this.x = Math.min(this.x,vec.x);
 			this.y = Math.min(this.y,vec.y);
 			this.z = Math.min(this.z,vec.z);
 			return this;
 		},
-		
+
 		modSelf: function(basex,basey,basez){
 			if(basey === undefined || basez === undefined){
 				basey = basez = basex;
@@ -2013,8 +2196,8 @@ define('toxi/geom/vectors',[
 			this.z %= basez;
 			return this;
 		},
-		
-		
+
+
 		normalize: function(){
 			var mag = Math.sqrt(this.x*this.x + this.y * this.y + this.z * this.z);
 			if(mag > 0) {
@@ -2025,7 +2208,7 @@ define('toxi/geom/vectors',[
 			}
 			return this;
 		},
-		
+
 		normalizeTo: function(length){
 			var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
 			if(mag>0){
@@ -2036,25 +2219,25 @@ define('toxi/geom/vectors',[
 			}
 			return this;
 		},
-		
+
 		reciprocal: function(){
 			this.x = 1.0 / this.x;
 			this.y = 1.0 / this.y;
 			this.z = 1.0 / this.z;
 			return this;
 		},
-		
+
 		reflect: function(normal){
 			return this.set(normal.scale(this.dot(normal)*2).subSelf(this));
 		},
 		/**
 		 * Rotates the vector around the giving axis.
-		 * 
+		 *
 		 * @param axis
 		 *            rotation axis vector
 		 * @param theta
 		 *            rotation angle (in radians)
-		 * 
+		 *
 		 * @return itself
 		 */
 		rotateAroundAxis: function(vec_axis,theta){
@@ -2082,10 +2265,10 @@ define('toxi/geom/vectors',[
 		},
 		/**
 		 * Rotates the vector by the given angle around the X axis.
-		 * 
+		 *
 		 * @param theta
 		 *            the theta
-		 * 
+		 *
 		 * @return itself
 		 */
 		rotateX: function(theta){
@@ -2098,10 +2281,10 @@ define('toxi/geom/vectors',[
 		},
 		/**
 		 * Rotates the vector by the given angle around the Y axis.
-		 * 
+		 *
 		 * @param theta
 		 *            the theta
-		 * 
+		 *
 		 * @return itself
 		 */
 	   rotateY:function(theta) {
@@ -2115,10 +2298,10 @@ define('toxi/geom/vectors',[
 
 		/**
 		 * Rotates the vector by the given angle around the Z axis.
-		 * 
+		 *
 		 * @param theta
 		 *            the theta
-		 * 
+		 *
 		 * @return itself
 		 */
 		rotateZ:function(theta) {
@@ -2133,7 +2316,7 @@ define('toxi/geom/vectors',[
 		/**
 		 * Rounds the vector to the closest major axis. Assumes the vector is
 		 * normalized.
-		 * 
+		 *
 		 * @return itself
 		 */
 		 roundToAxis:function() {
@@ -2159,7 +2342,7 @@ define('toxi/geom/vectors',[
 		},
 
 		scale:function(a,b,c) {
-			if( internals.tests.hasXYZ( a ) ) { //if it was a vec3d that was passed
+			if( has.XYZ( a ) ) { //if it was a vec3d that was passed
 				return new Vec3D(this.x * a.x, this.y * a.y, this.z * a.z);
 			}
 			else if(b === undefined || c === undefined) { //if only one float was passed
@@ -2167,9 +2350,9 @@ define('toxi/geom/vectors',[
 			}
 			return new Vec3D(this.x * a, this.y * b, this.z * c);
 		},
-		
+
 		scaleSelf: function(a,b,c) {
-			if( internals.tests.hasXYZ( a ) ){
+			if( has.XYZ( a ) ){
 				this.x *= a.x;
 				this.y *= a.y;
 				this.z *= a.z;
@@ -2182,9 +2365,9 @@ define('toxi/geom/vectors',[
 			this.z *= c;
 			return this;
 		},
-		
+
 		set: function(a,b,c){
-			if( internals.tests.hasXYZ( a ) )
+			if( has.XYZ( a ) )
 			{
 				this.x = a.x;
 				this.y = a.y;
@@ -2198,13 +2381,13 @@ define('toxi/geom/vectors',[
 			this.z = c;
 			return this;
 		},
-		
+
 		setXY: function(v){
 			this.x = v.x;
 			this.y = v.y;
 			return this;
 		},
-		
+
 		shuffle:function(nIterations){
 			var t;
 			for(var i=0;i<nIterations;i++) {
@@ -2214,13 +2397,13 @@ define('toxi/geom/vectors',[
 					this.x = this.y;
 					this.z = t;
 					break;
-					
+
 					case 1:
 					t = this.x;
 					this.x = this.z;
 					this.z = t;
 					break;
-					
+
 					case 2:
 					t = this.y;
 					this.y = this.z;
@@ -2234,7 +2417,7 @@ define('toxi/geom/vectors',[
 		 * Replaces all vector components with the signum of their original values.
 		 * In other words if a components value was negative its new value will be
 		 * -1, if zero => 0, if positive => +1
-		 * 
+		 *
 		 * @return itself
 		 */
 		signum: function(){
@@ -2243,18 +2426,18 @@ define('toxi/geom/vectors',[
 			this.z = (this.z < 0 ? -1 : this.z === 0 ? 0 : 1);
 			return this;
 		},
-		
+
 		sub: function(a,b,c){
-			if( internals.tests.hasXYZ( a ) ){
+			if( has.XYZ( a ) ){
 				return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 			} else if(b === undefined || c === undefined) {
 				b = c = a;
 			}
 			return new Vec3D(this.x - a, this.y - b, this.z - c);
 		},
-		
+
 		subSelf: function(a,b,c){
-			if( internals.tests.hasXYZ( a ) ){
+			if( has.XYZ( a ) ){
 				this.x -= a.x;
 				this.y -= a.y;
 				this.z -= a.z;
@@ -2268,29 +2451,29 @@ define('toxi/geom/vectors',[
 			this.z -= c;
 			return this;
 		},
-		
+
 		to2DXY: function(){
 			return new Vec2D(this.x,this.y);
 		},
-		
+
 		to2DXZ: function(){
 			return new Vec2D(this.x,this.z);
 		},
-		
+
 		to2DYZ: function(){
 			return new Vec2D(this.y,this.z);
 		},
-		
+
 		toArray: function(){
 			return [this.x,this.y,this.z];
 		},
-		
+
 		toArray4:function(w){
 			var ta = this.toArray();
 			ta[3] = w;
 			return ta;
 		},
-		
+
 		toCartesian: function(){
 			var a = (this.x * Math.cos(this.z));
 			var xx = (a * Math.cos(this.y));
@@ -2301,7 +2484,7 @@ define('toxi/geom/vectors',[
 			this.z = zz;
 			return this;
 		},
-		
+
 		toSpherical: function(){
 			var xx = Math.abs(this.x) <= mathUtils.EPS ? mathUtils.EPS : this.x;
 			var zz = this.z;
@@ -2312,7 +2495,7 @@ define('toxi/geom/vectors',[
 			this.x = radius;
 			return this;
 		},
-		
+
 		toString: function(){
 			return "[ x: "+this.x+ ", y: "+this.y+ ", z: "+this.z+"]";
 		}
@@ -2330,12 +2513,12 @@ define('toxi/geom/vectors',[
 	/**
 	 * Creates a new vector from the given angle in the XY plane. The Z
 	 * component of the vector will be zero.
-	 * 
+	 *
 	 * The resulting vector for theta=0 is equal to the positive X axis.
-	 * 
+	 *
 	 * @param theta
 	 *            the theta
-	 * 
+	 *
 	 * @return new vector in the XY plane
 	 */
 	Vec3D.fromXYTheta = function(theta) {
@@ -2344,12 +2527,12 @@ define('toxi/geom/vectors',[
 	/**
 	 * Creates a new vector from the given angle in the XZ plane. The Y
 	 * component of the vector will be zero.
-	 * 
+	 *
 	 * The resulting vector for theta=0 is equal to the positive X axis.
-	 * 
+	 *
 	 * @param theta
 	 *            the theta
-	 * 
+	 *
 	 * @return new vector in the XZ plane
 	 */
 	 Vec3D.fromXZTheta = function(theta) {
@@ -2359,12 +2542,12 @@ define('toxi/geom/vectors',[
 	/**
 	 * Creates a new vector from the given angle in the YZ plane. The X
 	 * component of the vector will be zero.
-	 * 
+	 *
 	 * The resulting vector for theta=0 is equal to the positive Y axis.
-	 * 
+	 *
 	 * @param theta
 	 *            the theta
-	 * 
+	 *
 	 * @return new vector in the YZ plane
 	 */
 	Vec3D.fromYZTheta = function(theta) {
@@ -2374,12 +2557,12 @@ define('toxi/geom/vectors',[
 	/**
 	 * Constructs a new vector consisting of the largest components of both
 	 * vectors.
-	 * 
+	 *
 	 * @param b
 	 *            the b
 	 * @param a
 	 *            the a
-	 * 
+	 *
 	 * @return result as new vector
 	 */
 	Vec3D.max = function(a, b) {
@@ -2389,12 +2572,12 @@ define('toxi/geom/vectors',[
 	/**
 	 * Constructs a new vector consisting of the smallest components of both
 	 * vectors.
-	 * 
+	 *
 	 * @param b
 	 *            comparing vector
 	 * @param a
 	 *            the a
-	 * 
+	 *
 	 * @return result as new vector
 	 */
 	Vec3D.min = function(a,b) {
@@ -2405,7 +2588,7 @@ define('toxi/geom/vectors',[
 	/**
 	 * Static factory method. Creates a new random unit vector using the Random
 	 * implementation set as default for the {@link MathUtils} class.
-	 * 
+	 *
 	 * @return a new random normalized unit vector.
 	 */
 
@@ -2419,7 +2602,7 @@ define('toxi/geom/vectors',[
 	Vec3D.Z_AXIS = new Vec3D(0,0,1);
 	Vec3D.Axis = {
 		X: {
-			getVector: function(){ 
+			getVector: function(){
 				return Vec3D.X_AXIS;
 			},
 			toString: function(){
@@ -2427,7 +2610,7 @@ define('toxi/geom/vectors',[
 			}
 		},
 		Y: {
-			getVector: function(){ 
+			getVector: function(){
 				return Vec3D.Y_AXIS;
 			},
 			toString: function(){
@@ -2435,7 +2618,7 @@ define('toxi/geom/vectors',[
 			}
 		},
 		Z: {
-			getVector: function(){ 
+			getVector: function(){
 				return Vec3D.Z_AXIS;
 			},
 			toString: function(){
@@ -2447,20 +2630,138 @@ define('toxi/geom/vectors',[
 	exports.Vec2D = Vec2D;
 	exports.Vec3D = Vec3D;
 });
-define('toxi/geom/Vec2D',['require','exports','module','./vectors'], function( require, exports, module ){
-    //Vec2D is located in toxi/geom/vectors to circumvent circular dependencies
-    module.exports = require('./vectors').Vec2D;
-});
-define('toxi/geom/Vec3D',['require','exports','module','./vectors'], function( require, exports, module ){
-	//Vec3D is defined in toxi/geom/vectors to circumvent circular dependencies
-	module.exports = require('./vectors').Vec3D;
-});
-define('toxi/color/TColor',["require", "exports", "module", "../math/mathUtils","../geom/Vec2D","../geom/Vec3D", "../internals"], function(require, exports, module) {
 
-var	internals = require('../internals'),
+define('toxi/color/Hue',[
+    '../internals/LinkedMap',
+    '../internals/each'
+], function( LinkedMap, each ){
+
+    var namedHues = new LinkedMap(),
+        primaryHues = [],
+        Hue;
+    /*
+    * This class defines color hues and allows them to be access by name. There are
+    * also methods to check if a hue is one of the 7 primary hues (rainbow) or to
+    * find the closest defined hue for a given color.
+    */
+
+    /**
+     * construct a new Hue
+     * @param {String} name
+     * @param {Number} hue (range 0-1)
+     * @param {Boolean} [isPrimary] optionally flag as a primary hue
+     * @constructor
+     */
+    Hue = function( name, hue, isPrimary ){
+        this._isPrimary = (isPrimary === true );
+        this.name = name;
+        this.hue = hue;
+        namedHues.put( name, this );
+        if( this._isPrimary ){
+            primaryHues.push( this );
+        }
+    };
+
+
+    Hue.prototype = {
+        constructor: Hue,
+        getHue: function(){ return this.hue; },
+        getName: function(){ return this.name; },
+        isPrimary: function(){ return this._isPrimary; },
+        toString: function(){
+            return "Hue: ID:" + this.name + " @ " + parseInt(this.hue*360, 10) + " degrees";
+        }
+    };
+
+    //add presets object, like what `toxi.color.ColorRange` has,
+    //allows for easy look-up
+    Hue.PRESETS = {};
+    //add the basic hues
+    each([
+        ['red', true],
+        ['orange', true],
+        ['yellow', true],
+        ['lime'],
+        ['green',true],
+        ['teal'],
+        ['cyan'],
+        ['azure'],
+        ['blue',true],
+        ['indigo'],
+        ['purple',true],
+        ['pink',true]
+    ], function( item, i ){
+        var name = item[0],
+            nameUC = name.toUpperCase(),
+            isPrimary = item[1];
+        Hue[nameUC] = new Hue( name, i * 30 / 360.0, isPrimary );
+        Hue.PRESETS[nameUC] = Hue[nameUC];
+    });
+
+    // Tolerance value for checking if a given hue is primary
+    Hue.PRIMARY_VARIANCE = 0.01;
+
+    /**
+     * Finds the closest defined & named Hue for the given hue vale.
+     * Optionally, the serach can be limited to primary hues only.
+     * @param {Number} hue
+     * @param {Boolean} [primaryOnly]
+     * @returns Hue
+     */
+    Hue.getClosest = function( hue, primaryOnly ){
+        hue %= 1;
+        primaryOnly = (primaryOnly === true);
+        var dist = Number.MAX_VALUE,
+            closest,
+            hues = primaryOnly ? primaryHues : namedHues.getArray();
+        each(hues, function(h){
+            var d = Math.min( Math.abs(h.getHue() - hue), Math.abs(1 + h.getHue() - hue) );
+            if( d < dist ) {
+                dist = d;
+                closest = h;
+            }
+        });
+        return closest;
+    };
+
+    Hue.getForName = function( name ){
+        return namedHues.get(name);
+    };
+
+    Hue.isPrimary = function( hue, variance ){
+        variance = typeof variance === 'number' ? variance : Hue.PRIMARY_VARIANCE;
+        var isPrimary = false;
+        for( var i=0, len = primaryHues.length; i<len; i++ ){
+            var h = primaryHues[i];
+            if( Math.abs( hue - h.getHue() ) < variance ) {
+                isPrimary = true;
+                break;
+            }
+        }
+        return isPrimary;
+    };
+
+    return Hue;
+});
+
+define('toxi/color/TColor',[
+    "require",
+    "exports",
+    "module",
+    "../math/mathUtils",
+    "../geom/vectors",
+    "../internals/numberComparator",
+    "../internals/is",
+    "./Hue"
+], function(require, exports, module) {
+
+var	numberComparator = require('../internals/numberComparator'),
+    is = require('../internals/is'),
 	mathUtils = require('../math/mathUtils'),
-	Vec2D = require('../geom/Vec2D'),
-	Vec3D = require('../geom/Vec3D');
+    vectors = require('../geom/vectors'),
+	Vec2D = vectors.Vec2D,
+	Vec3D = vectors.Vec3D,
+    Hue = require('./Hue');
 
 
 //private
@@ -2491,18 +2792,18 @@ var	TColor = function(tcolor){
 };
 
 TColor.prototype = {
-	
+
 	add: function(c){
 		return this.copy().addSelf(c);
 	},
-	
+
 	addSelf: function(c) {
 		this.rgb[0] = mathUtils.min(this.rgb[0] + c.rgb[0], 1);
 		this.rgb[1] = mathUtils.min(this.rgb[1] + c.rgb[1], 1);
 		this.rgb[2] = mathUtils.min(this.rgb[2] + c.rgb[2], 1);
 		return this.setRGB( this.rgb);
 	},
-	
+
 	/**
 	 * Changes the brightness of the color by the given amount in the direction
 	 * towards either the black or white point (depending on if current
@@ -2514,8 +2815,8 @@ TColor.prototype = {
 	adjustConstrast: function(amount) {
 		return this.hsv[2] < 0.5 ? this.darken(amount) : this.lighten(amount);
 	},
-	
-	
+
+
 	/**
 	 * Adds the given HSV values as offsets to the current color. Hue will
 	 * automatically wrap.
@@ -2528,7 +2829,7 @@ TColor.prototype = {
 	adjustHSV: function(h, s, v) {
 		return this.setHSV([ this.hsv[0] + h, this.hsv[1] + s, this.hsv[2] + v ]);
 	},
-	
+
 	/**
 	 * Adds the given RGB values as offsets to the current color. TColor will
 	 * clip at black or white.
@@ -2540,11 +2841,11 @@ TColor.prototype = {
 	adjustRGB: function(r, g,b) {
 		return this.setRGB([this.rgb[0] + r, this.rgb[1] + g, this.rgb[2] + b]);
 	},
-	
+
 	alpha:function(){
 		return this._alpha;
 	},
-	
+
 	/**
 	 * Rotates this color by a random amount (not exceeding the one specified)
 	 * and creates variations in saturation and brightness based on the 2nd
@@ -2562,7 +2863,7 @@ TColor.prototype = {
 		this.hsv[2] += delta * mathUtils.normalizedRandom();
 		return this.setHSV(this.hsv);
 	},
-	
+
 	//shouldnt this be this.cmyk[3]?
 	black: function(){
 		return this.cmyk[3];
@@ -2584,27 +2885,27 @@ TColor.prototype = {
 		this._alpha += (c._alpha - this._alpha) * t;
 		return this.setRGB(this.rgb);
 	},
-	
+
 	blue: function() {
 		return this.rgb[2];
 	},
-	
+
 	brightness: function(){
 		return this.hsv[2];
 	},
-	
+
 	complement: function(){
 		return this.rotateRYB(180);
 	},
-	
+
 	copy: function(){
 		return new TColor(this);
 	},
-	
+
 	cyan : function(){
 		return this.cmyk[0];
 	},
-	
+
 	darken: function(step){
 		this.hsv[2] = mathUtils.clip((this.hsv[2] -step), 0, 1);
 		return this.setHSV(this.hsv);
@@ -2624,7 +2925,7 @@ TColor.prototype = {
 			Math.abs(this.rgb[1] - c.rgb[1]),
 			Math.abs(this.rgb[2] - c.rgb[2]));
 	},
-	
+
 	distanceToCMYK: function(c) {
 		var ccmyk = c.toCMYKAArray();
 		var dc = this.cmyk[0] - ccmyk[0];
@@ -2633,7 +2934,7 @@ TColor.prototype = {
 		var dk = this.cmyk[3] - ccmyk[3];
 		return Math.sqrt(dc * dc + dm * dm + dy * dy + dk * dk);
 	},
-	
+
 	distanceToHSV: function(c) {
 		var hue = this.hsv[0] * mathUtils.TWO_PI;
 		var hue2 = c.hue() * mathUtils.TWO_PI;
@@ -2641,7 +2942,7 @@ TColor.prototype = {
 		var v2 = new Vec3D((mathUtils.cos(hue2) * c.saturation()), (mathUtils.sin(hue2) * c.saturation()), c.brightness());
 		return v1.distanceTo(v2);
 	},
-	
+
 	distanceToRGB: function(c) {
 		var crgb = c.toRGBAArray();
 		var dr = this.rgb[0] - crgb[0];
@@ -2649,9 +2950,9 @@ TColor.prototype = {
 		var db = this.rgb[2] - crgb[2];
 		return Math.sqrt(dr * dr + dg * dg + db * db);
 	},
-	
+
 	equals: function(o) {
-		if ( internals.tests.isTColor( o ) ) {
+		if ( is.TColor( o ) ) {
 			var c =  o;
 			var dr = c.rgb[0] - this.rgb[0];
 			var dg = c.rgb[1] - this.rgb[1];
@@ -2662,74 +2963,74 @@ TColor.prototype = {
 		}
 		return false;
 	},
-	
+
 	getAnalog: function(theta,delta) {
 		return new TColor(this).analog(theta, delta);
 	},
-	
+
 	getBlended: function(c,t) {
 		return new TColor(this).blend(c, t);
 	},
-	
-	/*getClosestHue: function(primaryOnly) {
-		return Hue.getClosest(hsv[0], false,primaryOnly);
-	},*/
-	
+
+	getClosestHue: function(primaryOnly) {
+		return Hue.getClosest(this.hsv[0], primaryOnly === true);
+	},
+
 	getComplement: function() {
 		return new TColor(this).complement();
 	},
-	
+
 	getComponentValue: function(criteria) {
 		return criteria.getComponentValueFor(this);
 	},
-	
+
 	getDarkened: function(step) {
 		return new TColor(this).darken(step);
 	},
-	
+
 	getDesaturated: function(step) {
 		return new TColor(this).desaturate(step);
 	},
-	
+
 	getDifferenceTo: function(c) {
 		return this.copy().differenceTo(c);
 	},
-	
+
 	getInverted: function() {
 		return new TColor(this).invert();
 	},
-	
+
 	getLightened: function(step) {
 		return new TColor(this).lighten(step);
 	},
-	
+
 	getRotatedRYB: function(theta) {
 		return new TColor(this).rotateRYB(theta);
 	},
-	
+
 	getSaturated: function(step) {
 		return new TColor(this).saturate(step);
 	},
-	
+
 	green: function() {
 		return this.rgb[1];
 	},
-	
+
 	hue: function() {
 		return this.hsv[0];
 	},
-	
+
 	invert: function() {
 		this.rgb[0] = 1 - this.rgb[0];
 		this.rgb[1] = 1 - this.rgb[1];
 		this.rgb[2] = 1 - this.rgb[2];
 		return this.setRGB(this.rgb);
 	},
-	
+
 	isBlack: function() {
-		return (this.rgb[0] <= TColor.BLACK_POINT && ((this.rgb[0]==this.rgb[1]) && this.rgb[0] == this.rgb[2]));
+		return (this.rgb[0] <= TColor.BLACK_POINT && ((this.rgb[0]===this.rgb[1]) && this.rgb[0] === this.rgb[2]));
 	},
-	
+
 	isGrey:function() {
 		return this.hsv[1] < TColor.GREY_THRESHOLD;
 	},
@@ -2737,28 +3038,28 @@ TColor.prototype = {
 	isPrimary:function() {
 		return Hue.isPrimary(this.hsv[0]);
 	},*/
-	
+
 	isWhite: function() {
-		return (this.rgb[0] >= TColor.WHITE_POINT && (this.rgb[0] == this.rgb[1]) && (this.rgb[0] == this.rgb[2]));
+		return (this.rgb[0] >= TColor.WHITE_POINT && (this.rgb[0] === this.rgb[1]) && (this.rgb[0] === this.rgb[2]));
 	},
-	
+
 	lighten: function(step) {
 		this.hsv[2] = mathUtils.clip(this.hsv[2] + step, 0, 1);
 		return this.setHSV(this.hsv);
 	},
-	
+
 	luminance: function() {
 		return this.rgb[0] * 0.299 + this.rgb[1] * 0.587 + this.rgb[2] * 0.114;
 	},
-	
+
 	magenta: function() {
 		return this.cmyk[1];
 	},
-	
+
 	red: function() {
 		return this.rgb[0];
 	},
-	
+
 	rotateRYB: function(theta) {
 		var deg = parseInt(mathUtils.degrees(theta),10),
 			h = this.hsv[0] * 360,
@@ -2799,47 +3100,47 @@ TColor.prototype = {
 
 		this.hsv[0] = (h % 360) / 360.0;
 		return this.setHSV(this.hsv);
-	
+
 	},
-	
+
 	saturate: function(step) {
 		this.hsv[1] = mathUtils.clip(this.hsv[1] + step, 0, 1);
 		return this.setHSV(this.hsv);
 	},
-	
+
 	saturation: function() {
 		return this.hsv[1];
 	},
-	
+
 	setAlpha: function(alpha) {
 		this._alpha = alpha;
 		return this;
 	},
-	
+
 	setARGB: function(argb) {
 		this.setRGB(((argb >> 16) & 0xff) * TColor.INV8BIT, ((argb >> 8) & 0xff) * TColor.INV8BIT, (argb & 0xff) * TColor.INV8BIT);
 		this._alpha = (argb >>> 24) * TColor.INV8BIT;
 		return this;
 	},
-	
+
 	setBlack: function(val) {
 		this.cmyk[3] = val;
 		return this.setCMYK( this.cmyk );
 	},
-	
+
 	setBlue: function(blue) {
 		this.rgb[2] = blue;
 		return this.setRGB(this.rgb);
 	},
-	
+
 	setBrightness: function(brightness) {
 		this.hsv[2] = mathUtils.clip(brightness, 0, 1);
 		return this.setHSV(this.hsv);
 	},
-	
+
 	setCMYK: function(c,m,y,k) {
 		//if it was passed in as an array instead of separate values
-		if( internals.tests.isArray( c ) ){
+		if( is.Array( c ) ){
 			m = c[1];
 			y = c[2];
 			k = c[3];
@@ -2853,12 +3154,12 @@ TColor.prototype = {
 		this.hsv = TColor.rgbToHSV(this.rgb[0],this.rgb[1],this.rgb[2]);
 		return this;
 	},
-	
-	/*setComponent(AccessCriteria criteria, float val) {
+
+    setComponent: function(criteria,  val) {
 		criteria.setComponentValueFor(this, val);
 		return this;
-	}*/
-	
+	},
+
 	setCyan: function(val) {
 		this.cmyk[0] = val;
 		return this.setCMYK(this.cmyk);
@@ -2870,7 +3171,7 @@ TColor.prototype = {
 	},
 
 	setHSV: function(h,s,v) {
-		if( internals.tests.isArray( h ) ){
+		if( is.Array( h ) ){
 			s = h[1];
 			v = h[2];
 			h = h[0];
@@ -2886,7 +3187,7 @@ TColor.prototype = {
 		this.cmyk = TColor.rgbToCMYK(this.rgb[0], this.rgb[1], this.rgb[2]);
 		return this;
 	},
-	
+
 	setHue: function(hue) {
 		hue %= 1.0;
 		if (hue < 0.0) {
@@ -2895,7 +3196,7 @@ TColor.prototype = {
 		this.hsv[0] = hue;
 		return this.setHSV(this.hsv);
 	},
-	
+
 	setMagenta: function(val) {
 		this.cmyk[1] = val;
 		return this.setCMYK(this.cmyk);
@@ -2907,7 +3208,7 @@ TColor.prototype = {
 	},
 
 	setRGB: function(r,g,b) {
-		if( internals.tests.isArray( r ) ){
+		if( is.Array( r ) ){
 			g = r[1];
 			b = r[2];
 			r = r[0];
@@ -2919,7 +3220,7 @@ TColor.prototype = {
 		this.hsv = TColor.rgbToHSV(this.rgb[0], this.rgb[1], this.rgb[2]);
 		return this;
 	},
-	
+
 	setSaturation: function(saturation) {
 		this.hsv[1] = mathUtils.clip(saturation, 0, 1);
 		return this.setHSV(this.hsv);
@@ -2933,14 +3234,14 @@ TColor.prototype = {
 	sub: function(c) {
 		return this.copy().subSelf(c);
 	},
-	
+
 	subSelf: function(c) {
 		this.rgb[0] = mathUtils.max(this.rgb[0] - c.rgb[0], 0);
 		this.rgb[1] = mathUtils.max(this.rgb[1] - c.rgb[1], 0);
 		this.rgb[2] = mathUtils.max(this.rgb[2] - c.rgb[2], 0);
 		return this.setRGB(this.rgb);
 	},
-	
+
 	toARGB: function() {
 		var r = parseInt((this.rgb[0] * 255),10),
 			g = parseInt((this.rgb[1] * 255),10),
@@ -2948,7 +3249,7 @@ TColor.prototype = {
 			a = parseInt((this._alpha * 255),10);
 		return  r << 16 | g << 8 | b | a << 24;
 	},
-	
+
 	toCMYKAArray: function(cmyka) {
 		if (cmyka === undefined) {
 			cmyka = [];
@@ -2960,7 +3261,7 @@ TColor.prototype = {
 		cmyka[4] = this._alpha;
 		return cmyka;
 	},
-	
+
 	toHex: function() {
 		var hex = dec2hex(this.toARGB());
 		if (hex.length > 6) {
@@ -2972,7 +3273,7 @@ TColor.prototype = {
 	toHexCSS: function(){
 		return "#"+this.toHex();
 	},
-	
+
 	toHSVAArray: function(hsva) {
 		if (hsva === undefined) {
 			hsva = [];
@@ -3006,7 +3307,7 @@ TColor.prototype = {
 	toInt: function(){
 		return Number( '0x' + this.toHex() );
 	},
-	
+
 	/**
 	 * to an Array of RGBA values
 	 * @param rgba
@@ -3014,18 +3315,29 @@ TColor.prototype = {
 	 * @return rgba array
 	 */
 	toRGBAArray: function(rgba, offset) {
-		if (rgba === undefined) {
-			rgba = [];
-		}
-		if(offset == undefined){
-			offset = 0;
-		}
+        rgba = rgba || [];
+        offset = offset || 0;
 		rgba[offset++] = this.rgb[0];
 		rgba[offset++] = this.rgb[1];
 		rgba[offset++] = this.rgb[2];
 		rgba[offset] = this._alpha;
 		return rgba;
 	},
+    /**
+     * to an Array of RGBA decimal values, i.e. [255,255,255,255] for solid white
+     * @param {Array|TypedArray} [rgba] optionally pass in an array or a TypedArray such as Uint8ClampedArray
+     * @param {Number} [offset] index offset to put these values in the array
+     * @return {Array}
+     */
+    toRGBADecimalArray: function( rgba, offset ) {
+        rgba = rgba || [];
+        offset = offset || 0;
+        rgba[offset++] = this.rgb[0] * 255;
+        rgba[offset++] = this.rgb[1] * 255;
+        rgba[offset++] = this.rgb[2] * 255;
+        rgba[offset] = this._alpha * 255;
+        return rgba;
+    },
 
 	toRGBCSS: function( asPercents ){
 		var rgba = scaleRGBACSSColors( this.toRGBAArray(), asPercents );
@@ -3040,18 +3352,18 @@ TColor.prototype = {
 		var rgba = scaleRGBACSSColors( this.toRGBAArray(), asPercents );
 		return "rgba("+rgba[0]+","+rgba[1]+","+rgba[2]+","+rgba[3]+")";
 	},
-	
+
 	toString: function(){
 		return "TColor: rgb: "+this.rgb[0] + ", " +this.rgb[1] + ", "+this.rgb[2]+
 				" hsv: "+ this.hsv[0] + ","+this.hsv[1]+","+this.hsv[2]+
 				" cmyk: "+this.cmyk[0] + ", "+this.cmyk[1]+","+this.cmyk[2]+","+this.cmyk[3]+
 				" alpha: "+this._alpha;
 	},
-	
+
 	yellow: function() {
 		return this.cmyk[2];
 	}
-	
+
 };
 
 function scaleHSLACSSColors( hsva ){
@@ -3081,17 +3393,6 @@ function scaleRGBACSSColors( rgba, asPercents ){
 TColor.INV60DEGREES = 60.0 / 360;
 TColor.INV8BIT = 1.0 / 255;
 TColor.EPS = 0.001;
-/*
-	protected static final Vec2D[] RYB_WHEEL = new Vec2D[] { new Vec2D(0, 0),
-			new Vec2D(15, 8), new Vec2D(30, 17), new Vec2D(45, 26),
-			new Vec2D(60, 34), new Vec2D(75, 41), new Vec2D(90, 48),
-			new Vec2D(105, 54), new Vec2D(120, 60), new Vec2D(135, 81),
-			new Vec2D(150, 103), new Vec2D(165, 123), new Vec2D(180, 138),
-			new Vec2D(195, 155), new Vec2D(210, 171), new Vec2D(225, 187),
-			new Vec2D(240, 204), new Vec2D(255, 219), new Vec2D(270, 234),
-			new Vec2D(285, 251), new Vec2D(300, 267), new Vec2D(315, 282),
-			new Vec2D(330, 298), new Vec2D(345, 329), new Vec2D(360, 0) };
-*/
 
 /**
  * Maximum rgb component value for a color to be classified as black.
@@ -3295,7 +3596,7 @@ TColor.newCSS = function( css ){
 		css = css.replace(' ', '');
 	}
 	css = css.toLowerCase();
-	
+
 	function digits( colorFnStr ){
 		//hack off the trailing )
 		var str = css.substr(0, css.length-1);
@@ -3474,9 +3775,9 @@ TColor.rgbToHSV = function(r, g, b,hsv) {
 		s = d / v;
 	}
 	if (s !== 0) {
-        if( internals.numberCompare( r, v ) === 0 ){
+        if( numberComparator( r, v ) === 0 ){
 			h = (g - b) / d;
-		} else if ( internals.numberCompare( g, v ) === 0 ) {
+		} else if ( numberComparator( g, v ) === 0 ) {
 			h = 2 + (b - r) / d;
 		} else {
 			h = 4 + (r - g) / d;
@@ -3650,7 +3951,7 @@ TColor.X11 = {};
 		lavenderblush: [255, 240, 245],
 		mistyrose: [255, 228, 225],
 		gainsboro: [220, 220, 220],
-		lightgrey: [211, 211, 211],
+		lightgray: [211, 211, 211],
 		silver: [192, 192, 192],
 		darkgray: [169, 169, 169],
 		gray: [128, 128, 128],
@@ -3658,14 +3959,24 @@ TColor.X11 = {};
 		lightslategray: [119, 136, 153],
 		slategray: [112, 128, 144],
 		darkslategray: [47, 79, 79],
-		black: [0, 0, 0]
+		black: [0, 0, 0],
+		bark: [64, 48, 33]
 	};
 
 	var name, clr;
 	for( name in x11 ){
-		clr = x11[name];
-		TColor.X11[name] = TColor.newRGB( clr[0]/255, clr[1]/255, clr[2]/255 );
+        if( x11.hasOwnProperty( name ) ){
+            clr = x11[name];
+            TColor.X11[name] = TColor.newRGB( clr[0]/255, clr[1]/255, clr[2]/255 );
+            //for all of the grays duplicate with grey
+            if( name.indexOf('gray') >= 0 ){
+                TColor.X11[ name.replace('gray','grey') ] = TColor.X11[name];
+            }
+        }
 	}
+
+    //add `transparent`
+    TColor.X11.transparent = TColor.newRGBA(0,0,0,0);
 }());
 
 
@@ -3691,15 +4002,49 @@ define('toxi/color/ProximityComparator',['require'],function( require ){
 	};
 	return ProximityComparator;
 });
-define('toxi/color/ColorList',['require','exports','module','../internals','../math/mathUtils','./TColor','./HSVDistanceProxy','./RGBDistanceProxy','./ProximityComparator','./AccessCriteria'],function(require, exports, module) {
+define('toxi/color/AccessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
 
-var internals = require('../internals'),
+
+var HSVAccessor = require('./HSVAccessor'),
+	RGBAccessor = require('./RGBAccessor'),
+	CMYKAccessor = require('./CMYKAccessor'),
+	AlphaAccessor = require('./AlphaAccessor'),
+	LuminanceAccessor = require('./LuminanceAccessor');
+/**
+* Defines standard color component access criterias and associated comparators
+* used to sort colors based on component values. If a new custom accessor is
+* needed (e.g. for sub-classes TColor's), then simply sub-class this class and
+* implement the {@link Comparator} interface and the 2 abstract getter & setter
+* methods defined by this class.
+*/
+exports.HUE = new HSVAccessor(0),
+exports.SATURATION = new HSVAccessor(1),
+exports.BRIGHTNESS = new HSVAccessor(2),
+
+exports.RED = new RGBAccessor(0),
+exports.GREEN = new RGBAccessor(1),
+exports.BLUE = new RGBAccessor(2),
+
+exports.CYAN = new CMYKAccessor(0),
+exports.MAGENTA = new CMYKAccessor(1),
+exports.YELLOW = new CMYKAccessor(2),
+exports.BLACK = new CMYKAccessor(3),
+
+exports.ALPHA = new AlphaAccessor(),
+exports.LUMINANCE = new LuminanceAccessor();
+
+});
+
+define('toxi/color/ColorList',['require','exports','module','../internals/is','../internals/each','../internals/Iterator','../math/mathUtils','./TColor','./HSVDistanceProxy','./RGBDistanceProxy','./ProximityComparator','./AccessCriteria'],function(require, exports, module) {
+
+var is = require('../internals/is'),
+    each = require('../internals/each'),
+    Iterator = require('../internals/Iterator'),
 	mathUtils = require('../math/mathUtils'),
 	TColor = require('./TColor'),
 	HSVDistanceProxy = require('./HSVDistanceProxy'),
 	RGBDistanceProxy = require('./RGBDistanceProxy'),
 	ProximityComparator = require('./ProximityComparator'),
-	//ColorTheoryRegistry = require('./ColorTheoryRegistry'),
 	AccessCriteria = require('./AccessCriteria');
 
 /**
@@ -3723,9 +4068,25 @@ var ColorList = function(colors){
 		return ColorList.call(this,arguments);
 	}
 	this.colors = [];
-	if(colors !== undefined){
-		this.addAll(colors);
-	}
+    var i = 0;
+    if( is.Array(colors) && colors.length ){
+        if( typeof colors[0] === 'number' ){
+            //argb integers
+            for( i=0, l = colors.length; i<l; i++){
+                this.colors.push(TColor.newARGB(colors[i]));
+            }
+        } else {
+            //an array of tcolors
+            this.addAll(colors);
+        }
+    } else if( is.ColorList(colors) ){
+        for( i=0, l=colors.size(); i<l; i++){
+            this.add(colors.get(i));
+        }
+    } else if( is.TColor(colors) ){
+        //tcolor
+        this.add(colors);
+    }
 };
 
 ColorList.prototype = {
@@ -3747,9 +4108,13 @@ ColorList.prototype = {
 	*/
 	addAll:	function(collection){
 		var self = this;
-		internals.each(collection,function(color){
-			self.colors.push(color);
-		});
+        if( !is.Array(collection) ){
+            this.colors.push(collection);
+        } else {
+            each(collection,function(color){
+                self.colors.push(color);
+            });
+        }
 		return this;
 	},
 	/**
@@ -3758,7 +4123,7 @@ ColorList.prototype = {
 	* @return itself
 	*/
 	adjustBrightness: function(step){
-		internals.each(this.colors,function(c){
+		each(this.colors,function(c){
 			c.lighten(step);
 		});
 		return this;
@@ -3770,7 +4135,7 @@ ColorList.prototype = {
 	 * @return itself
 	 */
 	adjustSaturation: function(step){
-		internals.each(this.colors,function(c){
+		each(this.colors,function(c){
 			c.saturate(step);
 		});
 		return this;
@@ -3838,7 +4203,7 @@ ColorList.prototype = {
 		return false;
 	},
 	each: function( fn ){
-		internals.each( this.colors, fn );
+		each( this.colors, fn );
 		return this;
 	},
 	/**
@@ -3946,7 +4311,7 @@ ColorList.prototype = {
 	},
 
 	iterator: function(){
-		return new internals.Iterator(this.colors);
+		return new Iterator(this.colors);
 	},
 
 	reverse: function(){
@@ -4008,6 +4373,7 @@ ColorList.prototype = {
 	/**
 	* Sorts the list by relative distance to each predecessor, starting with
 	* the darkest color in the list.
+    * @param {toxi.color.*{DistanceProxy}} proxy
 	* @param isReversed
 	*            true, if list is to be sorted in reverse.
 	* @return itself
@@ -4018,7 +4384,7 @@ ColorList.prototype = {
 			isReversed = arguments[0];
 			proxy = new HSVDistanceProxy();
 		}
-		
+
 		if(this.colors.length === 0){
 			return this;
 		}
@@ -4040,7 +4406,7 @@ ColorList.prototype = {
 			var closest = stack[0],
 				lastSorted = sorted[sortedCount],
 				distance = proxy.distanceBetween(closest, lastSorted);
-			
+
 			for(var i = stack.length - 1; i >= 0; i--){
 				var c = stack[i],
 					d = proxy.distanceBetween(c, lastSorted);
@@ -4142,26 +4508,10 @@ ColorList.prototype = {
 	return new ColorList(colors);
  };
 
-/**
-* Factory method. Creates a new ColorList based on the given
-* {@link ColorTheoryStrategy} instance and the given source color. The
-* number of colors returned will vary with the strategy chosen.
-* @param strategy
-* @param c
-* @return new list
-*/
-/* TODO implement ColorTheoryRegistry
-ColorList.createUsingStrategy = function(strategy, c){
-	if(typeof strategy == 'string'){
-		strategy = ColorTheoryRegistry.getStrategyForName(strategy);
-	}
-	var list;
-	if(strategy !== undefined){
-		list = strategy.createListFromColor(c);
-	}
-	return list;
+
+ColorList.createUsingStrategy = function(){
+    throw new Error('Not allowed, use toxi/color/createListUsingStrategy instead');
 };
-*/
 
 module.exports = ColorList;
 });
@@ -4170,7 +4520,7 @@ define('toxi/color/ColorGradient',['require','exports','module','../internals','
 
 
 var filter = require('../internals').filter,
-	numberCompare = require('../internals').numberCompare,
+	numberComparator = require('../internals').numberComparator,
 	mathUtils = require('../math/mathUtils'),
 	LinearInterpolation = require('../math/LinearInterpolation'),
 	ColorList = require('./ColorList');
@@ -4183,7 +4533,7 @@ var _GradPoint = function(p, c){
 
 _GradPoint.prototype = {
 	compareTo: function(p){
-		if(numberCompare(p.pos,this.pos) === 0){
+		if(numberComparator(p.pos,this.pos) === 0){
 			return 0;
 		}
 		return this.pos < p.pos ? -1 : 1;
@@ -4213,8 +4563,8 @@ ColorGradient.prototype = {
 	},
 	/**
 	* Calculates the gradient from specified position.
-	* @param pos
-	* @param width
+	* @param {Number} pos position to start at (float)
+	* @param {Number} width (integer)
 	* @return list of interpolated gradient colors
 	*/
 	calcGradient: function(pos, width){
@@ -4297,7 +4647,7 @@ ColorGradient.prototype = {
 			pos++;
 		}
 		return result;
-		
+
 	},
 	getGradientPoints: function(){
 		return this.gradient;
@@ -4333,20 +4683,1530 @@ ColorGradient.prototype = {
 	module.exports = ColorGradient;
 });
 
-define('toxi/color',['require','exports','module','./color/AccessCriteria','./color/AlphaAccessor','./color/CMYKAccessor','./color/CMYKDistanceProxy','./color/ColorGradient','./color/ColorList','./color/HSVAccessor','./color/HSVDistanceProxy','./color/LuminanceAccessor','./color/ProximityComparator','./color/RGBAccessor','./color/RGBDistanceProxy','./color/TColor'],function(require, exports) {
-	exports.AccessCriteria = require('./color/AccessCriteria');
+define('toxi/util/datatypes/FloatRange',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
+
+var mathUtils = require('../../math/mathUtils');
+
+/**
+ * construct a new `FloatRange`
+ * provides utilities for dealing with a range of Numbers.
+ * @param {Number} [min=0] the minimum in the range
+ * @param {Number} [max=1.0] the maximum in the range
+ * @constructor
+ */
+var FloatRange = function(min, max){
+	min = min || 0.0;
+	max = typeof max === 'number' ? max : 1.0;
+	// swap if necessary
+	if(min > max){
+		var t= max;
+		max = min;
+		min = t;
+	}
+	this.min = min;
+	this.max = max;
+	this.currValue = min;
+};
+
+FloatRange.prototype = {
+	adjustCurrentBy: function(val){
+		return this.setCurrent(this.currValue + val);
+	},
+	copy: function(){
+		var range = new FloatRange(this.min,this.max);
+		range.currValue = this.currValue;
+		return range;
+	},
+    /**
+     * Returns the value at the normalized position <code>(0.0 = min ... 1.0 =
+     * max-EPS)</code> within the range. Since the max value is exclusive, the
+     * value returned for position 1.0 is the range max value minus
+     * {@link MathUtils#EPS}. Also note the given position is not being clipped
+     * to the 0.0-1.0 interval, so when passing in values outside that interval
+     * will produce out-of-range values too.
+     * @param {Number} perc
+     * @return {Number} value within the range
+     */
+	getAt: function(perc){
+		return this.min + (this.max - this.min - mathUtils.EPS) * perc;
+	},
+	getCurrent: function(){
+		return this.currValue;
+	},
+	getMedian: function(){
+		return (this.min + this.max) * 0.5;
+	},
+	getRange: function(){
+		return this.max - this.min;
+	},
+	isValueInRange: function(val){
+		return val >= this.min && val <= this.max;
+	},
+	pickRandom: function(){
+		this.currValue = mathUtils.random(this.min,this.max);
+		return this.currValue;
+	},
+    setCurrent: function( val ){
+        this.currValue = mathUtils.clip( val, this.min, this.max );
+        return this.currValue;
+    },
+	/*
+	seed: function(seed){
+		throw new Error("Not yet Implemented");
+	},
+	setRandom: function(rnd){
+		
+	}
+	*/
+	toArray: function(step){
+		var range = [],
+			v = this.min;
+		while(v < this.max){
+			range.push(v);
+			v += step;
+		}
+		return range;
+	},
+	toString: function(){
+		return "FloatRange: " + this.min + " -> " + this.max;
+	}
+};
+
+module.exports = FloatRange;
+});
+
+define('toxi/color/ColorRange',[
+    './TColor',
+    './ColorList',
+    '../util/datatypes/FloatRange',
+    '../internals/is',
+    '../internals/each',
+    '../math/mathUtils'
+],function( TColor, ColorList, FloatRange, is, each, MathUtils ){
+
+    var ColorRange,
+        UNTITLED_ID = 1,
+        addRange,
+        addAll,
+        pickRandom;
+
+
+    //@private
+    //add all elements to the given array, without creating a new array (like concat)
+    addAll = function( arr, elementsArr ){
+        arr.push.apply(arr, elementsArr);
+    };
+
+    //@private
+    //the addAlphaRange, addHueRange… methods are identical, so with js,
+    //we can generate them without
+    addRange = function(attr){
+        return function( min, max ){
+            this[attr.toLowerCase()+'Constraint'].push( is.FloatRange(min) ? min : new FloatRange(min,max) );
+            return this;
+        };
+    };
+
+    //@private
+    //pickRandom element from array
+    pickRandom = function( arr ){
+        return arr[Math.floor(Math.random()*arr.length)];
+    };
+
+    /**
+    * A ColorRange is a set of constraints to specify possible ranges for hue,
+    * saturation, brightness and alpha independently and use these as creation
+    * rules for new {@link TColor}s or {@link ColorList}s. The class comes with 11
+    * preset ranges reflecting common demands and color characters. You can also
+    * construct new ranges and manually add additional constraints. Unless the
+    * constraints in a range are very narrow the class will always create random
+    * variations within the constraints. Please see the examples for further
+    * details.
+    *
+    * {@link ColorRange}s are a key ingredient for defining {@link ColorTheme}s but
+    * can also be used individually.
+    */
+
+
+    /**
+    * construct a new ColorRange,
+    * this constructor takes a wide variety of param signatures,
+    * 1.
+        * @param {toxi.color.ColorList} list
+    * 2.
+        * @param {toxi.util.datatypes.FloatRange} [hue]
+        * @param {toxi.util.datatypes.FloatRange} [sat]
+        * @param {toxi.util.datatypes.FloatRange} [bri]
+        * @param {toxi.util.datatypes.FloatRange} [alpha]
+        * @param {toxi.util.datatypes.FloatRange} [black]
+        * @param {toxi.util.datatypes.FloatRange} [white]
+        * @param {String} [name]
+    * 3.
+        * @param {toxi.util.datatypes.FloatRange} [hue]
+        * @param {toxi.util.datatypes.FloatRange} [sat]
+        * @param {toxi.util.datatypes.FloatRange} [bri]
+        * @param {toxi.util.datatypes.FloatRange} [alpha]
+        * @param {String} [name]
+    * 4.
+        * @param {toxi.util.datatypes.FloatRange} [hue]
+        * @param {toxi.util.datatypes.FloatRange} [sat]
+        * @param {toxi.util.datatypes.FloatRange} [bri]
+        * @param {String} [name]
+    * 5.name
+        * @param {toxi.color.Hue} hue
+    * 6.
+        * @param {toxi.color.TColor} c
+    */
+    ColorRange = function( hue, sat, bri, alpha, black, white, name ){
+        var self = this, list; //if ColorList is supplied
+        if( arguments.length === 0 ){
+            return this;
+        }
+        //ColorRange( ColorList list)
+        if( is.ColorList(hue) ){
+            list = hue;
+            hue = list.get(0);
+        }
+        //ColorRange( Hue hue )
+        if( is.Hue(hue) ){
+            hue = new FloatRange( hue.getHue(), hue.getHue() );
+        }
+        //ColorRange( TColor c )
+        if( is.TColor(hue) ){
+            //transform `hue` from a TColor to FloatRange for hue
+            hue = new FloatRange( hue.hue(), hue.hue() );
+        }
+        this.hueConstraint = [is.FloatRange(hue) ? hue : new FloatRange(0,1)];
+        this.saturationConstraint = [is.FloatRange(sat) ? sat : new FloatRange(0,1)];
+        this.brightnessConstraint = [is.FloatRange(bri) ? bri : new FloatRange(0,1)];
+        this.alphaConstraint = [is.FloatRange(alpha) ? alpha : new FloatRange(1,1)];
+        //not arrays for black & white
+        this.black = is.FloatRange(black) ? black : new FloatRange(0,1);
+        this.white = is.FloatRange(white) ? white : new FloatRange(0,1);
+        //now that the constraints have all been created
+        if( list ){
+            this.hueConstraint = []; //clear the hues
+            list.each(function(c){ self.add(c); });
+        }
+        //search arguments for a string that would be the name
+        var i=arguments.length-1;
+        for(; i>=0; i--){
+            if( typeof arguments[i] === 'string' ){
+                this.name = arguments[i];
+                break;
+            }
+        }
+        if( !this.name ){
+            this.name = "untitled"+(UNTITLED_ID++);
+        }
+    };
+
+
+    ColorRange.prototype = {
+        constructor: ColorRange,
+        /**
+         * Adds the HSV color components as constraints
+         * @param {toxi.color.ColorRange | toxi.color.TColor} rc
+         * @return itself
+         */
+        add: function( rc ){
+            if( is.ColorRange(rc) ){
+                addAll(this.hueConstraint, rc.hueConstraint);
+                addAll(this.saturationConstraint, rc.saturationConstraint);
+                addAll(this.brightnessConstraint, rc.brightnessConstraint);
+                addAll(this.alphaConstraint, rc.alphaConstraint);
+                this.black.min = Math.min( this.black.min, rc.black.min );
+                this.black.max = Math.max( this.black.max, rc.black.max );
+                this.white.min = Math.min( this.white.min, rc.white.min );
+                this.white.max = Math.max( this.white.max, rc.white.max );
+            } else {
+                this.hueConstraint.push( new FloatRange(rc.hue(),rc.hue()) );
+                this.saturationConstraint.push( new FloatRange(rc.saturation(),rc.saturation()) );
+                this.brightnessConstraint.push( new FloatRange(rc.brightness(),rc.brightness()) );
+                this.alphaConstraint.push( new FloatRange(rc.alpha(),rc.alpha()) );
+            }
+            return this;
+        },
+        /**
+         * Adds the range between min-max as possible alpha values for this range
+         * @param {toxi.util.datatypes.FloatRange | Number} min
+         * @param {Number} [max]
+         * @return itself
+         */
+        addAlphaRange: addRange('alpha'),
+        addBrightnessRange: addRange('brightness'),
+        addHue: function( hue ){
+            this.hueConstraint.push( new FloatRange( hue.getHue(), hue.getHue() ) );
+            return this;
+        },
+        addHueRange: addRange('hue'),
+        addSaturationRange: addRange('saturation'),
+        /**
+         * checks if all HSVA components of the given color are within
+         * the constraints define for this range
+         * @param {toxi.color.TColor} c
+         * @return true if is contained
+         */
+        contains: function( c ){
+            var isInRange = this.isValueInConstraint(c.hue(), this.hueConstraint);
+            isInRange &= this.isValueInConstraint(c.saturation(), this.saturationConstraint);
+            isInRange &= this.isValueInConstraint(c.brightness(), this.brightnessConstraint);
+            isInRange &= this.isValueInConstraint(c.alpha(), this.alphaConstraint);
+            return isInRange || false; //if its 0, return false
+        },
+        /**
+         * creates a copy of the range but overrides the hue
+         * and alpha constraints taken from the given color (if specified)
+         * @param {toxi.color.TColor} [c]
+         * @param {Number} [variance]
+         * @return copy
+         */
+        copy: function( c, variance ){
+            variance = typeof variance === 'number' ? variance : 0;
+            var range = new ColorRange();
+            range.name = this.name;
+            if( c ){
+                var hue = c.hue() + variance * MathUtils.normalizedRandom();
+                range.hueConstraint = [ new FloatRange(hue,hue) ];
+                range.alphaConstraint = [ new FloatRange(c.alpha(),c.alpha()) ];
+            } else {
+                range.hueConstraint = [].concat(this.hueConstraint);
+                range.alphaConstraint = [].concat(this.alphaConstraint);
+            }
+            range.saturationConstraint = [].concat(this.saturationConstraint);
+            range.brightnessConstraint = [].concat(this.brightnessConstraint);
+            range.black = this.black.copy();
+            range.white = this.white.copy();
+            return range;
+        },
+        /**
+         * creates a new shade of the given parameter based on the other constraints
+         * of the range. This function has many param options:
+         * 1. no params
+         * 2.
+            * @param {toxi.color.Hue} hue
+         * 3.
+            * @param {toxi.color.TColor} c
+            * @param {Number} variance
+        */
+        getColor: function( hue_c, variance ){
+            if( is.Hue(hue_c) ){
+                return TColor.newHSVA(
+                    hue_c.getHue(),
+                    pickRandom(this.saturationConstraint).pickRandom(),
+                    pickRandom(this.brightnessConstraint).pickRandom(),
+                    pickRandom(this.alphaConstraint).pickRandom()
+                );
+            }
+            //must be a TColor
+            var c = hue_c, h, s, b, a;
+            if( c ){
+                if( c.isBlack() ){
+                    return TColor.newHSVA(c.hue(), 0, this.black.pickRandom(), c.alpha() );
+                } else if( c.isWhite() ){
+                    return TColor.newHSVA(c.hue(), 0, this.white.pickRandom(), c.alpha() );
+                }
+                if( c.isGrey() ){
+                    return TColor.newHSVA(
+                        c.hue(),
+                        0,
+                        MathUtils.flipCoin() ? this.black.pickRandom() : this.white.pickRandom(),
+                        c.alpha()
+                    );
+                }
+                h = c.hue() + variance * MathUtils.normalizedRandom();
+                a = c.alpha();
+            } else {
+                h = pickRandom(this.hueConstraint).pickRandom();
+                a = pickRandom(this.alphaConstraint).pickRandom();
+            }
+            s = pickRandom(this.saturationConstraint).pickRandom();
+            b = pickRandom(this.brightnessConstraint).pickRandom();
+            return TColor.newHSVA(h,s,b,a);
+        },
+        /**
+        * creates a new `toxi.color.ColorList` of colors based
+        * on constraints of this range
+        * 1.
+            * @param {Number} num integer of how many colors to get
+        * 2.
+            * @param {toxi.color.TColor} c
+            * @param {Number} num
+            * @param {Number} variance
+        * @return {toxi.color.ColorList} list
+        */
+        getColors: function( c, num, variance ){
+            if( arguments.length < 3 ){
+                variance = ColorRange.DEFAULT_VARIANCE;
+            }
+            if( arguments.length === 1 ){
+                num = c;
+                c = undefined;
+            }
+            var list = new ColorList();
+            for( var i=0; i<num; i++){
+                list.add(this.getColor(c, variance));
+            }
+            return list;
+        },
+        /**
+         * creates a new shade of gray
+         * @param {Number} brightness
+         * @param {Number} variance
+         */
+        getGrayscale: function( brightness, variance ){
+            return this.getColor( TColor.newGray(brightness), variance);
+        },
+        getName: function(){
+            return this.name;
+        },
+        /**
+         * creates a copy of the current range and adds the given one to it
+         * @param {toxi.color.ColorRange} range
+         * @return the summed copy
+         */
+        getSum: function( range ){
+            return this.copy().add(range);
+        },
+        isValueInConstraint: function( val, rangeSet ){
+            var isValid = false;
+            each(rangeSet, function(r){
+                isValid |= r.isValueInRange(val);
+            });
+            return isValid;
+        }
+    };
+
+
+    //default hue variance for #getColor
+    ColorRange.DEFAULT_VARIANCE = 0.035;
+
+    //build static pre-defined ColorRange's
+    (function(FR, un){
+        ColorRange.PRESETS = {};
+        each({
+            'light': [ un, new FR(0.3,0.7),new FR(0.9,1.0), un, new FR(0.15,0.3),un],
+            'dark': [un, new FR(0.7,1.0), new FR(0.15,0.4),un,un, new FR(0.5,0.75)],
+            'bright': [un, new FR(0.8,1.0), new FR(0.8,1.0)],
+            'weak': [un, new FR(0.15,0.3), new FR(0.7,1.0), un, new FR(0.2,0.2),un],
+            'neutral': [un, new FR(0.25,0.35), new FR(0.3,0.7),un,new FR(0.15,0.15), new FR(0.9,1.0)],
+            'fresh': [un, new FR(0.4,0.8), new FR(0.8,1.0), un, new FR(0.05,0.3), new FR(0.8,1.0)],
+            'soft': [un, new FR(0.2,0.3),new FR(0.6,0.9), un, new FR(0.05,0.15), new FR(0.6,0.9)],
+            'hard': [un, new FR(0.9,1.0), new FR(0.4,1.0)],
+            'warm': [un, new FR(0.6,0.9), new FR(0.4,0.9), un, new FR(0.2,0.2), new FR(0.8,1.0)],
+            'cool': [un, new FR(0.05, 0.2), new FR(0.9, 1.0), un, un, new FR(0.95,1.0)],
+            'intense': [un, new FR(0.9,1.0), new FR(0.2,0.35)]
+        }, function( args, name ){
+            args.push(name);
+            var nameUC = name.toUpperCase();
+            //construct a new ColorRange without params (only do this internally)
+            ColorRange[nameUC] = new ColorRange();
+            //apply the arguments to the constructor
+            ColorRange.apply(ColorRange[nameUC], args);
+            //reference the same object from the PRESETS object
+            ColorRange.PRESETS[nameUC] = ColorRange[nameUC];
+        });
+        ColorRange.INTENSE.addBrightnessRange( new FR(0.8,1.0) );
+    }(FloatRange, undefined));
+
+
+    ColorRange.getPresetForName = function( name ){
+        return ColorRange.PRESETS[name.toUpperCase()];
+    };
+
+    return ColorRange;
+});
+
+define('toxi/color/NamedColor',[
+    './TColor',
+    '../internals',
+    'exports'
+], function( TColor, internals, exports ){
+    var each = internals.each,
+        names = [],
+        //kept private, used for `getForName`
+        namedColorMap = {};
+
+    //attach every one of the X11 colors to NamedColor
+    //make all names uppercase
+    each(TColor.X11, function( value, key ){
+        var upkey = key.toUpperCase();
+        names.push(upkey);
+        namedColorMap[upkey] = value;
+        namedColorMap[key] = value;
+        exports[upkey] = value;
+    });
+
+
+    /**
+     * Returns the color for the given name
+     * @param {String} name
+     * @return color or undefined if name not found
+     */
+    exports.getForName = function( name ){
+        //return the color, and if it was sent like "springGreen", lowercase it to be nice :)
+        return namedColorMap[name] || namedColorMap[name.toLowerCase()];
+    };
+
+    /**
+     * Return the names of all defined colors
+     * @return list of names
+     */
+    exports.getNames = function(){
+        return names.slice(0);
+    };
+
+});
+
+define('toxi/color/ColorTheme',[
+    '../internals',
+    '../math/mathUtils',
+    './ColorRange',
+    './NamedColor',
+    './ColorList'
+], function( internals, MathUtils, ColorRange, NamedColor, ColorList ){
+
+
+    var ColorTheme, _ThemePart, each = internals.each;
+
+
+    /**
+     * @private
+     * internal object for a part of the theme
+     * @param {ColorRange} range
+     * @param {TColor} color.
+     * @param {Number} weight
+     */
+    _ThemePart = function( range, color, weight ){
+        this.range = range;
+        this.color = color;
+        this.weight = weight;
+    };
+    _ThemePart.prototype.getColor = function(){
+        return this.range.getColor(this.color, ColorRange.DEFAULT_VARIANCE);
+    };
+
+    /**
+    * A ColorTheme is a weighted collection of {@link ColorRange}s used to define
+    * custom palettes with a certain balance between individual colors/shades. New
+    * theme parts can be added via textual descriptors referring to one of the
+    * preset {@link ColorRange}s and/or {@link NamedColor}s: e.g.
+    * "warm springgreen". For each theme part a weight has to be specified. The
+    * magnitude of the weight value is irrelevant and is only important in relation
+    * to the weights of other theme parts. For example: Theme part A with a weight
+    * of 0.5 will only have 1/20 of the weight of theme part B with a weight of 5.0...
+    */
+    ColorTheme = function( name ){
+        this.name = name;
+        this.parts = [];
+        this._weightedSum = 0;
+    };
+
+    ColorTheme.prototype = {
+        constructor: ColorTheme,
+        /**
+         * Add a range to the theme, 2 paramater options:
+         * @param {toxi.color.ColorRange|string} range_or_descriptor either a range
+         * or a tokenized string
+         * @param {toxi.color.TColor|Number} color_or_weight a color if you provided
+         * a ColorRange, or a weight if specified a descriptor
+         * @param {Number} [weight] a weight if you specified a ColorRange and a TColor
+         * for former parameters
+         * @return itself
+         */
+        addRange: function( range_or_descriptor, color_or_weight, weight ){
+            var self = this;
+            var _range, _col;
+            if( arguments.length === 3 ){
+                this.parts.push( new _ThemePart(range_or_descriptor, color_or_weight, weight) );
+                this._weightedSum += weight;
+            } else {
+                //tokenize
+                each(range_or_descriptor.split(' '), function( item ){
+                    if( ColorRange.getPresetForName(item) ){
+                        _range = ColorRange.getPresetForName(item);
+                    } else if ( NamedColor.getForName(item) ){
+                       _col = NamedColor.getForName(item);
+                    }
+                });
+                if( _range ){
+                    self.addRange( _range, _col, color_or_weight );
+                }
+            }
+            return this;
+        },
+        getColor: function(){
+            var self = this,
+                rnd = Math.random(),
+                t,
+                currWeight;
+            for( var i = 0, l = this.parts.length; i<l; i++){
+                t = this.parts[i];
+                currWeight = t.weight / this._weightedSum;
+                if( currWeight >= rnd ){
+                    return t.getColor();
+                }
+                rnd -= currWeight;
+            }
+            return null;
+        },
+        /**
+         * Creates a {ColorList} of {TColor} based on the theme's
+         * ranges and balance defined by their weights
+         * @param {Number} num the number of colors to put in the list
+         */
+        getColors: function( num ){
+           var list = new ColorList();
+           for( var i = 0; i < num; i++) {
+               list.add( this.getColor() );
+            }
+           return list;
+        },
+        /**
+         * @return the theme's name
+         */
+        getName: function(){
+            return this.name;
+        }
+    };
+
+    return ColorTheme;
+});
+
+define('toxi/color/theory/strategies',[
+    '../../internals/has',
+    '../../internals/is',
+    'exports'
+], function( has, is, exports ){
+
+    var has = has.all,
+        isTColor = is.TColor;
+
+    exports.create = function( name, constructor, extend ){
+        if( arguments.length === 2 ){
+            extend = constructor;
+            constructor = function(){};
+        }
+        var _NAME = name.charAt(0).toLowerCase() + name.slice(1,name.length);
+        constructor.prototype.constructor = constructor;
+        constructor.prototype.getName = function(){ return _NAME; };
+        constructor.prototype.toString = constructor.prototype.getName;
+        for( var prop in extend ){
+            constructor.prototype[prop] = extend[prop];
+        }
+        //wrap this function in an error-condition
+        (function(createList){
+            constructor.prototype.createListFromColor = function( src ){
+                if( !isTColor(src) ){
+                    throw new Error('src color was not a valid TColor');
+                }
+                return createList.call(this, src);
+            };
+        })(constructor.prototype.createListFromColor);
+
+        return constructor;
+    };
+
+    exports.wrap = function( x, min, threshold, plus ){
+        if( x - min < threshold ){
+            return x + plus;
+        }
+        return x - min;
+    };
+
+});
+
+define('toxi/color/theory/SingleComplementStrategy',[
+    './strategies',
+    '../ColorList'
+], function( strategies, ColorList ){
+    /**
+    * Implements the <a href=
+    * "http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm#complementary"
+    * >single complementary color scheme</a> to create a compatible color for the
+    * given one.
+    */
+
+    var getName = function(){ return "complement"; };
+
+    return strategies.create('SingleComplement', {
+        createListFromColor: function( src ){
+            var list = new ColorList(src);
+            list.add(src.getComplement());
+            return list;
+        },
+        getName: getName,
+        toString: getName
+    });
+});
+
+
+define('toxi/color/theory/ComplementaryStrategy',[
+    './strategies',
+    '../ColorList'
+], function( strategies, ColorList ){
+
+    var adjust = function( c, thresh ){
+        var b = c.brightness();
+        if( b > thresh ){
+            c.setBrightness( 0.1 + b * 0.25 );
+        } else {
+            c.setBrightness(1.0 - b * 0.25 );
+        }
+        return c;
+    };
+
+    return strategies.create('Complementary',{
+        createListFromColor: function( src ){
+            var colors = new ColorList(src),
+                c;
+
+            // A contrasting color: much darker or lighter than the original
+            colors.add( adjust(src.copy(),0.4) );
+
+            // A soft supporting color: lighter and less saturated
+            c = src.copy();
+            c.lighten(0.3);
+            c.setSaturation(0.1 + c.saturation() * 0.3);
+            colors.add(c);
+
+            // A contrasting complement: very dark or very light
+            colors.add( adjust(src.getComplement(),0.3) );
+
+            // The complment and a light supporting variant
+            colors.add( src.getComplement() );
+
+            c = src.getComplement();
+            c.lighten(0.3);
+            c.setSaturation(0.1 + c.saturation() * 0.25);
+            colors.add(c);
+
+            return colors;
+        }
+    });
+});
+
+define('toxi/color/theory/SplitComplementaryStrategy',[
+    './strategies',
+    '../ColorList'
+], function( strategies, ColorList ){
+    /**
+    * Implements the <a href=
+    * "http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm#split-complementary"
+    * >split-complementary color scheme</a> to create 2 compatible colors for the
+    * given one.
+    */
+    return strategies.create('SplitComplementary', {
+        createListFromColor: function( src ){
+            var colors = new ColorList(src);
+            colors.add(src.getRotatedRYB(150).lighten(0.1));
+            colors.add(src.getRotatedRYB(210).lighten(0.1));
+            return colors;
+        }
+    });
+});
+
+define('toxi/color/theory/LeftSplitComplementaryStrategy',[
+    './strategies',
+    '../ColorList',
+    './ComplementaryStrategy'
+], function( strategies, ColorList, ComplementaryStrategy ){
+
+    var complementary;
+
+    /**
+     * creates an instance of a LeftSplitComplementaryStrategy
+     * @constructor
+     */
+    return strategies.create('LeftSplitComplementary',{
+        createListFromColor: function( src ){
+            //first time create the instance, then just reuse it
+            complementary = complementary || new ComplementaryStrategy();
+            var left = src.getComplement().rotateRYB(-30).lighten(0.1),
+                colors = complementary.createListFromColor(src),
+                c;
+            for( var i = 3; i < 6; i++){
+                c = colors.get(i);
+                c.setHue(left.hue());
+            }
+            return colors;
+        }
+    });
+});
+
+define('toxi/color/theory/RightSplitComplementaryStrategy',[
+    './strategies',
+    '../ColorList',
+    './ComplementaryStrategy'
+], function( strategies, ColorList, ComplementaryStrategy ){
+
+    var complementary;
+
+    return strategies.create('RightSplitComplementary', {
+        createListFromColor: function( src ){
+            complementary = complementary || new ComplementaryStrategy();
+            var left = src.getComplement().rotateRYB(30).lighten(0.1),
+                colors = complementary.createListFromColor(src),
+                c;
+
+            for(var i=3; i<6; i++){
+                c = colors.get(i);
+                c.setHue(left.hue());
+            }
+            return colors;
+        }
+    });
+});
+
+define('toxi/color/theory/AnalagousStrategy',[
+    './strategies',
+    '../../geom/vectors',
+    '../../math/mathUtils',
+    '../../internals',
+    '../ColorList'
+],function( strategies, vectors, MathUtils, internals, ColorList ){
+    var each = internals.each,
+        Vec2D = vectors.Vec2D;
+
+    //@private
+    var _tones = [
+        new Vec2D(1,2.2),
+        new Vec2D(2,1),
+        new Vec2D(-1,-0.5),
+        new Vec2D(-2,1)
+    ];
+
+    return strategies.create('Analagous',
+        /**
+        * Creates a new instance
+        * @param {Number} [theta] optionally provide an angle in degrees, defaults to 10
+        * @param {Number} [contrast] optionally provide a contrast, defaults to 0.25
+        */
+        function( theta, contrast ){
+            this.contrast = typeof contrast === 'number' ? contrast : 0.25;
+            this.theta = MathUtils.radians( typeof theta === 'number' ? theta : 10 );
+        }, {
+        createListFromColor: function( src ){
+            var self = this;
+            this.contrast = MathUtils.clipNormalized( this.contrast );
+            var colors = new ColorList( src );
+            each(_tones, function(currTone){
+                var c = src.getRotatedRYB(self.theta * currTone.x),
+                    t = 0.44 - currTone.y * 0.1;
+                if(src.brightness() - self.contras * currTone.y < t){
+                    c.setBrightness(t);
+                } else {
+                    c.setBrightness(src.brightness() - self.contrast * currTone.y);
+                }
+                c.desaturate(0.05);
+                colors.add( c );
+            });
+            return colors;
+        },
+        toString: function(){
+            return 'analagous contrast: ' + this.contrast + ' theta: ' + MathUtils.degrees(this.theta);
+        }
+    });
+});
+
+define('toxi/color/theory/MonochromeTheoryStrategy',[
+    './strategies',
+    '../ColorList'
+], function( strategies, ColorList ){
+
+    var wrap = strategies.wrap;
+
+    return strategies.create('Monochrome', {
+        createListFromColor: function( src ){
+            var colors = new ColorList(src),
+                c = src.copy();
+            c.setBrightness(wrap(c.brightness(), 0.5, 0.2, 0.3));
+            c.setSaturation(wrap(c.saturation(), 0.3, 0.1, 0.3));
+            colors.add(c);
+
+            c = src.copy();
+            c.setBrightness(wrap(c.brightness(), 0.2, 0.2, 0.6));
+            colors.add(c);
+
+            c = src.copy();
+            c.setBrightness(Math.max(0.2, c.brightness() + (1-c.brightness()) * 0.2));
+            c.setSaturation(wrap(c.saturation(), 0.3, 0.1, 0.3));
+            colors.add(c);
+
+            c = src.copy();
+            c.setBrightness(wrap(c.brightness(), 0.5, 0.2, 0.3));
+            colors.add(c);
+
+            return colors;
+        }
+    });
+});
+
+define('toxi/color/theory/TriadTheoryStrategy',[
+    './strategies',
+    '../ColorList'
+], function( strategies, ColorList ){
+
+    var getName = function(){ return 'triad'; };
+    /**
+    * Implements the <a href=
+    * "http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm#triadic"
+    * >triadic color scheme</a> to create 3 compatible colors for the given one.
+    */
+    return strategies.create('TriadTheory', {
+        createListFromColor: function( src ){
+            var colors = new ColorList(src);
+            colors.add( src.getRotatedRYB(120).lighten(0.1) );
+            colors.add( src.getRotatedRYB(-120).lighten(0.1) );
+            return colors;
+        },
+        getName: getName,
+        toString: toString
+    });
+});
+
+define('toxi/color/theory/TetradTheoryStrategy',[
+    './strategies',
+    '../ColorList'
+], function( strategies, ColorList ){
+
+    var getName = function(){ return 'tetrad'; },
+        adjust = function( c ){
+            return c[ c.brightness() < 0.5 ? 'lighten' : 'darken'](0.2);
+        };
+    /**
+    * Implements the <a href=
+    * "http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm#rectangle"
+    * >tetradic color scheme</a> to create 4 compatible colors for the given one.
+    */
+    return strategies.create('TetradTheory',
+        /**
+        * Constructs a new instance with the given color offset angle
+        * @param {Number} hue rotation angle in degrees
+        */
+        function( theta ){
+            this.theta = typeof theta === 'number' ? theta : 90;
+        }, {
+        createListFromColor: function( src ){
+            var colors = new ColorList(src);
+            colors.add( adjust(src.getRotatedRYB(this.theta)) );
+            colors.add( adjust(src.getRotatedRYB(this.theta*2)) );
+            colors.add( src.getRotatedRYB(this.theta*3).lighten(0.1));
+            return colors;
+        },
+        getName: getName,
+        toString: getName
+    });
+});
+
+define('toxi/color/theory/CompoundTheoryStrategy',[
+    './strategies',
+    '../ColorList'
+], function( strategies, ColorList ){
+
+    var wrap = strategies.wrap;
+
+    return strategies.create('Compound',
+        function( flipped ){
+            this._isFlipped = flipped === true;
+        }, {
+        createListFromColor: function( src ){
+            var colors = new ColorList(src),
+                direction = this._isFlipped ? -1 : 1,
+                c;
+
+            c = src.getRotatedRYB(30 * direction);
+            c.setBrightness(wrap(c.brightness(), 0.25, 0.6, 0.25));
+            colors.add(c);
+
+            c = src.getRotatedRYB(30 * direction);
+            c.setSaturation(wrap(c.saturation(), 0.4, 0.1, 0.4));
+            c.setBrightness(wrap(c.brightness(), 0.4, 0.2, 0.4));
+            colors.add(c);
+
+            c = src.getRotatedRYB(160 * direction);
+            c.setSaturation(wrap(c.saturation(), 0.25, 0.1, 0.25));
+            c.setBrightness(Math.max(0.2, c.brightness()));
+            colors.add(c);
+
+            c = src.getRotatedRYB(150 * direction);
+            c.setSaturation(wrap(c.saturation(), 0.1, 0.8, 0.1));
+            c.setBrightness(wrap(c.brightness(), 0.3, 0.6, 0.3));
+            colors.add(c);
+
+            /* disabled in java: http://hg.postspectacular.com/toxiclibs/src/4cfadbbea3b0bd02e2081e532f44782c5bfd67d7/src.color/toxi/color/theory/CompoundTheoryStrategy.java?at=default#cl-89
+            c = src.getRotatedRYB(150 * direction);
+            c.setSaturation(wrap(c.saturation(), 0.1, 0.8, 0.1));
+            c.setBrightness(wrap(c.brightness(), 0.4, 0.2, 0.4));
+            colors.add(c);*/
+
+            return colors;
+        },
+        isFlipped: function(){
+            return this._isFlipped;
+        },
+        setFlipped: function( state ){
+            this._isFlipped = state;
+        },
+        toString: function(){
+            return 'Compound' + (this.isFlipped() ? "_flipped" : "");
+        }
+    });
+
+});
+
+define('toxi/color/theory/ColorTheoryRegistry',['require','exports','module','../../internals','./SingleComplementStrategy','./ComplementaryStrategy','./SplitComplementaryStrategy','./LeftSplitComplementaryStrategy','./RightSplitComplementaryStrategy','./AnalagousStrategy','./MonochromeTheoryStrategy','./TriadTheoryStrategy','./TetradTheoryStrategy','./CompoundTheoryStrategy'],function( require, exports ){
+
+    var internals = require('../../internals'),
+        each = internals.each,
+        keys = internals.keys,
+        values = internals.values,
+        implementations = {};
+
+    var strats = {
+        SINGLE_COMPLEMENT: require('./SingleComplementStrategy'),
+        COMPLEMENTARY: require('./ComplementaryStrategy'),
+        SPLIT_COMPLEMENTARY: require('./SplitComplementaryStrategy'),
+        LEFT_SPLIT_COMPLEMENTARY: require('./LeftSplitComplementaryStrategy'),
+        RIGHT_SPLIT_COMPLEMENTARY: require('./RightSplitComplementaryStrategy'),
+        ANALAGOUS: require('./AnalagousStrategy'),
+        MONOCHROME: require('./MonochromeTheoryStrategy'),
+        TRIAD: require('./TriadTheoryStrategy'),
+        TETRAD: require('./TetradTheoryStrategy'),
+        COMPOUND: require('./CompoundTheoryStrategy')
+    };
+
+    exports.getRegisteredNames = function(){
+        return keys(implementations);
+    };
+
+    exports.getRegisteredStrategies = function(){
+        return values(implementations);
+    };
+
+    exports.getStrategyForName = function( id ){
+        return implementations[id];
+    };
+
+    exports.registerImplementation = function( impl ){
+        implementations[ impl.getName() ] = impl;
+    };
+
+    each(strats, function( Constructor, type ){
+        exports[type] = new (strats[type])();
+        exports.registerImplementation( exports[type] );
+    });
+});
+
+
+
+define('toxi/color/createListUsingStrategy',['./theory/ColorTheoryRegistry'], function( ColorTheoryRegistry ){
+    /**
+    * Factory method. Creates a new ColorList based on the given
+    * {@link ColorTheoryStrategy} instance and the given source color. The
+    * number of colors returned will vary with the strategy chosen.
+    * @param {string|toxi.color.theory.*Strategy} strategy either a string
+    * for a strategy, such as "splitComplementary" or an instance of a strategy
+    * @param {toxi.color.TColor} c a color to base the strategy off
+    * @return {toxi.color.ColorList} new list
+    */
+    return function(strategy, c){
+        if(typeof strategy == 'string'){
+            strategy = ColorTheoryRegistry.getStrategyForName(strategy);
+        }
+        var list;
+        if(strategy !== undefined){
+            list = strategy.createListFromColor(c);
+        }
+        return list;
+    };
+});
+
+define('toxi/color/HistEntry',['require'],function( require ){
+	var HistEntry = function( c ){
+		this.col = c;
+		this.freq = 1;
+	};
+
+	HistEntry.prototype = {
+		constructor: HistEntry,
+		compareTo: function( entry ){
+			return parseInt( entry.freq - this.freq, 10 );
+		},
+		getColor: function(){
+			return this.col;
+		},
+		getFrequency: function(){
+			return this.freq;
+		}
+	};
+	return HistEntry;
+});
+define('toxi/color/Histogram',['require','../internals','../internals','./HistEntry','./ColorList'],function( require ){
+
+	var each = require('../internals').each,
+		Iterator = require('../internals').Iterator,
+		HistEntry = require('./HistEntry'),
+		ColorList = require('./ColorList');
+
+	/**
+	 * Histogram constructor
+	 * @param {toxi.color.ColorList} palette
+	 */
+	var Histogram = function( palette ){
+		this.palette = palette;
+	};
+
+	Histogram.prototype = {
+		constructor: Histogram,
+		/**
+		 * @param {Number} tolerance color tolerance used to merge similar colors
+		 * (based on RGB distance)
+		 * @param {Boolean} blendCols switch to enable color blending of binned colors
+		 * @type sorted histogram as List of HistEntry
+		 */
+		compute: function( tolerance, blendCols ){
+			var self = this;
+			this.entries = [];
+			var maxFreq = 1;
+			this.palette.each(function( c ){
+				var existing, e, i=0, l=self.entries.length;
+				for( i=0; i<l; i++ ){
+					e = self.entries[i];
+					if( e.col.distanceToRGB(c) < tolerance ){
+						if( blendCols ){
+							e.col.blend( c, 1/(e.freq+1) );
+						}
+						existing = e;
+						break;
+					}
+				}
+				if( existing !== undefined ){
+					existing.freq++;
+					if( existing.freq > maxFreq ){
+						maxFreq = existing.freq;
+					}
+				} else {
+					self.entries.push( new HistEntry(c) );
+				}
+			});
+			this.entries.sort();
+			maxFreq = 1/this.palette.size();
+
+			each( this.entries, function( e ){
+				e.freq *= maxFreq;
+			});
+
+			return this.entries;
+		},
+		getEntries: function(){
+			return this.entries;
+		},
+		getPalette: function(){
+			return this.palette;
+		},
+		iterator: function(){
+			return new Iterator( this.entries );
+		},
+		setPalette: function( palette ){
+			this.palette = palette;
+		}
+	};
+
+	Histogram.newFromARGBArray = function( pixels, numSamples, tolerance, blendCols ){
+		var h = new Histogram( ColorList.createFromARGBArray(pixels, numSamples, false) );
+		h.compute( tolerance, blendCols );
+		return h;
+	};
+
+	return Histogram;
+});
+define('toxi/color/namedColor',[
+    './TColor',
+    '../internals',
+    'exports'
+], function( TColor, internals, exports ){
+    var each = internals.each,
+        names = [],
+        //kept private, used for `getForName`
+        namedColorMap = {};
+
+    //attach every one of the X11 colors to NamedColor
+    //make all names uppercase
+    each(TColor.X11, function( value, key ){
+        var upkey = key.toUpperCase();
+        names.push(upkey);
+        namedColorMap[upkey] = value;
+        namedColorMap[key] = value;
+        exports[upkey] = value;
+    });
+
+
+    /**
+     * Returns the color for the given name
+     * @param {String} name
+     * @return color or undefined if name not found
+     */
+    exports.getForName = function( name ){
+        //return the color, and if it was sent like "springGreen", lowercase it to be nice :)
+        return namedColorMap[name] || namedColorMap[name.toLowerCase()];
+    };
+
+    /**
+     * Return the names of all defined colors
+     * @return list of names
+     */
+    exports.getNames = function(){
+        return names.slice(0);
+    };
+
+});
+
+define('toxi/color/theory/colorTheoryRegistry',['require','exports','module','../../internals','./SingleComplementStrategy','./ComplementaryStrategy','./SplitComplementaryStrategy','./LeftSplitComplementaryStrategy','./RightSplitComplementaryStrategy','./AnalagousStrategy','./MonochromeTheoryStrategy','./TriadTheoryStrategy','./TetradTheoryStrategy','./CompoundTheoryStrategy'],function( require, exports ){
+
+    var internals = require('../../internals'),
+        each = internals.each,
+        keys = internals.keys,
+        values = internals.values,
+        implementations = {};
+
+    var strats = {
+        SINGLE_COMPLEMENT: require('./SingleComplementStrategy'),
+        COMPLEMENTARY: require('./ComplementaryStrategy'),
+        SPLIT_COMPLEMENTARY: require('./SplitComplementaryStrategy'),
+        LEFT_SPLIT_COMPLEMENTARY: require('./LeftSplitComplementaryStrategy'),
+        RIGHT_SPLIT_COMPLEMENTARY: require('./RightSplitComplementaryStrategy'),
+        ANALAGOUS: require('./AnalagousStrategy'),
+        MONOCHROME: require('./MonochromeTheoryStrategy'),
+        TRIAD: require('./TriadTheoryStrategy'),
+        TETRAD: require('./TetradTheoryStrategy'),
+        COMPOUND: require('./CompoundTheoryStrategy')
+    };
+
+    exports.getRegisteredNames = function(){
+        return keys(implementations);
+    };
+
+    exports.getRegisteredStrategies = function(){
+        return values(implementations);
+    };
+
+    exports.getStrategyForName = function( id ){
+        return implementations[id];
+    };
+
+    exports.registerImplementation = function( impl ){
+        implementations[ impl.getName() ] = impl;
+    };
+
+    each(strats, function( Constructor, type ){
+        exports[type] = new (strats[type])();
+        exports.registerImplementation( exports[type] );
+    });
+});
+
+
+
+define('toxi/color/theory',['require','exports','module','./theory/AnalagousStrategy','./theory/colorTheoryRegistry','./theory/ComplementaryStrategy','./theory/CompoundTheoryStrategy','./theory/LeftSplitComplementaryStrategy','./theory/MonochromeTheoryStrategy','./theory/RightSplitComplementaryStrategy','./theory/SingleComplementStrategy','./theory/SplitComplementaryStrategy','./theory/TetradTheoryStrategy','./theory/TriadTheoryStrategy','./theory/strategies'],function( require, exports ){
+    exports.AnalagousStrategy = require('./theory/AnalagousStrategy');
+    exports.colorTheoryRegistry = require('./theory/colorTheoryRegistry');
+    //keep it uppercase also
+    exports.ColorTheoryRegistry = exports.colorTheoryRegistry;
+    exports.ComplementartyStrategy = require('./theory/ComplementaryStrategy');
+    exports.CompoundTheoryStrategy = require('./theory/CompoundTheoryStrategy');
+    exports.LeftSplitComplementaryStrategy = require('./theory/LeftSplitComplementaryStrategy');
+    exports.MonochromeTheoryStrategy = require('./theory/MonochromeTheoryStrategy');
+    exports.RightSplitComplementaryStrategy = require('./theory/RightSplitComplementaryStrategy');
+    exports.SingleComplementStrategy = require('./theory/SingleComplementStrategy');
+    exports.SplitComplementaryStrategy = require('./theory/SplitComplementaryStrategy');
+    exports.TetradTheoryStrategy = require('./theory/TetradTheoryStrategy');
+    exports.TriadTheoryStrategy = require('./theory/TriadTheoryStrategy');
+    //for creating custom strategies
+    exports.strategies = require('./theory/strategies');
+});
+
+define('toxi/math/ScaleMap',["require", "exports", "module", "./mathUtils","./LinearInterpolation"], function(require, exports, module) {
+
+var mathUtils = require('./mathUtils'),
+    LinearInterpolation = require('./LinearInterpolation');
+
+
+var _Range = function(min,max){
+	this.min = min;
+	this.max = max;
+};
+_Range.prototype.toString = function(){
+	return "{ min: "+this.min+ ", max: "+this.max+"}";
+};
+
+
+/**
+ * @class This class maps values from one interval into another. By default the mapping
+ * is using linear projection, but can be changed by using alternative
+ * {@link math.InterpolateStrategy} implementations to achieve a
+ * non-regular mapping.
+ *
+ * @member toxi
+ *
+ * @description Creates a new instance to map values between the 2 number ranges
+ * specified. By default linear projection is used.
+ * @param {Number} minIn
+ * @param {Number} maxIn
+ * @param {Number} minOut
+ * @param {Number} maxOut
+ */ 
+var ScaleMap = function(minIn, maxIn, minOut, maxOut) {
+	if(arguments.length == 1 && arguments[0].input !== undefined && arguments[0].output !== undefined){ //opts object
+		var arg = arguments[0];
+		minOut = arg.output.min;
+		maxOut = arg.output.max;
+        maxIn = arg.input.max;
+        minIn = arg.input.min;
+	}
+	this.mapFunction = new LinearInterpolation();
+	this.setInputRange(minIn, maxIn);
+	this.setOutputRange(minOut, maxOut);
+};
+
+
+ScaleMap.prototype = {
+	
+    /**
+     * Computes mapped value in the target interval and ensures the input value
+     * is clipped to source interval.
+     * 
+     * @param val
+     * @return mapped value
+     */
+   getClippedValueFor: function(val) {
+        var t = mathUtils.clipNormalized( ((val - this._in.min) / this._interval));
+        return this.mapFunction.interpolate(0, this.mapRange, t) + this._out.min;
+    },
+
+    /**
+     * @return the middle value of the input range.
+     */
+    getInputMedian: function() {
+        return (this._in.min + this._in.max) * 0.5;
+    },
+
+    /**
+     * @return the in
+     */
+    getInputRange: function() {
+        return this._in;
+    },
+
+    /**
+     * @return the mapped middle value of the output range. Depending on the
+     *         mapping function used, this value might be different to the one
+     *         returned by {@link #getOutputMedian()}.
+     */
+    getMappedMedian: function() {
+        return this.getMappedValueFor(0.5);
+    },
+
+    /**
+     * Computes mapped value in the target interval. Does check if input value
+     * is outside the input range.
+     * 
+     * @param val
+     * @return mapped value
+     */
+    getMappedValueFor: function(val) {
+        var t = ((val - this._in.min) / this._interval);
+        return this.mapFunction.interpolate(0,  this.mapRange, t) + this._out.min;
+    },
+
+    /**
+     * @return the middle value of the output range
+     */
+    getOutputMedian:function() {
+        return (this._out.min + this._out.max) * 0.5;
+    },
+
+    /**
+     * @return the output range
+     */
+    getOutputRange: function() {
+        return this._out;
+    },
+
+    /**
+     * Sets new minimum & maximum values for the input range
+     * 
+     * @param min
+     * @param max
+     */
+    setInputRange: function(min,max) {
+        this._in = new _Range(min,max);
+        this._interval = max - min;
+    },
+
+    /**
+     * Overrides the mapping function used for the scale conversion.
+     * 
+     * @param func
+     *            interpolate strategy implementation
+     */
+    setMapFunction: function(func) {
+        this.mapFunction = func;
+    },
+
+    /**
+     * Sets new minimum & maximum values for the output/target range
+     * 
+     * @param min
+     *            new min output value
+     * @param max
+     *            new max output value
+     */
+    setOutputRange: function(min, max) {
+        this._out = new _Range(min, max);
+        this.mapRange = max - min;
+    },
+    
+    toString: function(){
+		return "ScaleMap, inputRange: "+this._in.toString() + " outputRange: "+this._out.toString();
+    }
+};
+
+module.exports = ScaleMap;
+});
+
+define('toxi/color/ToneMap',[
+    'toxi/internals/is',
+    'toxi/math/ScaleMap',
+    './ColorList',
+    './ColorGradient'
+], function( is, ScaleMap, ColorList, ColorGradient ){
+
+    var ToneMap;
+    /**
+     * ToneMap
+     * @constructor
+     * @param {Number} min `min` or `a`
+     * @param {Number} max `max` or `b`
+     * @param {toxi.color.ColorGradient|ColorList|TColor} g
+     * @param {toxi.color.TColor} [colorB]
+     * @param {Number} [resolution]
+     *
+     * @usages
+     * new ToneMap( min, max, gradient );
+     * or
+     * new ToneMap( min, max, colorList );
+     * or
+     * new ToneMap( a, b, colorA, colorB );
+     * or
+     * new ToneMap( min, max, colorA, colorB, resolution );
+     */
+    ToneMap = function( min, max, list, colorB, resolution ){
+        var al = arguments.length;
+        if( al > 3 ){
+            //( a, b, colorA, colorB )
+            if( al === 4 ){
+                list = new ColorList( list, colorB );
+            } else {
+                //( min, max, colorA, colorB, resolution )
+                var colA = list;
+                list = new ColorGradient();
+                list.addColorAt(0, colA);
+                list.addColorAt(resolution-1, colorB);
+                list = list.calcGradient(0, resolution);
+            }
+        //by now all of the variables are syphoned down to min, max, colorList
+        }
+        //( min, max, gradient ) or
+        //( min, max, colorlist )
+        if( is.ColorGradient( list ) ){
+            //make it a colorlist
+            list = list.calcGradient();
+        }
+        this.map = new ScaleMap( min, max, 0, list.size()-1 );
+        this.colors = list;
+    };
+
+    ToneMap.prototype = {
+        constructor: ToneMap,
+        getARGBToneFor: function( t  ){
+            return this.getToneFor(t).toARGB();
+        },
+        /**
+        * get a color from a tonal value
+        * @param {Number} t
+        * @return {toxi.color.TColor}
+        */
+        getToneFor: function( t ){
+            var idx;
+            if( this.colors.size() > 2 ){
+                idx = Math.floor( this.map.getClippedValueFor(t) + 0.5 );
+            } else {
+                idx = t >= this.map.getInputMedian() ? 1 : 0;
+            }
+            return this.colors.get(idx);
+        },
+        /**
+        * Applies the tonemap to all elements in the given source array of
+        * values and places the resulting ARGB color in the corresponding
+        * index of the target pixel buffer. If the target buffer is null, a new one
+        * will be created automatically.
+        *
+        * @param {Array<Number>}src source array of values to be tone mapped
+        * @param {Array<Number>}pixels target pixel buffer
+        * @param {Number} [offset] optionally provide an index-offset to start
+        * at in the destination pixels array
+        * @return pixel array
+        */
+        getToneMappedArray: function( src, pixels, offset ){
+            if( typeof offset !== 'number'){
+                offset = 0;
+            } else if ( offset < 0 ){
+                throw new Error("offset into target pixel array is negative");
+            }
+            pixels = pixels || new Array(src.length);
+            for(var i=0, l=src.length; i<l; i++){
+                pixels[offset++] = this.getToneFor(src[i]).toARGB();
+            }
+            return pixels;
+        },
+        /**
+         * @param {toxi.math.InterpolateStrategy} func
+         */
+        setMapFunction: function( func ){
+            this.map.setMapFunction( func );
+        }
+    };
+
+    return ToneMap;
+
+});
+
+define('toxi/color',['require','exports','module','./color/accessCriteria','./color/AlphaAccessor','./color/CMYKAccessor','./color/CMYKDistanceProxy','./color/ColorGradient','./color/ColorList','./color/ColorRange','./color/ColorTheme','./color/createListUsingStrategy','./color/HistEntry','./color/Histogram','./color/HSVAccessor','./color/HSVDistanceProxy','./color/Hue','./color/LuminanceAccessor','./color/namedColor','./color/ProximityComparator','./color/RGBAccessor','./color/RGBDistanceProxy','./color/TColor','./color/theory','./color/ToneMap'],function(require, exports) {
+	exports.accessCriteria = require('./color/accessCriteria');
+    //keep it uppercase also
+    exports.AccessCriteria = exports.accessCriteria;
 	exports.AlphaAccessor = require('./color/AlphaAccessor');
 	exports.CMYKAccessor = require('./color/CMYKAccessor');
 	exports.CMYKDDistanceProxy = require('./color/CMYKDistanceProxy');
 	exports.ColorGradient = require('./color/ColorGradient');
 	exports.ColorList = require('./color/ColorList');
+    exports.ColorRange = require('./color/ColorRange');
+    exports.ColorTheme = require('./color/ColorTheme');
+    exports.createListUsingStrategy = require('./color/createListUsingStrategy');
+    exports.HistEntry = require('./color/HistEntry');
+    exports.Histogram = require('./color/Histogram');
 	exports.HSVAccessor = require('./color/HSVAccessor');
 	exports.HSVDistanceProxy = require('./color/HSVDistanceProxy');
+    exports.Hue = require('./color/Hue');
 	exports.LuminanceAccessor = require('./color/LuminanceAccessor');
+    exports.namedColor = require('./color/namedColor');
+    exports.NamedColor = exports.namedColor;
 	exports.ProximityComparator = require('./color/ProximityComparator');
 	exports.RGBAccessor = require('./color/RGBAccessor');
 	exports.RGBDistanceProxy = require('./color/RGBDistanceProxy');
 	exports.TColor = require('./color/TColor');
+    exports.theory = require('./color/theory');
+    exports.ToneMap = require('./color/ToneMap');
 });
 
 define('toxi/geom/Line3D',["require", "exports", "module", "../math/mathUtils"], function(require, exports, module) {
@@ -4576,6 +6436,10 @@ module.exports = Line3D;
 
 });
 
+define('toxi/geom/Vec3D',['require','exports','module','./vectors'], function( require, exports, module ){
+	//Vec3D is defined in toxi/geom/vectors to circumvent circular dependencies
+	module.exports = require('./vectors').Vec3D;
+});
 define('toxi/geom/Matrix4x4',["require", "exports", "module", "../math/mathUtils","./Vec3D","../internals"], function(require, exports, module) {
 
 var mathUtils = require('../math/mathUtils'),
@@ -4605,7 +6469,7 @@ var Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42
 		var m3 = [v31,v32,v33,v34];
 		var m4 = [v41,v42,v43,v44];
 		this.matrix = [m1,m2,m3,m4];
-	} else if( internals.tests.isArray( v11 ) ){ //if it was sent in as one array
+	} else if( internals.is.Array( v11 ) ){ //if it was sent in as one array
 		var array = v11;
 		if (array.length != 9 && array.length != 16) {
 			throw new Error("Matrix4x4: Array length must == 9 or 16");
@@ -4625,7 +6489,7 @@ var Matrix4x4 = function(v11,v12,v13,v14,v21,v22,v23,v24,v31,v32,v33,v34,v41,v42
 			this.matrix[2][3] = NaN;
 			this.matrix[3] = [NaN,NaN,NaN,NaN];
 		}
-	} else if( internals.tests.isMatrix4x4( v11 ) ){
+	} else if( internals.is.Matrix4x4( v11 ) ){
 
 	//else it should've been a Matrix4x4 that was passed in
 		var m = v11,
@@ -4681,7 +6545,7 @@ Matrix4x4.prototype = {
 
     /**
      * Creates a copy of the given vector, transformed by this matrix.
-     * 
+     *
      * @param v
      * @return transformed vector
      */
@@ -4746,7 +6610,7 @@ Matrix4x4.prototype = {
      * Matrix Inversion using Cramer's Method Computes Adjoint matrix divided by
      * determinant Code modified from
      * http://www.intel.com/design/pentiumiii/sml/24504301.pdf
-     * 
+     *
      * @return itself
      */
 	invert: function() {
@@ -4894,7 +6758,7 @@ Matrix4x4.prototype = {
     },
     /**
      * Applies rotation about arbitrary axis to matrix
-     * 
+     *
      * @param axis
      * @param theta
      * @return rotation applied to this matrix
@@ -4919,7 +6783,7 @@ Matrix4x4.prototype = {
 
     /**
      * Applies rotation about X to this matrix.
-     * 
+     *
      * @param theta
      *            rotation angle in radians
      * @return itself
@@ -4934,7 +6798,7 @@ Matrix4x4.prototype = {
 
     /**
      * Applies rotation about Y to this matrix.
-     * 
+     *
      * @param theta
      *            rotation angle in radians
      * @return itself
@@ -4961,7 +6825,7 @@ Matrix4x4.prototype = {
     },
 
     scaleSelf: function(a,b,c) {
-		if( internals.tests.hasXYZ( a ) ){
+		if( internals.has.XYZ( a ) ){
 			b = a.y;
 			c = a.z;
 			a = a.x;
@@ -5017,7 +6881,7 @@ Matrix4x4.prototype = {
     	var rl = (right - left),
     		tb = (top - bottom),
     		fn = (far - near);
-    	
+
 
     	return this.set(
     		(2.0 * near) / rl,
@@ -5036,26 +6900,26 @@ Matrix4x4.prototype = {
     		0,
     		-1,
     		0
-    	);	
+    	);
     },
 
     setOrtho: function(left,right,top,bottom,near,far){
     	var mat = [
     		2.0 / (right - left),
-    		0, 
-    		0, 
+    		0,
+    		0,
     		(left + right) / (right - left),
-            0, 
-            2.0 / (top - bottom), 
-            0, 
-            (top + bottom) / (top - bottom), 
+            0,
+            2.0 / (top - bottom),
+            0,
+            (top + bottom) / (top - bottom),
             0,
             0,
-            -2.0 / (far - near), 
-            (far + near) / (far - near), 
-            0, 
-            0, 
-            0, 
+            -2.0 / (far - near),
+            (far + near) / (far - near),
+            0,
+            0,
+            0,
             1
     	];
 
@@ -5065,24 +6929,24 @@ Matrix4x4.prototype = {
     setPerspective: function(fov,aspect,near,far){
     	var y = near * Math.tan(0.5 * mathUtils.radians(fov)),
     		x = aspect * y;
-    	return this.setFrustrum(-x,x,y,-y,near,far);	
+    	return this.setFrustrum(-x,x,y,-y,near,far);
     },
 
     setPosition: function(x,y,z){
     	this.matrix[0][3] = x;
     	this.matrix[1][3] = y;
     	this.matrix[2][3] = z;
-    	return this;	
+    	return this;
     },
 
     setScale: function(sX,sY,sZ){
     	this.matrix[0][0] = sX;
     	this.matrix[1][1] = sY;
     	this.matrix[2][2] = sZ;
-    	return this;	
+    	return this;
     },
 
-   
+
     sub: function(m) {
 		return new Matrix4x4(this).subSelf(m);
     },
@@ -5101,7 +6965,7 @@ Matrix4x4.prototype = {
 
     /**
      * Copies all matrix elements into an linear array.
-     * 
+     *
      * @param result
      *            array (or null to create a new one)
      * @return matrix as 16 element array
@@ -5125,7 +6989,7 @@ Matrix4x4.prototype = {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#toString()
      */
     toString: function() {
@@ -5149,7 +7013,7 @@ Matrix4x4.prototype = {
     },
 
     translateSelf: function( dx, dy, dz) {
-		if( internals.tests.hasXYZ( dx ) ){
+		if( internals.has.XYZ( dx ) ){
 			dy = dx.y;
 			dz = dx.z;
 			dx = dx.x;
@@ -5162,7 +7026,7 @@ Matrix4x4.prototype = {
     /**
      * Converts the matrix (in-place) between column-major to row-major order
      * (and vice versa).
-     * 
+     *
      * @return itself
      */
     transpose: function() {
@@ -5182,6 +7046,10 @@ module.exports = Matrix4x4;
 
 });
 
+define('toxi/geom/Vec2D',['require','exports','module','./vectors'], function( require, exports, module ){
+    //Vec2D is located in toxi/geom/vectors to circumvent circular dependencies
+    module.exports = require('./vectors').Vec2D;
+});
 define('toxi/geom/AABB',[
 	"require",
 	"exports",
@@ -5212,9 +7080,9 @@ var AABB = function(a,b){
 	} else if(typeof(a) == "number") {
 		Vec3D.call(this,new Vec3D());
 		this.setExtent(a);
-	} else if( internals.tests.hasXYZ( a ) ) {
+	} else if( internals.has.XYZ( a ) ) {
 		Vec3D.call(this,a);
-		if(b === undefined && internals.tests.isAABB( a )) {
+		if(b === undefined && internals.is.AABB( a )) {
 			this.setExtent(a.getExtent());
 		} else {
 			if(typeof b == "number"){
@@ -5224,8 +7092,8 @@ var AABB = function(a,b){
 			}
 		}
 	}
-	
-	
+
+
 };
 
 internals.extend(AABB,Vec3D);
@@ -5239,7 +7107,7 @@ AABB.fromMinMax = function(min,max){
 AABB.prototype.containsPoint = function(p) {
     return p.isInAABB(this);
 };
-	
+
 AABB.prototype.copy = function() {
     return new AABB(this);
 };
@@ -5254,7 +7122,7 @@ AABB.prototype.copy = function() {
 AABB.prototype.getExtent = function() {
    return this.extent.copy();
 };
-	
+
 AABB.prototype.getMax = function() {
    // return this.add(extent);
    return this.max.copy();
@@ -5537,7 +7405,7 @@ AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
     }
     return false;
 };
-		
+
 /**
  * Updates the position of the box in space and calls
  * {@link #updateBounds()} immediately
@@ -5546,11 +7414,11 @@ AABB.prototype.planeBoxOverlap = function(normal, d, maxbox) {
  */
 
 AABB.prototype.set = function(a,b,c) {
-		if(internals.tests.isAABB( a )) {
+		if(internals.is.AABB( a )) {
 			this.extent.set(a.extent);
 			return Vec3D.set.apply(this,[a]);
 		}
-		if( internals.tests.hasXYZ( a )){
+		if( internals.has.XYZ( a )){
 			b = a.y;
 			c = a.z;
 			a = a.a;
@@ -6396,17 +8264,14 @@ define('toxi/geom/Sphere',['require','../internals','./mesh/meshCommon','./Vec3D
 			if(a === undefined){
 				Vec3D.apply(this,[new Vec3D()]);
 				this.radius = 1;
-			}
-			else if( internals.tests.hasXYZ( a ) ){
+			} else if( internals.has.XYZ( a ) ){
 				Vec3D.apply(this,[a]);
-				if( internals.tests.isSphere( a ) ){
+				if( internals.is.Sphere( a ) ){
 					this.radius = a.radius;
-				}
-				else {
+				} else {
 					this.radius = b;
 				}
-			}
-			else {
+			} else {
 				Vec3D.apply(this,[new Vec3D()]);
 				this.radius = a;
 			}
@@ -6538,8 +8403,8 @@ define('toxi/geom/Sphere',['require','../internals','./mesh/meshCommon','./Vec3D
 			if(sphere_or_radius === undefined){
 				this.sphere = new Sphere(new Vec3D(),1);
 			}
-			
-			if(internals.tests.isSphere( sphere_or_radius )){
+
+			if(internals.is.Sphere( sphere_or_radius )){
 				this.sphere = sphere_or_radius;
 			}
 			else{
@@ -6582,7 +8447,7 @@ define('toxi/geom/Sphere',['require','../internals','./mesh/meshCommon','./Vec3D
 			}
 		};
 	}( Sphere ));
-	
+
 	Sphere.SphereFunction = SphereFunction;
 	return Sphere;
 
@@ -6725,17 +8590,17 @@ var Interpolation2D = {};
  */
 Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
 	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if( internals.tests.hasXY( _x ) ) //if the first 3 params are passed in as Vec2Ds
+	if( internals.has.XY( _x ) ) //if the first 3 params are passed in as Vec2Ds
 	{
 		x = _x.x;
 		y = _x.y;
-		
+
 		x1 = _y.x;
 		y1 = _y.y;
-		
+
 		x2 = _x1.x;
 		y2 = _x1.y;
-		
+
 		tl = _y1;
 		tr = _x2;
 		bl = _y2;
@@ -7016,7 +8881,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				var va = this.__checkVertex(a);
 				var vb = this.__checkVertex(b);
 				var vc = this.__checkVertex(c);
-			
+
 				if(va.id === vb.id || va.id === vc.id || vb.id === vc.id){
 					//console.log("ignoring invalid face: "+a + ", " +b+ ", "+c);
 				} else {
@@ -7034,7 +8899,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return this;
 			},
-			
+
 			addMesh: function(m){
 				var l = m.getFaces().length;
 				for(var i=0;i<l;i++){
@@ -7043,7 +8908,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return this;
 			},
-			
+
 			//if no function is called it is assumed the response is not needed
 			center: function(origin){
 				this.computeCentroid();
@@ -7053,10 +8918,10 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 					var v = this.vertices[i];
 					v.addSelf(delta);
 				}
-				
+
 				return this.getBoundingBox();
 			},
-			
+
 			__checkVertex: function(v){
 				var vertex = this.vertexMap.get(v);
 				if(vertex === undefined){
@@ -7065,7 +8930,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return vertex;
 			},
-			
+
 			clear: function(){
 				this.vertexMap = new internals.LinkedMap( vertexKeyGenerator );
 				this.vertices = this.vertexMap.getArray();
@@ -7073,7 +8938,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				this.bounds = undefined;
 				return this;
 			},
-			
+
 			computeCentroid: function(){
 				this.centroid.clear();
 				var l = this.vertices.length;
@@ -7082,14 +8947,14 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return this.centroid.scaleSelf(1.0/this.vertexMap.size()).copy();
 			},
-			
+
 			computeFaceNormals: function(){
 				var l = this.faces.length;
 				for(var i=0;i<l;i++){
 					this.faces[i].computeNormal();
 				}
 			},
-			
+
 			computeVertexNormals: function(){
 				var l = this.vertices.length,
 					i = 0;
@@ -7109,7 +8974,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return this;
 			},
-			
+
 			copy: function(){
 				var m = new TriangleMesh(this.name+"-copy",this.vertexMap.size(),this.faces.length);
 				var l = this.faces.length;
@@ -7119,12 +8984,12 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return m;
 			},
-			
+
 			_createVertex: function(vec3D,id){
 				var vertex = new Vertex( vec3D, id );
 				return vertex;
 			},
-			
+
 			faceOutwards: function(){
 				this.computeCentroid();
 				var l = this.faces.length;
@@ -7138,7 +9003,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return this;
 			},
-			
+
 			flipVertexOrder: function(){
 				var l = this.faces.length;
 				for(var i=0;i<l;i++){
@@ -7150,13 +9015,13 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return this;
 			},
-			
+
 			flipYAxis: function(){
 				this.transform(new Matrix4x4().scaleSelf(1,-1,1));
 				this.flipVerteAxOrder();
 				return this;
 			},
-			
+
 			getBoundingBox: function( ){
 				/*if( fn === undefined ){
 					throw new Error("getBoundingBox() is an async method, provide a callback and the AABB will be the first parameter");
@@ -7175,7 +9040,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				self.bounds = AABB.fromMinMax(minBounds,maxBounds);
 				return self.bounds;
 			},
-			
+
 			getBoundingSphere:function(){
 				/*if( fn === undefined ){
 					throw new Error("getBoundingSphere() is an async method, provide a callback and the Sphere will be the first parameter");
@@ -7192,7 +9057,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				var sph = new Sphere(this.centroid,Math.sqrt(radius));
 				return sph;
 			},
-			
+
 			getClosestVertexToPoint: function(p){
 				var closest,
 					minDist = Number.MAX_VALUE,
@@ -7207,7 +9072,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return closest;
 			},
-			
+
 			/**
 			 * Creates an array of unravelled normal coordinates. For each vertex the
 			 * normal vector of its parent face is used. This method can be used to
@@ -7257,11 +9122,11 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return normals;
 			},
-			
+
 			getFaces: function() {
 				return this.faces;
 			},
-			
+
 			/**
 			 * Builds an array of vertex indices of all faces. Each vertex ID
 			 * corresponds to its position in the {@link #vertices} HashMap. The
@@ -7281,12 +9146,12 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return faceList;
 			},
-			
+
 			getIntersectionData: function() {
 				return this.intersector.getIntersectionData();
 			},
-			
-			
+
+
 			/**
 			 * Creates an array of unravelled vertex coordinates for all faces. This
 			 * method can be used to translate the internal mesh data structure into a
@@ -7366,39 +9231,39 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return verts;
 			},
-			
+
 			getNumFaces: function() {
 				return this.faces.length;
 			},
-			
+
 			getNumVertices: function() {
 				return this.vertexMap.size();
 			},
-			
+
 			getRotatedAroundAxis: function(axis,theta) {
 				return this.copy().rotateAroundAxis(axis, theta);
 			},
-			
+
 			getRotatedX: function(theta) {
 				return this.copy().rotateX(theta);
 			},
-			
+
 			getRotatedY: function(theta) {
 				return this.copy().rotateY(theta);
 			},
-			
+
 			getRotatedZ: function(theta) {
 				return this.copy().rotateZ(theta);
 			},
-			
+
 			getScaled: function(scale) {
 				return this.copy().scale(scale);
 			},
-			
+
 			getTranslated: function(trans) {
 				return this.copy().translate(trans);
 			},
-			
+
 			getUniqueVerticesAsArray: function() {
 				var verts = [];
 				var i = 0;
@@ -7411,7 +9276,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return verts;
 			},
-			
+
 			getVertexAtPoint: function(v) {
 				var index;
 				for(var i=0;i<this.vertices.length;i++){
@@ -7434,9 +9299,9 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 					}
 				}
 				return matchedVertex;
-			
+
 			},
-			
+
 			getVertexForID: function(id) {
 				var vertex,
 					l = this.vertices.length;
@@ -7449,7 +9314,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return vertex;
 			},
-			
+
 			/**
 			 * Creates an array of unravelled vertex normal coordinates for all faces.
 			 * This method can be used to translate the internal mesh data structure
@@ -7491,11 +9356,11 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return normals;
 			},
-			
+
 			getVertices: function() {
 				return this.vertices;
 			},
-			
+
 			handleSaveAsSTL: function(stl,useFlippedY) {
 				/*f (useFlippedY) {
 					stl.setScale(new Vec3D(1, -1, 1));
@@ -7511,7 +9376,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				console.log(numFaces + " faces written");
 				*/
 				throw Error("TriangleMesh.handleSaveAsSTL() currently not implemented");
-			
+
 			},
 
 			init: function( name ){
@@ -7524,7 +9389,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				this.faces = [];
 				this.uniqueVertexID = 0;
 			},
-			
+
 			//FIXME this.intersector needs implementing of TriangleIntersector
 			intersectsRay: function(ray) {
 				throw Error('intersectsRay not yet implemented');
@@ -7542,7 +9407,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return false;*/
 			},
-			
+
 			perforateFace: function(f, size) {
 				var centroid = f.getCentroid();
 				var d = 1 - size;
@@ -7558,7 +9423,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				this.addFace(f.c, f.a, a2);
 				return new Triangle3D(a2, b2, c2);
 			},
-			
+
 			/**
 			 * Rotates the mesh in such a way so that its "forward" axis is aligned with
 			 * the given direction. This version uses the positive Z-axis as default
@@ -7572,7 +9437,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				forward = forward || Vec3D.Z_AXIS;
 				return this.transform( Quaternion.getAlignmentQuat(dir, forward).toMatrix4x4(this.matrix), true);
 			},
-			
+
 			removeFace: function(f) {
 				var index = -1;
 				var l = this.faces.length;
@@ -7586,24 +9451,24 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 					this.faces.splice(index,1);
 				}
 			},
-			
-			
+
+
 			rotateAroundAxis: function(axis, theta) {
 				return this.transform(this.matrix.identity().rotateAroundAxis(axis, theta));
 			},
-			
+
 			rotateX: function(theta) {
 				return this.transform(this.matrix.identity().rotateX(theta));
 			},
-			
+
 			rotateY: function(theta) {
 				return this.transform(this.matrix.identity().rotateY(theta));
 			},
-			
+
 			rotateZ: function(theta) {
 				return this.transform(this.matrix.identity().rotateZ(theta));
 			},
-			
+
 			saveAsOBJ: function(obj, saveNormals) {
 				if( saveNormals === undefined){
 					saveNormals = true;
@@ -7636,28 +9501,28 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 					}
 				}
 			},
-			
+
 			saveAsSTL: function(a,b,c){
 				throw Error("TriangleMesh.saveAsSTL() currently not implemented");
 			},
-			
+
 			scale: function(scale) {
 				return this.transform(this.matrix.identity().scaleSelf(scale));
 			},
-			
+
 			setName: function(name) {
 				this.name = name;
 				return this;
 			},
-			
+
 			toString: function() {
 				return "TriangleMesh: " + this.name + " vertices: " + this.getNumVertices() + " faces: " + this.getNumFaces();
 			},
-			
+
 			toWEMesh: function() {
 				return new WETriangleMesh(this.name).addMesh(this);
 			},
-			
+
 			/**
 			* Applies the given matrix transform to all mesh vertices. If the
 			* updateNormals flag is true, all face normals are updated automatically,
@@ -7689,7 +9554,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return this.transform(this.matrix.identity().translateSelf(x,y,z));
 			},
-			
+
 			updateVertex: function(origVec3D,newPos) {
 				var vertex = this.vertexMap.get( origVec3D );
 				if (vertex !== undefined ) {
@@ -7712,7 +9577,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 		var WEFace = require('./Face').WEFace;
 		var WingedEdge = require('./WingedEdge');
 		var MidpointSubdivision = require('./subdiv/MidpointSubdivision');
-		
+
 		//locals
 		var proto;
 		//constructor
@@ -7723,7 +9588,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 		//passing these on to match java api
 		WETriangleMesh.DEFAULT_NUM_FACES = TriangleMesh.DEFAULT_NUM_FACES;
 		WETriangleMesh.DEFAULT_NUM_VERTICES = TriangleMesh.DEFAULT_NUM_VERTICES;
-		
+
 		internals.extend( WETriangleMesh, TriangleMesh );
 		proto = WETriangleMesh.prototype;
 
@@ -8041,7 +9906,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 		Terrain = function(width, depth, scale){
 			this.width = width;
 			this._depth = depth;
-			if( !internals.tests.hasXY(scale) ){
+			if( !internals.has.XY(scale) ){
 				scale = new Vec2D(scale,scale);
 			}
 			this.setScale( scale );
@@ -8100,7 +9965,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 						zz: parseInt(zz,10)
 					};
 				if(xx >= 0 & xx < this.width && zz >= 0 && zz < this._depth){
-					
+
 					var x2 = parseInt(mathUtils.min(xx + 1, this.width - 1), 10),
 						z2 = parseInt(mathUtils.min(zz + 1, this._depth - 1), 10);
 
@@ -8108,7 +9973,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 						b = this.getHeightAtCell(x2, fl.zz),
 						c = this.getHeightAtCell(fl.xx, z2),
 						d = this.getHeightAtCell(x2, z2);
-					
+
 					y = Interpolation2D.bilinear(xx,zz, fl.xx, fl.zz, x2, z2, a, b, c, d);
 				}
 				return y;
@@ -8209,7 +10074,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				return this;
 			},
 			setScale: function(scale){
-				if(!internals.tests.hasXY(scale) ){
+				if(!internals.has.XY(scale) ){
 					scale = new Vec2D(scale,scale);
 				}
 				this._scale = scale;
@@ -8261,7 +10126,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				return opts.mesh;
 			}
 		};
-			
+
 	}( TriangleMesh ));
 
 
@@ -8323,7 +10188,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				if(mesh === undefined || mesh === null){
 					mesh = new TriangleMesh();
 				}
-				
+
 				var a = new Vec3D(),
 					b = new Vec3D(),
 					pa = new Vec3D(),
@@ -8374,8 +10239,8 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 				}
 				return mesh;
 			},
-			
-			
+
+
 			/**
 			@return the function
 			*/
@@ -8395,6 +10260,7 @@ define('toxi/geom/mesh/meshCommon',['require','exports','module','../Line3D','..
 	exports.SurfaceMeshBuilder = SurfaceMeshBuilder;
 
 });
+
 define('toxi/geom/mesh/TriangleMesh',['require','./meshCommon'],function( require ){
 	return require('./meshCommon').TriangleMesh;
 });
@@ -9088,7 +10954,7 @@ var Line2D = function( a, b) {
 Line2D.prototype = {
 	/**
 	 * Computes the closest point on this line to the point given.
-	 * 
+	 *
 	 * @param p
 	 *            point to check against
 	 * @return closest point on the line
@@ -9114,7 +10980,7 @@ Line2D.prototype = {
 		if (this == obj) {
 			return true;
 		}
-		if (!( internals.tests.isLine2D( obj ) ) ) {
+		if (!( internals.is.Line2D( obj ) ) ) {
 			return false;
 		}
 		var l = obj;
@@ -9154,9 +11020,9 @@ Line2D.prototype = {
 	 * Computes intersection between this and the given line. The returned value
 	 * is a {@link LineIntersection} instance and contains both the type of
 	 * intersection as well as the intersection point (if existing).
-	 * 
+	 *
 	 * Based on: http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline2d/
-	 * 
+	 *
 	 * @param l
 	 *            line to intersect with
 	 * @return intersection result
@@ -9232,7 +11098,7 @@ Line2D.prototype = {
  * last segment has a shorter length than the step length requested. The
  * first point (A) can be omitted and not be added to the list if so
  * desired.
- * 
+ *
  * @param a
  *            start point
  * @param b
@@ -9277,14 +11143,14 @@ Line2D.LineIntersection.prototype = {
 	getPos: function(){
 		return this.pos.copy();
 	},
-	
+
 	getType: function(){
 		return this.type;
 	},
-	
+
 	toString: function(){
 		return "type: "+this.type+ " pos: "+this.pos;
-	}	
+	}
 };
 
 Line2D.LineIntersection.Type = { COINCIDENT: 0, PARALLEL: 1, NON_INTERSECTING: 2, INTERSECTING: 3};
@@ -9296,7 +11162,9 @@ module.exports = Line2D;
 define('toxi/geom/Polygon2D',["require", "exports", "module", "./Vec2D","./Line2D","../internals"], function(require, exports, module) {
 
 var	internals = require('../internals'),
+	MathUtils = require('../math/mathUtils'),
 	Vec2D = require('./Vec2D'),
+	Circle = require('./Circle'),
 	Line2D = require('./Line2D');
 
 
@@ -9314,7 +11182,7 @@ var Polygon2D = function(){
 		}
 	} else if(arguments.length == 1){
 		var arg = arguments[0];
-		if( internals.tests.isArray( arg ) ){ // if it was an array of points
+		if( internals.is.Array( arg ) ){ // if it was an array of points
 			for(i=0,l = arg.length;i<l;i++){
 				this.add(arg[i].copy());
 			}
@@ -9325,13 +11193,25 @@ var Polygon2D = function(){
 
 
 Polygon2D.prototype = {
-
+	constructor: Polygon2D,
 	add: function(p){
 		if(this.vertices.indexOf(p) < 0){
 			this.vertices.push(p);
 		}
 	},
-	
+	/**
+	 * centers the polygon so that its new centroid is at the given point
+	 * @param {Vec2D} [origin]
+	 * @return itself
+	 */
+	center: function( origin ){
+		var centroid = this.getCentroid();
+		var delta = origin !== undefined ? origin.sub( centroid ) : centroid.invert();
+		for( var i=0, l = this.vertices.length; i<l; i++){
+			this.vertices[i].addSelf( delta );
+		}
+		return this;
+	},
 	containsPoint: function(p){
 		var num = this.vertices.length,
 			i = 0,
@@ -9351,21 +11231,50 @@ Polygon2D.prototype = {
 		}
 		return oddNodes;
 	},
-	
-	containsPoly: function(poly) {
-        for (var i=0,num=poly.vertices.length; i<num; i++) {
-            if (!this.containsPoint(poly.vertices[i])) {
-                return false;
-            }
-        }
-        return true;
-    },
-    
+
+	containsPolygon: function(poly) {
+		for (var i=0,num=poly.vertices.length; i<num; i++) {
+			if (!this.containsPoint(poly.vertices[i])) {
+				return false;
+			}
+		}
+		return true;
+	},
+
+	copy: function(){
+		return new Polygon2D( this.vertices );
+	},
+
 	flipVertexOrder: function(){
 		this.vertices.reverse();
 		return this;
 	},
-	
+	/**
+	 * Returns the vertex at the given index. This function follows Python
+	 * convention, in that if the index is negative, it is considered relative
+	 * to the list end. Therefore the vertex at index -1 is the last vertex in
+	 * the list.
+	 * @param {Number} i index
+	 * @return vertex
+	 */
+	get: function( i ){
+		if( i < 0 ){
+			i += this.vertices.length;
+		}
+		return this.vertices[i];
+	},
+
+	/**
+	 * Computes the length of this polygon's apothem. This will only be valid if
+	 * the polygon is regular. More info: http://en.wikipedia.org/wiki/Apothem
+	 * @return apothem length
+	 */
+	getApothem: function() {
+		return this.vertices[0]
+			.interpolateTo(this.vertices[1], 0.5)
+			.distanceTo( this.getCentroid() );
+	},
+
 	getArea: function(){
 		var area = 0,
 			numPoints = this.vertices.length;
@@ -9378,7 +11287,15 @@ Polygon2D.prototype = {
 		area *= 0.5;
 		return area;
 	},
-	
+
+	getBoundingCircle: function() {
+		return Circle.newBoundingCircle( this.vertices );
+	},
+	//TODO
+	getBounds: function(){
+		throw Error("Not yet implemented in Rect");
+	},
+
 	getCentroid: function(){
 		var res = new Vec2D(),
 			numPoints = this.vertices.length;
@@ -9391,7 +11308,7 @@ Polygon2D.prototype = {
 		}
 		return res.scale(1 / (this.getArea() * 6));
 	},
-	
+
 	getCircumference: function(){
 		var circ = 0;
 		for(var i=0,num=this.vertices.length;i<num;i++){
@@ -9399,7 +11316,35 @@ Polygon2D.prototype = {
 		}
 		return circ;
 	},
-	
+
+	getClosestPointTo: function( p ){
+		var minD = Number.MAX_VALUE;
+		var q, c, d;
+		var edges = this.getEdges();
+		for( var i=0, len = edges.length; i<len; i++ ){
+			c = edges[i].closestPointTo( p );
+			d = c.distanceToSquared( p );
+			if( d < minD ){
+				q = c;
+				minD = d;
+			}
+		}
+		return q;
+	},
+
+	getClosestVertexTo: function( p ){
+		var minD = Number.MAX_VALUE;
+		var q, d, i = 0, len = this.vertices.length;
+		for( ; i<len; i++){
+			d = this.vertices[i].distanceToSquared( p );
+			if( d < minD ){
+				q = this.vertices[i];
+				minD = d;
+			}
+		}
+		return q;
+	},
+
 	getEdges: function() {
 		var num = this.vertices.length,
 			edges = [];
@@ -9408,11 +11353,87 @@ Polygon2D.prototype = {
 		}
 		return edges;
 	},
-	
+
+	//@deprecated
 	getNumPoints: function(){
+		return this.getNumVertices();
+	},
+
+	getNumVertices: function(){
 		return this.vertices.length;
 	},
-	
+
+	getRandomPoint: function(){
+		var edges = this.getEdges();
+		var numEdges = edges.length;
+		var ea = edges[MathUtils.random(numEdges)],
+			eb;
+		while( eb === undefined || eb.equals( ea ) ){
+			eb = edges[ MathUtils.random(numEdges) ];
+		}
+		//pick a random point on edge A
+		var p = ea.a.interpolateTo( ea.b, Math.random() );
+		//then randomly interpolate to another point on b
+		return p.interpolateToSelf(
+			eb.a.interpolateTo( eb.b, Math.random() ),
+			Math.random()
+		);
+	},
+	/**
+	 * Repeatedly inserts vertices as mid points of the longest edges until the
+	 * new vertex count is reached.
+	 * @param {Number} count new vertex count
+	 * @return itself
+	 */
+	increaseVertexCount: function( count ){
+		var num = this.vertices.length,
+			longestID = 0,
+			maxD = 0,
+			i = 0,
+			d,
+			m;
+
+		while( num < count ){
+			//find longest edge
+			longestID = 0;
+			maxD = 0;
+			for( i=0; i<num; i++ ){
+				d = this.vertices[i].distanceToSquared( this.vertices[ (i+1) % num ] );
+				if( d > maxD ){
+					longestID = i;
+					maxD = d;
+				}
+			}
+			//insert mid point of longest segment
+			m = this.vertices[longestID]
+				.add(this.vertices[(longestID + 1) % num])
+				.scaleSelf(0.5);
+			//push this into the array inbetween the 2 points
+			this.vertices.splice( longestID+1, 0, m );
+			num++;
+		}
+		return this;
+	},
+
+	intersectsPolygon: function( poly ){
+		var Type = Line2D.LineIntersection.Type;
+		var edges = this.getEdges(), polyEdges = poly.getEdges();
+		var i = 0, el = edges.length;
+		var j = 0, pl = polyEdges.length;
+		var ea, eb, isec;
+		for( ; i<el; i++ ){
+			ea = edges[i];
+			for( j=0; j<pl; j++ ){
+				eb = polyEdges[j];
+				isec = ea.intersectLine(eb).getType();
+				if( isec === Type.INTERSECTING || isec == Type.COINCIDENT ){
+					return true;
+				}
+			}
+		}
+		return false;
+	},
+
 	isClockwise: function(){
 		var isClockwise = function( a, b, c ){
 			var determ = (b.x-a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
@@ -9423,9 +11444,9 @@ Polygon2D.prototype = {
 		}
 		return false;
 	},
-	
+
 	intersectsPoly: function(poly) {
-		if (!this.containsPoly(poly)) {
+		if (!this.containsPolygon(poly)) {
 			var edges=this.getEdges();
 			var pedges=poly.getEdges();
 			for(var i=0, n=edges.length; i < n; i++) {
@@ -9440,18 +11461,49 @@ Polygon2D.prototype = {
 			return true;
 		}
 	},
-    
-    rotate: function(theta) {
+	/**
+     * Removes duplicate vertices from the polygon. Only successive points are
+     * recognized as duplicates.
+     * @param {Number} tolerance snap distance for finding duplicates
+     * @return itself
+     */
+	removeDuplicates: function( tolerance ){
+		//if tolerance is 0, it will be faster to just use 'equals' method
+		var equals = tolerance ? 'equalsWithTolerance' : 'equals';
+		var p, prev, i = 0, num = this.vertices.length;
+		var last;
+		for( ; i<num; i++ ){
+			p = this.vertices[i];
+			//if its the 'equals' method tolerance will just be ingored
+			if( p[equals]( prev, tolerance ) ){
+				//remove from array, step back counter
+				this.vertices.splice( i, 1 );
+				i--;
+				num--;
+			} else {
+				prev = p;
+			}
+		}
+		num = this.vertices.length;
+		if( num >  0 ){
+			last = this.vertices[num-1];
+			if( last[equals]( this.vertices[0], tolerance ) ){
+				this.vertices.splice( num-1, 1 );
+			}
+		}
+		return this;
+	},
+	rotate: function(theta) {
 		for (var i=0, num=this.vertices.length; i < num; i++) {
 			this.vertices[i].rotate(theta);
 		}
-    },
-    
-    scale: function() {
+	},
+
+	scale: function() {
 		var x,y;
 		if (arguments.length==1) {
 			var arg = arguments[0];
-			if( internals.tests.hasXY( arg ) ){
+			if( internals.has.XY( arg ) ){
 				x=arg.x;
 				y=arg.y;
 			} else {
@@ -9469,25 +11521,25 @@ Polygon2D.prototype = {
 			this.vertices[i].scaleSelf(x, y);
 		}
 		return this;
-    },
-    
+	},
+
 	translate: function() {
 		var x,y;
-		if (arguments.length==1 && internals.tests.hasXY( arguments[0] ) ){
-			x=arg.x;
-			y=arg.y;
+		if (arguments.length==1 && internals.has.XY( arguments[0] ) ){
+			x=arguments[0].x;
+			y=arguments[0].y;
 		} else if (arguments.length==2) {
 			x=arguments[0];
 			y=arguments[1];
 		} else {
 			throw "Invalid argument(s) passed.";
 		}
-        for (var i=0, num=this.vertices.length; i < num; i++) {
-            this.vertices[i].addSelf(x, y);
-        }
-        return this;
-    },
-    
+		for (var i=0, num=this.vertices.length; i < num; i++) {
+			this.vertices[i].addSelf(x, y);
+		}
+		return this;
+	},
+
 	smooth: function(amount, baseWeight){
 		var centroid = this.getCentroid();
 		var num = this.vertices.length;
@@ -9509,7 +11561,7 @@ Polygon2D.prototype = {
 		this.vertices = filtered;
 		return this;
 	},
-	
+
 	toString: function(){
 		var s = "";
 		for(var i=0;i<this.vertices.length;i++){
@@ -9520,18 +11572,81 @@ Polygon2D.prototype = {
 		}
 		return s;
 	}
-	
+
+};
+
+/**
+ * Constructs a new regular polygon from the given base line/edge.
+ * @param {Vec2D} baseA left point of the base edge
+ * @param {Vec2D} baseB right point of the base edge
+ * @param {Number} res number of polygon vertices
+ * @return polygon
+ */
+Polygon2D.fromBaseEdge = function( baseA, baseB, res ){
+	var theta = -( MathUtils.PI - (MathUtils.PI*(res-2) / res) ),
+		dir = baseB.sub( baseA ),
+		prev = baseB,
+		poly = new Polygon2D( baseA, baseB ),
+		p;
+	for( var i=0; i< res-1; i++){
+		p = prev.add( dir.getRotated(theta*i) );
+		poly.add( p );
+		prev = p;
+	}
+	return poly;
+};
+
+/**
+ * Constructs a regular polygon from the given edge length and number of
+ * vertices. This automatically computes the radius of the circle the
+ * polygon is inscribed in.
+ * More information: http://en.wikipedia.org/wiki/Regular_polygon#Radius
+ *
+ * @param {Number} len desired edge length
+ * @param {Number} res number of vertices
+ * @return polygon
+ */
+Polygon2D.fromEdgeLength = function( len, res ){
+	return new Circle( Polygon2D.getRadiusForEdgeLength(len,res) ).toPolygon2D( res );
+};
+
+/**
+ * Computes the radius of the circle the regular polygon with the desired
+ * edge length is inscribed in
+ * @param {Number} len edge length
+ * @param {Number} res number of polygon vertices
+ * @return radius
+ */
+
+Polygon2D.getRadiusForEdgeLength = function( len, res ){
+	return len / ( 2 * MathUtils.sin(MathUtils.PI/res) );
 };
 
 module.exports = Polygon2D;
 });
 
-define('toxi/geom/Ellipse',["require", "exports", "module", "../internals","../math/mathUtils","./Vec2D","./Polygon2D"], function(require, exports, module) {
-var	internals = require('../internals'),
+define('toxi/geom/Ellipse',[
+    'require',
+    'exports',
+    'module',
+    '../internals/extend',
+    '../internals/has',
+    '../internals/is',
+    '../math/mathUtils',
+    './Vec2D',
+    './Polygon2D'
+], function(require, exports, module) {
+
+var extend = require('../internals/extend'),
+    has = require('../internals/has'),
+    is = require('../internals/is'),
 	mathUtils = require('../math/mathUtils'),
 	Vec2D = require('./Vec2D'),
 	Polygon2D = require('./Polygon2D');
 
+
+//declared in this module
+var Ellipse, Circle;
 
 /**
  * @class defines a 2D ellipse and provides several utility methods for it.
@@ -9539,14 +11654,14 @@ var	internals = require('../internals'),
  * @augments Vec2D
  */
 
-var	Ellipse = function(a,b,c,d) {
+Ellipse = function(a,b,c,d) {
 	this.radius = new Vec2D();
 	if(arguments.length === 0){
 		Vec2D.apply(this,[0,0]);
 		this.setRadii(1,1);
-	} else if( internals.tests.hasXY( a ) ) {
+	} else if( has.XY( a ) ) {
 		Vec2D.apply(this,[a.x,a.y]);
-		if( internals.tests.hasXY( b ) ){
+		if( has.XY( b ) ){
 			this.setRadii(b.x,b.y);
 		} else {
 			this.setRadii(b,c);
@@ -9567,7 +11682,7 @@ var	Ellipse = function(a,b,c,d) {
 	}
 };
 
-internals.extend(Ellipse,Vec2D);
+extend(Ellipse,Vec2D);
 
 Ellipse.prototype.containsPoint = function(p) {
     var foci = this.getFoci();
@@ -9576,7 +11691,7 @@ Ellipse.prototype.containsPoint = function(p) {
 
 /**
  * Computes the area covered by the ellipse.
- * 
+ *
  * @return area
  */
 Ellipse.prototype.getArea = function() {
@@ -9586,12 +11701,12 @@ Ellipse.prototype.getArea = function() {
 /**
  * Computes the approximate circumference of the ellipse, using this
  * equation: <code>2 * PI * sqrt(1/2 * (rx*rx+ry*ry))</code>.
- * 
+ *
  * The precise value is an infinite series elliptical integral, but the
  * approximation comes sufficiently close. See Wikipedia for more details:
- * 
+ *
  * http://en.wikipedia.org/wiki/Ellipse
- * 
+ *
  * @return circumference
  */
 Ellipse.prototype.getCircumference = function() {
@@ -9626,13 +11741,13 @@ Ellipse.prototype.getRadii = function() {
 
 /**
  * Sets the radii of the ellipse to the new values.
- * 
+ *
  * @param rx
  * @param ry
  * @return itself
  */
 Ellipse.prototype.setRadii = function(rx,ry) {
-	if( internals.tests.hasXY( rx ) ){
+	if( has.XY( rx ) ){
 		ry = rx.y;
 		rx = rx.x;
 	}
@@ -9644,7 +11759,7 @@ Ellipse.prototype.setRadii = function(rx,ry) {
 /**
  * Creates a {@link Polygon2D} instance of the ellipse sampling it at the
  * given resolution.
- * 
+ *
  * @param res
  *            number of steps
  * @return ellipse as polygon
@@ -9660,29 +11775,19 @@ Ellipse.prototype.toPolygon2D = function(res) {
 };
 
 
-module.exports = Ellipse;
-
-});
-
-define('toxi/geom/Circle',["require", "exports", "module", "../internals","../math/mathUtils",'./Ellipse','./Vec2D'], function(require, exports, module) {
-var internals, mathUtils;
-
-
-internals = require('../internals');
-mathUtils = require('../math/mathUtils');
-var Ellipse = require('./Ellipse');
-var Vec2D = require('./Vec2D');
+exports = module.exports = Ellipse;
 
 /**
+ * Circle
  * @class This class overrides {@link Ellipse} to define a 2D circle and provides
  * several utility methods for it, including factory methods to construct
  * circles from points.
  * @member toxi
  * @augments Ellipse
  */
-var	Circle = function(a,b,c) {
+Circle = function(a,b,c) {
 	if(arguments.length == 1){
-		if( internals.tests.isCircle( a ) ){
+		if( is.Circle( a ) ){
 			Ellipse.apply(this,[a,a.radius.x]);
 		} else {
 			Ellipse.apply(this,[0,0,a]);
@@ -9694,7 +11799,7 @@ var	Circle = function(a,b,c) {
 	}
 };
 
-internals.extend(Circle,Ellipse);
+extend(Circle,Ellipse);
 
 
 
@@ -9704,7 +11809,7 @@ internals.extend(Circle,Ellipse);
  * Factory method to construct a circle which has the two given points lying
  * on its perimeter. If the points are coincident, the circle will have a
  * radius of zero.
- * 
+ *
  * @param p1
  * @param p2
  * @return new circle instance
@@ -9719,10 +11824,10 @@ Circle.from2Points = function(p1,p2) {
  * Factory method to construct a circle which has the three given points
  * lying on its perimeter. The function returns null, if the 3 points are
  * co-linear (in which case it's impossible to find a circle).
- * 
+ *
  * Based on CPP code by Paul Bourke:
  * http://local.wasp.uwa.edu.au/~pbourke/geometry/circlefrom3/
- * 
+ *
  * @param p1
  * @param p2
  * @param p3
@@ -9750,6 +11855,25 @@ Circle.from3Points = function(p1,p2,p3) {
 		}
 	}
     return circle;
+};
+
+
+Circle.newBoundingCircle = function( vertices ){
+	var origin = new Vec2D();
+	var maxD = 0;
+	var i = 0;
+	var l = vertices.length;
+	for( ; i<l; i++ ){
+		origin.addSelf( vertices[i] );
+	}
+	origin.scaleSelf( 1 / vertices.length );
+	for( i = 0; i<l; i++ ){
+		var d = origin.distanceToSquared( vertices[i] );
+		if( d > maxD ) {
+			maxD = d;
+		}
+	}
+	return new Circle( origin, Math.sqrt( maxD ) );
 };
 
 
@@ -9798,9 +11922,17 @@ Circle.prototype.setRadius = function(r) {
 };
 
 
-module.exports = Circle;
+exports.Circle = Circle;
 
+});
 
+define('toxi/geom/Circle',[
+    'require',
+    'exports',
+    'module',
+    './Ellipse'
+], function(require, exports, module) {
+    module.exports = require('./Ellipse').Circle;
 });
 
 define('toxi/geom/CircleIntersector',["require", "exports", "module"], function(require, exports, module) {
@@ -10014,6 +12146,135 @@ IsectData2D.prototype = {
 module.exports = IsectData2D;
 });
 
+define('toxi/geom/LineStrip3D',['require','exports','module','./vectors','./Line3D','../internals'],function( require, exports, module ){
+	var Vec3D = require('./vectors').Vec3D,
+		Line3D = require('./Line3D'),
+		internals = require('../internals'),
+		hasXYZ = internals.has.XYZ,
+		Iterator = internals.Iterator;
+
+	/**
+	 * construct a LineStrip3D
+	 * @constructor
+	 * @param {Vec3D[]} [vertices] optional vertices to start with
+	 */
+	var LineStrip3D = function( vertices ){
+		this.vertices = vertices || [];
+	};
+
+	LineStrip3D.prototype = {
+		constructor: LineStrip3D,
+		/**
+		 * add a vector to the line-strip, it will always be a copy
+		 * @param {Vec3D | Number } x either a Vec3D or an x coordinate
+		 * @param {Number} [y]
+		 * @param {Number} [z]
+		 * @return itself
+		 */
+		add: function( x, y, z ){
+			if( hasXYZ( x ) ){
+				//it was 1 param, it was a vector or object
+				this.vertices.push( new Vec3D(x) );
+			} else {
+				this.vertices.push( new Vec3D(x,y,z) );
+			}
+			return this;
+		},
+		get: function( i ){
+			if( i < 0 ){
+				i += this.vertices.length;
+			}
+			return this.vertices[i];
+		},
+		/**
+		* Computes a list of points along the spline which are uniformly separated
+		* by the given step distance.
+		*
+		* @param {Number} step
+		* @param {Boolean} [doAddFinalVertex] true by default
+		* @return {Vec3D[]} point list
+		*/
+		getDecimatedVertices: function( step, doAddFinalVertex ){
+			if( doAddFinalVertex !== false ){
+				doAddFinalVertex = true;
+			}
+			var uniform = [];
+			if( this.vertices.length < 3 ){
+				if( this.vertices.length === 2 ){
+					new Line3D( this.vertices[0], this.vertices[1])
+						.splitIntoSegments( uniform, step, true );
+					if( !doAddFinalVertex ){
+						uniform.pop();
+					}
+				} else {
+					return;
+				}
+			}
+			var arcLen = this.getEstimatedArcLength(),
+				delta = step / arcLen,
+				currIdx = 0,
+				currT,
+				t,
+				p,
+				q,
+				frac,
+				i;
+
+			for( t = 0; t<1.0; t+=delta ){
+				currT = t * arcLen;
+				while( currT >= this.arcLenIndex[currIdx] ){
+					currIdx++;
+				}
+				p = this.get(currIdx-1);
+				q = this.get(currIdx);
+				frac = ((currT-this.arcLenIndex[currIdx-1]) / (this.arcLenIndex[currIdx] - this.arcLenIndex[currIdx-1]) );
+				i = p.interpolateTo( q, frac );
+				uniform.push( i );
+			}
+			if( doAddFinalVertex ){
+				uniform.push( this.get(-1).copy() );
+			}
+			return uniform;
+		},
+		getEstimatedArcLength: function(){
+			if( this.arcLenIndex === undefined || this.arcLenIndex.length !== this.vertices.length ){
+				this.arcLenIndex = [0];
+			}
+			var arcLen = 0,
+				p,
+				q;
+			for( var i=1, l = this.vertices.length; i<l; i++){
+				p = this.vertices[i-1];
+				q = this.vertices[i];
+				arcLen += p.distanceTo(q);
+				//this will start at index 1
+				this.arcLenIndex[i] = arcLen;
+			}
+			return arcLen;
+		},
+		getSegments: function(){
+			var i = 1,
+				num = this.vertices.length,
+				segments = [];
+			for( ; i<num; i++ ){
+				segments.push( new Line3D(this.get(i-1), this.get(i)) );
+			}
+			return segments;
+		},
+		getVertices: function(){
+			return vertices;
+		},
+		iterator: function(){
+			return new Iterator( this.vertices );
+		},
+		setVertices: function( vertices ){
+			this.vertices = vertices;
+		}
+	};
+
+	module.exports = LineStrip3D;
+});
+
 define('toxi/geom/Plane',["require", "exports", "module", "../internals","../math/mathUtils","./Ray3D","./Vec3D","./mesh/TriangleMesh"], function(require, exports, module) {
 
 var extend = require('../internals').extend,
@@ -10208,7 +12469,7 @@ var	internals = require('../internals'),
  */
 var	Rect = function(a,b,width,height){
 	if(arguments.length == 2){ //then it should've been 2 Vec2D's
-		if( !( internals.tests.hasXY( a ) ) ){
+		if( !( internals.has.XY( a ) ) ){
 			throw new Error("Rect received incorrect parameters");
 		} else {
 			this.x = a.x;
@@ -10223,7 +12484,7 @@ var	Rect = function(a,b,width,height){
 		this.height = height;
 	} else if(arguments.length == 1){ //object literal with x,y,width,height
 		var o = arguments[0];
-		if( internals.tests.hasXYWidthHeight( o ) ){
+		if( internals.has.XYWidthHeight( o ) ){
 			this.x = o.x;
 			this.y = o.y;
 			this.width = o.width;
@@ -10250,35 +12511,35 @@ Rect.prototype = {
 		}
 		return true;
 	},
-	
+
 	copy: function(){
 		return new Rect(this.x,this.y,this.width,this.height);
 	},
-	
+
 	getArea: function(){
 		return this.width * this.height;
 	},
-	
+
 	getAspect: function(){
 		return this.width / this.height;
 	},
-	
+
 	getBottom: function(){
 		return this.y + this.height;
 	},
-	
+
 	getBottomRight: function(){
 		return new Vec2D(this.x + this.width, this.y + this.height);
 	},
-	
+
 	getCentroid: function(){
 		return new Vec2D(this.x + this.width * 0.5, this.y + this.height * 0.5);
 	},
-	
+
 	getDimensions: function(){
 		return new Vec2D(this.width,this.height);
 	},
-	
+
 	getEdge: function(id){
 		var edge;
 		switch(id){
@@ -10309,26 +12570,26 @@ Rect.prototype = {
 			default:
 				throw new Error("edge ID needs to be 0...3");
 		}
-		return edge;	
+		return edge;
 	},
-	
+
 	getLeft: function(){
 		return this.x;
 	},
-	
+
 	getRight: function(){
 		return this.x + this.width;
 	},
-	
+
 	getTop: function(){
 		return this.y;
 	},
-	
+
 	getTopLeft: function(){
 		return new Vec2D(this.x,this.y);
 	},
-	
-	intersectsRay: function(ray,minDist,maxDist){ 
+
+	intersectsRay: function(ray,minDist,maxDist){
 		//returns Vec2D of point intersection
 		var invDir = ray.getDirection().reciprocal();
 		var signDirX = invDir.x < 0;
@@ -10353,15 +12614,15 @@ Rect.prototype = {
             tmax = tymax;
         }
         if ((tmin < maxDist) && (tmax > minDist)) {
-            return ray.getPointAtDistance(tmin); 
+            return ray.getPointAtDistance(tmin);
         }
         return undefined;
 	},
-	
+
 	intersectsRect: function(r){
 		return !(this.x > r.x + r.width || this.x + this.width < r.x || this.y > r.y + r.height || this.y + this.height < r.y);
 	},
-	
+
 	scale: function(s){
 		var c = this.getCentroid();
 		this.width *= s;
@@ -10370,7 +12631,7 @@ Rect.prototype = {
 		this.y = c.y - this.height * 0.5;
 		return this;
 	},
-	
+
 	set: function(x,y,width,height){
 		if(arguments.length == -1){
 			this.y = x.y;
@@ -10386,7 +12647,7 @@ Rect.prototype = {
 			throw new Error("Rect set() received wrong parameters");
 		}
 	},
-	
+
 	setDimensions: function(dim){
 		if( arguments.length == 2 ){
 			dim = { x: arguments[0], y: arguments[1] };
@@ -10395,13 +12656,13 @@ Rect.prototype = {
 		this.height = dim.y;
 		return this;
 	},
-	
+
 	setPosition: function(pos){
 		this.x = pos.x;
 		this.y = pos.y;
 		return this;
 	},
-	
+
 	toPolygon2D: function(){
 		var poly = new Polygon2D();
 		poly.add(new Vec2D(this.x,this.y));
@@ -10410,11 +12671,11 @@ Rect.prototype = {
 		poly.add(new Vec2D(this.x,this.y+this.height));
 		return poly;
 	},
-	
+
 	toString: function(){
 		return "rect: {x: "+this.x +", y: "+this.y+ ", width: "+this.width+ ", height: "+this.height+"}";
 	},
-	
+
 	union: function(r){
 		var tmp = mathUtils.max(this.x + this.width, r.x + r.width);
 		this.x = mathUtils.min(this.x,r.x);
@@ -10433,11 +12694,11 @@ module.exports = Rect;
 
 });
 
-define('toxi/geom/Spline2D',["require", "exports", "module", "../internals","./Vec2D","./BernsteinPolynomial"], function(require, exports, module) {
-
-var Vec2D = require('./Vec2D'),
-	internals = require('../internals'),
-	BernsteinPolynomial = require('./BernsteinPolynomial');
+define('toxi/geom/Spline2D',[
+    './Vec2D',
+    '../internals/is',
+    './BernsteinPolynomial'
+], function(Vec2D, is, BernsteinPolynomial) {
 
 /**
  * @class
@@ -10446,7 +12707,7 @@ var Vec2D = require('./Vec2D'),
  * @param {BernsteinPolynomial} [bernsteinPoly]
  */
 var	Spline2D = function(points, bernsteinPoly, tightness){
-	if( arguments.length === 1 && !internals.isArray( points ) && typeof points === 'object' ){
+	if( arguments.length === 1 && !is.Array( points ) && is.Object(points)){
 		//if its an options object
 		bernsteinPoly = bernsteinPoly || points.bernsteinPoly;
 		tightness = tightness || points.tightness;
@@ -10484,7 +12745,7 @@ Spline2D.prototype = {
 		return this;
 	},
 
-	
+
 	computeVertices: function(res){
 		this.updateCoefficients();
 		if (this.bernstein === undefined || this.bernstein.resolution != res) {
@@ -10531,7 +12792,7 @@ Spline2D.prototype = {
 			this.delta[i + 1].y * this.bi[i]);
 		}
 	},
-	
+
 	getDecimatedVertices: function(step,doAddFinalVertex){
 		if(doAddFinalVertex === undefined)doAddFinalVertex = true;
 		if(this.vertices === undefined || this.vertices.length < 2){
@@ -10549,7 +12810,7 @@ Spline2D.prototype = {
 			var p = this.vertices[currIdx - 1];
 			var q = this.vertices[currIdx];
 			var frac = ((currT - this.arcLenIndex[currIdx - 1]) / (this.arcLenIndex[currIdx] - this.arcLenIndex[currIdx - 1]));
-			
+
 			var i = p.interpolateTo(q,frac);
 			this.uniform.push(i);
 		}
@@ -10558,8 +12819,8 @@ Spline2D.prototype = {
 		}
 		return uniform;
 	},
-	
-	
+
+
 	getEstimatedArcLength: function(){
 		if(this.arcLenIndex === undefined || (this.arcLenIndex !== undefined && this.arcLenIndex.length != this.vertices.length)){
 			this.arcLenIndex = [];
@@ -10573,31 +12834,31 @@ Spline2D.prototype = {
 		}
 		return arcLen;
 	},
-	
-	
+
+
 	getNumPoints: function(){
 		return this.numP;
 	},
-	
+
 	getPointList: function(){
 		return this.pointList;
 	},
-	
+
 	getTightness: function(){
 		return this.tightness;
 	},
-	
+
 	setPointList: function(plist){
 		this.pointList =plist.slice(0);
 		return this;
 	},
-	
+
 	setTightness: function(tight){
 		this.tightness = tight;
 		this.invTightness = 1 / this.tightness;
 		return this;
 	},
-	
+
 	updateCoefficients: function(){
 		this.numP = this.pointList.length;
 		if(this.points === undefined || (this.points !== undefined && this.points.length != this.numP)) {
@@ -10618,9 +12879,349 @@ Spline2D.prototype = {
 Spline2D.DEFAULT_TIGHTNESS = 0.25;
 Spline2D.DEFAULT_RES = 16;
 
-module.exports = Spline2D;
+return Spline2D;
 });
 
+define('toxi/geom/Spline3D',[
+    './Vec3D',
+    '../internals/is',
+    './BernsteinPolynomial'
+],function(Vec3D, is, BernsteinPolynomial ){
+
+    /**
+     * @class
+     * @member toxi
+     * @param {Vec3D[]} points array of Vec3D's
+     * @param {BernsteinPolynomial} [bernsteinPoly]
+     */
+    var	Spline3D = function(points, bernsteinPoly, tightness){
+        if( arguments.length === 1 && !is.Array( points ) && is.Object(points) ){
+            //if its an options object
+            bernsteinPoly = bernsteinPoly || points.bernsteinPoly;
+            tightness = tightness || points.tightness;
+            points = points.points;
+        }
+        var i = 0, l;
+        this.pointList = [];
+        if( typeof tightness !== 'number' ){
+            tightness = Spline3D.DEFAULT_TIGHTNESS;
+        }
+        this.setTightness(tightness);
+        //this may be undefined
+        this.bernstein = bernsteinPoly;
+        if( points !== undefined ){
+            for(i = 0, l = points.length; i<l; i++){
+                this.add( points[i].copy() );
+            }
+        }
+        this.coeffA = [];
+        this.delta = [];
+        this.bi = [];
+        for (i = 0; i < this.numP; i++) {
+            this.coeffA[i] = new Vec3D();
+            this.delta[i] = new Vec3D();
+            this.bi[i] = 0;
+        }
+        this.bi = [];
+    };
+
+
+    Spline3D.prototype = {
+        add: function(p){
+            this.pointList.push(p.copy());
+            this.numP = this.pointList.length;
+            return this;
+        },
+
+
+        computeVertices: function(res){
+            this.updateCoefficients();
+            if (this.bernstein === undefined || this.bernstein.resolution != res) {
+                this.bernstein = new BernsteinPolynomial(res);
+            }
+            var bst = this.bernstein;
+            this.vertices = [];
+            this.findCPoints();
+            var deltaP = new Vec3D();
+            var deltaQ = new Vec3D();
+            for (var i = 0; i < this.numP - 1; i++) {
+                var p = this.points[i];
+                var q = this.points[i + 1];
+                deltaP.set(this.delta[i]).addSelf(p);
+                deltaQ.set(q).subSelf(this.delta[i + 1]);
+                for (var k = 0; k < bst.resolution; k++) {
+                    var x = p.x * bst.b0[k] + deltaP.x * bst.b1[k] +
+                        deltaQ.x * bst.b2[k] +
+                        q.x * bst.b3[k];
+                    var y = p.y * bst.b0[k] + deltaP.y * bst.b1[k] +
+                        deltaQ.y * bst.b2[k] +
+                        q.y * bst.b3[k];
+                    var z = p.z * bst.b0[k] + deltaP.z * bst.b1[k] +
+                        deltaQ.z * bst.b2[k] + q.z * bst.b3[k];
+                    this.vertices.push(new Vec3D(x, y, z));
+                }
+            }
+            return this.vertices;
+        },
+
+        findCPoints: function(){
+            this.bi[1] = -0.25;
+            var i, p0, p2, d0;
+            p0 = this.pointList[0];
+            p2 = this.pointList[2];
+            d0 = this.delta[0];
+            this.coeffA[1].set(
+                (p2.x - p0.x - d0.x) * this.tightness, //x
+                (p2.y - p0.y - d0.y) * this.tightness, //y
+                (p2.z - p0.z - d0.z) * this.tightness //z
+            );
+            for (i = 2; i < this.numP - 1; i++) {
+                this.bi[i] = -1 / (this.invTightness + this.bi[i - 1]);
+                this.coeffA[i].set(
+                    -(this.points[i + 1].x - this.points[i - 1].x - this.coeffA[i - 1].x) * this.bi[i],
+                    -(this.points[i + 1].y - this.points[i - 1].y - this.coeffA[i - 1].y) * this.bi[i],
+                    -(this.points[i + 1].z - this.points[i - 1].z - this.coeffA[i - 1].z) * this.bi[i]
+                );
+            }
+            for (i = this.numP - 2; i > 0; i--) {
+                this.delta[i].set(
+                    this.coeffA[i].x + this.delta[i + 1].x * this.bi[i],
+                    this.coeffA[i].y + this.delta[i + 1].y * this.bi[i],
+                    this.coeffA[i].z + this.delta[i + 1].z * this.bi[i]
+                );
+            }
+        },
+
+        getDecimatedVertices: function(step,doAddFinalVertex){
+            if(doAddFinalVertex === undefined)doAddFinalVertex = true;
+            if(this.vertices === undefined || this.vertices.length < 2){
+                this.computeVertices(Spline3D.DEFAULT_RES);
+            }
+            var arcLen = this.getEstimatedArcLength();
+            var uniform = [];
+            var delta = step / arcLen;
+            var currIdx = 0;
+            for(var t =0; t<1.0; t+= delta){
+                var currT = t * arcLen;
+                while(currT >= this.arcLenIndex[currIdx]){
+                    currIdx++;
+                }
+                var p = this.vertices[currIdx - 1];
+                var q = this.vertices[currIdx];
+                var frac = ((currT - this.arcLenIndex[currIdx - 1]) / (this.arcLenIndex[currIdx] - this.arcLenIndex[currIdx - 1]));
+
+                var i = p.interpolateTo(q,frac);
+                this.uniform.push(i);
+            }
+            if(doAddFinalVertex){
+                uniform.push(this.vertices[this.vertices.length-1]);
+            }
+            return uniform;
+        },
+
+
+        getEstimatedArcLength: function(){
+            if(this.arcLenIndex === undefined || (this.arcLenIndex !== undefined && this.arcLenIndex.length != this.vertices.length)){
+                this.arcLenIndex = [];
+            }
+            var arcLen = 0;
+            for(var i=1;i<this.arcLenIndex.length;i++){
+                var p = this.vertices[i-1];
+                var q = this.vertices[i];
+                arcLen += p.distanceTo(q);
+                this.arcLenIndex[i] = arcLen;
+            }
+            return arcLen;
+        },
+
+
+        getNumPoints: function(){
+            return this.numP;
+        },
+
+        getPointList: function(){
+            return this.pointList;
+        },
+
+        getTightness: function(){
+            return this.tightness;
+        },
+
+        setPointList: function(plist){
+            this.pointList =plist.slice(0);
+            return this;
+        },
+
+        setTightness: function(tight){
+            this.tightness = tight;
+            this.invTightness = 1 / this.tightness;
+            return this;
+        },
+
+        updateCoefficients: function(){
+            this.numP = this.pointList.length;
+            if(this.points === undefined || (this.points !== undefined && this.points.length != this.numP)) {
+                this.coeffA = [];
+                this.delta = [];
+                this.bi = [];
+                for(var i=0;i<this.numP; i++){
+                    this.coeffA[i] = new Vec3D();
+                    this.delta[i] = new Vec3D();
+                }
+                this.setTightness(this.tightness);
+            }
+            this.points = this.pointList.slice(0);
+        }
+
+    };
+
+    Spline3D.DEFAULT_TIGHTNESS = 0.25;
+    Spline3D.DEFAULT_RES = 16;
+
+    return Spline3D;
+});
+
+define('toxi/geom/SutherlandHodgemanClipper',['require','exports','module','./Polygon2D','./vectors'],function( require, exports, module ){
+	/**
+	* A version of the Sutherland-Hodgeman algorithm to clip 2D polygons optimized
+	* for rectangular clipping regions.
+	* More information: http://en.wikipedia.org/wiki/Sutherland-Hodgman_algorithm
+	*/
+	var Polygon2D = require('./Polygon2D'),
+		Vec2D = require('./vectors').Vec2D;
+
+	//function for finding clipped position on each edge
+	//faster than a switch
+	var clippedPos = {
+		0: function( b, p1, p2 ){
+			var x = p1.x + ( (b.y-p1.y) * (p2.x-p1.x) ) / ( p2.y-p1.y );
+			return new Vec2D( x, b.y );
+		},
+		1: function( b, p1, p2 ){
+			var bx = b.x + b.width;
+			var y = p1.y + ( (bx-p1.x) * (p2.y-p1.y) ) / (p2.x-p1.x);
+			return new Vec2D( bx, y );
+		},
+		2: function( b, p1, p2 ){
+			var by = b.y + b.height;
+			var x = p1.x + ( (by-p1.y) * (p2.x-p1.x) ) / ( p2.y-p1.y );
+			return new Vec2D( x, by );
+		},
+		3: function( b, p1, p2 ){
+			var y = p1.y + ( (b.x-p1.x) * (p2.y-p1.y) ) / ( p2.x-p1.x );
+			return new Vec2D( b.x, y );
+		}
+	};
+
+	/**
+	 * method for getting the position on the edge
+	 * @private
+	 * @param {Rect} bounds
+	 * @param {Number} edgeID
+	 * @param {Vec2D} p1
+	 * @param {Vec2D} p2
+	 * @returns Vec2D
+	 */
+	var getClippedPosOnEdge = function( bounds, edgeID, p1, p2 ){
+		return clippedPos[edgeID]( bounds, p1, p2 );
+	};
+
+
+	//tests for each edgeID whether the point is within the edge
+	var insideEdgeConditions = {
+		0: function( bounds, p ){
+			return p.y >= bounds.y;
+		},
+		1: function( bounds, p ){
+			return p.x < bounds.x + bounds.width;
+		},
+		2: function( bounds, p ){
+			return p.y < bounds.y + bounds.height;
+		},
+		3: function( bounds, p ){
+			return p.x >= bounds.x;
+		}
+	};
+
+	/**
+	 * @private
+	 * @param {Rect} bounds
+	 * @param {Vec2D} p
+	 * @param {Number} edgeID
+	 * @return {Boolean}
+	 */
+	var isInsideEdge = function( bounds, p, edgeID ){
+		return insideEdgeConditions[edgeID]( bounds, p );
+	};
+
+
+	/**
+	 * SutherlandHodgemanClipper constructor
+	 * @param {Rect} bounds
+	 */
+	var SutherlandHodgemanClipper = function( bounds ){
+		this.bounds = bounds;
+	};
+
+	SutherlandHodgemanClipper.prototype = {
+		constructor: SutherlandHodgemanClipper,
+		clipPolygon: function( poly ){
+			var points = poly.vertices.slice(0), //copy of poly's points
+				clipped, //will contain the clipped points
+				edgeID = 0, //numeric id for each edge
+				i = 0,
+				num = points.length-1,
+				p, //current point in loop
+				q; //next point in loop
+
+			//duplicate the first point ref
+			points.push( points[0] );
+			for( ; edgeID < 4; edgeID++ ){
+				i = 0; //make sure the inner-loop starts over
+                num = points.length - 1;
+				clipped = []; //new clipped coords for this iteration
+				for( ; i<num; i++ ){
+					p = points[i];
+					q = points[i+1];
+					if( isInsideEdge( this.bounds, p, edgeID ) ){
+						if( isInsideEdge( this.bounds, q, edgeID ) ){
+							clipped.push( q.copy() );
+						} else {
+							clipped.push( getClippedPosOnEdge(this.bounds, edgeID, p, q) );
+						}
+						continue;
+					}
+					if( isInsideEdge( this.bounds, q, edgeID) ){
+						clipped.push( getClippedPosOnEdge(this.bounds, edgeID, p, q) );
+						clipped.push( q.copy() );
+					}
+				}
+				if( clipped.length > 0 && clipped[0] !== clipped[clipped.length-1] ){
+					clipped.push( clipped[0] );
+				}
+				points = clipped;
+			}
+			return new Polygon2D( points ).removeDuplicates( 0.001 );
+		},
+		getBounds: function(){
+			return this.bounds;
+		},
+		//protected + unused in java
+		isKnownVertex: function( list, q ){
+			for( var i=0, l=list.length; i<l; i++){
+				if( list[i].equalsWithTolerance(q, 0.0001) ){
+					return true;
+				}
+			}
+			return false;
+		},
+		setBounds: function( bounds ){
+			this.bounds = bounds;
+		}
+	};
+
+	module.exports = SutherlandHodgemanClipper;
+});
 define('toxi/geom/Triangle2D',["require", "exports", "module", "./Vec2D","./Line2D","./Rect","./Circle","./Polygon2D","../math/mathUtils"], function(require, exports, module) {
 
 var Vec2D = require('./Vec2D'),
@@ -11016,7 +13617,41 @@ ZAxisCylinder.prototype.getMajorAxis = function(){
 module.exports = ZAxisCylinder;
 });
 
-define('toxi/geom',["require", "exports","./geom/mesh","./geom/AABB","./geom/BernsteinPolynomial","./geom/Circle","./geom/CircleIntersector","./geom/Cone","./geom/Ellipse","./geom/IsectData2D","./geom/IsectData3D","./geom/Line2D","./geom/Line3D","./geom/Matrix4x4","./geom/Plane","./geom/Polygon2D","./geom/Quaternion","./geom/Ray2D","./geom/Ray3D","./geom/Ray3DIntersector","./geom/Rect","./geom/Sphere","./geom/Spline2D","./geom/Triangle2D","./geom/Triangle3D","./geom/Vec2D","./geom/Vec3D","./geom/XAxisCylinder","./geom/YAxisCylinder","./geom/ZAxisCylinder"], function(require, exports) {
+define('toxi/geom',[
+    "require",
+    "exports",
+    "./geom/mesh",
+    "./geom/AABB",
+    "./geom/BernsteinPolynomial",
+    "./geom/Circle",
+    "./geom/CircleIntersector",
+    "./geom/Cone",
+    "./geom/Ellipse",
+    "./geom/IsectData2D",
+    "./geom/IsectData3D",
+    "./geom/Line2D",
+    "./geom/Line3D",
+    "./geom/LineStrip3D",
+    "./geom/Matrix4x4",
+    "./geom/Plane",
+    "./geom/Polygon2D",
+    "./geom/Quaternion",
+    "./geom/Ray2D",
+    "./geom/Ray3D",
+    "./geom/Ray3DIntersector",
+    "./geom/Rect",
+    "./geom/Sphere",
+    "./geom/Spline2D",
+    "./geom/Spline3D",
+    "./geom/SutherlandHodgemanClipper",
+    "./geom/Triangle2D",
+    "./geom/Triangle3D",
+    "./geom/Vec2D",
+    "./geom/Vec3D",
+    "./geom/XAxisCylinder",
+    "./geom/YAxisCylinder",
+    "./geom/ZAxisCylinder"
+], function(require, exports) {
 	exports.AABB = require('./geom/AABB');
 	exports.mesh = require('./geom/mesh');
 	exports.BernsteinPolynomial = require('./geom/BernsteinPolynomial');
@@ -11028,6 +13663,7 @@ define('toxi/geom',["require", "exports","./geom/mesh","./geom/AABB","./geom/Ber
 	exports.IsectData3D = require('./geom/IsectData3D');
 	exports.Line2D = require('./geom/Line2D');
 	exports.Line3D = require('./geom/Line3D');
+    exports.LineStrip3D = require('./geom/LineStrip3D');
 	exports.Matrix4x4 = require('./geom/Matrix4x4');
 	exports.Plane = require('./geom/Plane');
 	exports.Polygon2D = require('./geom/Polygon2D');
@@ -11038,6 +13674,8 @@ define('toxi/geom',["require", "exports","./geom/mesh","./geom/AABB","./geom/Ber
 	exports.Rect = require('./geom/Rect');
 	exports.Sphere = require('./geom/Sphere');
 	exports.Spline2D = require('./geom/Spline2D');
+    exports.Spline3D = require('./geom/Spline3D');
+    exports.SutherlandHodgemanClipper = require('./geom/SutherlandHodgemanClipper');
 	exports.Triangle2D = require('./geom/Triangle2D');
 	exports.Triangle3D = require('./geom/Triangle3D');
 	exports.Vec2D = require('./geom/Vec2D');
@@ -11195,155 +13833,6 @@ ExponentialInterpolation.prototype = {
 };
 
 module.exports = ExponentialInterpolation;
-});
-
-define('toxi/math/ScaleMap',["require", "exports", "module", "./mathUtils","./LinearInterpolation"], function(require, exports, module) {
-
-var mathUtils = require('./mathUtils'),
-    LinearInterpolation = require('./LinearInterpolation');
-
-
-var _Range = function(min,max){
-	this.min = min;
-	this.max = max;
-};
-_Range.prototype.toString = function(){
-	return "{ min: "+this.min+ ", max: "+this.max+"}";
-};
-
-
-/**
- * @class This class maps values from one interval into another. By default the mapping
- * is using linear projection, but can be changed by using alternative
- * {@link math.InterpolateStrategy} implementations to achieve a
- * non-regular mapping.
- *
- * @member toxi
- *
- * @description Creates a new instance to map values between the 2 number ranges
- * specified. By default linear projection is used.
- * @param {Number} minIn
- * @param {Number} maxIn
- * @param {Number} minOut
- * @param {Number} maxOut
- */ 
-var ScaleMap = function(minIn, maxIn, minOut, maxOut) {
-	if(arguments.length == 1 && arguments[0].input !== undefined && arguments[0].output !== undefined){ //opts object
-		var arg = arguments[0];
-		minOut = arg.output.min;
-		maxOut = arg.output.max;
-        maxIn = arg.input.max;
-        minIn = arg.input.min;
-	}
-	this.mapFunction = new LinearInterpolation();
-	this.setInputRange(minIn, maxIn);
-	this.setOutputRange(minOut, maxOut);
-};
-
-
-ScaleMap.prototype = {
-	
-    /**
-     * Computes mapped value in the target interval and ensures the input value
-     * is clipped to source interval.
-     * 
-     * @param val
-     * @return mapped value
-     */
-   getClippedValueFor: function(val) {
-        var t = mathUtils.clipNormalized( ((val - this._in.min) / this._interval));
-        return this.mapFunction.interpolate(0, this.mapRange, t) + this._out.min;
-    },
-
-    /**
-     * @return the middle value of the input range.
-     */
-    getInputMedian: function() {
-        return (this._in.min + this._in.max) * 0.5;
-    },
-
-    /**
-     * @return the in
-     */
-    getInputRange: function() {
-        return this._in;
-    },
-
-    /**
-     * @return the mapped middle value of the output range. Depending on the
-     *         mapping function used, this value might be different to the one
-     *         returned by {@link #getOutputMedian()}.
-     */
-    getMappedMedian: function() {
-        return this.getMappedValueFor(0.5);
-    },
-
-    /**
-     * Computes mapped value in the target interval. Does check if input value
-     * is outside the input range.
-     * 
-     * @param val
-     * @return mapped value
-     */
-    getMappedValueFor: function(val) {
-        var t = ((val - this._in.min) / this._interval);
-        return this.mapFunction.interpolate(0,  this.mapRange, t) + this._out.min;
-    },
-
-    /**
-     * @return the middle value of the output range
-     */
-    getOutputMedian:function() {
-        return (this._out.min + this._out.max) * 0.5;
-    },
-
-    /**
-     * @return the output range
-     */
-    getOutputRange: function() {
-        return this._out;
-    },
-
-    /**
-     * Sets new minimum & maximum values for the input range
-     * 
-     * @param min
-     * @param max
-     */
-    setInputRange: function(min,max) {
-        this._in = new _Range(min,max);
-        this._interval = max - min;
-    },
-
-    /**
-     * Overrides the mapping function used for the scale conversion.
-     * 
-     * @param func
-     *            interpolate strategy implementation
-     */
-    setMapFunction: function(func) {
-        this.mapFunction = func;
-    },
-
-    /**
-     * Sets new minimum & maximum values for the output/target range
-     * 
-     * @param min
-     *            new min output value
-     * @param max
-     *            new max output value
-     */
-    setOutputRange: function(min, max) {
-        this._out = new _Range(min, max);
-        this.mapRange = max - min;
-    },
-    
-    toString: function(){
-		return "ScaleMap, inputRange: "+this._in.toString() + " outputRange: "+this._out.toString();
-    }
-};
-
-module.exports = ScaleMap;
 });
 
 define('toxi/math/SigmoidInterpolation',["require", "exports", "module"], function(require, exports, module) {
@@ -13112,14 +15601,14 @@ var internals = require('../internals'),
 
 var	VerletParticle2D = function(x,y,w){
 	this.force = new Vec2D();
-	if( internals.tests.hasXY( x ) ){
-		if( internals.tests.isVerletParticle2D( x ) ){
-			
+	if( internals.has.XY( x ) ){
+		if( internals.is.VerletParticle2D( x ) ){
+
 			y = x.y;
 			w = x.weight;
 			x = x.x;
 			this.isLocked = x.isLocked;
-			
+
 		} else if(y === undefined){
 			y = x.y;
 			w = 1;
@@ -13261,7 +15750,7 @@ VerletParticle2D.prototype.unlock = function() {
 };
 
 VerletParticle2D.prototype.update = function(){
-	
+
 	if(!this.isLocked){
 		var that = this;
 		this.applyBehaviors();
@@ -13657,7 +16146,7 @@ define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../intern
 		this.timeStep = opts.timeStep;
 		this.setDrag(opts.drag);
 		if( opts.gravity ){
-			if( internals.tests.hasXY( opts.gravity ) ){
+			if( internals.has.XY( opts.gravity ) ){
 				opts.gravity = new GravityBehavior( new Vec2D(opts.gravity) );
 			}
 			this.addBehavior( opts.gravity );
@@ -13678,30 +16167,30 @@ define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../intern
 	};
 
 	VerletPhysics2D.prototype = {
-		
+
 		addBehavior: function(behavior){
 			behavior.configure(this.timeStep);
 			this.behaviors.push(behavior);
 		},
-		
+
 		addParticle: function(p){
 			this.particles.push(p);
 			return this;
 		},
-		
+
 		addSpring: function(s){
 			if(this.getSpring(s.a,s.b) === undefined){
 				this.springs.push(s);
 			}
 			return this;
 		},
-		
+
 		clear: function(){
 			this.particles = [];
 			this.springs = [];
 			return this;
 		},
-		
+
 		constrainToBounds: function(){ //protected
 			var p,
 				i = 0;
@@ -13718,7 +16207,7 @@ define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../intern
 				}
 			}
 		},
-		
+
 		getCurrentBounds: function(){
 			var min = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
 			var max = new Vec2D(Number.MIN_VALUE, Number.MIN_VALUE);
@@ -13731,15 +16220,15 @@ define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../intern
 			}
 			return new Rect(min,max);
 		},
-		
+
 		getDrag: function() {
 			return 1 - this.drag;
 		},
-		
+
 		getNumIterations: function(){
 			return this.numIterations;
 		},
-		
+
 		getSpring: function(a,b){
 			var i = 0;
 			for(i = 0;i<this.springs.length;i++){
@@ -13750,42 +16239,42 @@ define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../intern
 			}
 			return undefined;
 		},
-		
+
 		getTimeStep: function(){
 			return this.timeStep;
 		},
-		
+
 		getWorldBounds: function(){
 			return this.worldBounds;
 		},
-		
+
 		removeBehavior: function(c){
 			return internals.removeItemFrom(c,this.behaviors);
 		},
-		
+
 		removeParticle: function(p){
 			return internals.removeItemFrom(p,this.particles);
 		},
-		
+
 		removeSpring: function(s) {
 			return internals.removeItemFrom(s,this.springs);
 		},
-		
+
 		removeSpringElements: function(s){
 			if(this.removeSpring(s) !== undefined){
 				return (this.removeParticle(s.a) && this.removeParticle(s.b));
 			}
 			return false;
 		},
-		
+
 		setDrag: function(drag){
 			this.drag = 1 - drag;
 		},
-		
+
 		setNumIterations: function(numIterations){
 			this.numIterations = numIterations;
 		},
-		
+
 		setTimeStep: function(timeStep){
 			this.timeStep = timeStep;
 			var i =0, l = this.behaviors.length;
@@ -13794,19 +16283,19 @@ define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../intern
 				b.configure(timeStep);
 			}
 		},
-		
+
 		setWorldBounds: function(world){
 			this.worldBounds = world;
 			return this;
 		},
-		
+
 		update: function(){
 			this.updateParticles();
 			this.updateSprings();
 			this.constrainToBounds();
 			return this;
 		},
-		
+
 		updateParticles: function(){
 			var i = 0,
 				j = 0,
@@ -13825,7 +16314,7 @@ define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../intern
 				p.update();
 			}
 		},
-		
+
 		updateSprings: function(){
 			var i = 0,
 				j = 0;
@@ -14566,7 +17055,8 @@ module.exports = {
 };
 });
 
-define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module", "../internals"], function(require, exports, module) {
+define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module", "../internals/is"], function(require, exports, module) {
+/*global THREE*/
 /**
  * @author Kyle Phillips  / haptic-data.com
  * Intended to be a bridge between Toxiclibs.js and Three.js
@@ -14575,7 +17065,7 @@ define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module", "../intern
  * this helps to do that conversion process.
  */
 
-var internals = require('../internals');
+var is = require('../internals/is');
 
 var	ToxiclibsSupport = function(scene){
 	if(THREE === undefined){
@@ -14585,31 +17075,49 @@ var	ToxiclibsSupport = function(scene){
 	this.objectDictionary = {};
 };
 
-	
-var f3 = function(geometry,i1,i2,i3){
-	//unlike toxiclibs, a face in three.js are indices related to the vertices array
-	geometry.faces.push( new THREE.Face3( i1,i2,i3 ) );
-};
-var v3 = function(geometry,a){
-	var threeV = new THREE.Vector3(a.x,a.y,a.z);
-	geometry.vertices.push( threeV );
-};
 
+var f3 = function(geometry,i1,i2,i3, normal, index){
+	//unlike toxiclibs, a face in three.js are indices related to the vertices array
+	geometry.faces[index] = new THREE.Face3( i1,i2,i3, new THREE.Vector3( normal.x, normal.y, normal.z ) );
+};
+var v3 = function(geometry,a, index){
+	var threeV = new THREE.Vector3(a.x,a.y,a.z);
+	geometry.vertices[index] = threeV;
+};
+/*
+var update = {
+	f3: function(geometry,i1,i2,i3, index){
+		//unlike toxiclibs, a face in three.js are indices related to the vertices array
+		geometry.faces[index].a = i1;
+		geometry.faces[index].b = i2;
+		geometry.faces[index].c = i3;
+	},
+	v3: function(geometry,a, index){
+		geometry.vertices[index].set(a.x,a.y,a.z);
+	}
+};
+*/
 
 
 ToxiclibsSupport.createLineGeometry = function(line3d){
 	var geometry = new THREE.Geometry();
-	v3(geometry,line3d.a);
-	v3(geometry,line3d.b);
+	v3(geometry,line3d.a, 0);
+	v3(geometry,line3d.b, 1);
 	geometry.computeCentroids();
-	geometry.computeFaceNormals();
 	geometry.computeVertexNormals();
 	return geometry;
 };
-ToxiclibsSupport.createMeshGeometry = function(triangleMesh){
-	var geometry = new THREE.Geometry();
-	
-	var addFace = function(f){
+/**
+ * create a THREE.Geometry with matching vertices to your triangleMesh
+ * @param {toxi.geom.mesh.TriangleMesh} triangleMesh the toxiclibs.js triangle mesh to convert
+ * @param {THREE.Geometry} [geometry] optional geometry to pass in if you would prefer to update
+ * a geometry instead of create a new one
+ * @returns {THREE.Geometry}
+ */
+ToxiclibsSupport.createMeshGeometry = function(triangleMesh, geometry){
+	geometry = geometry || new THREE.Geometry();
+
+	var addFace = function(f, faceIndex){
 		var vectors = [f.a,f.b,f.c],
 			startIndex = geometry.vertices.length;
 		//make sure this wasnt a vertices from a previous face
@@ -14617,21 +17125,23 @@ ToxiclibsSupport.createMeshGeometry = function(triangleMesh){
 			len = 3;
 		for(i=0;i<len;i++){
 			var toxiV = vectors[i];
-			v3(geometry,toxiV);
+			v3(geometry,toxiV, startIndex+i);
 		}
+		var normal = f.normal.copy();
+		normal.y *= -1;
+		f3(geometry,startIndex,startIndex+1,startIndex+2, normal, faceIndex);
+	};
 
-		f3(geometry,startIndex,startIndex+1,startIndex+2);
-	}
-	
 
 	for(var j=0,flen=triangleMesh.faces.length;j<flen;j++){
-		addFace(triangleMesh.faces[j]);
+		addFace(triangleMesh.faces[j], j);
 	}
-	
+
 	geometry.computeCentroids();
-	geometry.computeFaceNormals();
+    //using toxiclibsjs normals
+	//geometry.computeFaceNormals();
 	geometry.computeVertexNormals();
-	
+
 	return geometry;
 };
 
@@ -14652,51 +17162,47 @@ ToxiclibsSupport.createParticle = function(position, materials){
 };
 
 ToxiclibsSupport.prototype = {
-	addLine: function(line3d, material,holdInDictionary){
+	addLine: function(line3d, material){
 		if(material === undefined){
 			material = new THREE.LineBasicMaterial();
 		}
-		if(holdInDictionary === undefined){
-			holdInDictionary = true;
-		}
 		var geom = ToxiclibsSupport.createLineGeometry(line3d);
 		var line = new THREE.Line(geom,material);
-		if(holdInDictionary){
-			this.objectDictionary[line3d] = line;
-		}
 		this.scene.add(line);
 		return line;
 	},
-	addMesh: function(obj_or_toxiTriangleMesh,threeMaterials,holdInDictionary){
-		var toxiTriangleMesh = undefined;
+    /**
+     * add a toxiclibs.js mesh to the three.js scene
+     * @param {Object|toxi.geom.mesh.TriangleMesh} obj_or_mesh either an options object or
+     * the toxiclibsjs mesh
+     * --
+     * @param {toxi.geom.mesh.Trianglemesh} [obj_or_mesh.geometry] the mesh in the options object
+     * @param {THREE.Material} [obj_or_mesh.material] the three.js material for the mesh
+     * @param {boolean} [obj_or_mesh.holdInDictionary] should ToxiclibsSupport hold a reference?
+     * --
+     * @param {THREE.Material} [threeMaterials] the three.js material for the mesh
+     */
+	addMesh: function(obj_or_mesh,threeMaterials){
+		var toxiTriangleMesh;
 		if(arguments.length == 1){ //it needs to be an param object
-			toxiTriangleMesh == obj_or_toxiTriangleMesh.geometry;
-			threeMaterials = obj_or_toxiTriangleMesh.materials;
-			holdInDictionary = obj_or_toxiTriangleMesh.holdInDictionary;
+			toxiTriangleMesh = obj_or_mesh.geometry;
+			threeMaterials = obj_or_mesh.materials;
+			holdInDictionary = obj_or_mesh.holdInDictionary;
 		} else {
-			toxiTriangleMesh = obj_or_toxiTriangleMesh;
-		}
-		if(holdInDictionary === undefined){
-			holdInDictionary = true;
+			toxiTriangleMesh = obj_or_mesh;
 		}
 		var threeMesh = this.createMesh(toxiTriangleMesh,threeMaterials);
-		if(holdInDictionary){
-			this.objectDictionary[toxiTriangleMesh] = threeMesh;
-		}
 		this.scene.add(threeMesh);
 		return threeMesh;
 	},
-	addParticles: function(positions, material, holdInDictionary){
+	addParticles: function(positions, material){
 		if(material === undefined){
 			material = new THREE.ParticleBasicMaterial();
 		}
-		positions =  internals.tests.isArray( positions ) ? positions : [ positions ];
+		positions =  is.Array( positions ) ? positions : [ positions ];
 		var particle = new THREE.Geometry();
 		for(var i=0,len = positions.length;i<len;i++){
 			v3(particle,positions[i]);
-		}
-		if(holdInDictionary){
-			this.objectDictionary[position] = particle;
 		}
 		var particleSystem = new THREE.ParticleSystem(particle,material);
 		this.scene.add(particleSystem);
@@ -14707,11 +17213,6 @@ ToxiclibsSupport.prototype = {
 	},
 	createMesh: function(triangleMesh,material){
 		return ToxiclibsSupport.createMesh(triangleMesh,material);
-	},
-	removeObject: function(toxiObject){
-		var threeMesh = this.objectDictionary[toxiObject];
-		scene.removeObject(threeMesh);
-		delete this.objectDictionary[toxiObject];
 	}
 };
 
@@ -14725,13 +17226,13 @@ module.exports = {
 };
 });
 
-define('toxi/utils/datatypes/ArraySet',["require", "exports", "module", "../../internals"], function(require, exports, module) {
+define('toxi/util/datatypes/ArraySet',["require", "exports", "module", "../../internals"], function(require, exports, module) {
 
 var internals = require('../../internals');
 
 /**
  * ArraySet
- * toxi/core/utils/datatypes/ArraySet
+ * toxi/core/util/datatypes/ArraySet
  * implements relevant portions of the java version as well as those from java's AbstractSet
  */
 
@@ -14740,190 +17241,115 @@ var internals = require('../../internals');
  * @member toxi
  */
 var ArraySet = function(collection){
- 	Array.apply(this);
- 	if(arguments.length >= 1){
- 		for(var i=0,len = collection.length;i<len;i++){
- 			var item = collection[i];
- 			if(this.indexOf(item) < 0){
- 				this.push(item);
- 			}
- 		}
- 	}
+	Array.apply(this);
+	if(arguments.length >= 1){
+		for(var i=0,len = collection.length;i<len;i++){
+			var item = collection[i];
+			if(this.indexOf(item) < 0){
+				this.push(item);
+			}
+		}
+	}
  };
 
  internals.extend(ArraySet,Array);
 
 
  internals.mixin(ArraySet.prototype,{
- 	add: function(item){
- 		if(this.contains(item)){
- 			return false;
- 		}
- 		this.push(item);
- 		return true;
- 	},
- 	addAll: function(collection){
- 		var self = this;
- 		for(var i=0,len = collection.length;i<len;i++){
- 			this.push(collection[i]);
- 		}
+	add: function(item){
+		if(this.contains(item)){
+			return false;
+		}
+		this.push(item);
+		return true;
+	},
+	addAll: function(collection){
+		var self = this;
+		for(var i=0,len = collection.length;i<len;i++){
+			this.push(collection[i]);
+		}
 
- 	},
- 	clear: function(){
- 		this.retainAll([]);	
- 	},
- 	clone: function(){
- 		return new ArraySet(this);
- 	},
- 	contains: function(item){
- 		return this.indexOf(item) >= 0;
- 	},
- 	containsAll: function(collection){
- 		for(var i=0,len=collection.length;i<len;i++){
- 			var val = collection[i];
- 			if(!this.contains(val)){
- 				return false;
- 			}
- 		}
- 		return true;
- 	},
- 	containsAny: function(collection){
- 		for(var i=0,len = collection.length;i<len;i++){
- 			if(this.contains(collection[i])){
- 				return true;
- 			}
- 		}
- 		return false;
- 	},
- 	equals: function(object){
- 		return this === object;	
- 	},
- 	get: function(index){
- 		return this[index];
- 	},
- 	iterator: function(){
- 		return new internals.Iterator(this);
- 	},
- 	isEmpty: function(){
- 		return this.length < 1;	
- 	},
- 	remove: function(o){
- 		var i = this.indexOf(o);
- 		if(i >= 0){
-	 		this.splice(i,1);
-	 		return true;
+	},
+	clear: function(){
+		this.retainAll([]);
+	},
+	clone: function(){
+		return new ArraySet(this);
+	},
+	contains: function(item){
+		return this.indexOf(item) >= 0;
+	},
+	containsAll: function(collection){
+		for(var i=0,len=collection.length;i<len;i++){
+			var val = collection[i];
+			if(!this.contains(val)){
+				return false;
+			}
+		}
+		return true;
+	},
+	containsAny: function(collection){
+		for(var i=0,len = collection.length;i<len;i++){
+			if(this.contains(collection[i])){
+				return true;
+			}
 		}
 		return false;
- 	},
- 	removeAll: function(){
- 		this.retainAll([]);
- 	},
- 	retainAll: function(collection){
- 		var self = this,
- 			changed = false;
+	},
+	equals: function(object){
+		return this === object;
+	},
+	get: function(index){
+		return this[index];
+	},
+	iterator: function(){
+		return new internals.Iterator(this);
+	},
+	isEmpty: function(){
+		return this.length < 1;
+	},
+	remove: function(o){
+		var i = this.indexOf(o);
+		if(i >= 0){
+			this.splice(i,1);
+			return true;
+		}
+		return false;
+	},
+	removeAll: function(){
+		this.retainAll([]);
+	},
+	retainAll: function(collection){
+		var self = this,
+			changed = false;
 
- 		for(var i=0;i<this.length;i++){
- 			var val = this[i];
- 			if(collection.indexOf(val) < 0){
- 				this.splice(i,1);
- 				changed = true;
- 				i--;
- 			}
- 		}
- 		return changed;
- 	},
- 	size: function(){
- 		return this.length;
- 	},
- 	toArray: function(arr){
- 		arr = arr || [];
- 		for(var i=0;i<this.length;i++){
- 			if(this.hasOwnProperty())
- 			arr[i] = this[i];
- 		}
- 		return arr;
- 	}
+		for(var i=0;i<this.length;i++){
+			var val = this[i];
+			if(collection.indexOf(val) < 0){
+				this.splice(i,1);
+				changed = true;
+				i--;
+			}
+		}
+		return changed;
+	},
+	size: function(){
+		return this.length;
+	},
+	toArray: function(arr){
+		arr = arr || [];
+		for(var i=0;i<this.length;i++){
+			if(this.hasOwnProperty())
+			arr[i] = this[i];
+		}
+		return arr;
+	}
 });
 
 module.exports = ArraySet;
 });
 
-define('toxi/utils/datatypes/FloatRange',["require", "exports", "module", "../../math/mathUtils"], function(require, exports, module) {
-
-var mathUtils = require('../../math/mathUtils');
-
-/**
- * @class
- * @member toxi
- */
-var FloatRange = function(min, max){
-	min = min || 0.1;
-	max = max || 1.0;
-	// swap if necessary
-	if(min > max){
-		var t= max;
-		max = min;
-		min = t;
-	}
-	this.min = min;
-	this.max = max;
-	this.currValue = min;
-};
-
-FloatRange.prototype = {
-	adjustCurrentBy: function(val){
-		return this.setCurrent(this.currValue + val);
-	},
-	copy: function(){
-		var range = new FloatRange(this.min,this.max);
-		range.currValue = this.currValue;
-		return range;
-	},
-	getAt: function(perc){
-		return this.min + (this.max - this.min - mathUtils.EPS) * perc;
-	},
-	getCurrent: function(){
-		return this.currValue;
-	},
-	getMedian: function(){
-		return (this.min + this.max) * 0.5;
-	},
-	getRange: function(){
-		return this.max - this.min;
-	},
-	isValueInRange: function(val){
-		return val >= this.min && val <= this.max;
-	},
-	pickRandom: function(){
-		this.currValue = mathUtils.random(min,max);
-		return this.currValue;
-	},
-	/*
-	seed: function(seed){
-		throw new Error("Not yet Implemented");
-	},
-	setRandom: function(rnd){
-		
-	}
-	*/
-	toArray: function(step){
-		var range = [],
-			v = this.min;
-		while(v < this.max){
-			range.push(v);
-			v += step;
-		}
-		return range;
-	},
-	toString: function(){
-		return "FloatRange: " + this.min + " -> " + this.max;
-	}
-};
-
-module.exports = FloatRange;
-});
-
-define('toxi/utils/datatypes/UndirectedGraph',["require", "exports", "module", "./ArraySet"], function(require, exports, module) {
+define('toxi/util/datatypes/UndirectedGraph',["require", "exports", "module", "./ArraySet"], function(require, exports, module) {
 
 var ArraySet = require('./ArraySet');
 
@@ -15018,7 +17444,7 @@ UndirectedGraph.prototype = {
 module.exports = UndirectedGraph;
 });
 
-define('toxi/utils/datatypes',["require", "exports", "module", "./datatypes/ArraySet","./datatypes/FloatRange","./datatypes/UndirectedGraph"], function(require, exports, module) {
+define('toxi/util/datatypes',["require", "exports", "module", "./datatypes/ArraySet","./datatypes/FloatRange","./datatypes/UndirectedGraph"], function(require, exports, module) {
 module.exports = {
 	ArraySet: require('./datatypes/ArraySet'),
 	FloatRange: require('./datatypes/FloatRange'),
@@ -15026,9 +17452,8 @@ module.exports = {
 };
 });
 
-define('toxi/utils',["require", "exports", "module", "./utils/datatypes"], function(require, exports, module) {
-module.exports = {};
-module.exports.datatypes = require('./utils/datatypes');
+define('toxi/util',["require", "exports", "module", "./util/datatypes"], function(require, exports, module) {
+    exports.datatypes = require('./util/datatypes');
 });
 
 define('toxi/main',[
@@ -15041,7 +17466,7 @@ define('toxi/main',[
 	"./physics2d",
 	"./processing",
 	"./THREE",
-	"./utils"
+	"./util"
 	], function(require, exports) {
 		exports.color = require('./color');
 		exports.geom = require('./geom');
@@ -15050,10 +17475,13 @@ define('toxi/main',[
 		exports.physics2d = require('./physics2d');
 		exports.processing = require('./processing');
 		exports.THREE = require('./THREE');
-		exports.utils = require('./utils');
+		exports.util = require('./util');
 });
 
 define('toxi',["./toxi/main"], function(toxi) {
 	return toxi;
 });
-toxi = require('toxi'); }())
+
+define.unordered = true;
+toxi = require("toxi");toxi.VERSION = "<%= pkg.version %>";
+})();
