@@ -68,28 +68,19 @@ The following objects are returned when loading the entire library
 * **utils** - the utils package
 
 ##Creating Builds
-Run `make` to generate new builds. There are additional targets defined in the [Makefile](https://github.com/hapticdata/toxiclibsjs/blob/release/Makefile)
-
+Run `make` to generate new versions of the existing builds. There are additional targets defined in the [Makefile](https://github.com/hapticdata/toxiclibsjs/blob/release/Makefile)
+###Custom builds
 If you are working with the `build/` files you may wish to create a custom build that only includes the modules you are using in order to save file size. If you are [using the files as AMD modules](#use-with-requirejs-or-other-amd-loader) there is no need for this.
 
-To generate a custom build space-delimit the modules you want:
+To generate a custom build, space-delimit the modules you want:
 
 	./bin/toxiclibsjs --include "toxi/geom/Vec2D toxi/physics2d" --minify --out "./build/toxiclibsjs-custom.min.js"
 
+##Run the tests
+Run `make test` to run the suite of tests.
 
 ## Contributing
 Contributions to toxiclibs.js are appreciated, please [read more here](https://github.com/hapticdata/toxiclibsjs/blob/master/docs/contributing.md)
-
-## Roadmap
-Toxiclibs.js will reach `v1.0` when it has achieved stable compliance with `toxiclibs 0020`. Post-0020 features will continue to be ported as well to represent that latest state of the library. Some of the near-future goals are:
-
-* complete WingedEdge Mesh and the rest of `toxi.geom.mesh.*` and `toxi.geom.mesh.subdiv.*` packages
-* complete `toxi.physics3d.*`
-* move unit-test assertions to [chai](http://chaijs.com/)
-* implement CI system.
-
-
-
 
 
 
