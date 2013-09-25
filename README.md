@@ -67,8 +67,8 @@ The following objects are returned when loading the entire library
 * **THREE** - features to ease use with [Three.js](http://github.com/mrdoob/three.js)
 * **utils** - the utils package
 
-##Generate a custom build
-If you are working with the `build/` files you may wish to create a custom build that only includes the modules you are using in order to save file size. If you are [using the files as AMD modules](#use-with-requirejs-or-other-amd-loader) there is no need for this.
+##Creating Builds
+Run `make` to generate new builds. If you are working with the `build/` files you may wish to create a custom build that only includes the modules you are using in order to save file size. If you are [using the files as AMD modules](#use-with-requirejs-or-other-amd-loader) there is no need for this.
 
 To generate a custom build space-delimit the modules you want:
 
@@ -77,6 +77,7 @@ To generate a custom build space-delimit the modules you want:
 Or say you are using `physics2d` and `Vec2D`:
 
 	./bin/toxiclibsjs --include "toxi/geom/Vec2D toxi/physics2d" --minify --out "./build/toxiclibsjs-custom.min.js"
+For more ideas [check out the Makefile](https://github.com/hapticdata/toxiclibsjs/blob/release/Makefile)
 
 ## Contributing
 Contributions to toxiclibs.js are appreciated, please [read more here](https://github.com/hapticdata/toxiclibsjs/blob/master/docs/contributing.md)
