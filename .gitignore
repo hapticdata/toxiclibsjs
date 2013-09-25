@@ -1,3 +1,4 @@
+*.swp
 *.DS_STORE
 .idea
 *.swp
@@ -6,3 +7,5 @@
 site/*
 TODO.md
 node_modules
+
+/.idea/

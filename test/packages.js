@@ -6,11 +6,11 @@ var t = require('../index'),
 var classes = [];
 function createFunctionTests( pkg, excludeList ){
 	excludeList = excludeList || [];
-	describe('class modules', function(){
+	describe('package module', function(){
 		for( var module in pkg ){
 			if(excludeList.indexOf(module) < 0){
 				(function( m ){
-					it(m + ' is function', function(){
+					it('`'+m+'` should be a function', function(){
 						//console.log(classes.length + ' ' +m);
 						assert.equal(typeof pkg[m],'function');
 						classes.push( m );
@@ -23,7 +23,7 @@ function createFunctionTests( pkg, excludeList ){
 //test a package
 function pkg( id, obj, excludes ){
 	describe( id, function(){
-		it('should be object', function(){
+		it('should be an object', function(){
 			assert.equal(typeof obj, 'object');
 		});
 		createFunctionTests( obj, excludes );
@@ -31,7 +31,8 @@ function pkg( id, obj, excludes ){
 }
 
 //toxi.color
-pkg('color',t.color);
+pkg('color',t.color, ['accessCriteria','AccessCriteria','namedColor','NamedColor','theory']);
+pkg('color.theory', t.color.theory, ['colorTheoryRegistry','ColorTheoryRegistry', 'strategies']);
 //toxi.geom
 pkg('geom',t.geom,['mesh']);
 //toxi.geom.mesh
@@ -47,5 +48,5 @@ pkg('physics2d.behaviors', t.physics2d.behaviors );
 pkg('physics2d.constraint', t.physics2d.constraints );
 pkg('processing', t.processing);
 pkg('THREE', t.THREE);
-pkg('utils', t.utils, ['datatypes']);
-pkg('utils.datatypes', t.utils.datatypes);
+pkg('util', t.util, ['datatypes']);
+pkg('util.datatypes', t.util.datatypes);

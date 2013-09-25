@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+
+var builder = require('../build'),
+    pkg = require('../package.json');
+
+var argv = process.argv,
+    find,
+    includes,
+    commands,
+    options = {};
+    
+//find the index of the option, if its used
+find = function(options){
+    options = Array.isArray(options) ? options : [options];
+    var j;
+    for( var i=0; i<options.length; i++ ){
+        if( (j=argv.indexOf(options[i])) > 1 ){
+            return j;
+        }
+    }
+    return NaN;
+};
+
+//the list of the available arguments and their actions
+commands = [
+    {
+        options: ['--help','-h'],
+        help: 'Display help information about this program',
+        action: function(index){
+            console.log('toxiclibs.js v'+pkg.version);
+            console.log('generate a build using the options below: ');
+            commands.forEach(function(cmd){
+                var opts = cmd.options.join(', ');
+                console.log(opts + '                  '.slice(0, -opts.length) + cmd.help );
+            });
+            //stop everything
+            process.exit(0);
+        }
+    },
+    {
+        options: ['--include','-i'],
+        help: 'space-delimited list of modules you wish to expose in the build',
+        action: function(index){
+            includes = argv[index+1];
+        }
+    },
+    {
+        options: ['--out','-o'],
+        help: 'file path for output, defaults to `./build/toxiclibs-custom.js`',
+        action: function(index){
+            options.out = argv[index+1];
+        }
+    },
+    {
+        options: ['--minify','-m'],
+        help: 'compress build for use in production',
+        action: function(index){
+            options.optimize = 'uglify2';
+            options.preserveLicenseComments = false;
+        }
+    },
+    {
+        options: ['--verbose','-v'],
+        help: 'output verbose build information',
+        action: function(index){
+            console.log('include: ', includes);
+            console.log('options: ', options);
+        }
+    }
+];
+
+//parse the argv for all of the commands
+commands.forEach(function(cmd){
+    var i = find(cmd.options);
+    if(i){
+        cmd.action(i);
+    } else if( cmd.required ){
+        throw new Error('Didn\'t receive required '+cmd.options[0]);
+    }
+});
+
+//perform the build operation
+builder.optimize(includes, options, function( output ){
+    console.log( output );
+});

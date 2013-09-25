@@ -8,8 +8,8 @@ function outputOBJ( mesh, name ){
 	mesh.saveAsOBJ( objWriter );
 	var objBody = objWriter.getOutput();
 	it('should output an OBJ', function(){
-		assert.equal( objBody.length > 1, true );
-		/*require('fs').writeFile('./'+name+'.obj', objBody, function( err ){
+		assert.equal( objBody.length > 2, true );
+		/*require('fs').writeFile('./test/objs/'+name+'.obj', objBody, function( err ){
 			if( err ) throw err;
 		});*/
 	});
