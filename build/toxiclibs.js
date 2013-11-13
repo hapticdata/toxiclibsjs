@@ -448,6 +448,9 @@ define('toxi/internals/has',['require','exports','module'],function( require, ex
         return hasOwnProperty.call(obj, key);
     };
     exports.all = all;
+    exports.typedArrays = function(){
+        return typeof Int32Array !== 'undefined' && typeof Float32Array !== 'undefined' && typeof Uint8Array !== 'undefined';
+    };
     exports.XY = apply(['x','y']);
 	exports.XYZ = apply(['x','y','z']);
 	exports.XYWidthHeight = apply(['x','y','width','height']);
@@ -716,14 +719,6 @@ define('toxi/internals/numberComparator',[],function(){
     };
 });
 
-define('toxi/internals/Int32Array',[],function(){
-    return (typeof Int32Array !== 'undefined') ? Int32Array : Array;
-});
-
-define('toxi/internals/Float32Array',[],function(){
-   return (typeof Float32Array !== 'undefined') ? Float32Array : Array;
-});
-
 define('toxi/internals/removeItemFrom',[],function( ){
     return function(item,array){
         var index = array.indexOf(item);
@@ -734,7 +729,7 @@ define('toxi/internals/removeItemFrom',[],function( ){
     };
 });
 
-define('toxi/internals',['require','exports','module','./internals/is','./internals/has','./internals/extend','./internals/each','./internals/bind','./internals/keys','./internals/values','./internals/filter','./internals/mixin','./internals/Iterator','./internals/LinkedMap','./internals/numberComparator','./internals/Int32Array','./internals/Float32Array','./internals/removeItemFrom'],function(require, exports) {
+define('toxi/internals',['require','exports','module','./internals/is','./internals/has','./internals/extend','./internals/each','./internals/bind','./internals/keys','./internals/values','./internals/filter','./internals/mixin','./internals/Iterator','./internals/LinkedMap','./internals/numberComparator','./internals/removeItemFrom'],function(require, exports) {
 /**
  * @namespace contains helper functions used internally
  * THESE MODULES ARE NOT ALLOWED TO HAVE DEPENDENCIES OUTSIDE
@@ -760,9 +755,6 @@ exports.Iterator = require('./internals/Iterator');
 exports.LinkedMap = require('./internals/LinkedMap');
 //simport sort comparator for numbers
 exports.numberComparator = require('./internals/numberComparator');
-//set up for use with typed-arrays
-exports.Int32Array = require('./internals/Int32Array');
-exports.Float32Array = require('./internals/Float32Array');
 exports.removeItemFrom = require('./internals/removeItemFrom');
 
 });
@@ -6209,9 +6201,107 @@ define('toxi/color',['require','exports','module','./color/accessCriteria','./co
     exports.ToneMap = require('./color/ToneMap');
 });
 
-define('toxi/geom/Line3D',["require", "exports", "module", "../math/mathUtils"], function(require, exports, module) {
+define('toxi/geom/Vec3D',['require','exports','module','./vectors'], function( require, exports, module ){
+	//Vec3D is defined in toxi/geom/vectors to circumvent circular dependencies
+	module.exports = require('./vectors').Vec3D;
+});
+define('toxi/geom/Ray3D',["require", "exports", "module", "../internals","./Vec3D","./Line3D"], function(require, exports, module) {
 
-var mathUtils = require('../math/mathUtils');
+var extend = require('../internals').extend,
+	Vec3D = require('./Vec3D'),
+	Line3D = require('./Line3D');
+
+/**
+ * @class
+ * @member toxi
+ */
+var	Ray3D = function(a,b,c,d){
+	var o, dir;
+	if(arguments.length == 4){
+		o = new Vec3D(a,b,c);
+		dir = d;
+	}
+	else if(arguments.length == 2){
+		o = a;
+		dir = b;
+	}
+	else {
+		o = new Vec3D();
+		dir = Vec3D.Y_AXIS.copy();
+	}
+	Vec3D.apply(this,[o]);
+	this.dir = dir;
+};
+
+extend(Ray3D,Vec3D);
+
+/**
+	Returns a copy of the ray's direction vector.
+	@return vector
+*/
+Ray3D.prototype.getDirection = function() {
+    return this.dir.copy();
+};
+
+/**
+	Calculates the distance between the given point and the infinite line
+	coinciding with this ray.
+	@param p
+*/
+Ray3D.prototype.getDistanceToPoint = function(p) {
+    var sp = p.sub(this);
+    return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
+};
+
+/**
+	Returns the point at the given distance on the ray. The distance can be
+	any real number.
+	@param dist
+	@return vector
+*/
+Ray3D.prototype.getPointAtDistance = function(dist) {
+    return this.add(this.dir.scale(dist));
+};
+
+/**
+  Uses a normalized copy of the given vector as the ray direction. 
+  @param d new direction
+  @return itself
+*/
+Ray3D.prototype.setDirection = function(d) {
+    this.dir.set(d).normalize();
+    return this;
+};
+
+/**
+  Converts the ray into a 3D Line segment with its start point coinciding
+  with the ray origin and its other end point at the given distance along
+  the ray.
+  
+  @param dist end point distance
+  @return line segment
+*/
+Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
+    return new Line3D(this, this.getPointAtDistance(dist));
+};
+
+Ray3D.prototype.toString = function() {
+    return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
+};
+
+module.exports = Ray3D;
+});
+
+define('toxi/geom/Line3D',[
+    "require",
+    "exports",
+    "module",
+    "../math/mathUtils",
+    "./Ray3D"
+], function(require, exports, module) {
+
+var mathUtils = require('../math/mathUtils'),
+    Ray3D = require('./Ray3D');
 
 /**
  @class
@@ -6223,129 +6313,131 @@ var Line3D = function(vec_a, vec_b) {
 };
 
 Line3D.prototype = {
-	
-	closestLineTo: function(l) {
+    constructor: Line3D,
+    closestLineTo: function(l) {
 
-       var p43 = l.a.sub(l.b);
-       if (p43.isZeroVector()) {
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
-       }
+        var p43 = l.a.sub(l.b);
+        if (p43.isZeroVector()) {
+            return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+        }
 
-       var p21 = this.b.sub(this.a);
-       if (p21.isZeroVector()) {
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
-       }
-       var p13 = this.a.sub(l.a);
+        var p21 = this.b.sub(this.a);
+        if (p21.isZeroVector()) {
+            return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+        }
+        var p13 = this.a.sub(l.a);
 
-       var d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
-       var d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
-       var d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
-       var d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
-       var d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
+        var d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
+        var d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
+        var d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
+        var d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
+        var d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
 
-       var denom = d2121 * d4343 - d4321 * d4321;
-       if (Math.abs(denom) < mathUtils.EPS) {
-           return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
-       }
-       var numer = d1343 * d4321 - d1321 * d4343;
-       var mua = numer / denom;
-       var mub = (d1343 + d4321 * mua) / d4343;
+        var denom = d2121 * d4343 - d4321 * d4321;
+        if (Math.abs(denom) < mathUtils.EPS) {
+            return new Line3D.LineIntersection(Line3D.LineIntersection.Type.NON_INTERSECTING);
+        }
+        var numer = d1343 * d4321 - d1321 * d4343;
+        var mua = numer / denom;
+        var mub = (d1343 + d4321 * mua) / d4343;
 
-       var pa = this.a.add(p21.scaleSelf(mua));
-       var pb = l.a.add(p43.scaleSelf(mub));
-       return new Line3D.LineIntersection(Line3D.LineIntersection.Type.INTERSECTING, new Line3D(pa, pb), mua,mub);
-	},
+        var pa = this.a.add(p21.scaleSelf(mua));
+        var pb = l.a.add(p43.scaleSelf(mub));
+        return new Line3D.LineIntersection(Line3D.LineIntersection.Type.INTERSECTING, new Line3D(pa, pb), mua,mub);
+    },
 
-   /**
+    /**
     * Computes the closest point on this line to the given one.
-    * 
+    *
     * @param p
     *            point to check against
     * @return closest point on the line
     */
-	closestPointTo: function(p) {
-       var v = this.b.sub(this.a);
-       var t = p.sub(this.a).dot(v) / v.magSquared();
-       // Check to see if t is beyond the extents of the line segment
-       if (t < 0.0) {
-           return this.a.copy();
-       } else if (t > 1.0) {
-           return this.b.copy();
-       }
-       // Return the point between 'a' and 'b'
-       return this.a.add(v.scaleSelf(t));
-	},
+    closestPointTo: function(p) {
+        var v = this.b.sub(this.a);
+        var t = p.sub(this.a).dot(v) / v.magSquared();
+        // Check to see if t is beyond the extents of the line segment
+        if (t < 0.0) {
+            return this.a.copy();
+        } else if (t > 1.0) {
+            return this.b.copy();
+        }
+        // Return the point between 'a' and 'b'
+        return this.a.add(v.scaleSelf(t));
+    },
 
-	copy: function() {
-       return new Line3D(this.a.copy(), this.b.copy());
-	},
+    copy: function() {
+        return new Line3D(this.a.copy(), this.b.copy());
+    },
 
-	equals: function(obj) {
-       if (this == obj) {
-           return true;
-       }
-       if ((typeof(obj) != Line3D)) {
-           return false;
-       }
-       return (this.a.equals(obj.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
-	},
+    equals: function(obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((typeof(obj) != Line3D)) {
+            return false;
+        }
+        return (this.a.equals(obj.a) || this.a.equals(l.b)) && (this.b.equals(l.b) || this.b.equals(l.a));
+    },
 
-   getDirection: function() {
-       return this.b.sub(this.a).normalize();
-   },
+    getDirection: function() {
+        return this.b.sub(this.a).normalize();
+    },
 
-   getLength: function() {
-       return this.a.distanceTo(this.b);
-   },
+    getLength: function() {
+        return this.a.distanceTo(this.b);
+    },
 
-   getLengthSquared: function() {
-       return this.a.distanceToSquared(this.b);
-   },
+    getLengthSquared: function() {
+        return this.a.distanceToSquared(this.b);
+    },
 
-   getMidPoint: function() {
-       return this.a.add(this.b).scaleSelf(0.5);
-   },
+    getMidPoint: function() {
+        return this.a.add(this.b).scaleSelf(0.5);
+    },
 
-   getNormal: function() {
-       return this.b.cross(this.a);
-   },
+    getNormal: function() {
+        return this.b.cross(this.a);
+    },
 
-   hasEndPoint: function(p) {
-       return this.a.equals(p) || this.b.equals(p);
-   },
-
-
-	offsetAndGrowBy: function(offset,scale,ref) {
-		var m = this.getMidPoint(),
-			d = this.getDirection(),
-			n = this.a.cross(d).normalize();
-       if (ref !== undefined && m.sub(ref).dot(n) < 0) {
-           n.invert();
-       }
-       n.normalizeTo(offset);
-       this.a.addSelf(n);
-       this.b.addSelf(n);
-       d.scaleSelf(scale);
-       this.a.subSelf(d);
-       this.b.addSelf(d);
-       return this;
-   },
-
-   set: function(vec_a, vec_b) {
-       this.a = vec_a;
-       this.b = vec_b;
-       return this;
-   },
+    hasEndPoint: function(p) {
+        return this.a.equals(p) || this.b.equals(p);
+    },
 
 
-   splitIntoSegments: function(segments,stepLength, addFirst) {
-       return Line3D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
-   },
+    offsetAndGrowBy: function(offset,scale,ref) {
+        var m = this.getMidPoint(),
+            d = this.getDirection(),
+            n = this.a.cross(d).normalize();
+        if (ref !== undefined && m.sub(ref).dot(n) < 0) {
+            n.invert();
+        }
+        n.normalizeTo(offset);
+        this.a.addSelf(n);
+        this.b.addSelf(n);
+        d.scaleSelf(scale);
+        this.a.subSelf(d);
+        this.b.addSelf(d);
+        return this;
+    },
 
+    set: function(vec_a, vec_b) {
+        this.a = vec_a;
+        this.b = vec_b;
+        return this;
+    },
 
-  toString: function() {
-       return this.a.toString() + " -> " + this.b.toString();
-   }
+    splitIntoSegments: function(segments,stepLength, addFirst) {
+        return Line3D.splitIntoSegments(this.a, this.b, stepLength, segments, addFirst);
+    },
+
+    toRay3D: function(){
+        return new Ray3D( this.a.copy(), this.getDirection() );
+    },
+
+    toString: function() {
+        return this.a.toString() + " -> " + this.b.toString();
+    }
 };
 
 /**
@@ -6355,7 +6447,7 @@ Line3D.prototype = {
     * last segment has a shorter length than the step length requested. The
     * first point (A) can be omitted and not be added to the list if so
     * desired.
-    * 
+    *
     * @param a
     *            start point
     * @param b
@@ -6391,55 +6483,51 @@ Line3D.splitIntoSegments = function(vec_a, vec_b, stepLength, segments, addFirst
 
 
 Line3D.LineIntersection = function(type,line,mua,mub){
-	this.type = type;
-	if(mua === undefined){ mua = 0; }
-	if(mub === undefined){ mub = 0; }
-	this.line = line;
-	this.coeff = [mua,mub];
+    this.type = type;
+    if(mua === undefined){ mua = 0; }
+    if(mub === undefined){ mub = 0; }
+    this.line = line;
+    this.coeff = [mua,mub];
 };
 
 Line3D.LineIntersection.prototype = {
-	
-	getCoefficient: function(){
-		return this.coeff;
-	},
-	
-	getLength: function(){
-		if(this.line === undefined){ return undefined; }
-		return this.line.getLength();
-	},
-	
-	getLine: function(){
-		if(this.line === undefined){ return undefined; }
-		return this.line.copy();
-	},
-	
-	getType: function(){
-		return this.type;
-	},
-	
-	isIntersectionInside: function(){
-		return this.type == Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
-	},
-	
-	toString: function(){
-		return "type: "+this.type+ " line: "+this.line;
-	}
+
+    getCoefficient: function(){
+        return this.coeff;
+    },
+
+    getLength: function(){
+        if(this.line === undefined){ return undefined; }
+        return this.line.getLength();
+    },
+
+    getLine: function(){
+        if(this.line === undefined){ return undefined; }
+        return this.line.copy();
+    },
+
+    getType: function(){
+        return this.type;
+    },
+
+    isIntersectionInside: function(){
+        return this.type == Line3D.LineIntersection.Type.INTERSECTING && this.coeff[0] >= 0 && this.coeff[0] <= 1 && this.coeff[1] >=0 && this.coeff[1] <= 1;
+    },
+
+    toString: function(){
+        return "type: "+this.type+ " line: "+this.line;
+    }
 };
-	
+
 Line3D.LineIntersection.Type = {
-	NON_INTERSECTING: 0,
-	INTERSECTING: 1
+    NON_INTERSECTING: 0,
+    INTERSECTING: 1
 };
 
 module.exports = Line3D;
 
 });
 
-define('toxi/geom/Vec3D',['require','exports','module','./vectors'], function( require, exports, module ){
-	//Vec3D is defined in toxi/geom/vectors to circumvent circular dependencies
-	module.exports = require('./vectors').Vec3D;
-});
 define('toxi/geom/Matrix4x4',["require", "exports", "module", "../math/mathUtils","./Vec3D","../internals"], function(require, exports, module) {
 
 var mathUtils = require('../math/mathUtils'),
@@ -8628,93 +8716,6 @@ Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _b
 module.exports = Interpolation2D;
 });
 
-define('toxi/geom/Ray3D',["require", "exports", "module", "../internals","./Vec3D","./Line3D"], function(require, exports, module) {
-
-var extend = require('../internals').extend,
-	Vec3D = require('./Vec3D'),
-	Line3D = require('./Line3D');
-
-/**
- * @class
- * @member toxi
- */
-var	Ray3D = function(a,b,c,d){
-	var o, dir;
-	if(arguments.length == 4){
-		o = new Vec3D(a,b,c);
-		dir = d;
-	}
-	else if(arguments.length == 2){
-		o = a;
-		dir = b;
-	}
-	else {
-		o = new Vec3D();
-		dir = Vec3D.Y_AXIS.copy();
-	}
-	Vec3D.apply(this,[o]);
-	this.dir = dir;
-};
-
-extend(Ray3D,Vec3D);
-
-/**
-	Returns a copy of the ray's direction vector.
-	@return vector
-*/
-Ray3D.prototype.getDirection = function() {
-    return this.dir.copy();
-};
-
-/**
-	Calculates the distance between the given point and the infinite line
-	coinciding with this ray.
-	@param p
-*/
-Ray3D.prototype.getDistanceToPoint = function(p) {
-    var sp = p.sub(this);
-    return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
-};
-
-/**
-	Returns the point at the given distance on the ray. The distance can be
-	any real number.
-	@param dist
-	@return vector
-*/
-Ray3D.prototype.getPointAtDistance = function(dist) {
-    return this.add(this.dir.scale(dist));
-};
-
-/**
-  Uses a normalized copy of the given vector as the ray direction. 
-  @param d new direction
-  @return itself
-*/
-Ray3D.prototype.setDirection = function(d) {
-    this.dir.set(d).normalize();
-    return this;
-};
-
-/**
-  Converts the ray into a 3D Line segment with its start point coinciding
-  with the ray origin and its other end point at the given distance along
-  the ray.
-  
-  @param dist end point distance
-  @return line segment
-*/
-Ray3D.prototype.toLine3DWithPointAtDistance = function(dist) {
-    return new Line3D(this, this.getPointAtDistance(dist));
-};
-
-Ray3D.prototype.toString = function() {
-    return "origin: " + this.parent.toString.call(this) + " dir: " + this.dir;
-};
-
-module.exports = Ray3D;
-});
-
 define('toxi/geom/IsectData3D',["require", "exports", "module", "./Vec3D"], function(require, exports, module) {
 
 var Vec3D = require('./Vec3D');
@@ -10888,48 +10889,47 @@ var	Ray2D = function(a,b,d){
 extend(Ray2D,Vec2D);
 
 Ray2D.prototype.getDirection = function() {
-      return this.dir.copy();
+	  return this.dir.copy();
 };
 /**
  * Calculates the distance between the given point and the infinite line
  * coinciding with this ray.
  */
 Ray2D.prototype.getDistanceToPoint = function(p) {
-    var sp = p.sub(this);
-    return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
+	var sp = p.sub(this);
+	return sp.distanceTo(this.dir.scale(sp.dot(this.dir)));
 };
 
 Ray2D.prototype.getPointAtDistance = function(dist) {
-    return this.add(this.dir.scale(dist));
+	return this.add(this.dir.scale(dist));
 };
 
 /**
  * Uses a normalized copy of the given vector as the ray direction.
- * 
- * @param d
- *            new direction
+ *
+ * @param d new direction
  * @return itself
  */
 Ray2D.prototype.setDirection = function(d) {
-    this.dir.set(d).normalize();
-    return this;
+	this.dir.set(d).normalize();
+	return this;
 };
 
 /**
  * Converts the ray into a 2D Line segment with its start point coinciding
  * with the ray origin and its other end point at the given distance along
  * the ray.
- * 
- * @param dist
- *            end point distance
+ *
+ * @param dist end point distance
  * @return line segment
  */
 Ray2D.prototype.toLine2DWithPointAtDistance = function(dist) {
-    return new Line2D(this, this.getPointAtDistance(dist));
+	var Line2D = require('./Line2D');
+	return new Line2D(this, this.getPointAtDistance(dist));
 };
 
 Ray2D.prototype.toString = function() {
-    return "origin: " + Vec2D.prototype.toString.apply(this) + " dir: " + this.dir;
+	return "origin: " + Vec2D.prototype.toString.apply(this) + " dir: " + this.dir;
 };
 
 module.exports = Ray2D;
@@ -10953,12 +10953,12 @@ var Line2D = function( a, b) {
 
 Line2D.prototype = {
 	/**
-	 * Computes the closest point on this line to the point given.
-	 *
-	 * @param p
-	 *            point to check against
-	 * @return closest point on the line
-	 */
+    * Computes the closest point on this line to the point given.
+    *
+    * @param p
+    *            point to check against
+    * @return closest point on the line
+    */
 	closestPointTo: function(p) {
 		var v = this.b.sub(this.a);
 		var t = p.sub(this.a).dot(v) / v.magSquared();
@@ -11015,18 +11015,17 @@ Line2D.prototype = {
 		return this.a.equals(p) || this.b.equals(p);
 	},
 
-
 	/**
-	 * Computes intersection between this and the given line. The returned value
-	 * is a {@link LineIntersection} instance and contains both the type of
-	 * intersection as well as the intersection point (if existing).
-	 *
-	 * Based on: http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline2d/
-	 *
-	 * @param l
-	 *            line to intersect with
-	 * @return intersection result
-	 */
+    * Computes intersection between this and the given line. The returned value
+    * is a {@link LineIntersection} instance and contains both the type of
+    * intersection as well as the intersection point (if existing).
+    *
+    * Based on: http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline2d/
+    *
+    * @param l
+    *            line to intersect with
+    * @return intersection result
+    */
 	intersectLine: function(l) {
 		var isec,
 			denom = (l.b.y - l.a.y) * (this.b.x - this.a.x) - (l.b.x - l.a.x) * (this.b.y - this.a.y),
@@ -11085,6 +11084,7 @@ Line2D.prototype = {
 	},
 
 	toRay2D: function() {
+        var Ray2D = require('./Ray2D');
 		return new Ray2D(this.a.copy(), this.b.sub(this.a).normalize());
 	}
 };
@@ -11099,16 +11099,11 @@ Line2D.prototype = {
  * first point (A) can be omitted and not be added to the list if so
  * desired.
  *
- * @param a
- *            start point
- * @param b
- *            end point (always added to results)
- * @param stepLength
- *            desired distance between points
- * @param segments
- *            existing array list for results (or a new list, if null)
- * @param addFirst
- *            false, if A is NOT to be added to results
+ * @param a start point
+ * @param b end point (always added to results)
+ * @param stepLength desired distance between points
+ * @param segments existing array list for results (or a new list, if null)
+ * @param addFirst false, if A is NOT to be added to results
  * @return list of result vectors
  */
 Line2D.splitIntoSegments = function(a, b, stepLength, segments, addFirst) {
@@ -12146,18 +12141,26 @@ IsectData2D.prototype = {
 module.exports = IsectData2D;
 });
 
-define('toxi/geom/LineStrip3D',['require','exports','module','./vectors','./Line3D','../internals'],function( require, exports, module ){
+define('toxi/geom/LineStrip3D',[
+	'require',
+	'exports',
+	'module',
+	'./vectors',
+	'./Line3D',
+	'../internals/has',
+	'../internals/Iterator'
+], function( require, exports, module ){
+
 	var Vec3D = require('./vectors').Vec3D,
 		Line3D = require('./Line3D'),
-		internals = require('../internals'),
-		hasXYZ = internals.has.XYZ,
-		Iterator = internals.Iterator;
+		hasXYZ = require('../internals/has').XYZ,
+		Iterator = require('../internals/Iterator');
 
 	/**
-	 * construct a LineStrip3D
-	 * @constructor
-	 * @param {Vec3D[]} [vertices] optional vertices to start with
-	 */
+	* construct a LineStrip3D
+	* @constructor
+	* @param {Vec3D[]} [vertices] optional vertices to start with
+	*/
 	var LineStrip3D = function( vertices ){
 		this.vertices = vertices || [];
 	};
@@ -12165,12 +12168,12 @@ define('toxi/geom/LineStrip3D',['require','exports','module','./vectors','./Line
 	LineStrip3D.prototype = {
 		constructor: LineStrip3D,
 		/**
-		 * add a vector to the line-strip, it will always be a copy
-		 * @param {Vec3D | Number } x either a Vec3D or an x coordinate
-		 * @param {Number} [y]
-		 * @param {Number} [z]
-		 * @return itself
-		 */
+		* add a vector to the line-strip, it will always be a copy
+		* @param {Vec3D | Number } x either a Vec3D or an x coordinate
+		* @param {Number} [y]
+		* @param {Number} [z]
+		* @return itself
+		*/
 		add: function( x, y, z ){
 			if( hasXYZ( x ) ){
 				//it was 1 param, it was a vector or object
@@ -14383,7 +14386,8 @@ mixkey(math.random(), pool);
 
 define('toxi/math/noise/simplexNoise',["require", "exports", "module", "../../internals"], function(require, exports, module) {
 
-var Int32Array = require('../../internals').Int32Array;
+var each = require('../../internals/each');
+var has = require('../../internals/has');
 
 
 /**
@@ -14417,94 +14421,95 @@ var	_F2 = 0.5 * (_SQRT3 - 1.0),
 	_G44 = _G4 * 4.0 - 1.0;
 
 
-	/**
-	 * Gradient vectors for 3D (pointing to mid points of all edges of a unit
-	 * cube)
-	 */
+/**
+* Gradient vectors for 3D (pointing to mid points of all edges of a unit
+* cube)
+*/
 var	_grad3 = [
-		new Int32Array([1, 1, 0 ]),
-		new Int32Array([ -1, 1, 0 ]),
-		new Int32Array([ 1, -1, 0 ]),
-		new Int32Array([ -1, -1, 0 ]),
-		new Int32Array([ 1, 0, 1 ]),
-		new Int32Array([ -1, 0, 1 ]),
-		new Int32Array([ 1, 0, -1 ]),
-		new Int32Array([ -1, 0, -1 ]),
-		new Int32Array([0, 1, 1 ]),
-		new Int32Array([0, -1, 1 ]),
-		new Int32Array([ 0, 1, -1 ]),
-		new Int32Array([ 0, -1, -1 ])
-	];
+    [1, 1, 0 ],
+    [ -1, 1, 0 ],
+    [ 1, -1, 0 ],
+    [ -1, -1, 0 ],
+    [ 1, 0, 1 ],
+    [ -1, 0, 1 ],
+    [ 1, 0, -1 ],
+    [ -1, 0, -1 ],
+    [0, 1, 1 ],
+    [0, -1, 1 ],
+    [ 0, 1, -1 ],
+    [ 0, -1, -1 ]
+];
 
-	/**
-	 * Gradient vectors for 4D (pointing to mid points of all edges of a unit 4D
-	 * hypercube)
-	 */
+
+/**
+* Gradient vectors for 4D (pointing to mid points of all edges of a unit 4D
+* hypercube)
+*/
 var	_grad4 = [
-		new Int32Array([ 0, 1, 1, 1 ]),
-		new Int32Array([ 0, 1, 1, -1 ]),
-		new Int32Array([ 0, 1, -1, 1 ]),
-		new Int32Array([ 0, 1, -1, -1 ]),
-		new Int32Array([ 0, -1, 1, 1 ]),
-		new Int32Array([ 0, -1, 1, -1 ]),
-		new Int32Array([ 0, -1, -1, 1 ]),
-		new Int32Array([ 0, -1, -1, -1 ]),
-		new Int32Array([ 1, 0, 1, 1 ]),
-		new Int32Array([ 1, 0, 1, -1 ]),
-		new Int32Array([ 1, 0, -1, 1 ]),
-		new Int32Array([ 1, 0, -1, -1 ]),
-		new Int32Array([ -1, 0, 1, 1 ]),
-		new Int32Array([ -1, 0, 1, -1 ]),
-		new Int32Array([ -1, 0, -1, 1 ]),
-		new Int32Array([ -1, 0, -1, -1 ]),
-		new Int32Array([ 1, 1, 0, 1 ]),
-		new Int32Array([ 1, 1, 0, -1 ]),
-		new Int32Array([ 1, -1, 0, 1 ]),
-		new Int32Array([ 1, -1, 0, -1 ]),
-		new Int32Array([ -1, 1, 0, 1 ]),
-		new Int32Array([ -1, 1, 0, -1 ]),
-		new Int32Array([ -1, -1, 0, 1 ]),
-		new Int32Array([ -1, -1, 0, -1 ]),
-		new Int32Array([ 1, 1, 1, 0 ]),
-		new Int32Array([ 1, 1, -1, 0 ]),
-		new Int32Array([ 1, -1, 1, 0 ]),
-		new Int32Array([ 1, -1, -1, 0 ]),
-		new Int32Array([ -1, 1, 1, 0 ]),
-		new Int32Array([ -1, 1, -1, 0 ]),
-		new Int32Array([ -1, -1, 1, 0 ]),
-		new Int32Array([ -1, -1, -1, 0 ])
-	];
+    [ 0, 1, 1, 1 ],
+    [ 0, 1, 1, -1 ],
+    [ 0, 1, -1, 1 ],
+    [ 0, 1, -1, -1 ],
+    [ 0, -1, 1, 1 ],
+    [ 0, -1, 1, -1 ],
+    [ 0, -1, -1, 1 ],
+    [ 0, -1, -1, -1 ],
+    [ 1, 0, 1, 1 ],
+    [ 1, 0, 1, -1 ],
+    [ 1, 0, -1, 1 ],
+    [ 1, 0, -1, -1 ],
+    [ -1, 0, 1, 1 ],
+    [ -1, 0, 1, -1 ],
+    [ -1, 0, -1, 1 ],
+    [ -1, 0, -1, -1 ],
+    [ 1, 1, 0, 1 ],
+    [ 1, 1, 0, -1 ],
+    [ 1, -1, 0, 1 ],
+    [ 1, -1, 0, -1 ],
+    [ -1, 1, 0, 1 ],
+    [ -1, 1, 0, -1 ],
+    [ -1, -1, 0, 1 ],
+    [ -1, -1, 0, -1 ],
+    [ 1, 1, 1, 0 ],
+    [ 1, 1, -1, 0 ],
+    [ 1, -1, 1, 0 ],
+    [ 1, -1, -1, 0 ],
+    [ -1, 1, 1, 0 ],
+    [ -1, 1, -1, 0 ],
+    [ -1, -1, 1, 0 ],
+    [ -1, -1, -1, 0 ]
+];
 
 	/**
 	 * Permutation table
 	 */
-var	_p = new Int32Array([
-		151, 160, 137, 91, 90, 15, 131, 13, 201,
-		95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37,
-		240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62,
-		94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56,
-		87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139,
-		48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133,
-		230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25,
-		63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200,
-		196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3,
-		64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255,
-		82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
-		223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153,
-		101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79,
-		113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242,
-		193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249,
-		14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
-		176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222,
-		114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
-	]);
+var	_p = [
+    151, 160, 137, 91, 90, 15, 131, 13, 201,
+    95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37,
+    240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62,
+    94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56,
+    87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139,
+    48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133,
+    230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25,
+    63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200,
+    196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3,
+    64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255,
+    82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42,
+    223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153,
+    101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79,
+    113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242,
+    193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249,
+    14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
+    176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222,
+    114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
+];
 
 	/**
 	 * To remove the need for index wrapping, double the permutation table
 	 * length
 	 */
 var	_perm = (function(){
-		var _per = new Int32Array(0x200);
+		var _per = has.typedArrays() ? new Int32Array(0x200) : [];
 		for (var i = 0; i < 0x200; i++) {
 			_per[i] = _p[i & 0xff];
 		}
@@ -14517,24 +14522,46 @@ var	_perm = (function(){
 	 * Details can be found where this table is used, in the 4D noise method.
 	 */
 var	_simplex = [
-		new Int32Array([ 0, 1, 2, 3 ]), new Int32Array([ 0, 1, 3, 2 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 2, 3, 1 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 2, 3, 0 ]), new Int32Array([ 0, 2, 1, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 3, 1, 2 ]), new Int32Array([ 0, 3, 2, 1 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 3, 2, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 1, 2, 0, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 1, 3, 0, 2 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 2, 3, 0, 1 ]), new Int32Array([ 2, 3, 1, 0 ]), new Int32Array([ 1, 0, 2, 3 ]), new Int32Array([ 1, 0, 3, 2 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 0, 3, 1 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 1, 3, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 2, 0, 1, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 0, 1, 2 ]), new Int32Array([ 3, 0, 2, 1 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 2, 0 ]), new Int32Array([ 2, 1, 0, 3 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 0, 0, 0, 0 ]), new Int32Array([ 3, 1, 0, 2 ]), new Int32Array([ 0, 0, 0, 0 ]),
-		new Int32Array([ 3, 2, 0, 1 ]), new Int32Array([ 3, 2, 1, 0 ])
+		[ 0, 1, 2, 3 ], [ 0, 1, 3, 2 ],
+		[ 0, 0, 0, 0 ], [ 0, 2, 3, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 1, 2, 3, 0 ], [ 0, 2, 1, 3 ], [ 0, 0, 0, 0 ],
+		[ 0, 3, 1, 2 ], [ 0, 3, 2, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 1, 3, 2, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 1, 2, 0, 3 ], [ 0, 0, 0, 0 ],
+		[ 1, 3, 0, 2 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ],
+		[ 2, 3, 0, 1 ], [ 2, 3, 1, 0 ], [ 1, 0, 2, 3 ], [ 1, 0, 3, 2 ],
+		[ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 2, 0, 3, 1 ],
+		[ 0, 0, 0, 0 ], [ 2, 1, 3, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 2, 0, 1, 3 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 3, 0, 1, 2 ], [ 3, 0, 2, 1 ],
+		[ 0, 0, 0, 0 ], [ 3, 1, 2, 0 ], [ 2, 1, 0, 3 ], [ 0, 0, 0, 0 ],
+		[ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 3, 1, 0, 2 ], [ 0, 0, 0, 0 ],
+		[ 3, 2, 0, 1 ], [ 3, 2, 1, 0 ]
 	];
+
+//if this environment supports typed arrays
+//convert our arrays over for massive perf gain!
+if( has.typedArrays() ){
+    var makeEachTypedArray = function(arr){
+        var _g = [];
+        each( arr, function(g){
+            _g.push( new Int32Array(g) );
+        });
+        return _g;
+    };
+    _grad3 = makeEachTypedArray(_grad3);
+    _grad4 = makeEachTypedArray(_grad4);
+    _p = new Int32Array(_p);
+    _simplex = makeEachTypedArray(_simplex);
+    this.testObjs = {
+        _grad3: _grad3,
+        _grad4: _grad4,
+        _p: _p,
+        _simplex: _simplex
+    };
+}
 
 	/**
 	* Computes dot product in 2D.
@@ -14859,7 +14886,7 @@ var	SimplexNoise = { //SimplexNoise only consists of static methods
 						t4,
 						gi4;
 
-						
+
 						i1 = sc[0] >= 3 ? 1 : 0;
 						j1 = sc[1] >= 3 ? 1 : 0;
 						k1 = sc[2] >= 3 ? 1 : 0;
@@ -14940,7 +14967,7 @@ var	SimplexNoise = { //SimplexNoise only consists of static methods
 						// Sum up and scale the result to cover the range [-1,1]
 						return 27.0 * (n0 + n1 + n2 + n3 + n4);
 				})();
-				
+
 			}
 
 	}
@@ -14978,6 +15005,10 @@ module.exports = WaveState;
 define('toxi/math/waves/AbstractWave',["require", "exports", "module", "./WaveState"], function(require, exports, module) {
 
 var WaveState = require('./WaveState');
+var defaultNumberTo = function( i, num ){
+    return typeof i === 'number' ? i : num;
+};
+
 
 /**
  * @module toxi/math/waves/AbstractWave
@@ -14986,15 +15017,18 @@ var WaveState = require('./WaveState');
  * conversion methods to & from Hertz ({@link #hertzToRadians(float, float)})
  * are included in this base class.
  */
-var	AbstractWave = function(phase,freq,amp,offset){
-	if(phase !== undefined || freq !== undefined || amp !== undefined || offset !== undefined){
-		this.setPhase(phase);
-		this.frequency = freq;
-		if(amp === undefined)amp = 1;
-		if(offset === undefined)offset = 1;
-		this.amp = amp;
-		this.offset = offset;
-	}
+var AbstractWave = function( phase, freq, amp, offset ){
+    if( arguments.length === 1 && typeof arguments[0] === 'object' ){
+        //options object
+        offset = phase.offset;
+        amp = phase.amp;
+        freq = phase.freq;
+        phase = phase.phase;
+    }
+    this.setPhase( defaultNumberTo(phase, 0) );
+    this.frequency = defaultNumberTo( freq, 0 );
+    this.amp = defaultNumberTo( amp, 1.0 );
+    this.offset = defaultNumberTo( offset, 0 );
 };
 
 
@@ -15014,24 +15048,23 @@ AbstractWave.prototype = {
 		}
 		return this.phase;
 	},
-	
+
 	getClass: function(){
 		return "AbstractWave";
 	},
-	
+
 	pop: function() {
         if (this.stateStack === undefined || (this.stateStack !== undefined && this.stateStack.length <= 0)) {
             //throw new Error("no wave states on stack");
 			console.log(this.toString());
 			console.log("no wave states on stack");
+            return;
         }
-		else{
-			var s = this.stateStack.pop();
-			this.phase = s.phase;
-			this.frequency = s.frequency;
-			this.amp = s.amp;
-		this.offset = s.offset;
-		}
+        var s = this.stateStack.pop();
+        this.phase = s.phase;
+        this.frequency = s.frequency;
+        this.amp = s.amp;
+        this.offset = s.offset;
     },
 
 	push: function() {
@@ -15040,7 +15073,7 @@ AbstractWave.prototype = {
         }
         this.stateStack.push(new WaveState(this.phase, this.frequency, this.amp, this.offset));
     },
-	
+
 	reset: function() {
         this.phase = this.origPhase;
     },
@@ -15054,11 +15087,11 @@ AbstractWave.prototype = {
 	toString: function(){
 		return this.getClass()+" phase:" + this.phase+ " frequency: "+this.frequency+" amp: "+this.amp+ " offset: "+this.offset;
 	},
-	
+
 	update:function(){
 		console.log(this.getClass()+ " this should be overridden");
 	}
-	
+
 };
 
 AbstractWave.PI = 3.14159265358979323846;
@@ -15067,11 +15100,9 @@ AbstractWave.TWO_PI = 2 * AbstractWave.PI;
 
 /**
  * Converts a frequency in Hertz into radians.
- * 
- * @param hz
- *            frequency to convert (in Hz)
- * @param sampleRate
- *            sampling rate in Hz (equals period length @ 1 Hz)
+ *
+ * @param hz frequency to convert (in Hz)
+ * @param sampleRate sampling rate in Hz (equals period length @ 1 Hz)
  * @return frequency in radians
  */
 AbstractWave.hertzToRadians = function(hz,sampleRate) {
@@ -15080,11 +15111,9 @@ AbstractWave.hertzToRadians = function(hz,sampleRate) {
 
 /**
  * Converts a frequency from radians to Hertz.
- * 
- * @param f
- *            frequency in radians
- * @param sampleRate
- *            sampling rate in Hz (equals period length @ 1 Hz)
+ *
+ * @param f frequency in radians
+ * @param sampleRate  sampling rate in Hz (equals period length @ 1 Hz)
  * @return freq in Hz
  */
 AbstractWave.radiansToHertz = function(f,sampleRate) {
@@ -15106,11 +15135,11 @@ var extend = require('../../internals').extend,
  */
 var	AMFMSineWave = function(a,b,c,d,e){
 	if(typeof c == "number"){
-		AbstractWave.apply(this,[a,b,1,c]);
+		AbstractWave.call(this,a,b,1,c);
 		this.amod = d;
 		this.fmod = e;
 	} else{
-		AbstractWave.apply(this,[a,b]);
+		AbstractWave.call(this,a,b);
 		this.amod = c;
 		this.fmod = d;
 	}
@@ -15136,7 +15165,7 @@ AMFMSineWave.prototype.push = function() {
 
 /**
  * Resets this wave and its modulating waves as well.
- * 
+ *
  * @see toxi.math.waves.AbstractWave#reset()
  */
 AMFMSineWave.prototype.reset = function(){
@@ -15202,7 +15231,7 @@ var extend = require('../../internals').extend,
  * fourier series of harmonics. Also uses a secondary wave to modulate the
  * frequency of the main wave.
  * </p>
- * 
+ *
  * <p>
  * <strong>Note:</strong> You must NEVER call the update() method on the
  * modulating wave.
@@ -15215,10 +15244,10 @@ var	FMHarmonicSquareWave = function(a,b,c,d,e) {
 		if(e === undefined){
 			e = new ConstantWave(0);
 		}
-		AbstractWave.apply(this,[a,b,c,d]);
+		AbstractWave.call(this,a,b,c,d);
 		this.fmod = e;
 	} else{
-		AbstractWave.apply(this,[a,b]);
+		AbstractWave.call(this,a,b);
 		this.fmod = c;
 	}
 };
@@ -15248,7 +15277,7 @@ FMHarmonicSquareWave.prototype.reset = function() {
  * @class Progresses the wave and updates the result value. You must NEVER call the
  * update() method on the modulating wave since this is handled
  * automatically by this method.
- * 
+ *
  * @see toxi.math.waves.AbstractWave#update()
  * @member toxi
  * @augments AbstractWave
@@ -15278,10 +15307,10 @@ var extend = require('../../internals').extend,
  */
 var	FMSawtoothWave = function(a,b,c,d,e){
 	if(typeof c == "number") {
-		AbstractWave.apply(this,[a,b,c,d]);
+		AbstractWave.call(this,a,b,c,d);
 		this.fmod = e;
 	} else {
-		AbstractWave.apply(this,[a,b]);
+		AbstractWave.call(this,a,b);
 		this.fmod = c;
 	}
 };
@@ -15331,10 +15360,10 @@ var extend = require('../../internals').extend,
  */
 var	FMSineWave = function(a,b,c,d,e){
 	if(typeof(c) == "number"){
-		AbstractWave.apply(this,[a,b,c,d]);
+		AbstractWave.call(this,a,b,c,d);
 		this.fmod = e;
 	}else{
-		AbstractWave.apply(this,[a,b]);
+		AbstractWave.call(this,a,b);
 		this.fmod = c;
 	}
 };
@@ -15383,13 +15412,13 @@ var	FMSquareWave = function(a,b,c,d,e)
 {
 	if(typeof c == "number"){
 		if(e === undefined){
-			AbstractWave.apply(this,[a,b,c,d, new ConstantWave(0)]);
+			AbstractWave.call(this,a,b,c,d, new ConstantWave(0));
 		} else {
-			AbstractWave.apply(this,[a,b,c,d]);
+			AbstractWave.call(this,a,b,c,d);
 			this.fmod = e;
 		}
 	} else {
-		AbstractWave.apply(this,[a,b]);
+		AbstractWave.call(this,a,b);
 		this.fmod = c;
 	}
 };
@@ -15400,7 +15429,7 @@ FMSquareWave.prototype.getClass = function(){
 	return "FMSquareWave";
 };
 
-FMSquareWave.prototype.pop = function(){		
+FMSquareWave.prototype.pop = function(){
 	this.parent.pop.call(this);
 	this.fmod.pop();
 };
@@ -15438,13 +15467,13 @@ var extend = require('../../internals').extend,
 var	FMTriangleWave = function(a,b,c,d,e){
 	if(typeof c == "number"){
 		if(e !== undefined){
-			AbstractWave.apply(this,[a,b,c,d]);
+			AbstractWave.call(this,a,b,c,d);
 			this.fmod = e;
 		} else {
-			AbstractWave.apply(this,[a,b,c,d, new ConstantWave(0)]);
+			AbstractWave.call(this,a,b,c,d, new ConstantWave(0));
 		}
 	} else {
-		AbstractWave.apply(this,[a,b,1,0]);
+		AbstractWave.call(this,a,b,1,0);
 	}
 };
 
@@ -15494,21 +15523,13 @@ var extend = require('../../internals').extend,
  * @param {Number} [offset] offset
  */
 var	SineWave = function(phase,freq,amp,offset) {
-   AbstractWave.apply(this,[phase,freq,amp,offset]);
+    AbstractWave.call(this, phase, freq, amp, offset);
 };
 
 extend(SineWave,AbstractWave);
 
 SineWave.prototype.getClass = function(){
 	return "SineWave";
-};
-
-SineWave.prototype.pop = function(){		
-	this.parent.pop.call(this);
-};
-
-SineWave.prototype.push = function(){
-	this.parent.push.call(this);
 };
 
 SineWave.prototype.update = function() {

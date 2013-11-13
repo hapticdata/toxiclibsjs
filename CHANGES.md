@@ -1,4 +1,13 @@
 #Toxiclibs.js CHANGES
+
+##v0.2.1
+*   bugfix `toxi.geom.Ray2D#toLine2DWithPointAtDistance` having `undefined` Line2D
+*   added `toxi.geom.Line3D#toRay3D`
+*   bugfix `toxi.math.waves.*` defaulting to an offset of 1 _(instead of 0)_ when not specified
+*   bugfix `toxi.math.noise.simplexNoise` throwing error in older browsers not supported Typed-Arrays
+*   removed `toxi.internals.Float32Array` and `toxi.internals.Int32Array` polyfills
+*   added `toxi.internals.has#typedArrays` for Typed-Arrays support testing
+
 ##v0.2.0
 *	**completed _100%_ of _colorutils_** - `toxi.color` and `toxi.color.theory` packages with thorough test coverage
 *	completed `toxi.geom.Spline3D` and corresponding unit tests
@@ -18,7 +27,7 @@
 *	updated node dependencies to `require.js >= 2.0`, `almond ~0.2.6` and `mocha >=1.12.0`, no longer requiring global mocha
 *	produced new builds with latest
 *	removed `utils/` contents used for old builds
-*	developed build process for creating custom-builds that only includes requested modules	
+*	developed build process for creating custom-builds that only includes requested module
 
 ##v0.1.3
 *	wrote new unit tests for TColor, and ported all qunit unit tests to mocha
