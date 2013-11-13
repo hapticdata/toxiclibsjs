@@ -4,7 +4,7 @@ var toxi = require('../index'),
 
 var Vec2D = toxi.geom.Vec2D,
 	Ray2D = toxi.geom.Ray2D;
-	
+
 describe('toxi.geom.Ray2D', function(){
 
 	//run an instance of Ray2D through these tests
@@ -35,4 +35,14 @@ describe('toxi.geom.Ray2D', function(){
 			testRay2D( ray, direction );
 		});
 	});
+
+    describe('#toLine2DWithPointAtDistance', function(){
+        it('should create a Line2D', function(){
+            var ray = new Ray2D( 100, 200, new Vec2D(1,0.5) ),
+                line = ray.toLine2DWithPointAtDistance( 100 );
+            assert.equal( line.a.x, 100 );
+            assert.equal( line.a.y, 200 );
+            assert.ok( line.b );
+        });
+    });
 });
