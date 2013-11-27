@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.2.0
+* toxiclibsjs - v0.2.2
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -3994,40 +3994,7 @@ define('toxi/color/ProximityComparator',['require'],function( require ){
 	};
 	return ProximityComparator;
 });
-define('toxi/color/AccessCriteria',['require','exports','module','./HSVAccessor','./RGBAccessor','./CMYKAccessor','./AlphaAccessor','./LuminanceAccessor'],function( require, exports ) {
-
-
-var HSVAccessor = require('./HSVAccessor'),
-	RGBAccessor = require('./RGBAccessor'),
-	CMYKAccessor = require('./CMYKAccessor'),
-	AlphaAccessor = require('./AlphaAccessor'),
-	LuminanceAccessor = require('./LuminanceAccessor');
-/**
-* Defines standard color component access criterias and associated comparators
-* used to sort colors based on component values. If a new custom accessor is
-* needed (e.g. for sub-classes TColor's), then simply sub-class this class and
-* implement the {@link Comparator} interface and the 2 abstract getter & setter
-* methods defined by this class.
-*/
-exports.HUE = new HSVAccessor(0),
-exports.SATURATION = new HSVAccessor(1),
-exports.BRIGHTNESS = new HSVAccessor(2),
-
-exports.RED = new RGBAccessor(0),
-exports.GREEN = new RGBAccessor(1),
-exports.BLUE = new RGBAccessor(2),
-
-exports.CYAN = new CMYKAccessor(0),
-exports.MAGENTA = new CMYKAccessor(1),
-exports.YELLOW = new CMYKAccessor(2),
-exports.BLACK = new CMYKAccessor(3),
-
-exports.ALPHA = new AlphaAccessor(),
-exports.LUMINANCE = new LuminanceAccessor();
-
-});
-
-define('toxi/color/ColorList',['require','exports','module','../internals/is','../internals/each','../internals/Iterator','../math/mathUtils','./TColor','./HSVDistanceProxy','./RGBDistanceProxy','./ProximityComparator','./AccessCriteria'],function(require, exports, module) {
+define('toxi/color/ColorList',['require','exports','module','../internals/is','../internals/each','../internals/Iterator','../math/mathUtils','./TColor','./HSVDistanceProxy','./RGBDistanceProxy','./ProximityComparator','./accessCriteria'],function(require, exports, module) {
 
 var is = require('../internals/is'),
     each = require('../internals/each'),
@@ -4037,7 +4004,7 @@ var is = require('../internals/is'),
 	HSVDistanceProxy = require('./HSVDistanceProxy'),
 	RGBDistanceProxy = require('./RGBDistanceProxy'),
 	ProximityComparator = require('./ProximityComparator'),
-	AccessCriteria = require('./AccessCriteria');
+	AccessCriteria = require('./accessCriteria');
 
 /**
  * A container class of concrete colors. ColorLists can be built manually and
@@ -5109,7 +5076,7 @@ define('toxi/color/ColorRange',[
     return ColorRange;
 });
 
-define('toxi/color/NamedColor',[
+define('toxi/color/namedColor',[
     './TColor',
     '../internals',
     'exports'
@@ -5151,15 +5118,15 @@ define('toxi/color/NamedColor',[
 });
 
 define('toxi/color/ColorTheme',[
-    '../internals',
+    '../internals/each',
     '../math/mathUtils',
     './ColorRange',
-    './NamedColor',
+    './namedColor',
     './ColorList'
-], function( internals, MathUtils, ColorRange, NamedColor, ColorList ){
+], function( each, MathUtils, ColorRange, NamedColor, ColorList ){
 
 
-    var ColorTheme, _ThemePart, each = internals.each;
+    var ColorTheme, _ThemePart;
 
 
     /**
@@ -5647,7 +5614,7 @@ define('toxi/color/theory/CompoundTheoryStrategy',[
 
 });
 
-define('toxi/color/theory/ColorTheoryRegistry',['require','exports','module','../../internals','./SingleComplementStrategy','./ComplementaryStrategy','./SplitComplementaryStrategy','./LeftSplitComplementaryStrategy','./RightSplitComplementaryStrategy','./AnalagousStrategy','./MonochromeTheoryStrategy','./TriadTheoryStrategy','./TetradTheoryStrategy','./CompoundTheoryStrategy'],function( require, exports ){
+define('toxi/color/theory/colorTheoryRegistry',['require','exports','module','../../internals','./SingleComplementStrategy','./ComplementaryStrategy','./SplitComplementaryStrategy','./LeftSplitComplementaryStrategy','./RightSplitComplementaryStrategy','./AnalagousStrategy','./MonochromeTheoryStrategy','./TriadTheoryStrategy','./TetradTheoryStrategy','./CompoundTheoryStrategy'],function( require, exports ){
 
     var internals = require('../../internals'),
         each = internals.each,
@@ -5692,7 +5659,7 @@ define('toxi/color/theory/ColorTheoryRegistry',['require','exports','module','..
 
 
 
-define('toxi/color/createListUsingStrategy',['./theory/ColorTheoryRegistry'], function( ColorTheoryRegistry ){
+define('toxi/color/createListUsingStrategy',['./theory/colorTheoryRegistry'], function( ColorTheoryRegistry ){
     /**
     * Factory method. Creates a new ColorList based on the given
     * {@link ColorTheoryStrategy} instance and the given source color. The
@@ -5813,92 +5780,6 @@ define('toxi/color/Histogram',['require','../internals','../internals','./HistEn
 
 	return Histogram;
 });
-define('toxi/color/namedColor',[
-    './TColor',
-    '../internals',
-    'exports'
-], function( TColor, internals, exports ){
-    var each = internals.each,
-        names = [],
-        //kept private, used for `getForName`
-        namedColorMap = {};
-
-    //attach every one of the X11 colors to NamedColor
-    //make all names uppercase
-    each(TColor.X11, function( value, key ){
-        var upkey = key.toUpperCase();
-        names.push(upkey);
-        namedColorMap[upkey] = value;
-        namedColorMap[key] = value;
-        exports[upkey] = value;
-    });
-
-
-    /**
-     * Returns the color for the given name
-     * @param {String} name
-     * @return color or undefined if name not found
-     */
-    exports.getForName = function( name ){
-        //return the color, and if it was sent like "springGreen", lowercase it to be nice :)
-        return namedColorMap[name] || namedColorMap[name.toLowerCase()];
-    };
-
-    /**
-     * Return the names of all defined colors
-     * @return list of names
-     */
-    exports.getNames = function(){
-        return names.slice(0);
-    };
-
-});
-
-define('toxi/color/theory/colorTheoryRegistry',['require','exports','module','../../internals','./SingleComplementStrategy','./ComplementaryStrategy','./SplitComplementaryStrategy','./LeftSplitComplementaryStrategy','./RightSplitComplementaryStrategy','./AnalagousStrategy','./MonochromeTheoryStrategy','./TriadTheoryStrategy','./TetradTheoryStrategy','./CompoundTheoryStrategy'],function( require, exports ){
-
-    var internals = require('../../internals'),
-        each = internals.each,
-        keys = internals.keys,
-        values = internals.values,
-        implementations = {};
-
-    var strats = {
-        SINGLE_COMPLEMENT: require('./SingleComplementStrategy'),
-        COMPLEMENTARY: require('./ComplementaryStrategy'),
-        SPLIT_COMPLEMENTARY: require('./SplitComplementaryStrategy'),
-        LEFT_SPLIT_COMPLEMENTARY: require('./LeftSplitComplementaryStrategy'),
-        RIGHT_SPLIT_COMPLEMENTARY: require('./RightSplitComplementaryStrategy'),
-        ANALAGOUS: require('./AnalagousStrategy'),
-        MONOCHROME: require('./MonochromeTheoryStrategy'),
-        TRIAD: require('./TriadTheoryStrategy'),
-        TETRAD: require('./TetradTheoryStrategy'),
-        COMPOUND: require('./CompoundTheoryStrategy')
-    };
-
-    exports.getRegisteredNames = function(){
-        return keys(implementations);
-    };
-
-    exports.getRegisteredStrategies = function(){
-        return values(implementations);
-    };
-
-    exports.getStrategyForName = function( id ){
-        return implementations[id];
-    };
-
-    exports.registerImplementation = function( impl ){
-        implementations[ impl.getName() ] = impl;
-    };
-
-    each(strats, function( Constructor, type ){
-        exports[type] = new (strats[type])();
-        exports.registerImplementation( exports[type] );
-    });
-});
-
-
-
 define('toxi/color/theory',['require','exports','module','./theory/AnalagousStrategy','./theory/colorTheoryRegistry','./theory/ComplementaryStrategy','./theory/CompoundTheoryStrategy','./theory/LeftSplitComplementaryStrategy','./theory/MonochromeTheoryStrategy','./theory/RightSplitComplementaryStrategy','./theory/SingleComplementStrategy','./theory/SplitComplementaryStrategy','./theory/TetradTheoryStrategy','./theory/TriadTheoryStrategy','./theory/strategies'],function( require, exports ){
     exports.AnalagousStrategy = require('./theory/AnalagousStrategy');
     exports.colorTheoryRegistry = require('./theory/colorTheoryRegistry');

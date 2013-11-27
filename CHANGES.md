@@ -1,5 +1,8 @@
 #Toxiclibs.js CHANGES
 
+##v0.2.2
+*   bugfix case-sensitivity on loading modules `toxi/color/accessCriteria`, `toxi/color/namedColor`, `toxi/color/theory/colorTheoryRegistry`
+
 ##v0.2.1
 *   bugfix `toxi.geom.Ray2D#toLine2DWithPointAtDistance` having `undefined` Line2D
 *   added `toxi.geom.Line3D#toRay3D`
