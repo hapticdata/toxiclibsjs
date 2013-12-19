@@ -1,0 +1,6 @@
+{
+	"predef": {
+		"describe": true,
+		"it": true
+	}
+}
