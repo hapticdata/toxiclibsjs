@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.2.0
+* toxiclibsjs - v0.2.1-sim
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -17076,6 +17076,608 @@ module.exports = {
 };
 });
 
+define('toxi/sim/automata/CAMatrix',[
+	'toxi/math/mathUtils'
+], function( MathUtils ){
+	function CAMatrix() {
+		var i = 0;
+		
+		this.width = arguments[0];
+		this.height = (arguments.length === 1) ? 1 : arguments[1];
+		this.matrix = [];
+		for (i = 0; i < (this.width * this.height); i++) {
+			this.matrix.push(0)
+		}
+		this.swap = this.matrix.slice(0);
+		
+		this.rule = null;
+		this.generation = 0;
+	}
+
+	CAMatrix.prototype = {
+		addNoise: function() {
+			if (this.rule === null) {
+				throw "CA Rule not yet initialized";
+			}
+			var probability = arguments[0],
+					minState = (arguments.length === 1) ? 0 : arguments[1],
+					maxState = (arguments.length === 1) ? this.rule.getStateCount() : arguments[2],
+					x, y, idx;
+			
+			minState = MathUtils.clip(minState, 0, this.rule.getStateCount());
+			maxState = MathUtils.clip(maxState, 0, this.rule.getStateCount());
+			
+			for (x = 0; x < this.width; x++) {
+				for (y = 0; y < this.height; y++) {
+					if (MathUtils.random() > probability) {
+						idx = y * this.width + x;
+						this.swap[idx] = this.matrix[idx] = Math.round(MathUtils.random(minState, maxState));
+					}
+				}
+			}
+			return this;
+		},
+		drawBoxAt: function(x, y, w, state) {
+			var idx, i, j;
+
+			for (i = y - w / 2; i < y + w; i++) {
+				for (j = x - w; j < x + w; j++) {
+					if(j >= 0 && j < this.height && i >= 0 && i < this.width){
+						idx = j + i * this.width;
+						this.swap[idx] = this.matrix[idx] = state;
+					}
+				}
+			}
+			return this
+		},
+		getGeneration: function() {
+			return this.generation;
+		},
+		getHeight: function() {
+			return this.height;
+		},
+		getIndexFor: function(x, y) {
+			return x + y * this.width;
+		},
+		getMatrix: function() {
+			return this.matrix;
+		},
+		getRule: function() {
+			return this.rule;
+		},
+		getSwapBuffer: function() {
+			return this.swap;
+		},
+		getWidth: function() {
+			return this.width;
+		},
+		reset: function() {
+			var i;
+			for (i = 0; i < this.matrix.length; i++) {
+				this.matrix[i] = 0;
+				this.swap[i] = 0;
+			}
+			return this;
+		},
+		seedImage: function(pixels, imgWidth, imgHeight) {
+			var xo = MathUtils.clip((this.width - imgWidth) / 2, 0, width - 1),
+					yo = MathUtils.clip((this.height - imgHeight) / 2, 0, height - 2),
+					idx, x, y;
+			imgWidth = MathUtils.min(imgWidth, this.width);
+			imgHeight = MathUtils.min(imgHeight, this.height);
+			for (y = 0; y < imgHeight; y++) {
+				var i = y * imgWidth;
+				for (x = 0; x < imgWidth; x++) {
+					if (0 < (pixels[i + x] & 0xff)) {
+						idx = (yo + y) * width + xo + x;
+						this.matrix[idx] = 1;
+					}
+				}
+			}
+			return this;
+		},
+		setRule: function(rule){
+			this.rule = rule;
+			return this;
+		},
+		setStateAt: function(x, y, state) {
+			var idx = x + y * this.width;
+
+			if (idx >= 0 && idx < this.matrix.length){
+				this.swap[idx] = state;
+				this.matrix[idx] = state;
+			} else {
+					throw "given coordinates: " + x + ";" + y + " are out of bounds";
+			}
+			return this;
+		},
+		update: function() {
+			if(this.rule !== null) { 
+				this.rule.evolve(this);
+				this.matrix = this.swap.slice(0); //copy swap to matrix
+				this.generation++;
+			}
+		}
+	};
+	return CAMatrix;
+});
+
+define('toxi/sim/automata/CARule2D',[
+	'toxi/math/mathUtils'
+	], function( MathUtils ){
+
+	function CARule2D(brules, srules, st, tiled) {
+		this.birthRules = [false,false,false,false,false,false,false,false,false];
+		this.survivalRules = [false,false,false,false,false,false,false,false,false];
+		this.randomBirthChance = 0.15;
+		this.randomSurvivalChance = 0.25;
+
+		this.setBirthRules(brules);
+		this.setSurvivalRules(srules);
+		this.stateCount = MathUtils.max(1, st);
+		this.setTiling(tiled);
+	}
+
+	CARule2D.prototype = {
+		evolve: function(evolvableMatrix) {
+			var width = evolvableMatrix.getWidth(),
+					height = evolvableMatrix.getHeight(),
+					matrix = evolvableMatrix.getMatrix(),
+					temp = evolvableMatrix.getSwapBuffer(),
+					maxState = this.stateCount - 1,           
+					x1, x2, y1, y2,                          // boundaries
+					x, y,                                    // iterators
+					centre, down, up,                        // neighborhood positions
+					currVal, left, newVal, right,            // more neighborhood positions
+					sum;                                     // total
+			if (this.isTiling){
+				x1 = 0;
+				x2 = width;
+				y1 = 0;
+				y2 = height;
+			} else {
+				x1 = 1;
+				x2 = width - 1;
+				y1 = 1;
+				y2 = height - 1;
+			}
+			for (y = y1; y < y2; y++) {
+				// determine up and down cell indices
+				up = (y > 0 ? y - 1 : height - 1) * width;
+				down = (y < height - 1 ? y + 1 : 0) * width;
+				centre = y * width;
+				for (x = x1; x < x2; x++) {
+					// determine left and right cell offsets
+					left = x > 0 ? x - 1 : width - 1;
+					right = x < width - 1 ? x + 1 : 0;
+					currVal = matrix[centre + x];
+					newVal = currVal;
+					sum = 0;
+					if (currVal > 1) {
+						if (this.isAutoExpire) {
+							newVal = (newVal + 1) % this.stateCount;
+						} else {
+							newVal = MathUtils.min(newVal + 1, maxState);
+						}
+					} else {
+						if (matrix[up + left] === 1) {
+							sum++; // top left
+						}
+						if (matrix[up + x] === 1) {
+							sum++; // top
+						}
+						if (matrix[up + right] === 1) {
+							sum++; // top right
+						}
+						if (matrix[centre + left] === 1) {
+							sum++; // left
+						}
+						if (matrix[centre + right] === 1) {
+							sum++; // right
+						}
+						if (matrix[down + left] === 1) {
+							sum++; // bottom left
+						}
+						if (matrix[down + x] === 1) {
+							sum++; // bottom
+						}
+						if (matrix[down + right] === 1) {
+							sum++; // bottom right
+						}
+						if (currVal !== 0) { // centre
+							if (this.survivalRules[sum]) {
+								newVal = 1;
+							} else {
+								if (this.isAutoExpire) {
+									newVal = (newVal + 1) % this.stateCount;
+								} else {
+									newVal = MathUtils.min(newVal + 1, maxState);
+								}
+							}
+						} else {
+							if (this.birthRules[sum]) {
+								newVal = 1;
+							}
+						}
+					}
+					temp[centre + x] = newVal;
+				}
+			}
+		},
+		getStateCount: function() {
+			return this.stateCount;
+		},
+		isAutoExpire: function() {
+			return this.isAutoExpire;
+		},
+		isTiling: function() {
+			return this.isTiling;
+		},
+		randomArray: function(chance) {
+			var r = [],
+					i;
+			for (i = 0; i < 9; i++) {
+				if (MathUtils.random() < chance) {
+					r.push(i)
+				}
+			}
+			return r;
+		},
+		randomize: function() {
+			this.setRuleArray(this.randomArray(this.randomBirthChance), this.birthRules);
+			this.setRuleArray(this.randomArray(this.randomSurvivalChance), this.survivalRules);
+		},  
+		setAutoExpire: function(state) {
+			this.isAutoExpire = state;
+		},
+		setBirthRules: function(birthRuleArray) {
+			this.setRuleArray(birthRuleArray, this.birthRules);
+		},
+		setRandomProbabilities: function(birthChance, survivalChance) {
+			this.randomBirthChance = birthChance;
+			this.randomSurvivalChance = survivalChance;
+		},
+		setRuleArray: function(seed, kernal) {
+			var i;
+			if (seed.length === 0) {
+				return;
+			};
+			for (i = 0; i < seed.length; i++) {
+				id = seed[i];
+				if (id >= 0 && id < kernal.length) {
+					kernal[id] = true;
+				} else {
+					throw "invalid rule index: " + id + " (needs to be less than 9 for a 3x3 kernel)";
+				}
+			}
+		},
+		setStateCount: function(number) {
+			this.stateCount = number;
+		},
+		setSurvivalRules: function(newRules) {
+			this.setRuleArray(newRules, this.survivalRules);
+		},
+		setTiling: function(state) {
+			this.isTiling = state;
+		}
+	};
+
+	return CARule2D;
+
+});
+define('toxi/sim/automata/CAWolfram1D',[
+	'toxi/math/mathUtils'
+], function( MathUtils ){
+	
+	function CAWolfram1D( MathUtils ) {
+		this.kernelWidth = arguments[0];
+		this.tiling = (arguments.length < 3) ? arguments[1] : arguments[2];
+		this.stateCount = (arguments.length < 3) ? 2 : arguments[1];
+		this.isAutoExpire = false;
+		this.maxBitValue = Math.pow(4, this.kernelWidth);
+		this.numBits = this.maxBitValue * 2;
+		this.rules = null;
+	}
+	 
+	CAWolfram1D.prototype = {
+		evolve: function (evolvableMatrix) {
+			var cells, nextgen,     // evolvableMatrix components
+					maxstate, sum,     
+					i, idx, j, k;       // iterators
+			
+			cells = evolvableMatrix.getMatrix();
+			nextgen = evolvableMatrix.getSwapBuffer();
+			
+			maxState = this.stateCount - 1;
+			for(i = 0; i < cells.length; i++) {
+				sum = 0;
+				for(j = -this.kernelWidth, k = this.maxBitValue; j <= this.kernelWidth; j++) {
+					idx = i + j;
+					if (this.tiling) {
+						idx %= cells.length;
+						if (idx < 0) {
+							idx += cells.length;
+						}
+						sum += cells[idx] > 0 ? k : 0;
+					} else {
+						if (idx >= 0 && idx < cells.length) {
+					
+						}
+					}
+					k >>>= 1;
+				}
+				if (this.isAutoExpire) {
+					nextgen[i] = this.rules[sum] ? (cells[i] + 1) % this.stateCount : 0;
+				} else {
+					nextgen[i] = this.rules[sum] ? MathUtils.min(cells[i] + 1, maxState) : 0;
+				}
+			}
+		},
+		getNumRuleBits: function() {
+			return this.numBits;
+		},
+		getRuleArray: function() {
+			return this.rules;
+		},
+		getRuleAsBigInt: function() {
+			var r=0,
+					i;
+			for (i = this.numBits - 1; i >= 0; i--) {
+				r <<= 1;
+				if (this.rules[i]) {
+					r = r | (1 << 0);
+				}
+			}
+			return r;
+		},
+		getStateCount: function() {
+			return this.stateCount;
+		},
+		isAutoExpire: function() {
+			return this.isAutoExpire;
+		},
+		isTiling: function() {
+			return this.tiling;
+		},
+		randomize: function() {
+			var newRule = Math.round(Math.random() * 4294967295);
+			this.setRuleID(newRule);
+		},
+		setAutoExpire: function(autoExpire) {
+			this.isAutoExpire = autoExpire;
+		},
+		setRuleArray: function(ruleArray) {
+			if (ruleArray.length !== this.numBits) {
+				throw "rule array length needs to be equal to " + this.numBits + " for the given kernel size";
+			}
+			this.rules = ruleArray;
+		return this;
+		},
+		setRuleID: function(id) {
+			var i;
+			this.rules = [];
+			for (i = 0; i < this.numBits; i++) {
+				this.rules.push((id & 1) === 1);
+				id >>>= 1;
+			}
+			return this;
+		},
+		setStateCount: function(num) {
+			this.stateCount = num;
+		},
+		setTiling: function(state) {
+			this.tiling = state;
+		}
+	};
+	return CAWolfram1D;
+});
+ 
+define('toxi/sim/automata',[
+	'require',
+	'exports',
+	'./automata/CAMatrix',
+	'./automata/CARule2D',
+	'./automata/CAWolfram1D'
+], function( require, exports ){
+	exports.CAMatrix = require('./automata/CAMatrix');
+	exports.CARule2D = require('./automata/CARule2D');
+	exports.CAWolfram1D = require('./automata/CAWolfram1D');
+});
+define('toxi/sim/erosion/ErosionFunction',[
+	'toxi/geom/Polygon2D',
+	'toxi/geom/Rect',
+	'toxi/geom/Vec2D'
+], function( Polygon2D, Rect, Vec2D ){
+
+	var ErosionFunction = function(){
+		this.elevation = [];
+		this.width = 0;
+		this.height = 0;
+		this._d = [0,0,0,0,0,0,0,0,0];
+		this._h = [0,0,0,0,0,0,0,0,0];
+		this._off = [];
+	};
+	ErosionFunction.prototype = {
+		erodeAll: function(){
+			var y, x, w1 = this.width -1, h1 = this.height -1;
+			for(y=1; y<h1; y++){
+				for(x=1; x<w1; x++){
+					this.erodeAt(x,y);
+				}
+			}
+		},
+		erodeAt: function(){
+			throw Error('ErosionFunction is an abstract, do not call directly');
+		},
+		erodeWithinPolygon: function( poly ){
+			var bounds, pos, y, y2, x, x2;
+			pos = new Vec2D();
+			bounds = poly.getBounds().intersectionRectWith(
+				new Rect(1,1, this.width-2, this.height-2)
+			);
+			y2 = parseInt(bounds.getBottom(), 10);
+			for(y=parseInt(bounds.getTop(), 10); y<y2; y++){
+				x2 = parseInt(bounds.getRight(),10);
+				for(x=parseInt(bounds.getLeft(),10); x<x2; x++){
+					if( poly.containsPoint(pos.set(x,y)) ){
+						this.erodeAt( x,y );
+					}
+				}
+			}
+		},
+		// {Number[]} elevation,
+		// {Number} width
+		// {Number} height
+		setElevation: function( elevation, width, height ){
+			this.elevation = elevation;
+			this.width = width;
+			this.height = height;
+			this._off = [ -width-1, -width, -width+1, -1, 0, 1, width-1, width, width+1 ];
+		}
+	};
+
+	return ErosionFunction;
+});
+define('toxi/sim/erosion/TalusAngleErosion',[
+	'toxi/internals',
+	'./ErosionFunction'
+], function( internals, ErosionFunction ){
+	/**
+	 * For each neighbour it's computed the difference between the processed cell
+	 * and the neighbour:
+	 *
+	 * <pre>
+	 * d[i] = h - h[i];
+	 * </pre>
+	 *
+	 * the maximum positive difference is stored in d_max, and the sum of all the
+	 * positive differences that are bigger than T (this numer is n), the talus
+	 * angle, is stored in d_tot.
+	 *
+	 * Now it's possible to update all the n cells (where d[i] is bigger than T)
+	 * using this formula:
+	 *
+	 * <pre>
+	 * h[i] = h[i] + c * (d_max - T) * (d[i] / d_tot);
+	 * </pre>
+	 *
+	 * and the main cell with this other formula:
+	 *
+	 * <pre>
+	 * h = h - (d_max - (n * d_max * T / d_tot));
+	 * </pre>
+	 *
+	 * The Talus angle T is a threshold that determines which slopes are affected by
+	 * the erosion, instead the c constant determines how much material is eroded.
+	 */
+	/**
+     * @param theta
+     *            talus angle
+     * @param amount
+     *            material transport amount
+     */
+	var TalusAngleErosion = function( theta, amount ){
+		ErosionFunction.call(this);
+		this.__theta = theta;
+		this.__amount = amount;
+	};
+	internals.extend(TalusAngleErosion, ErosionFunction);
+
+	TalusAngleErosion.prototype.erodeAt = function( x,y ){
+		var idx = y * this.width + x,
+			maxD = 0,
+			sumD = 0,
+			n = 0,
+			i =0;
+		for(i=0; i<9; i++){
+			this._h[i] = this.elevation[idx + this._off[i]];
+			this._d[i] = this.elevation[idx] - this._h[i];
+			if( this._d[i] > this.__theta ){
+				sumD += this._d[i];
+				n++;
+				if( this._d[i] > maxD ){
+					maxD = this._d[i];
+				}
+			}
+		}
+		if( sumD > 0 ){
+			this.elevation[idx] -= (maxD - (n * maxD * this.__theta / sumD));
+			for(i=0; i<9; i++){
+				if( this._d[i] > this.__theta ){
+					this.elevation[idx + this._off[i]] = this._h[i] + this.__amount * (maxD - this.__theta) * (this._d[i] / sumD);
+				}
+			}
+		}
+	};
+
+	TalusAngleErosion.prototype.getAmount = function(){ return this.__amount; };
+	TalusAngleErosion.prototype.getTheta = function(){ return this.__theta; };
+	TalusAngleErosion.prototype.setAmount = function( amount ){ this.__amount = amount; };
+	TalusAngleErosion.prototype.setTheta = function( theta ){ this.__theta = theta; };
+	TalusAngleErosion.prototype.toString = function(){
+		return 'TalusAngleErosion: theta=' +this.__theta+ ' amount=' +this.__amount;
+	};
+
+	return TalusAngleErosion;
+});
+define('toxi/sim/erosion/ThermalErosion',[
+	'toxi/internals',
+	'./ErosionFunction'
+], function( internals, ErosionFunction ){
+	var ThermalErosion = function(){
+		ErosionFunction.call(this);
+	};
+	internals.extend( ThermalErosion, ErosionFunction );
+	ThermalErosion.prototype.erodeAt = function( x, y ){
+		var idx = y * this.width + x,
+			minD = Number.MAX_VALUE,
+			sumD = 0,
+			n = 0,
+			i = 0,
+			hOut;
+		for(i=0; i<9; i++){
+			this._h[i] = this.elevation[idx + this._off[i]];
+			this._d[i] = this.elevation[idx] - this._h[i];
+			if( this._d[i] > 0 ){
+				if( this._d[i] < minD ){
+					minD = this._d[i];
+				}
+				sumD += this._d[i];
+				n++;
+			}
+		}
+		hOut = n * minD / (n + 1.0);
+		this.elevation[idx] -= hOut;
+		for(i=0; i<9; i++){
+			if( this._d[i] > 0 ){
+				this.elevation[idx + this._off[i]] = this._h[i] + hOut * ( this._d[i] / sumD );
+			}
+		}
+	};
+
+	ThermalErosion.prototype.toString = function(){ return 'ThermalErosion'; };
+    return ThermalErosion;
+});
+define('toxi/sim/erosion',[
+	'require',
+	'exports',
+	'./erosion/ErosionFunction',
+	'./erosion/TalusAngleErosion',
+	'./erosion/ThermalErosion'
+], function( require, exports ){
+	exports.ErosionFunction = require('./erosion/ErosionFunction');
+	exports.TalusAngleErosion = require('./erosion/TalusAngleErosion');
+	exports.ThermalErosion = require('./erosion/ThermalErosion');
+});
+define('toxi/sim',[
+	'require',
+	'exports',
+	'./sim/automata',
+	'./sim/erosion'
+], function( require, exports ){
+	exports.automata = require('./sim/automata');
+	exports.erosion = require('./sim/erosion');
+});
 define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module", "../internals/is"], function(require, exports, module) {
 /*global THREE*/
 /**
@@ -17486,6 +18088,7 @@ define('toxi/main',[
 	"./math",
 	"./physics2d",
 	"./processing",
+	"./sim",
 	"./THREE",
 	"./util"
 	], function(require, exports) {
@@ -17495,6 +18098,7 @@ define('toxi/main',[
 		exports.math = require('./math');
 		exports.physics2d = require('./physics2d');
 		exports.processing = require('./processing');
+		exports.sim = require('./sim');
 		exports.THREE = require('./THREE');
 		exports.util = require('./util');
 });
