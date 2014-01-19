@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.2.2
+* toxiclibsjs - v0.2.3
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -12632,6 +12632,10 @@ Spline2D.prototype = {
 
 	computeVertices: function(res){
 		this.updateCoefficients();
+        if( res < 1 ){
+            res = 1;
+        }
+        res++;
 		if (this.bernstein === undefined || this.bernstein.resolution != res) {
 			this.bernstein = new BernsteinPolynomial(res);
 		}
@@ -12640,12 +12644,13 @@ Spline2D.prototype = {
 		this.findCPoints();
 		var deltaP = new Vec2D();
 		var deltaQ = new Vec2D();
+        res--;
 		for (var i = 0; i < this.numP - 1; i++) {
 			var p = this.points[i];
 			var q = this.points[i + 1];
 			deltaP.set(this.delta[i]).addSelf(p);
 			deltaQ.set(q).subSelf(this.delta[i + 1]);
-			for (var k = 0; k < bst.resolution; k++) {
+			for (var k = 0; k < res; k++) {
 				var x = p.x * bst.b0[k] + deltaP.x * bst.b1[k] +
 				deltaQ.x * bst.b2[k] +
 				q.x * bst.b3[k];
@@ -12655,6 +12660,7 @@ Spline2D.prototype = {
 				this.vertices.push(new Vec2D(x, y));
 			}
 		}
+        this.vertices.push(this.points[this.points.length-1].copy());
 		return this.vertices;
 	},
 
@@ -12820,6 +12826,10 @@ define('toxi/geom/Spline3D',[
 
         computeVertices: function(res){
             this.updateCoefficients();
+            if( res < 1 ){
+                res = 1;
+            }
+            res++;
             if (this.bernstein === undefined || this.bernstein.resolution != res) {
                 this.bernstein = new BernsteinPolynomial(res);
             }
@@ -12828,12 +12838,13 @@ define('toxi/geom/Spline3D',[
             this.findCPoints();
             var deltaP = new Vec3D();
             var deltaQ = new Vec3D();
+            res--;
             for (var i = 0; i < this.numP - 1; i++) {
                 var p = this.points[i];
                 var q = this.points[i + 1];
                 deltaP.set(this.delta[i]).addSelf(p);
                 deltaQ.set(q).subSelf(this.delta[i + 1]);
-                for (var k = 0; k < bst.resolution; k++) {
+                for (var k = 0; k < res; k++) {
                     var x = p.x * bst.b0[k] + deltaP.x * bst.b1[k] +
                         deltaQ.x * bst.b2[k] +
                         q.x * bst.b3[k];
@@ -12845,6 +12856,7 @@ define('toxi/geom/Spline3D',[
                     this.vertices.push(new Vec3D(x, y, z));
                 }
             }
+            this.vertices.push(this.points[this.points.length-1].copy());
             return this.vertices;
         },
 
