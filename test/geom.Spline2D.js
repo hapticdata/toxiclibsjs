@@ -78,7 +78,7 @@ describe("Spline2D", function(){
 			[2,3,4,5,6,7,8,9,10,20].forEach(function( res ){
 				it('for resolution ' + res, function(){
 					var vertices = instance.computeVertices( res );
-					assert.equal( vertices.length, instance.getNumPoints() * res - res );
+					assert.equal( vertices.length, instance.getNumPoints() * res - (res-1) );
 					//ensure that all vertex positions are valid numbers
 					vertices.forEach(function( vert ){
 						['x','y'].forEach(function( a ){

@@ -1,5 +1,8 @@
 #Toxiclibs.js CHANGES
 
+##v0.2.3
+*   bugfix resolved [issue #26](https://github.com/hapticdata/toxiclibsjs/issues/26) where `toxi.geom.Spline3D` and `toxi.geom.Spline2D` had incorrect number of computed vertices.
+
 ##v0.2.2
 *   bugfix case-sensitivity on loading modules `toxi/color/accessCriteria`, `toxi/color/namedColor`, `toxi/color/theory/colorTheoryRegistry`
 
