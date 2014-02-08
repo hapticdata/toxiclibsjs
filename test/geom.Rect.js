@@ -36,6 +36,40 @@ describe('toxi.geom.Rect', function(){
 		});
 	});
 
+    describe('Rect.getBoundingRect( points )', function(){
+        it('should create a Rect that fits all points', function(){
+            var points = [
+                new Vec2D( -5, -5 ),
+                new Vec2D( -10, -10 ),
+                new Vec2D( 10, 10 ),
+                new Vec2D( 20, 20 )
+            ];
+            var rect = Rect.getBoundingRect( points );
+            assert.equal( rect.x, -10 );
+            assert.equal( rect.y, -10 );
+            assert.equal( rect.width, 30 );
+            assert.equal( rect.height, 30 );
+        });
+    });
+
+    describe('#growToContainPoint( p )', function(){
+        var rect = new Rect(0, 0, 5, 5);
+        it('should grow to new width', function(){
+            assert.equal(rect.width, 5);
+            assert.equal(rect.height, 5);
+            rect.growToContainPoint( new Vec2D(10,12) );
+            assert.equal(rect.width, 10);
+            assert.equal(rect.height,12);
+        });
+        it('should change x and y', function(){
+            rect.growToContainPoint( new Vec2D( -5, -3 ) );
+            assert.equal( rect.x, -5 );
+            assert.equal( rect.y, -3 );
+            assert.equal( rect.width, 15);
+            assert.equal( rect.height, 15);
+        });
+    });
+
 	describe('#intersectsRay()', function(){
 		var r = new Rect(30,50,100,100);
 		var ray2d = new Ray2D(60,70,new Vec2D(Math.PI/1.5,0));
