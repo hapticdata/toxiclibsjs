@@ -1,5 +1,13 @@
 #Toxiclibs.js CHANGES
 
+##v0.2.4
+*   improved `toxi.THREE.ToxiclibsSupport.createMeshGeometry( triMesh, [geom] ):THREE.Geometry` to avoid duplicated vertices
+*   bugfix resolve [issue #27](https://github.com/hapticdata/toxiclibsjs/issues/27) where `toxi.physics2d.constraints.RectConstraint`, `toxi.physics2d.constraints.AngularConstraint` and `toxi.physics2d.ParticlePath2D` had missing require's
+*   added `toxi.geom.Polygon2D#getBounds():Rect`
+*   added `toxi.geom.Rect.getBoundingRect( points ):Rect`
+*   added `toxi.geom.Rect#growToContainPoint( point ):Rect`
+*   fixed possible _"module toxi/geom/Circle has not been loaded yet…"_ error from Require.js when loading only `toxi.geom.Polygon2D` with Require.js.
+
 ##v0.2.3
 *   bugfix resolved [issue #26](https://github.com/hapticdata/toxiclibsjs/issues/26) where `toxi.geom.Spline3D` and `toxi.geom.Spline2D` had incorrect number of computed vertices.
 

@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.2.3
+* toxiclibsjs - v0.2.4
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -439,11 +439,6 @@ define('toxi/internals/has',['require','exports','module'],function( require, ex
         return true;
     };
 
-    var apply = function( properties ){
-        return function( o ){
-            return all(o, properties);
-        };
-    };
     exports.property = function(obj, key) {
         return hasOwnProperty.call(obj, key);
     };
@@ -451,9 +446,11 @@ define('toxi/internals/has',['require','exports','module'],function( require, ex
     exports.typedArrays = function(){
         return typeof Int32Array !== 'undefined' && typeof Float32Array !== 'undefined' && typeof Uint8Array !== 'undefined';
     };
-    exports.XY = apply(['x','y']);
-	exports.XYZ = apply(['x','y','z']);
-	exports.XYWidthHeight = apply(['x','y','width','height']);
+    exports.XY = function( a ){ return a && typeof a.x === 'number' && typeof a.y === 'number'; };
+	exports.XYZ = function( a ){ return a && typeof a.x === 'number' && typeof a.y === 'number' && typeof a.z === 'number'; };
+	exports.XYWidthHeight = function( a ){
+        return a && typeof a.x === 'number' && typeof a.y === 'number' && typeof a.width === 'number' && typeof a.height === 'number';
+    };
 });
 
 define('toxi/internals/is',['./has','exports'],function( has, exports ){
@@ -1131,7 +1128,7 @@ define('toxi/geom/vectors',[
 	@class a two-dimensional vector class
 	*/
 	var	Vec2D = function(a,b){
-		if( hasXY( a ) ){
+		if( hasXY(a) ){
 			b = a.y;
 			a = a.x;
 		} else {
@@ -1154,20 +1151,24 @@ define('toxi/geom/vectors',[
 	};
 
 	//private,
-	var _getXY = function(a,b) {
-		if( hasXY( a ) ){
-			b = a.y;
-			a = a.x;
-		}
-		else {
-			if(a !== undefined && b === undefined){
-				b = a;
-			}
-			else if(a === undefined){ a = 0; }
-			else if(b === undefined){ b = 0; }
-		}
-		return {x: a, y: b};
-	};
+    var _getXY = (function(){
+        //create a temp object to avoid creating garbage-collectable objects
+        var temp = { x: 0, y: 0 };
+        return function getXY(a,b) {
+            if( a && typeof a.x === 'number' && typeof a.y === 'number' ){
+                return a;
+            } else {
+                if(a !== undefined && b === undefined){
+                    b = a;
+                }
+                else if(a === undefined){ a = 0; }
+                else if(b === undefined){ b = 0; }
+            }
+            temp.x = a;
+            temp.y = b;
+            return temp;
+        };
+    })();
 	//public
 	Vec2D.prototype = {
 
@@ -11035,12 +11036,290 @@ Line2D.LineIntersection.Type = { COINCIDENT: 0, PARALLEL: 1, NON_INTERSECTING: 2
 module.exports = Line2D;
 });
 
-define('toxi/geom/Polygon2D',["require", "exports", "module", "./Vec2D","./Line2D","../internals"], function(require, exports, module) {
+define('toxi/geom/Rect',[
+    "require",
+    "exports",
+    "module",
+    "../internals",
+    "./Vec2D",
+    "./Line2D",
+    "./Polygon2D"
+], function( require, exports, module ) {
+
+    var	internals = require('../internals'),
+        mathUtils = require('../math/mathUtils'),
+        Vec2D = require('./Vec2D'),
+        Line2D = require('./Line2D'),
+        Polygon2D = require('./Polygon2D');
+
+    /**
+     * @class
+     * @member toxi
+     * @param {Number} [x]
+     * @param {Number} [y]
+     * @param {Number} [width]
+     * @param {Number} [height]
+     */
+    var	Rect = function(a,b,width,height){
+        if(arguments.length == 2){ //then it should've been 2 Vec2D's
+            if( !( internals.has.XY( a ) ) ){
+                throw new Error("Rect received incorrect parameters");
+            } else {
+                this.x = a.x;
+                this.y = a.y;
+                this.width = b.x - this.x;
+                this.height = b.y - this.y;
+            }
+        } else if(arguments.length == 4){
+            this.x = a;
+            this.y = b;
+            this.width = width;
+            this.height = height;
+        } else if(arguments.length == 1){ //object literal with x,y,width,height
+            var o = arguments[0];
+            if( internals.has.XYWidthHeight( o ) ){
+                this.x = o.x;
+                this.y = o.y;
+                this.width = o.width;
+                this.height = o.height;
+            }
+        } else if(arguments.length > 0){
+            throw new Error("Rect received incorrect parameters");
+        }
+    };
+
+    Rect.fromCenterExtent = function(center,extent){
+        return new Rect(center.sub(extent),center.add(extent));
+    };
+
+
+    Rect.getBoundingRect = function( points ){
+        var first = points[0];
+        var bounds = new Rect(first.x, first.y, 0, 0);
+        for (var i = 1, num = points.length; i < num; i++) {
+            bounds.growToContainPoint(points[i]);
+        }
+        return bounds;
+    };
+
+    Rect.prototype = {
+        containsPoint: function(p){
+            var px = p.x;
+            var py = p.y;
+            if(px < this.x || px >= this.x + this.width){
+                return false;
+            }
+            if(py < this.y || py >= this.y + this.height){
+                return false;
+            }
+            return true;
+        },
+
+        copy: function(){
+            return new Rect(this.x,this.y,this.width,this.height);
+        },
+
+        getArea: function(){
+            return this.width * this.height;
+        },
+
+        getAspect: function(){
+            return this.width / this.height;
+        },
+
+        getBottom: function(){
+            return this.y + this.height;
+        },
+
+        getBottomRight: function(){
+            return new Vec2D(this.x + this.width, this.y + this.height);
+        },
+
+        getCentroid: function(){
+            return new Vec2D(this.x + this.width * 0.5, this.y + this.height * 0.5);
+        },
+
+        getDimensions: function(){
+            return new Vec2D(this.width,this.height);
+        },
+
+        getEdge: function(id){
+            var edge;
+            switch(id){
+                case 0:
+                    edge = new Line2D(
+                        new Vec2D(this.x,this.y),
+                        new Vec2D(this.x + this.width, this.y)
+                    );
+                    break;
+                case 1:
+                    edge = new Line2D(
+                        new Vec2D(this.x + this.width, this.y),
+                        new Vec2D(this.x + this.width, this.y + this.height)
+                    );
+                    break;
+                case 2:
+                    edge = new Line2D(
+                        new Vec2D(this.x, this.y + this.height),
+                        new Vec2D(this.x + this.width, this.y + this.height)
+                    );
+                    break;
+                case 3:
+                    edge = new Line2D(
+                        new Vec2D(this.x,this.y),
+                        new Vec2D(this.x,this.y+this.height)
+                    );
+                    break;
+                default:
+                    throw new Error("edge ID needs to be 0...3");
+            }
+            return edge;
+        },
+
+        getLeft: function(){
+            return this.x;
+        },
+
+        getRight: function(){
+            return this.x + this.width;
+        },
+
+        getTop: function(){
+            return this.y;
+        },
+
+        getTopLeft: function(){
+            return new Vec2D(this.x,this.y);
+        },
+
+        growToContainPoint: function( p ){
+            if (!this.containsPoint(p)) {
+                if (p.x < this.x) {
+                    this.width = this.getRight() - p.x;
+                    this.x = p.x;
+                } else if (p.x > this.getRight()) {
+                    this.width = p.x - this.x;
+                }
+                if (p.y < this.y) {
+                    this.height = this.getBottom() - p.y;
+                    this.y = p.y;
+                } else if (p.y > this.getBottom()) {
+                    this.height = p.y - this.y;
+                }
+            }
+            return this;
+        },
+
+        intersectsRay: function(ray,minDist,maxDist){
+            //returns Vec2D of point intersection
+            var invDir = ray.getDirection().reciprocal();
+            var signDirX = invDir.x < 0;
+            var signDirY = invDir.y < 0;
+            var min = this.getTopLeft();
+            var max = this.getBottomRight();
+            var bbox = signDirX ? max : min;
+            var tmin = (bbox.x - ray.x) * invDir.x;
+            bbox = signDirX ? min : max;
+            var tmax = (bbox.x - ray.x) * invDir.x;
+            bbox = signDirY ? max : min;
+            var tymin = (bbox.y - ray.y) * invDir.y;
+            bbox = signDirY ? min : max;
+            var tymax = (bbox.y - ray.y) * invDir.y;
+            if((tmin > tymax) || (tymin > tmax)){
+                return undefined;
+            }
+            if(tymin > tmin){
+                tmin = tymin;
+            }
+            if (tymax < tmax) {
+                tmax = tymax;
+            }
+            if ((tmin < maxDist) && (tmax > minDist)) {
+                return ray.getPointAtDistance(tmin);
+            }
+            return undefined;
+        },
+
+        intersectsRect: function(r){
+            return !(this.x > r.x + r.width || this.x + this.width < r.x || this.y > r.y + r.height || this.y + this.height < r.y);
+        },
+
+        scale: function(s){
+            var c = this.getCentroid();
+            this.width *= s;
+            this.height *= s;
+            this.x = c.x - this.width * 0.5;
+            this.y = c.y - this.height * 0.5;
+            return this;
+        },
+
+        set: function(x,y,width,height){
+            if(arguments.length == -1){
+                this.y = x.y;
+                this.width = x.width;
+                this.height = x.height;
+                this.x = x.x;
+            } else if(arguments.length === 4) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            } else {
+                throw new Error("Rect set() received wrong parameters");
+            }
+        },
+
+        setDimensions: function(dim){
+            if( arguments.length == 2 ){
+                dim = { x: arguments[0], y: arguments[1] };
+            }
+            this.width = dim.x;
+            this.height = dim.y;
+            return this;
+        },
+
+        setPosition: function(pos){
+            this.x = pos.x;
+            this.y = pos.y;
+            return this;
+        },
+
+        toPolygon2D: function(){
+            var Polygon2D = require('./Polygon2D');
+            var poly = new Polygon2D();
+            poly.add(new Vec2D(this.x,this.y));
+            poly.add(new Vec2D(this.x+this.width,this.y));
+            poly.add(new Vec2D(this.x+this.width,this.y+this.height));
+            poly.add(new Vec2D(this.x,this.y+this.height));
+            return poly;
+        },
+
+        toString: function(){
+            return "rect: {x: "+this.x +", y: "+this.y+ ", width: "+this.width+ ", height: "+this.height+"}";
+        },
+
+        union: function(r){
+            var tmp = mathUtils.max(this.x + this.width, r.x + r.width);
+            this.x = mathUtils.min(this.x,r.x);
+            this.width = tmp - this.x;
+            tmp = mathUtils.max(this.y + this.height, r.y + r.height);
+            this.y = mathUtils.min(this.y,r.y);
+            this.height = tmp - this.y;
+            return this;
+        }
+    };
+
+
+    module.exports = Rect;
+});
+
+define('toxi/geom/Polygon2D',["require", "exports", "module", "./Vec2D","./Line2D","./Circle","./Rect","../internals"], function(require, exports, module) {
 
 var	internals = require('../internals'),
 	MathUtils = require('../math/mathUtils'),
 	Vec2D = require('./Vec2D'),
 	Circle = require('./Circle'),
+    Rect = require('./Rect'),
 	Line2D = require('./Line2D');
 
 
@@ -11165,12 +11444,14 @@ Polygon2D.prototype = {
 	},
 
 	getBoundingCircle: function() {
+        var Circle = require('./Circle');
 		return Circle.newBoundingCircle( this.vertices );
 	},
-	//TODO
-	getBounds: function(){
-		throw Error("Not yet implemented in Rect");
-	},
+
+    getBounds: function(){
+        var Rect = require('./Rect');
+        return Rect.getBoundingRect(this.vertices);
+    },
 
 	getCentroid: function(){
 		var res = new Vec2D(),
@@ -11545,14 +11826,14 @@ Ellipse = function(a,b,c,d) {
 	} else {
 		if(d === undefined) {
 			if(c === undefined) {
-				Vec2D.apply(this,[0,0]);
+				Vec2D.call(this, 0, 0 );
 				this.setRadii(a,b);
 			} else {
-				Vec2D.apply(this,[a,b]);
+				Vec2D.call(this, a, b );
 				this.setRadii(c,c);
 			}
 		} else {
-			Vec2D.apply(this,[a,b]);
+			Vec2D.call(this, a,b);
 			this.setRadii(c,d);
 		}
 	}
@@ -11567,11 +11848,9 @@ Ellipse.prototype.containsPoint = function(p) {
 
 /**
  * Computes the area covered by the ellipse.
- *
- * @return area
  */
 Ellipse.prototype.getArea = function() {
-    return mathUtils.PI * radius.x * radius.y;
+    return mathUtils.PI * this.radius.x * this.radius.y;
 };
 
 /**
@@ -11641,6 +11920,7 @@ Ellipse.prototype.setRadii = function(rx,ry) {
  * @return ellipse as polygon
  */
 Ellipse.prototype.toPolygon2D = function(res) {
+    var Polygon2D = require('./Polygon2D');
     var poly = new Polygon2D();
     var step = mathUtils.TWO_PI / res;
     for (var i = 0; i < res; i++) {
@@ -12333,249 +12613,6 @@ Ray3DIntersector.prototype = {
 };
 
 module.exports = Ray3DIntersector;
-});
-
-define('toxi/geom/Rect',["require", "exports", "module", "../math/mathUtils","./Vec2D","./Line2D","./Polygon2D","../internals"], function(require, exports, module) {
-
-var	internals = require('../internals'),
-	mathUtils = require('../math/mathUtils'),
-	Vec2D = require('./Vec2D'),
-	Line2D = require('./Line2D'),
-	Polygon2D = require('./Polygon2D');
-
-/**
- * @class
- * @member toxi
- * @param {Number} [x]
- * @param {Number} [y]
- * @param {Number} [width]
- * @param {Number} [height]
- */
-var	Rect = function(a,b,width,height){
-	if(arguments.length == 2){ //then it should've been 2 Vec2D's
-		if( !( internals.has.XY( a ) ) ){
-			throw new Error("Rect received incorrect parameters");
-		} else {
-			this.x = a.x;
-			this.y = a.y;
-			this.width = b.x - this.x;
-			this.height = b.y - this.y;
-		}
-	} else if(arguments.length == 4){
-		this.x = a;
-		this.y = b;
-		this.width = width;
-		this.height = height;
-	} else if(arguments.length == 1){ //object literal with x,y,width,height
-		var o = arguments[0];
-		if( internals.has.XYWidthHeight( o ) ){
-			this.x = o.x;
-			this.y = o.y;
-			this.width = o.width;
-			this.height = o.height;
-		}
-	} else if(arguments.length > 0){
-		throw new Error("Rect received incorrect parameters");
-	}
-};
-
-Rect.fromCenterExtent = function(center,extent){
-	return new Rect(center.sub(extent),center.add(extent));
-};
-
-Rect.prototype = {
-	containsPoint: function(p){
-		var px = p.x;
-		var py = p.y;
-		if(px < this.x || px >= this.x + this.width){
-			return false;
-		}
-		if(py < this.y || py >= this.y + this.height){
-			return false;
-		}
-		return true;
-	},
-
-	copy: function(){
-		return new Rect(this.x,this.y,this.width,this.height);
-	},
-
-	getArea: function(){
-		return this.width * this.height;
-	},
-
-	getAspect: function(){
-		return this.width / this.height;
-	},
-
-	getBottom: function(){
-		return this.y + this.height;
-	},
-
-	getBottomRight: function(){
-		return new Vec2D(this.x + this.width, this.y + this.height);
-	},
-
-	getCentroid: function(){
-		return new Vec2D(this.x + this.width * 0.5, this.y + this.height * 0.5);
-	},
-
-	getDimensions: function(){
-		return new Vec2D(this.width,this.height);
-	},
-
-	getEdge: function(id){
-		var edge;
-		switch(id){
-			case 0:
-				edge = new Line2D(
-					new Vec2D(this.x,this.y),
-					new Vec2D(this.x + this.width, this.y)
-				);
-				break;
-			case 1:
-				edge = new Line2D(
-					new Vec2D(this.x + this.width, this.y),
-					new Vec2D(this.x + this.width, this.y + this.height)
-				);
-				break;
-			case 2:
-				edge = new Line2D(
-					new Vec2D(this.x, this.y + this.height),
-					new Vec2D(this.x + this.width, this.y + this.height)
-				);
-				break;
-			case 3:
-				edge = new Line2D(
-					new Vec2D(this.x,this.y),
-					new Vec2D(this.x,this.y+this.height)
-				);
-				break;
-			default:
-				throw new Error("edge ID needs to be 0...3");
-		}
-		return edge;
-	},
-
-	getLeft: function(){
-		return this.x;
-	},
-
-	getRight: function(){
-		return this.x + this.width;
-	},
-
-	getTop: function(){
-		return this.y;
-	},
-
-	getTopLeft: function(){
-		return new Vec2D(this.x,this.y);
-	},
-
-	intersectsRay: function(ray,minDist,maxDist){
-		//returns Vec2D of point intersection
-		var invDir = ray.getDirection().reciprocal();
-		var signDirX = invDir.x < 0;
-		var signDirY = invDir.y < 0;
-		var min = this.getTopLeft();
-		var max = this.getBottomRight();
-		var bbox = signDirX ? max : min;
-		var tmin = (bbox.x - ray.x) * invDir.x;
-		bbox = signDirX ? min : max;
-		var tmax = (bbox.x - ray.x) * invDir.x;
-		bbox = signDirY ? max : min;
-		var tymin = (bbox.y - ray.y) * invDir.y;
-		bbox = signDirY ? min : max;
-		var tymax = (bbox.y - ray.y) * invDir.y;
-		if((tmin > tymax) || (tymin > tmax)){
-			return undefined;
-		}
-		if(tymin > tmin){
-			tmin = tymin;
-		}
-		if (tymax < tmax) {
-            tmax = tymax;
-        }
-        if ((tmin < maxDist) && (tmax > minDist)) {
-            return ray.getPointAtDistance(tmin);
-        }
-        return undefined;
-	},
-
-	intersectsRect: function(r){
-		return !(this.x > r.x + r.width || this.x + this.width < r.x || this.y > r.y + r.height || this.y + this.height < r.y);
-	},
-
-	scale: function(s){
-		var c = this.getCentroid();
-		this.width *= s;
-		this.height *= s;
-		this.x = c.x - this.width * 0.5;
-		this.y = c.y - this.height * 0.5;
-		return this;
-	},
-
-	set: function(x,y,width,height){
-		if(arguments.length == -1){
-			this.y = x.y;
-			this.width = x.width;
-			this.height = x.height;
-			this.x = x.x;
-		} else if(arguments.length === 4) {
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
-		} else {
-			throw new Error("Rect set() received wrong parameters");
-		}
-	},
-
-	setDimensions: function(dim){
-		if( arguments.length == 2 ){
-			dim = { x: arguments[0], y: arguments[1] };
-		}
-		this.width = dim.x;
-		this.height = dim.y;
-		return this;
-	},
-
-	setPosition: function(pos){
-		this.x = pos.x;
-		this.y = pos.y;
-		return this;
-	},
-
-	toPolygon2D: function(){
-		var poly = new Polygon2D();
-		poly.add(new Vec2D(this.x,this.y));
-		poly.add(new Vec2D(this.x+this.width,this.y));
-		poly.add(new Vec2D(this.x+this.width,this.y+this.height));
-		poly.add(new Vec2D(this.x,this.y+this.height));
-		return poly;
-	},
-
-	toString: function(){
-		return "rect: {x: "+this.x +", y: "+this.y+ ", width: "+this.width+ ", height: "+this.height+"}";
-	},
-
-	union: function(r){
-		var tmp = mathUtils.max(this.x + this.width, r.x + r.width);
-		this.x = mathUtils.min(this.x,r.x);
-		this.width = tmp - this.x;
-		tmp = mathUtils.max(this.y + this.height, r.y + r.height);
-		this.y = mathUtils.min(this.y,r.y);
-		this.height = tmp - this.y;
-		return this;
-	}
-};
-
-module.exports = Rect;
-
-
-
-
 });
 
 define('toxi/geom/Spline2D',[
@@ -13910,9 +13947,10 @@ ZoomLensInterpolation.prototype = {
 module.exports = ZoomLensInterpolation;
 });
 
-define('toxi/math/noise/PerlinNoise',['require','../SinCosLUT'],function(require ) {
+define('toxi/math/noise/PerlinNoise',['require','../SinCosLUT','../../internals/has'],function(require ) {
 
-var SinCosLUT = require('../SinCosLUT');
+var SinCosLUT = require('../SinCosLUT'),
+    hasTypedArrays = require('../../internals/has').typedArrays();
 
 /*
 Using David Bau's seedrandom.js for PerlinNoise#noiseSeed functionality
@@ -13926,18 +13964,18 @@ Using David Bau's seedrandom.js for PerlinNoise#noiseSeed functionality
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
- 
+
 	1. Redistributions of source code must retain the above copyright
 			notice, this list of conditions and the following disclaimer.
 
 	2. Redistributions in binary form must reproduce the above copyright
 			notice, this list of conditions and the following disclaimer in the
 			documentation and/or other materials provided with the distribution.
- 
+
 	3. Neither the name of this module nor the names of its contributors may
 			be used to endorse or promote products derived from this software
 			without specific prior written permission.
- 
+
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -14150,6 +14188,7 @@ mixkey(math.random(), pool);
 	var	PerlinNoise = function(){
 		this._perlin_octaves = 4; // default to medium smooth
 		this._perlin_amp_falloff = 0.5; // 50% reduction/octave
+        this._sinCosLUT = SinCosLUT.getDefaultInstance();
 	};
 
 	PerlinNoise.prototype = {
@@ -14167,15 +14206,15 @@ mixkey(math.random(), pool);
 			z = z || 0;
 
 			if(!this._perlin){
-				this._perlin = [];
+                this._perlin = hasTypedArrays ? new Float32Array( PERLIN_SIZE ) : [];
 				var length = PERLIN_SIZE - 1;
 				for(i = 0;i < PERLIN_SIZE + 1; i++){
 					this._perlin[i] = internalMath.random();
 				}
 			}
 
-			this._perlin_cosTable = SinCosLUT.getDefaultInstance().getSinLUT();
-			this._perlin_TWOPI = this._perlin_PI = SinCosLUT.getDefaultInstance().getPeriod();
+			this._perlin_cosTable = this._sinCosLUT.getSinLUT();
+			this._perlin_TWOPI = this._perlin_PI = this._sinCosLUT.getPeriod();
 			this._perlin_PI >>= 1;
 
 			if (x < 0) {
@@ -14187,7 +14226,7 @@ mixkey(math.random(), pool);
 			if (z < 0) {
 				z = -z;
 			}
-			
+
 			var xi = x,
 				yi = y,
 				zi = z,
@@ -14221,7 +14260,7 @@ mixkey(math.random(), pool);
 				n2 += ryf * (n3 - n2);
 
 				n1 += _noise_fsc(this,zf) * (n2 - n1);
-				
+
 				r += n1 * ampl;
 				ampl *= this._perlin_amp_falloff;
 
@@ -15473,41 +15512,6 @@ module.exports.noise = require('./math/noise');
 module.exports.waves = require('./math/waves');
 });
 
-define('toxi/physics2d/ParticlePath2D',["require", "exports", "module", "../internals","../geom/Spline2D"], function(require, exports, module) {
-
-var internals = require('../internals'),
-	Spline2D = require('../geom/Spline2D');
-
-var	ParticlePath2D = function(points){
-	toxi.Spline2D.call(this,points);
-	this.particles = [];
-};
-
-internals.extend(ParticlePath2D,Spline2D);
-
-
-//protected
-var _createSingleParticle = function(pos,mass){
-	return new VerletParticle2D(pos,mass);
-};
-
-//public
-ParticlePath2D.prototype.createParticles = function(physics,subDiv,step,mass){
-	this.particles = [];
-	this.computeVertices(subDiv);
-	var i = 0;
-	var dv = this.getDecimatedVertices(step,true);
-	for(i = 0; i < dv; i++){
-		var p = _createSingleParticle(v,mass);
-		this.particles.push(p);
-		physics.addParticle(p);
-	}
-	return this.particles;
-};
-
-module.exports = ParticlePath2D;
-});
-
 define('toxi/physics2d/VerletParticle2D',["require", "exports", "module", "../internals","../geom/Vec2D"], function(require, exports, module) {
 
 var internals = require('../internals'),
@@ -15533,7 +15537,7 @@ var	VerletParticle2D = function(x,y,w){
 			x = x.x;
 		}
 	}
-	Vec2D.apply(this,[x,y]);
+	Vec2D.call(this, x,y);
 	this.isLocked = false;
 	this.prev = new Vec2D(this);
 	this.temp = new Vec2D();
@@ -15548,7 +15552,7 @@ VerletParticle2D.prototype.addBehavior = function(behavior,timeStep){
 		this.behaviors = [];
 	}
 	if(behavior === undefined){
-		throw { name: "TypeError", message: "behavior was undefined"};
+		throw new Error("behavior was undefined");
 	}
 	timeStep = (timeStep === undefined)? 1 : timeStep;
 	behavior.configure(timeStep);
@@ -15576,8 +15580,8 @@ VerletParticle2D.prototype.addVelocity = function(v){
 
 VerletParticle2D.prototype.applyBehaviors = function(){
 	if(this.behaviors !== undefined){
-		var i = 0;
-		for(i = 0;i<this.behaviors.length;i++){
+		var i = 0, len = this.behaviors.length;
+		for(i = 0;i<len;i++){
 			this.behaviors[i].applyBehavior(this);
 		}
 	}
@@ -15585,8 +15589,8 @@ VerletParticle2D.prototype.applyBehaviors = function(){
 
 VerletParticle2D.prototype.applyConstraints = function(){
 	if(this.constraints !== undefined){
-		var i =0;
-		for(i =0;i<this.constraints.length;i++){
+		var i = 0, len = this.constraints.length;
+		for(i =0;i<len;i++){
 			this.constraints[i].applyConstraint(this);
 		}
 	}
@@ -15666,20 +15670,56 @@ VerletParticle2D.prototype.unlock = function() {
 VerletParticle2D.prototype.update = function(){
 
 	if(!this.isLocked){
-		var that = this;
 		this.applyBehaviors();
-		//applyForce protected
-		(function(){
-			that.temp.set(that);
-			that.addSelf(that.sub(that.prev).addSelf(that.force.scale(that.weight)));
-			that.prev.set(that.temp);
-			that.force.clear();
-		})();
+		//applyForce() - inline
+        this.temp.set(this);
+        this.addSelf(this.sub(this.prev).addSelf(this.force.scale(this.weight)));
+        this.prev.set(this.temp);
+        this.force.clear();
+        //
 		this.applyConstraints();
 	}
 };
 
 module.exports = VerletParticle2D;
+});
+
+define('toxi/physics2d/ParticlePath2D',[
+    "require",
+    "exports",
+    "module",
+    "../internals",
+    "../geom/Spline2D",
+    "./VerletParticle2D"
+], function(require, exports, module) {
+
+    var internals = require('../internals'),
+        Spline2D = require('../geom/Spline2D'),
+        VerletParticle2D = require('./VerletParticle2D');
+
+    var	ParticlePath2D = function(points){
+        Spline2D.call(this,points);
+        this.particles = [];
+    };
+
+    internals.extend(ParticlePath2D,Spline2D);
+
+    //public
+    ParticlePath2D.prototype.createParticles = function(physics,subDiv,step,mass){
+        this.particles = [];
+        this.computeVertices(subDiv);
+        var i = 0;
+        var dv = this.getDecimatedVertices(step,true);
+        for(i = 0; i < dv.length; i++){
+            var v = dv[i];
+            var p = new VerletParticle2D(v,mass);
+            this.particles.push(p);
+            physics.addParticle(p);
+        }
+        return this.particles;
+    };
+
+    module.exports = ParticlePath2D;
 });
 
 define('toxi/physics2d/VerletSpring2D',["require", "exports", "module"], function(require, exports, module) {
@@ -15707,7 +15747,7 @@ VerletSpring2D.prototype = {
 	},
 	
 	lockB: function(s){
-		this.isALocked = s;
+		this.isBLocked = s;
 		return this;
 	},
 	
@@ -15969,386 +16009,402 @@ module.exports = VerletMinDistanceSpring2D;
 
 define('toxi/physics2d/behaviors/ConstantForceBehavior',["require", "exports", "module", "../../geom/Vec2D"], function(require, exports, module) {
 
-var Vec2D = require('../../geom/Vec2D');
+    var Vec2D = require('../../geom/Vec2D');
 
-var	ConstantForceBehavior = function(force){
-	this.force = force;
-	this.scaleForce = new Vec2D();
-	this.timeStep = 0;
-};
+    var	ConstantForceBehavior = function(force){
+        this.force = force;
+        this.scaledForce = new Vec2D();
+        this.timeStep = 0;
+    };
 
-ConstantForceBehavior.prototype = {
-	applyBehavior: function(p){ //apply() is reserved, so this is now applyBehavior
-		p.addForce(this.scaledForce);
-	},
-	
-	configure: function(timeStep){
-		this.timeStep = timeStep;
-		this.setForce(this.force);
-	},
-	
-	getForce: function(){
-		return this.force;
-	},
-	
-	setForce: function(forceVec){
-		this.force = forceVec;
-		this.scaledForce = this.force.scale(this.timeStep);
-	},
-	
-	toString: function(){
-		return "behavior force: "+ this.force+ " scaledForce: "+this.scaledForce+ " timeStep: "+this.timeStep;
-	}
-};
+    ConstantForceBehavior.prototype = {
+        applyBehavior: function(p){ //apply() is reserved, so this is now applyBehavior
+            p.addForce(this.scaledForce);
+        },
 
-module.exports = ConstantForceBehavior;
+        configure: function(timeStep){
+            this.timeStep = timeStep;
+            this.setForce(this.force);
+        },
+
+        getForce: function(){
+            return this.force;
+        },
+
+        setForce: function(forceVec){
+            this.force = forceVec;
+            this.scaledForce = this.force.scale(this.timeStep);
+        },
+
+        toString: function(){
+            return "behavior force: "+ this.force+ " scaledForce: "+this.scaledForce+ " timeStep: "+this.timeStep;
+        }
+    };
+
+    module.exports = ConstantForceBehavior;
 });
 
-define('toxi/physics2d/behaviors/GravityBehavior',['require','exports','module','../../internals','./ConstantForceBehavior'],function(require, exports, module) {
+define('toxi/physics2d/behaviors/GravityBehavior',[
+    "require",
+    "exports",
+    "module",
+    "../../internals",
+    "./ConstantForceBehavior"
+],function(require, exports, module) {
 
-var internals = require('../../internals'),
-	ConstantForceBehavior = require('./ConstantForceBehavior');
+    var internals = require('../../internals'),
+        ConstantForceBehavior = require('./ConstantForceBehavior');
 
-var	GravityBehavior = function(gravityVec){
-	ConstantForceBehavior.call(this,gravityVec);
-};
+    var	GravityBehavior = function(gravityVec){
+        ConstantForceBehavior.call(this,gravityVec);
+    };
 
-internals.extend(GravityBehavior,ConstantForceBehavior);
+    internals.extend(GravityBehavior,ConstantForceBehavior);
 
-GravityBehavior.prototype.configure = function(timeStep){
-	this.timeStep = timeStep;
-    this.scaledForce = this.force.scale(timeStep * timeStep);
-};
+    GravityBehavior.prototype.configure = function(timeStep){
+        this.timeStep = timeStep;
+        this.scaledForce = this.force.scale(timeStep * timeStep);
+    };
 
-module.exports = GravityBehavior;
+    module.exports = GravityBehavior;
 });
 
-define('toxi/physics2d/VerletPhysics2D',['require','exports','module','../internals','./behaviors/GravityBehavior','../geom/Rect','../geom/Vec2D'],function(require, exports, module) {
+define('toxi/physics2d/VerletPhysics2D',[
+    'require',
+    'exports',
+    'module',
+    '../internals',
+    './behaviors/GravityBehavior',
+    '../geom/Rect',
+    '../geom/Vec2D'
+], function(require, exports, module) {
 
-	var internals = require('../internals'),
-		GravityBehavior = require('./behaviors/GravityBehavior'),
-		Rect = require('../geom/Rect'),
-		Vec2D = require('../geom/Vec2D');
-	var id = 0;
+    var internals = require('../internals'),
+        GravityBehavior = require('./behaviors/GravityBehavior'),
+        Rect = require('../geom/Rect'),
+        Vec2D = require('../geom/Vec2D'),
+        id = 0;
 
-	var	VerletPhysics2D = function(gravity, numIterations, drag, timeStep) {
-		var opts = {
-			numIterations: 50,
-			drag: 0,
-			timeStep: 1
-		};
-		var a;
-		if( arguments.length == 1 && (arguments[0].gravity || arguments[0].numIterations || arguments[0].timeStep || arguments[0].drag) ){ //options object literal
-			a = arguments[0];
-			opts.gravity = a.gravity;
-			opts.numIterations = a.numIterations || opts.numIterations;
-			opts.drag = a.drag || opts.drag;
-			opts.timeStep = a.timeStep || opts.timeStep;
-		} else if( arguments.length == 1){
-			opts.gravity = gravity; //might be Vec2D, will get handled below
-		} else if( arguments.length == 4 ){
-			opts.gravity = gravity;
-			opts.numIterations = numIterations;
-			opts.drag = drag;
-			opts.timeStep = timeStep;
-		}
+    var VerletPhysics2D = function(gravity, numIterations, drag, timeStep) {
+        var opts = {
+            numIterations: 50,
+            drag: 0,
+            timeStep: 1
+        };
+        var a;
+        if( arguments.length == 1 && (arguments[0].gravity || arguments[0].numIterations || arguments[0].timeStep || arguments[0].drag) ){ //options object literal
+            a = arguments[0];
+            opts.gravity = a.gravity;
+            opts.numIterations = a.numIterations || opts.numIterations;
+            opts.drag = a.drag || opts.drag;
+            opts.timeStep = a.timeStep || opts.timeStep;
+        } else if( arguments.length == 1){
+            opts.gravity = gravity; //might be Vec2D, will get handled below
+        } else if( arguments.length == 4 ){
+            opts.gravity = gravity;
+            opts.numIterations = numIterations;
+            opts.drag = drag;
+            opts.timeStep = timeStep;
+        }
 
-		this.behaviors = [];
-		this.particles = [];
-		this.springs = [];
-		this.numIterations = opts.numIterations;
-		this.timeStep = opts.timeStep;
-		this.setDrag(opts.drag);
-		if( opts.gravity ){
-			if( internals.has.XY( opts.gravity ) ){
-				opts.gravity = new GravityBehavior( new Vec2D(opts.gravity) );
-			}
-			this.addBehavior( opts.gravity );
-		}
-		this.id = id++;
-	};
+        this.behaviors = [];
+        this.particles = [];
+        this.springs = [];
+        this.numIterations = opts.numIterations;
+        this.timeStep = opts.timeStep;
+        this.setDrag(opts.drag);
+        if( opts.gravity ){
+            if( internals.has.XY( opts.gravity ) ){
+                opts.gravity = new GravityBehavior( new Vec2D(opts.gravity) );
+            }
+            this.addBehavior( opts.gravity );
+        }
+        this.id = id++;
+    };
 
-	VerletPhysics2D.addConstraintToAll = function(c, list){
-		for(var i=0;i<list.length;i++){
-			list[i].addConstraint(c);
-		}
-	};
+    VerletPhysics2D.addConstraintToAll = function(c, list){
+        for(var i=0;i<list.length;i++){
+            list[i].addConstraint(c);
+        }
+    };
 
-	VerletPhysics2D.removeConstraintFromAll = function(c,list){
-		for(var i=0;i<list.length;i++){
-			list[i].removeConstraint(c);
-		}
-	};
+    VerletPhysics2D.removeConstraintFromAll = function(c,list){
+        for(var i=0;i<list.length;i++){
+            list[i].removeConstraint(c);
+        }
+    };
 
-	VerletPhysics2D.prototype = {
+    VerletPhysics2D.prototype = {
 
-		addBehavior: function(behavior){
-			behavior.configure(this.timeStep);
-			this.behaviors.push(behavior);
-		},
+        addBehavior: function(behavior){
+            behavior.configure(this.timeStep);
+            this.behaviors.push(behavior);
+        },
 
-		addParticle: function(p){
-			this.particles.push(p);
-			return this;
-		},
+        addParticle: function(p){
+            this.particles.push(p);
+            return this;
+        },
 
-		addSpring: function(s){
-			if(this.getSpring(s.a,s.b) === undefined){
-				this.springs.push(s);
-			}
-			return this;
-		},
+        addSpring: function(s){
+            if(this.getSpring(s.a,s.b) === undefined){
+                this.springs.push(s);
+            }
+            return this;
+        },
 
-		clear: function(){
-			this.particles = [];
-			this.springs = [];
-			return this;
-		},
+        clear: function(){
+            this.particles = [];
+            this.springs = [];
+            return this;
+        },
 
-		constrainToBounds: function(){ //protected
-			var p,
-				i = 0;
-			for(i=0;i<this.particles.length;i++){
-				p = this.particles[i];
-				if(p.bounds !== undefined){
-					p.constrain(p.bounds);
-				}
-			}
-			if(this.worldBounds !== undefined){
-				for(i=0;i<this.particles.length;i++){
-					p = this.particles[i];
-					p.constrain(this.worldBounds);
-				}
-			}
-		},
+        constrainToBounds: function(){ //protected
+            var p,
+                i = 0,
+                len = this.particles.length;
+            for(i=0; i<len; i++){
+                p = this.particles[i];
+                if(p.bounds !== undefined){
+                    p.constrain(p.bounds);
+                }
+            }
+            if(this.worldBounds !== undefined){
+                for(i=0; i<len; i++){
+                    p = this.particles[i];
+                    p.constrain(this.worldBounds);
+                }
+            }
+        },
 
-		getCurrentBounds: function(){
-			var min = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
-			var max = new Vec2D(Number.MIN_VALUE, Number.MIN_VALUE);
-			var i = 0,
-				p;
-			for(i = 0;i<this.particles.length;i++){
-				p = this.particles[i];
-				min.minSelf(p);
-				max.maxSelf(p);
-			}
-			return new Rect(min,max);
-		},
+        getCurrentBounds: function(){
+            var min = new Vec2D(Number.MAX_VALUE, Number.MAX_VALUE);
+            var max = new Vec2D(Number.MIN_VALUE, Number.MIN_VALUE);
+            var i = 0,
+                pLen = this.particles.length,
+                p;
+            for(; i<pLen; i++){
+                p = this.particles[i];
+                min.minSelf(p);
+                max.maxSelf(p);
+            }
+            return new Rect(min,max);
+        },
 
-		getDrag: function() {
-			return 1 - this.drag;
-		},
+        getDrag: function() {
+            return 1 - this.drag;
+        },
 
-		getNumIterations: function(){
-			return this.numIterations;
-		},
+        getNumIterations: function(){
+            return this.numIterations;
+        },
 
-		getSpring: function(a,b){
-			var i = 0;
-			for(i = 0;i<this.springs.length;i++){
-				var s = this.springs[i];
-				if((s.a === a && s.b === b) || (s.a === b && s.b === b)){
-					return s;
-				}
-			}
-			return undefined;
-		},
+        getSpring: function(a,b){
+            var i = 0,
+                sLen = this.springs.length;
+            for(; i<sLen; i++){
+                var s = this.springs[i];
+                if((s.a === a && s.b === b) || (s.a === b && s.b === b)){
+                    return s;
+                }
+            }
+            return undefined;
+        },
 
-		getTimeStep: function(){
-			return this.timeStep;
-		},
+        getTimeStep: function(){
+            return this.timeStep;
+        },
 
-		getWorldBounds: function(){
-			return this.worldBounds;
-		},
+        getWorldBounds: function(){
+            return this.worldBounds;
+        },
 
-		removeBehavior: function(c){
-			return internals.removeItemFrom(c,this.behaviors);
-		},
+        removeBehavior: function(c){
+            return internals.removeItemFrom(c,this.behaviors);
+        },
 
-		removeParticle: function(p){
-			return internals.removeItemFrom(p,this.particles);
-		},
+        removeParticle: function(p){
+            return internals.removeItemFrom(p,this.particles);
+        },
 
-		removeSpring: function(s) {
-			return internals.removeItemFrom(s,this.springs);
-		},
+        removeSpring: function(s) {
+            return internals.removeItemFrom(s,this.springs);
+        },
 
-		removeSpringElements: function(s){
-			if(this.removeSpring(s) !== undefined){
-				return (this.removeParticle(s.a) && this.removeParticle(s.b));
-			}
-			return false;
-		},
+        removeSpringElements: function(s){
+            if(this.removeSpring(s) !== undefined){
+                return (this.removeParticle(s.a) && this.removeParticle(s.b));
+            }
+            return false;
+        },
 
-		setDrag: function(drag){
-			this.drag = 1 - drag;
-		},
+        setDrag: function(drag){
+            this.drag = 1 - drag;
+        },
 
-		setNumIterations: function(numIterations){
-			this.numIterations = numIterations;
-		},
+        setNumIterations: function(numIterations){
+            this.numIterations = numIterations;
+        },
 
-		setTimeStep: function(timeStep){
-			this.timeStep = timeStep;
-			var i =0, l = this.behaviors.length;
-			for(i = 0; i<l; i++){
-				var b = this.behaviors[i];
-				b.configure(timeStep);
-			}
-		},
+        setTimeStep: function(timeStep){
+            this.timeStep = timeStep;
+            var i =0, l = this.behaviors.length;
+            for(; i<l; i++){
+                this.behaviors[i].configure(timeStep);
+            }
+        },
 
-		setWorldBounds: function(world){
-			this.worldBounds = world;
-			return this;
-		},
+        setWorldBounds: function(world){
+            this.worldBounds = world;
+            return this;
+        },
 
-		update: function(){
-			this.updateParticles();
-			this.updateSprings();
-			this.constrainToBounds();
-			return this;
-		},
+        update: function(){
+            this.updateParticles();
+            this.updateSprings();
+            this.constrainToBounds();
+            return this;
+        },
 
-		updateParticles: function(){
-			var i = 0,
-				j = 0,
-				b,
-				p;
-			for(i = 0;i<this.behaviors.length;i++){
-				b = this.behaviors[i];
-				for(j = 0;j<this.particles.length;j++){
-					p = this.particles[j];
-					b.applyBehavior(p);
-				}
-			}
-			for(j = 0;j<this.particles.length;j++){
-				p = this.particles[j];
-				p.scaleVelocity(this.drag);
-				p.update();
-			}
-		},
+        updateParticles: function(){
+            var i = 0,
+                j = 0,
+                bLen = this.behaviors.length,
+                pLen = this.particles.length,
+                b,
+                p;
+            for(; i<bLen; i++){
+                b = this.behaviors[i];
+                for(j = 0; j<pLen; j++){
+                    b.applyBehavior(this.particles[j]);
+                }
+            }
+            for(j = 0; j<pLen; j++){
+                p = this.particles[j];
+                p.scaleVelocity(this.drag);
+                p.update();
+            }
+        },
 
-		updateSprings: function(){
-			var i = 0,
-				j = 0;
-			for(i = this.numIterations; i > 0; i--){
-				for(j = 0;j<this.springs.length;j++){
-					var s = this.springs[j];
-					s.update(i === 1);
-				}
-			}
-		}
-	};
+        updateSprings: function(){
+            var i = this.numIterations,
+                sLen = this.springs.length,
+                j = 0;
+            for(; i > 0; i--){
+                for(j = 0; j<sLen; j++){
+                    this.springs[j].update(i === 1);
+                }
+            }
+        }
+    };
 
-	module.exports = VerletPhysics2D;
+    module.exports = VerletPhysics2D;
 });
 
 define('toxi/physics2d/behaviors/AttractionBehavior',["require", "exports", "module"], function(require, exports, module) {
-var	AttractionBehavior = function(attractor,radius,strength,jitter){
-	if(arguments.length < 3){
-		throw { name: "IncorrectParameters", message: "Constructor received incorrect Parameters"};
-	}
-	this.jitter = jitter || 0;	
-	this.attractor = attractor;
-	this.strength = strength;
-	this.setRadius(radius);
-};
+    var AttractionBehavior = function(attractor,radius,strength,jitter){
+        if(arguments.length < 3){
+            throw new Error("Constructor received incorrect Parameters");
+        }
+        this.jitter = jitter || 0;
+        this.attractor = attractor;
+        this.strength = strength;
+        this.setRadius(radius);
+    };
 
-AttractionBehavior.prototype = {
-	applyBehavior: function(p){ //apply() is reserved, so this is now applyBehavior
-		var delta = this.attractor.sub(p);
-		var dist = delta.magSquared();
-		if(dist < this.radiusSquared){
-			var f = delta.normalizeTo((1.0 - dist / this.radiusSquared)).jitter(this.jitter).scaleSelf(this.attrStrength);
-			p.addForce(f);
-		}
-	},
-	
-	configure: function(timeStep){
-		this.timeStep = timeStep;
-		this.setStrength(this.strength);
-	},
-	
-	getAttractor: function(){
-		return this.attractor;
-	},
-	
-	getJitter: function(){
-		return this.jitter;
-	},
-	
-	getRadius: function(){
-		return this.radius;
-	},
-	
-	getStrength: function(){
-		return this.strength;
-	},
-	
-	setAttractor: function(attractor){
-		this.attractor = attractor;
-	},
-	
-	setJitter: function(jitter){
-		this.jitter = jitter;
-	},
-	
-	setRadius: function(r){
-		this.radius = r;
-		this.radiusSquared = r * r;
-	},
-	
-	setStrength: function(strength){
-		this.strength = strength;
-		this.attrStrength = strength * this.timeStep;
-	}
-};
+    AttractionBehavior.prototype = {
+        applyBehavior: function(p){ //apply() is reserved, so this is now applyBehavior
+            var delta = this.attractor.sub(p);
+            var dist = delta.magSquared();
+            if(dist < this.radiusSquared){
+                var f = delta.normalizeTo((1.0 - dist / this.radiusSquared)).jitter(this.jitter).scaleSelf(this.attrStrength);
+                p.addForce(f);
+            }
+        },
 
-module.exports = AttractionBehavior;
+        configure: function(timeStep){
+            this.timeStep = timeStep;
+            this.setStrength(this.strength);
+        },
+
+        getAttractor: function(){
+            return this.attractor;
+        },
+
+        getJitter: function(){
+            return this.jitter;
+        },
+
+        getRadius: function(){
+            return this.radius;
+        },
+
+        getStrength: function(){
+            return this.strength;
+        },
+
+        setAttractor: function(attractor){
+            this.attractor = attractor;
+        },
+
+        setJitter: function(jitter){
+            this.jitter = jitter;
+        },
+
+        setRadius: function(r){
+            this.radius = r;
+            this.radiusSquared = r * r;
+        },
+
+        setStrength: function(strength){
+            this.strength = strength;
+            this.attrStrength = strength * this.timeStep;
+        }
+    };
+
+    module.exports = AttractionBehavior;
 
 });
 
-define('toxi/physics2d/behaviors',['require','exports','module','./behaviors/AttractionBehavior','./behaviors/ConstantForceBehavior','./behaviors/GravityBehavior'],function( require, exports ){
-/** @module toxi/physics2d/behaviors */
-exports.AttractionBehavior = require('./behaviors/AttractionBehavior');
-exports.ConstantForceBehavior = require('./behaviors/ConstantForceBehavior');
-exports.GravityBehavior = require('./behaviors/GravityBehavior');
+define('toxi/physics2d/behaviors',[
+    'exports',
+    './behaviors/AttractionBehavior',
+    './behaviors/ConstantForceBehavior',
+    './behaviors/GravityBehavior'
+], function( exports, AttractionBehavior, ConstantForceBehavior, GravityBehavior ){
+    exports.AttractionBehavior = AttractionBehavior;
+    exports.ConstantForceBehavior = ConstantForceBehavior;
+    exports.GravityBehavior = GravityBehavior;
 });
 
-define('toxi/physics2d/constraints/AngularConstraint',["require", "exports", "module", "../../math/mathUtils","../../geom/Vec2D"], function(require, exports, module) {
+define('toxi/physics2d/constraints/AngularConstraint',["require", "exports", "module","../../geom/Vec2D"], function(require, exports, module) {
 
-var mathUtils = require('../../math/mathUtils'),
-	Vec2D = require('../../geom/Vec2D');
+    var Vec2D = require('../../geom/Vec2D');
 
-//either Vec2D + angle
-/**
- * @param {Vec2D | Number} vector | angle
- * @param {Number} [theta]
- */
-var	AngularConstraint = function(theta_p,theta){
-
-	if(arguments.length > 1){
-		var p = theta_p;
-		this.theta = theta;
-		this.rootPos = new Vec2D(p);
-	} else {
-		this.rootPos = new Vec2D();
-		this.theta = theta_p;
-	}
-	if(parseInt(this.theta,10) != this.theta){
-		this.theta = mathUtils.radians(this.theta);
-	}
-};
+    //either Vec2D + angle
+    /**
+     * @param {Vec2D | Number} vector | angle
+     * @param {Number} [theta]
+     */
+    var	AngularConstraint = function(theta_p,theta){
+        if(arguments.length > 1){
+            this.theta = theta;
+            this.rootPos = new Vec2D(theta_p);
+        } else {
+            this.rootPos = new Vec2D();
+            this.theta = theta_p;
+        }
+        //due to lack-of int/float types, no support of theta in degrees
+    };
 
 
-AngularConstraint.prototype.applyConstraint = function(p){
-	var delta = p.sub(this.rootPos);
-	var heading = toxi.MathUtils.floor(delta.heading() / this.theta) * this.theta;
-	p.set(this.rootPos.add(toxi.Vec2D.fromTheta(heading).scaleSelf(delta.magnitude())));
-};
+    AngularConstraint.prototype.applyConstraint = function(p){
+        var delta = p.sub(this.rootPos);
+        var heading = Math.floor(delta.heading() / this.theta) * this.theta;
+        p.set(this.rootPos.add(Vec2D.fromTheta(heading).scaleSelf(delta.magnitude())));
+    };
 
-module.exports = AngularConstraint;
+    module.exports = AngularConstraint;
 });
 
 define('toxi/physics2d/constraints/AxisConstraint',["require", "exports", "module"], function(require, exports, module) {
@@ -16417,46 +16473,67 @@ MinConstraint.prototype.applyConstraint = function(p){
 module.exports = MinConstraint;
 });
 
-define('toxi/physics2d/constraints/RectConstraint',["require", "exports", "module"], function(require, exports, module) {
-var	RectConstraint = function(a,b){
-	if(arguments.length == 1){
-		this.rect = a.copy();
-	} else if(arguments.length > 1){
-		this.rect = new toxi.Rect(a,b);
-	}
-	this.intersectRay = new toxi.Ray2D(this.rect.getCentroid(), new toxi.Vec2D());
-};
+define('toxi/physics2d/constraints/RectConstraint',["require", "exports", "module", "../../geom/Vec2D","../../internals/has","../../geom/Ray2D","../../geom/Rect"], function(require, exports, module) {
 
-RectConstraint.prototype = {
-	applyConstraint: function(p){
-		if(this.rect.containsPoint(p)){
-			p.set(this.rect.intersectsRay(this.intersectRay.setDirection(this.intersectRay.sub(p)),0,Number.MAX_VALUE));
-		}
-	},
-	
-	getBox: function(){
-		return this.rect.copy();
-	},
-	
-	setBox: function(rect){
-		this.rect = rect.copy();
-		this.intersectRay.set(this.rect.getCentroid());
-	}	
-};
+    var Vec2D = require('../../geom/Vec2D'),
+        has = require('../../internals/has'),
+        Ray2D = require('../../geom/Ray2D'),
+        Rect = require('../../geom/Rect');
 
-module.exports = RectConstraint;
+    var	RectConstraint = function(a,b){
+        if(arguments.length == 1){
+            if(typeof a.copy === 'function' ){
+                //if passed in as a toxi.geom.Rect
+                this.rect = a.copy();
+            } else if( has.XYWidthHeight(a) ){
+                //if passed in as { x: y: width: height: }
+                this.rect = new Rect(a);
+            }
+        } else if(arguments.length > 1){
+            this.rect = new Rect(a,b);
+        }
+        if( !this.rect ){
+            throw new Error('Received Incorrect arguments');
+        }
+        this.intersectRay = new Ray2D(this.rect.getCentroid(), new Vec2D());
+    };
+
+    RectConstraint.prototype = {
+        applyConstraint: function(p){
+            if(this.rect.containsPoint(p)){
+                p.set(this.rect.intersectsRay(this.intersectRay.setDirection(this.intersectRay.sub(p)),0,Number.MAX_VALUE));
+            }
+        },
+
+        getBox: function(){
+            return this.rect.copy();
+        },
+
+        setBox: function(rect){
+            this.rect = rect.copy();
+            this.intersectRay.set(this.rect.getCentroid());
+        }
+    };
+
+    module.exports = RectConstraint;
 });
 
-define('toxi/physics2d/constraints',["require", "exports", "module", "./constraints/AngularConstraint","./constraints/AxisConstraint","./constraints/CircularConstraint","./constraints/MaxConstraint","./constraints/MinConstraint","./constraints/RectConstraint"], function(require, exports, module) {
-/** @module toxi/physics2d/constraints */
-module.exports = {
-	AngularConstraint: require('./constraints/AngularConstraint'),
-	AxisConstraint: require('./constraints/AxisConstraint'),
-	CircularConstraint: require('./constraints/CircularConstraint'),
-	MaxConstraint: require('./constraints/MaxConstraint'),
-	MinConstraint: require('./constraints/MinConstraint'),
-	RectConstraint: require('./constraints/RectConstraint')
-};
+define('toxi/physics2d/constraints',[
+    "exports",
+    "./constraints/AngularConstraint",
+    "./constraints/AxisConstraint",
+    "./constraints/CircularConstraint",
+    "./constraints/MaxConstraint",
+    "./constraints/MinConstraint",
+    "./constraints/RectConstraint"
+], function( exports, AngularConstraint, AxisConstraint, CircularConstraint, MaxConstraint, MinConstraint, RectConstraint) {
+    /** @module toxi/physics2d/constraints */
+	exports.AngularConstraint = AngularConstraint;
+	exports.AxisConstraint = AxisConstraint;
+	exports.CircularConstraint = CircularConstraint;
+	exports.MaxConstraint = MaxConstraint;
+	exports.MinConstraint = MinConstraint;
+	exports.RectConstraint = RectConstraint;
 });
 
 define('toxi/physics2d',["require", "exports", "module", "./physics2d/ParticlePath2D","./physics2d/ParticleString2D","./physics2d/PullBackString2D","./physics2d/VerletConstrainedSpring2D","./physics2d/VerletMinDistanceSpring2D","./physics2d/VerletParticle2D","./physics2d/VerletPhysics2D","./physics2d/VerletSpring2D","./physics2d/behaviors","./physics2d/constraints"], function(require, exports, module) {
@@ -16969,168 +17046,145 @@ module.exports = {
 };
 });
 
-define('toxi/THREE/ToxiclibsSupport',["require", "exports", "module", "../internals/is"], function(require, exports, module) {
 /*global THREE*/
-/**
- * @author Kyle Phillips  / haptic-data.com
- * Intended to be a bridge between Toxiclibs.js and Three.js
- *
- * Three.js does type-checking to ensure that vectors, vertices and faces are of THREE's types
- * this helps to do that conversion process.
- */
-
-var is = require('../internals/is');
-
-var	ToxiclibsSupport = function(scene){
-	if(THREE === undefined){
-		throw new Error("THREE.js has not been loaded");
-	}
-	this.scene = scene;
-	this.objectDictionary = {};
-};
-
-
-var f3 = function(geometry,i1,i2,i3, normal, index){
-	//unlike toxiclibs, a face in three.js are indices related to the vertices array
-	geometry.faces[index] = new THREE.Face3( i1,i2,i3, new THREE.Vector3( normal.x, normal.y, normal.z ) );
-};
-var v3 = function(geometry,a, index){
-	var threeV = new THREE.Vector3(a.x,a.y,a.z);
-	geometry.vertices[index] = threeV;
-};
-/*
-var update = {
-	f3: function(geometry,i1,i2,i3, index){
-		//unlike toxiclibs, a face in three.js are indices related to the vertices array
-		geometry.faces[index].a = i1;
-		geometry.faces[index].b = i2;
-		geometry.faces[index].c = i3;
-	},
-	v3: function(geometry,a, index){
-		geometry.vertices[index].set(a.x,a.y,a.z);
-	}
-};
-*/
-
-
-ToxiclibsSupport.createLineGeometry = function(line3d){
-	var geometry = new THREE.Geometry();
-	v3(geometry,line3d.a, 0);
-	v3(geometry,line3d.b, 1);
-	geometry.computeCentroids();
-	geometry.computeVertexNormals();
-	return geometry;
-};
-/**
- * create a THREE.Geometry with matching vertices to your triangleMesh
- * @param {toxi.geom.mesh.TriangleMesh} triangleMesh the toxiclibs.js triangle mesh to convert
- * @param {THREE.Geometry} [geometry] optional geometry to pass in if you would prefer to update
- * a geometry instead of create a new one
- * @returns {THREE.Geometry}
- */
-ToxiclibsSupport.createMeshGeometry = function(triangleMesh, geometry){
-	geometry = geometry || new THREE.Geometry();
-
-	var addFace = function(f, faceIndex){
-		var vectors = [f.a,f.b,f.c],
-			startIndex = geometry.vertices.length;
-		//make sure this wasnt a vertices from a previous face
-		var	i = 0,
-			len = 3;
-		for(i=0;i<len;i++){
-			var toxiV = vectors[i];
-			v3(geometry,toxiV, startIndex+i);
-		}
-		var normal = f.normal.copy();
-		normal.y *= -1;
-		f3(geometry,startIndex,startIndex+1,startIndex+2, normal, faceIndex);
-	};
-
-
-	for(var j=0,flen=triangleMesh.faces.length;j<flen;j++){
-		addFace(triangleMesh.faces[j], j);
-	}
-
-	geometry.computeCentroids();
-    //using toxiclibsjs normals
-	//geometry.computeFaceNormals();
-	geometry.computeVertexNormals();
-
-	return geometry;
-};
-
-ToxiclibsSupport.createMesh = function(triangleMesh,material){
-	if(material === undefined){
-		material = new THREE.MeshBasicMaterial();
-	}
-	var geometry = ToxiclibsSupport.createMeshGeometry(triangleMesh);
-	return new THREE.Mesh(geometry,material);
-};
-
-ToxiclibsSupport.createParticle = function(position, materials){
-	var particle = new THREE.Particle(materials);
-	particle.position.x = position.x;
-	particle.position.y = position.y;
-	particle.position.z = position.z;
-	return particle;
-};
-
-ToxiclibsSupport.prototype = {
-	addLine: function(line3d, material){
-		if(material === undefined){
-			material = new THREE.LineBasicMaterial();
-		}
-		var geom = ToxiclibsSupport.createLineGeometry(line3d);
-		var line = new THREE.Line(geom,material);
-		this.scene.add(line);
-		return line;
-	},
+define('toxi/THREE/ToxiclibsSupport',[
+    "../internals/is"
+], function( is ) {
     /**
-     * add a toxiclibs.js mesh to the three.js scene
-     * @param {Object|toxi.geom.mesh.TriangleMesh} obj_or_mesh either an options object or
-     * the toxiclibsjs mesh
-     * --
-     * @param {toxi.geom.mesh.Trianglemesh} [obj_or_mesh.geometry] the mesh in the options object
-     * @param {THREE.Material} [obj_or_mesh.material] the three.js material for the mesh
-     * @param {boolean} [obj_or_mesh.holdInDictionary] should ToxiclibsSupport hold a reference?
-     * --
-     * @param {THREE.Material} [threeMaterials] the three.js material for the mesh
+     * @author Kyle Phillips  / haptic-data.com
+     * a bridge between Toxiclibs.js and Three.js
+     *
+     * Three.js does type-checking to ensure that vectors, vertices and faces are of THREE's types
+     * this helps to do that conversion process.
      */
-	addMesh: function(obj_or_mesh,threeMaterials){
-		var toxiTriangleMesh;
-		if(arguments.length == 1){ //it needs to be an param object
-			toxiTriangleMesh = obj_or_mesh.geometry;
-			threeMaterials = obj_or_mesh.materials;
-			holdInDictionary = obj_or_mesh.holdInDictionary;
-		} else {
-			toxiTriangleMesh = obj_or_mesh;
-		}
-		var threeMesh = this.createMesh(toxiTriangleMesh,threeMaterials);
-		this.scene.add(threeMesh);
-		return threeMesh;
-	},
-	addParticles: function(positions, material){
-		if(material === undefined){
-			material = new THREE.ParticleBasicMaterial();
-		}
-		positions =  is.Array( positions ) ? positions : [ positions ];
-		var particle = new THREE.Geometry();
-		for(var i=0,len = positions.length;i<len;i++){
-			v3(particle,positions[i]);
-		}
-		var particleSystem = new THREE.ParticleSystem(particle,material);
-		this.scene.add(particleSystem);
-		return particle;
-	},
-	createMeshGeometry: function(triangleMesh){
-		return ToxiclibsSupport.createMeshGeometry(triangleMesh);
-	},
-	createMesh: function(triangleMesh,material){
-		return ToxiclibsSupport.createMesh(triangleMesh,material);
-	}
-};
+    var	ToxiclibsSupport = function(scene){
+        if(THREE === undefined){
+            throw new Error("THREE.js has not been loaded");
+        }
+        this.scene = scene;
+        this.objectDictionary = {};
+    };
 
-module.exports = ToxiclibsSupport;
+    ToxiclibsSupport.createLineGeometry = function(line3d, geometry){
+        return ToxiclibsSupport.createMeshGeometry({ vertices: [line3d.a, line3d.b] }, geometry);
+    };
+    /**
+     * create a THREE.Geometry with matching vertices to your triangleMesh
+     * @param {toxi.geom.mesh.TriangleMesh} triangleMesh the toxiclibs.js triangle mesh to convert
+     * @param {THREE.Geometry} [geometry] optional geometry to pass in if you would prefer to update
+     * a geometry instead of create a new one
+     * @returns {THREE.Geometry}
+     */
+
+    ToxiclibsSupport.createMeshGeometry = function createMeshGeometry(obj, geometry){
+        geometry = geometry || new THREE.Geometry();
+        //create a map where the unique id of the Vertex
+        //references the index in the array
+        var idIndexMap = {};
+        var v, i, f, len, vertices;
+        //add all vertices
+        vertices = is.Array(obj) ? obj : obj.vertices;
+        len = vertices.length;
+        if( !vertices ){
+            throw new Error('no vertices found');
+        }
+        for( i= 0; i<len; i++ ){
+            v = vertices[i];
+            geometry.vertices[i] = new THREE.Vector3(v.x, v.y, v.z);
+            idIndexMap[v.id] = i;
+        }
+
+        if( obj.faces ){
+            len = obj.faces.length;
+            for( i=0; i<len; i++ ){
+                f = obj.faces[i];
+                //normal.y *= -1;
+                //unlike toxiclibs, a face in three.js are indices related to the vertices array
+                geometry.faces[i] = new THREE.Face3(
+                    idIndexMap[f.a.id], idIndexMap[f.b.id], idIndexMap[f.c.id],
+                    new THREE.Vector3(f.normal.x, f.normal.y, f.normal.z )
+                );
+            }
+        }
+        geometry.computeCentroids();
+        geometry.computeVertexNormals();
+        return geometry;
+    };
+
+
+    ToxiclibsSupport.createMesh = function(triangleMesh,material){
+        if(material === undefined){
+            material = new THREE.MeshBasicMaterial();
+        }
+        var geometry = ToxiclibsSupport.createMeshGeometry(triangleMesh);
+        return new THREE.Mesh(geometry,material);
+    };
+
+    ToxiclibsSupport.createParticle = function(position, materials){
+        var particle = new THREE.Particle(materials);
+        particle.position.x = position.x;
+        particle.position.y = position.y;
+        particle.position.z = position.z;
+        return particle;
+    };
+
+    ToxiclibsSupport.prototype = {
+        addLine: function(line3d, material){
+            if(material === undefined){
+                material = new THREE.LineBasicMaterial();
+            }
+            var geom = ToxiclibsSupport.createLineGeometry(line3d);
+            var line = new THREE.Line(geom,material);
+            this.scene.add(line);
+            return line;
+        },
+        /**
+         * add a toxiclibs.js mesh to the three.js scene
+         * @param {Object|toxi.geom.mesh.TriangleMesh} obj_or_mesh either an options object or
+         * the toxiclibsjs mesh
+         * --
+         * @param {toxi.geom.mesh.Trianglemesh} [obj_or_mesh.geometry] the mesh in the options object
+         * @param {THREE.Material} [obj_or_mesh.material] the three.js material for the mesh
+         * @param {boolean} [obj_or_mesh.holdInDictionary] should ToxiclibsSupport hold a reference?
+         * --
+         * @param {THREE.Material} [threeMaterials] the three.js material for the mesh
+         */
+        addMesh: function(obj_or_mesh,threeMaterials){
+            var toxiTriangleMesh;
+            if(arguments.length == 1){ //it needs to be an param object
+                toxiTriangleMesh = obj_or_mesh.geometry;
+                threeMaterials = obj_or_mesh.materials;
+            } else {
+                toxiTriangleMesh = obj_or_mesh;
+            }
+            var threeMesh = this.createMesh(toxiTriangleMesh,threeMaterials);
+            this.scene.add(threeMesh);
+            return threeMesh;
+        },
+        addParticles: function(positions, material){
+            if(material === undefined){
+                material = new THREE.ParticleBasicMaterial();
+            }
+            positions =  is.Array( positions ) ? positions : [ positions ];
+            var particle = new THREE.Geometry(),
+                pos;
+            for(var i=0,len = positions.length;i<len;i++){
+                pos = positions[i];
+                particle.vertices[i] = new THREE.Vector3( pos.x, pos.y, pos.z );
+            }
+            var particleSystem = new THREE.ParticleSystem(particle,material);
+            this.scene.add(particleSystem);
+            return particle;
+        },
+        createMeshGeometry: function(triangleMesh){
+            return ToxiclibsSupport.createMeshGeometry(triangleMesh);
+        },
+        createMesh: function(triangleMesh,material){
+            return ToxiclibsSupport.createMesh(triangleMesh,material);
+        }
+    };
+
+    return ToxiclibsSupport;
 });
 
 define('toxi/THREE',["require", "exports", "module", "./THREE/ToxiclibsSupport"], function(require, exports, module) {
