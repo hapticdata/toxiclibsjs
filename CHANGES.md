@@ -7,6 +7,7 @@
 *   added `toxi.geom.Rect.getBoundingRect( points ):Rect`
 *   added `toxi.geom.Rect#growToContainPoint( point ):Rect`
 *   fixed possible _"module toxi/geom/Circle has not been loaded yet…"_ error from Require.js when loading only `toxi.geom.Polygon2D` with Require.js.
+*   added `bower.json`
 
 ##v0.2.3
 *   bugfix resolved [issue #26](https://github.com/hapticdata/toxiclibsjs/issues/26) where `toxi.geom.Spline3D` and `toxi.geom.Spline2D` had incorrect number of computed vertices.

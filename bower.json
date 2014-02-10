@@ -1,0 +1,29 @@
+{
+    "name": "toxiclibs.js",
+    "version": "0.2.4",
+    "homepage": "http://haptic-data.com/toxiclibsjs",
+    "description": "library for computational design tasks with JavaScript",
+    "main": "build/toxiclibs.js",
+    "keywords": [
+        "design",
+        "geometry",
+        "mesh",
+        "math",
+        "graphics",
+        "color",
+        "physics",
+        "canvas",
+        "webgl"
+    ],
+    "license": "GPLv2",
+    "ignore": [
+        "**/.*",
+        "bin",
+        "*.md",
+        "bower.json",
+        "docs",
+        "examples",
+        "test",
+        "LICENSE"
+    ]
+}
