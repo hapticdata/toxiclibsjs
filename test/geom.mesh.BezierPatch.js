@@ -66,7 +66,6 @@ describe('toxi.geom.mesh.BezierPatch', function(){
         it('should generate a mesh from points', function(){
             var bp = new BezierPatch( randPatch() );
             var mesh = bp.toMesh( 8 );
-            console.log( mesh );
             assert.ok( mesh instanceof TriangleMesh );
         });
     });
