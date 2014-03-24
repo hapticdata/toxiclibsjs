@@ -1,5 +1,9 @@
 #Toxiclibs.js CHANGES
 
+##v0.2.5
+* resolve [issue #28](https://github.com/hapticdata/toxiclibsjs/issues/28), toxi.geom.mesh.BezierPatch fails w/o Vec3D[][]
+* bugfix Vec2D#to3D** functions shouldn't have nested requires
+
 ##v0.2.4
 *   improved `toxi.THREE.ToxiclibsSupport.createMeshGeometry( triMesh, [geom] ):THREE.Geometry` to avoid duplicated vertices
 *   bugfix resolve [issue #27](https://github.com/hapticdata/toxiclibsjs/issues/27) where `toxi.physics2d.constraints.RectConstraint`, `toxi.physics2d.constraints.AngularConstraint` and `toxi.physics2d.ParticlePath2D` had missing require's

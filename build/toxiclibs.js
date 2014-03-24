@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.2.4
+* toxiclibsjs - v0.2.5
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -1114,26 +1114,29 @@ define('toxi/geom/vectors',[
 	"module",
 	"../math/mathUtils",
 	"../internals/has",
-    "../internals/is"
+	"../internals/is"
 ], function(require, exports, module) {
 
-	var	mathUtils = require('../math/mathUtils');
-    var has = require('../internals/has'),
-        is = require('../internals/is');
+	var mathUtils = require('../math/mathUtils');
+	var has = require('../internals/has'),
+		is = require('../internals/is');
 
 	var hasXY = has.XY;
 	var isRect = is.Rect;
 
+	//modules defined within
+	var Vec2D, Vec3D;
+
 	/**
 	@class a two-dimensional vector class
 	*/
-	var	Vec2D = function(a,b){
+	Vec2D = function(a,b){
 		if( hasXY(a) ){
 			b = a.y;
 			a = a.x;
 		} else {
-			if(a === undefined)a = 0;
-			if(b === undefined)b = 0;
+			a = a || 0;
+			b = b || 0;
 		}
 		this.x = a;
 		this.y = b;
@@ -1151,24 +1154,24 @@ define('toxi/geom/vectors',[
 	};
 
 	//private,
-    var _getXY = (function(){
-        //create a temp object to avoid creating garbage-collectable objects
-        var temp = { x: 0, y: 0 };
-        return function getXY(a,b) {
-            if( a && typeof a.x === 'number' && typeof a.y === 'number' ){
-                return a;
-            } else {
-                if(a !== undefined && b === undefined){
-                    b = a;
-                }
-                else if(a === undefined){ a = 0; }
-                else if(b === undefined){ b = 0; }
-            }
-            temp.x = a;
-            temp.y = b;
-            return temp;
-        };
-    })();
+	var _getXY = (function(){
+		//create a temp object to avoid creating garbage-collectable objects
+		var temp = { x: 0, y: 0 };
+		return function getXY(a,b) {
+			if( a && typeof a.x === 'number' && typeof a.y === 'number' ){
+				return a;
+			} else {
+				if(a !== undefined && b === undefined){
+					b = a;
+				}
+				else if(a === undefined){ a = 0; }
+				else if(b === undefined){ b = 0; }
+			}
+			temp.x = a;
+			temp.y = b;
+			return temp;
+		};
+	})();
 	//public
 	Vec2D.prototype = {
 
@@ -1189,9 +1192,9 @@ define('toxi/geom/vectors',[
 		 * Adds vector {a,b,c} and overrides coordinates with result.
 		 *
 		 * @param a
-		 *            X coordinate
+		 *			  X coordinate
 		 * @param b
-		 *            Y coordinate
+		 *			  Y coordinate
 		 * @return itself
 		 */
 		addSelf: function(a,b) {
@@ -1402,9 +1405,9 @@ define('toxi/geom/vectors',[
 		 * interpolation
 		 *
 		 * @param v
-		 *            target vector
+		 *			  target vector
 		 * @param f
-		 *            interpolation factor (should be in the range 0..1)
+		 *			  interpolation factor (should be in the range 0..1)
 		 * @return itself, result overrides current vector
 		 */
 		interpolateToSelf: function(v, f, s) {
@@ -1472,9 +1475,9 @@ define('toxi/geom/vectors',[
 		 * {@link Random} generator of {@link MathUtils}.
 		 *
 		 * @param a
-		 *            maximum x jitter or  Vec2D
+		 *			  maximum x jitter or  Vec2D
 		 * @param b
-		 *            maximum y jitter or undefined
+		 *			  maximum y jitter or undefined
 		 * @return itself
 		 */
 		jitter: function(a,b) {
@@ -1538,7 +1541,7 @@ define('toxi/geom/vectors',[
 		 * Normalizes the vector to the given length.
 		 *
 		 * @param len
-		 *            desired length
+		 *			  desired length
 		 * @return itself
 		 */
 		normalizeTo: function(len) {
@@ -1661,9 +1664,9 @@ define('toxi/geom/vectors',[
 		 * Subtracts vector {a,b,c} and overrides coordinates with result.
 		 *
 		 * @param a
-		 *            X coordinate
+		 *			  X coordinate
 		 * @param b
-		 *            Y coordinate
+		 *			  Y coordinate
 		 * @return itself
 		 */
 		subSelf: function(a,b) {
@@ -1712,7 +1715,6 @@ define('toxi/geom/vectors',[
 
 	//these requires are in the functions because of a circular dependency
 	Vec2D.prototype.bisect = function(b) {
-		var Vec3D = require('./Vec3D');
 		var diff = this.sub(b);
 		var sum = this.add(b);
 		var dot = diff.dot(sum);
@@ -1720,17 +1722,14 @@ define('toxi/geom/vectors',[
 	};
 
 	Vec2D.prototype.to3DXY = function() {
-		var Vec3D = require('./Vec3D');
 		return new Vec3D(this.x, this.y, 0);
 	};
 
 	Vec2D.prototype.to3DXZ = function() {
-		var Vec3D = require('./Vec3D');
 		return new Vec3D(this.x, 0, this.y);
 	};
 
 	Vec2D.prototype.to3DYZ = function() {
-		var Vec3D = require('./Vec3D');
 		return new Vec3D(0, this.x, this.y);
 	};
 
@@ -1762,7 +1761,7 @@ define('toxi/geom/vectors',[
 	 * @param {Number} y the y
 	 * @param {Number} z the z
 	 */
-	var Vec3D = function(x, y, z){
+	Vec3D = function(x, y, z){
 		if( has.XYZ( x ) ){
 			this.x = x.x;
 			this.y = x.y;
@@ -1798,11 +1797,11 @@ define('toxi/geom/vectors',[
 		 * Adds vector {a,b,c} and overrides coordinates with result.
 		 *
 		 * @param a
-		 *            X coordinate
+		 *			  X coordinate
 		 * @param b
-		 *            Y coordinate
+		 *			  Y coordinate
 		 * @param c
-		 *            Z coordinate
+		 *			  Z coordinate
 		 * @return itself
 		 */
 		addSelf: function(a,b,c){
@@ -1886,7 +1885,7 @@ define('toxi/geom/vectors',[
 		 * current.
 		 *
 		 * @param v
-		 *            the v
+		 *			  the v
 		 *
 		 * @return itself
 		 */
@@ -2137,7 +2136,7 @@ define('toxi/geom/vectors',[
 		 * {@link Random} generator of {@link MathUtils}.
 		 *
 		 * @param j
-		 *            the j
+		 *			  the j
 		 *
 		 * @return the vec3 d
 		 */
@@ -2227,9 +2226,9 @@ define('toxi/geom/vectors',[
 		 * Rotates the vector around the giving axis.
 		 *
 		 * @param axis
-		 *            rotation axis vector
+		 *			  rotation axis vector
 		 * @param theta
-		 *            rotation angle (in radians)
+		 *			  rotation angle (in radians)
 		 *
 		 * @return itself
 		 */
@@ -2260,7 +2259,7 @@ define('toxi/geom/vectors',[
 		 * Rotates the vector by the given angle around the X axis.
 		 *
 		 * @param theta
-		 *            the theta
+		 *			  the theta
 		 *
 		 * @return itself
 		 */
@@ -2276,7 +2275,7 @@ define('toxi/geom/vectors',[
 		 * Rotates the vector by the given angle around the Y axis.
 		 *
 		 * @param theta
-		 *            the theta
+		 *			  the theta
 		 *
 		 * @return itself
 		 */
@@ -2293,7 +2292,7 @@ define('toxi/geom/vectors',[
 		 * Rotates the vector by the given angle around the Z axis.
 		 *
 		 * @param theta
-		 *            the theta
+		 *			  the theta
 		 *
 		 * @return itself
 		 */
@@ -2422,7 +2421,7 @@ define('toxi/geom/vectors',[
 
 		sub: function(a,b,c){
 			if( has.XYZ( a ) ){
-				return  new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
+				return	new Vec3D(this.x - a.x, this.y - a.y, this.z - a.z);
 			} else if(b === undefined || c === undefined) {
 				b = c = a;
 			}
@@ -2510,7 +2509,7 @@ define('toxi/geom/vectors',[
 	 * The resulting vector for theta=0 is equal to the positive X axis.
 	 *
 	 * @param theta
-	 *            the theta
+	 *			  the theta
 	 *
 	 * @return new vector in the XY plane
 	 */
@@ -2524,7 +2523,7 @@ define('toxi/geom/vectors',[
 	 * The resulting vector for theta=0 is equal to the positive X axis.
 	 *
 	 * @param theta
-	 *            the theta
+	 *			  the theta
 	 *
 	 * @return new vector in the XZ plane
 	 */
@@ -2539,7 +2538,7 @@ define('toxi/geom/vectors',[
 	 * The resulting vector for theta=0 is equal to the positive Y axis.
 	 *
 	 * @param theta
-	 *            the theta
+	 *			  the theta
 	 *
 	 * @return new vector in the YZ plane
 	 */
@@ -2552,9 +2551,9 @@ define('toxi/geom/vectors',[
 	 * vectors.
 	 *
 	 * @param b
-	 *            the b
+	 *			  the b
 	 * @param a
-	 *            the a
+	 *			  the a
 	 *
 	 * @return result as new vector
 	 */
@@ -2567,9 +2566,9 @@ define('toxi/geom/vectors',[
 	 * vectors.
 	 *
 	 * @param b
-	 *            comparing vector
+	 *			  comparing vector
 	 * @param a
-	 *            the a
+	 *			  the a
 	 *
 	 * @return result as new vector
 	 */
@@ -10148,28 +10147,34 @@ define('toxi/geom/mesh/TriangleMesh',['require','./meshCommon'],function( requir
 	return require('./meshCommon').TriangleMesh;
 });
 
-define('toxi/geom/mesh/BezierPatch',["require", "exports", "module", "../Vec3D","./TriangleMesh"], function(require, exports, module) {
+define('toxi/geom/mesh/BezierPatch',["require", "exports", "module", "../Vec3D","./TriangleMesh", "../../internals/is"], function(require, exports, module) {
 var Vec3D = require('../Vec3D'),
-	TriangleMesh = require('./TriangleMesh');
+	TriangleMesh = require('./TriangleMesh'),
+	is = require('../../internals/is');
 
 /**
  * @class 4x4 bezier patch implementation with tesselation support (dynamic resolution)
  * for generating triangle mesh representations.
  * @member toxi
  */
-var	BezierPatch = function(points){
-	this.points = (points === undefined)?[] : points;
-	for (var i = 0; i < 4; i++) {
-		for (var j = 0; j < 4; j++) {
-			this.points[i][j] = new Vec3D();
+var BezierPatch = function(points){
+	if( is.Array(points) ){
+		this.points = points;
+	} else {
+		this.points = [];
+		for (var i = 0; i < 4; i++) {
+			this.points[i] = this.points[i] || [];
+			for (var j = 0; j < 4; j++) {
+				this.points[i][j] = new Vec3D();
+			}
 		}
 	}
 };
 
 BezierPatch.prototype = {
-	
+
 	computePointAt: function(u,v) {
-		return this.computePointAt(u, v, this.points);
+		return BezierPatch.computePointAt(u, v, this.points);
 	},
 
 	set: function(x,y,p) {
@@ -17451,5 +17456,5 @@ define('toxi',["./toxi/main"], function(toxi) {
 });
 
 define.unordered = true;
-toxi = require("toxi");toxi.VERSION = "<%= pkg.version %>";
+toxi = require("toxi");toxi.VERSION = "0.2.5";
 })();

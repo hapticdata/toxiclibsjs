@@ -1,6 +1,7 @@
 var _ = require('underscore'),
     toxi = require('./index'),
     requirejs = require('requirejs'),
+    pkg = require('./package.json'),
     defaults,
     wrap,
     banner,
@@ -14,7 +15,7 @@ banner = _.template('/*!\n'+
     '* Created by [Kyle Phillips](http://haptic-data.com),\n' +
     '* based on original work by [Karsten Schmidt](http://toxiclibs.org).\n' +
     '* Licensed [<%= pkg.licenses[0].type %>](<%= pkg.licenses[0].url %>) \n*/'
-)({ _: _, pkg: require('./package.json') });
+)({ _: _, pkg: pkg });
 //configure the r.js build
 requirejs.config({
     baseUrl: 'lib',
@@ -25,7 +26,7 @@ wrap = {
     start: banner+"\nvar toxi;\n(function(){\n",
     endPre: "\ndefine.unordered = true;\n",
     requires: "toxi = require('toxi');\n",
-    endPost: "toxi.VERSION = \"<%= pkg.version %>\";\n})();\n"
+    endPost: "toxi.VERSION = \"" +pkg.version+ "\";\n})();\n"
 };
 
 //The default configuration
