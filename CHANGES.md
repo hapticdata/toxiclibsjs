@@ -1,5 +1,9 @@
 #Toxiclibs.js CHANGES
 
+##v0.2.6
+* version bump due to NPM's `503 backend unhealthy`
+* cleaned up `toxi/math/*.js` modules
+
 ##v0.2.5
 * resolve [issue #28](https://github.com/hapticdata/toxiclibsjs/issues/28), toxi.geom.mesh.BezierPatch fails w/o Vec3D[][]
 * bugfix Vec2D#to3D** functions shouldn't have nested requires
