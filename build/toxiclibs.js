@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.2.5
+* toxiclibsjs - v0.2.6
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -884,229 +884,236 @@ define('toxi/color/distanceProxies',['require','exports','module'],function( req
 define('toxi/color/CMYKDistanceProxy',['require','./distanceProxies'],function( require ){
 	return require('./distanceProxies').CMYKDistanceProxy;
 });
-define('toxi/math/mathUtils',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class
- * @static
- * @member toxi
- * @description math utilities
- */
-MathUtils = {};
-MathUtils.SQRT2 = Math.sqrt(2);
-MathUtils.SQRT3 = Math.sqrt(3);
-MathUtils.LOG2 = Math.log(2);
-MathUtils.PI = 3.14159265358979323846;
+define('toxi/math/mathUtils',[], function() {
+    /**
+    * @class
+    * @static
+    * @member toxi
+    * @description math utilities
+    */
+    var MathUtils = {};
+    MathUtils.SQRT2 = Math.sqrt(2);
+    MathUtils.SQRT3 = Math.sqrt(3);
+    MathUtils.LOG2 = Math.log(2);
+    MathUtils.PI = 3.14159265358979323846;
 
-/**
- * The reciprocal of PI: (1/PI)
- */
-MathUtils.INV_PI = 1.0 / MathUtils.PI;
-MathUtils.HALF_PI = MathUtils.PI / 2;
-MathUtils.THIRD_PI = MathUtils.PI / 3;
-MathUtils.QUARTER_PI = MathUtils.PI / 4;
-MathUtils.TWO_PI = MathUtils.PI * 2;
-MathUtils.THREE_HALVES_PI = MathUtils.TWO_PI - MathUtils.HALF_PI;
-MathUtils.PI_SQUARED = MathUtils.PI * MathUtils.PI;
+    /**
+    * The reciprocal of PI: (1/PI)
+    */
+    MathUtils.INV_PI = 1.0 / MathUtils.PI;
+    MathUtils.HALF_PI = MathUtils.PI / 2;
+    MathUtils.THIRD_PI = MathUtils.PI / 3;
+    MathUtils.QUARTER_PI = MathUtils.PI / 4;
+    MathUtils.TWO_PI = MathUtils.PI * 2;
+    MathUtils.THREE_HALVES_PI = MathUtils.TWO_PI - MathUtils.HALF_PI;
+    MathUtils.PI_SQUARED = MathUtils.PI * MathUtils.PI;
 
-/**
- * Epsilon value
- */
-MathUtils.EPS = 1.1920928955078125E-7;
+    /**
+    * Epsilon value
+    */
+    MathUtils.EPS = 1.1920928955078125E-7;
 
-/**
- * Degrees to radians conversion factor
- */
-MathUtils.DEG2RAD = MathUtils.PI / 180;
+    /**
+    * Degrees to radians conversion factor
+    */
+    MathUtils.DEG2RAD = MathUtils.PI / 180;
 
-/**
- * Radians to degrees conversion factor
- */
-MathUtils.RAD2DEG = 180 / MathUtils.PI;
-MathUtils.SHIFT23 = 1 << 23;
-MathUtils.INV_SHIFT23 = 1.0 / MathUtils.SHIFT23;
-MathUtils.SIN_A = -4.0 / (MathUtils.PI * MathUtils.PI);
-MathUtils.SIN_B = 4.0 / MathUtils.PI;
-MathUtils.SIN_P = 9.0 / 40;
-MathUtils.abs = Math.abs;
-/**
- * Rounds up the value to the nearest higher power^2 value.
- * 
- * @param x
- * @return power^2 value
- */
-MathUtils.ceilPowerOf2 = function(x) {
-    var pow2 = 1;
-    while (pow2 < x) {
-        pow2 <<= 1;
-    }
-    return pow2;
-};
+    /**
+    * Radians to degrees conversion factor
+    */
+    MathUtils.RAD2DEG = 180 / MathUtils.PI;
+    MathUtils.SHIFT23 = 1 << 23;
+    MathUtils.INV_SHIFT23 = 1.0 / MathUtils.SHIFT23;
+    MathUtils.SIN_A = -4.0 / (MathUtils.PI * MathUtils.PI);
+    MathUtils.SIN_B = 4.0 / MathUtils.PI;
+    MathUtils.SIN_P = 9.0 / 40;
+    MathUtils.abs = Math.abs;
+    /**
+    * Rounds up the value to the nearest higher power^2 value.
+    *
+    * @param x
+    * @return power^2 value
+    */
+    MathUtils.ceilPowerOf2 = function(x) {
+        var pow2 = 1;
+        while (pow2 < x) {
+            pow2 <<= 1;
+        }
+        return pow2;
+    };
 
-MathUtils.clip = function(a, _min, _max) {
-    return a < _min ? _min : (a > _max ? _max : a);
-};
-/**
- * Clips the value to the 0.0 .. 1.0 interval.
- * 
- * @param a
- * @return clipped value
- * @since 0012
- */
-MathUtils.clipNormalized = function(a) {
-    if (a < 0) {
-        return 0;
-    } else if (a > 1) {
-        return 1;
-    }
-    return a;
-};
+    MathUtils.clip = function(a, _min, _max) {
+        return a < _min ? _min : (a > _max ? _max : a);
+    };
+    /**
+    * Clips the value to the 0.0 .. 1.0 interval.
+    *
+    * @param a
+    * @return clipped value
+    * @since 0012
+    */
+    MathUtils.clipNormalized = function(a) {
+        if (a < 0) {
+            return 0;
+        } else if (a > 1) {
+            return 1;
+        }
+        return a;
+    };
 
-MathUtils.cos = Math.cos;
+    MathUtils.cos = Math.cos;
 
-MathUtils.degrees = function(radians) {
-    return radians * this.RAD2DEG;
-};
+    MathUtils.degrees = function(radians) {
+        return radians * MathUtils.RAD2DEG;
+    };
 
-/**
- * Fast cosine approximation.
- * 
- * @param x
- *            angle in -PI/2 .. +PI/2 interval
- * @return cosine
- */
-MathUtils.fastCos = function(x) {
-    return MathUtils.fastSin(x + ((x > MathUtils.HALF_PI) ? -MathUtils.THREE_HALVES_PI : MathUtils.HALF_PI));
-};
+    /**
+    * Fast cosine approximation.
+    *
+    * @param x
+    *            angle in -PI/2 .. +PI/2 interval
+    * @return cosine
+    */
+    MathUtils.fastCos = function(x) {
+        return MathUtils.fastSin(x + ((x > MathUtils.HALF_PI) ? -MathUtils.THREE_HALVES_PI : MathUtils.HALF_PI));
+    };
 
-/**
- * Fast sine approximation.
- * 
- * @param x
- *            angle in -PI/2 .. +PI/2 interval
- * @return sine
- */
-MathUtils.fastSin = function(x) {
-    x = MathUtils.SIN_B * x + MathUtils.SIN_A * x * Math.abs(x);
-    return MathUtils.SIN_P * (x * Math.abs(x) - x) + x;
-};
+    /**
+    * Fast sine approximation.
+    *
+    * @param x
+    *            angle in -PI/2 .. +PI/2 interval
+    * @return sine
+    */
+    MathUtils.fastSin = function(x) {
+        x = MathUtils.SIN_B * x + MathUtils.SIN_A * x * Math.abs(x);
+        return MathUtils.SIN_P * (x * Math.abs(x) - x) + x;
+    };
 
-MathUtils.flipCoin = function(rnd) {
-    return Math.random() < 0.5;
-};
+    MathUtils.flipCoin = function(rnd) {
+        return Math.random() < 0.5;
+    };
 
-/**
- * This method is a *lot* faster than using (int)Math.floor(x).
- * 
- * @param x
- *            value to be floored
- * @return floored value as integer
- */
+    /**
+    * This method is a *lot* faster than using (int)Math.floor(x).
+    *
+    * @param x
+    *            value to be floored
+    * @return floored value as integer
+    */
 
-MathUtils.floor = function(x) {
-   var y = parseInt(x,10);
-   if (x < 0 && x != y) {
-       y--;
-   }
-   return y;
-};
+    MathUtils.floor = function(x) {
+        var y = ~~(x);
+        if (x < 0 && x != y) {
+            y--;
+        }
+        return y;
+    };
 
-/**
- * Rounds down the value to the nearest lower power^2 value.
- * 
- * @param x
- * @return power^2 value
- */
-MathUtils.floorPowerOf2 = function(x) {
-  return parseInt( Math.pow(2, parseInt((Math.log(x) / MathUtils.LOG2),10)),10);
-};
+    /**
+    * Rounds down the value to the nearest lower power^2 value.
+    *
+    * @param x
+    * @return power^2 value
+    */
+    MathUtils.floorPowerOf2 = function(x) {
+        return ~~( Math.pow(2, parseInt((Math.log(x) / MathUtils.LOG2),10)) );
+    };
 
-MathUtils.max =  function(a, b, c) {
-	if(c===undefined) return Math.max(a,b);
-    return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
-};
+    MathUtils.max =  function(a, b, c) {
+        if(c===undefined){
+            return Math.max(a,b);
+        }
+        return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
+    };
 
-MathUtils.min = function(a, b, c) {
-	if(c===undefined)return Math.min(a,b);
-    return (a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c);
-};
+    MathUtils.min = function(a, b, c) {
+        if(c===undefined){
+            return Math.min(a,b);
+        }
+        return (a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c);
+    };
 
-/**
- * Returns a random number in the interval -1 .. +1.
- * 
- * @return random float
- */
-MathUtils.normalizedRandom = function() {
-  return Math.random() * 2 - 1;
-};
+    /**
+    * Returns a random number in the interval -1 .. +1.
+    *
+    * @return random float
+    */
+    MathUtils.normalizedRandom = function() {
+        return Math.random() * 2 - 1;
+    };
 
-MathUtils.radians = function(degrees) {
-  return degrees * MathUtils.DEG2RAD;
-};
+    MathUtils.radians = function(degrees) {
+        return degrees * MathUtils.DEG2RAD;
+    };
 
-MathUtils.random = function(rand,min,max) {
-  if( arguments.length === 1 ){
-    //if its an int
-    if( parseInt( arguments[0], 10 ) === arguments[0] ){
-      return parseInt( Math.random() * arguments[0], 10 );
-    }
-    return Math.random() * arguments[0];
-  } else if(arguments.length == 2) {
-    max = min;
-    min = rand;
-    rand = Math.random;
-  }
-	if(!min && !max)return Math.random();
-	else if(!max){ //if only one is provided, then thats actually the max
-		max = min;
-		return rand()*max;
-	}
-    return rand() * (max - min) + min;
-};
+    MathUtils.random = function(rand,min,max) {
+        //one param
+        if( arguments.length === 1 ){
+            return Math.random() * arguments[0];
+        } else if(arguments.length == 2) {
+            //min and max
+            max = min;
+            min = rand;
+            rand = Math.random;
+        }
+        if(!min && !max) {
+            return Math.random();
+        } else if(!max){
+            //if only one is provided, then thats actually the max
+            max = min;
+            return rand()*max;
+        }
+        return rand() * (max - min) + min;
+    };
 
-MathUtils.reduceAngle = function(theta) {
-    theta %= MathUtils.TWO_PI;
-    if (Math.abs(theta) > MathUtils.PI) {
-        theta = theta - MathUtils.TWO_PI;
-    }
-    if (Math.abs(theta) > MathUtils.HALF_PI) {
-        theta = MathUtils.PI - theta;
-    }
-    return theta;
-};
+    MathUtils.reduceAngle = function(theta) {
+        theta %= MathUtils.TWO_PI;
+        if (Math.abs(theta) > MathUtils.PI) {
+            theta = theta - MathUtils.TWO_PI;
+        }
+        if (Math.abs(theta) > MathUtils.HALF_PI) {
+            theta = MathUtils.PI - theta;
+        }
+        return theta;
+    };
 
-MathUtils.sign = function(x) {
-    return x < 0 ? -1 : (x > 0 ? 1 : 0);
-};
+    MathUtils.sign = function(x) {
+        return x < 0 ? -1 : (x > 0 ? 1 : 0);
+    };
 
-MathUtils.sin = function(theta) {
-   theta = MathUtils.reduceAngle(theta);
-   if (Math.abs(theta) <= MathUtils.QUARTER_PI) {
-       return MathUtils.fastSin(theta);
-   }
-   return MathUtils.fastCos(MathUtils.HALF_PI - theta);
-};
+    MathUtils.sin = function(theta) {
+        theta = MathUtils.reduceAngle(theta);
+        if (Math.abs(theta) <= MathUtils.QUARTER_PI) {
+            return MathUtils.fastSin(theta);
+        }
+        return MathUtils.fastCos(MathUtils.HALF_PI - theta);
+    };
 
-module.exports = MathUtils;
+    return MathUtils;
 
 });
 
-define('toxi/math/LinearInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Implementation of the linear interpolation function
- * 
- * i = a + ( b - a ) * f
- * @member toxi
- */
-var	LinearInterpolation = function(){};
 
-LinearInterpolation.prototype = {
-	interpolate: function(a, b, f) {
+define('toxi/math/LinearInterpolation',[], function(){
+    /**
+    * @class Implementation of the linear interpolation function
+    *
+    * i = a + ( b - a ) * f
+    * @member toxi
+    */
+    var	LinearInterpolation = function(){};
+    var interpolate = function(a, b, f) {
         return a + (b - a) * f;
-	}
-};
+    };
 
-module.exports = LinearInterpolation;
+    LinearInterpolation.interpolate = interpolate;
+    LinearInterpolation.prototype.interpolate = interpolate;
+    //
+
+    return LinearInterpolation;
 });
+
 
 define('toxi/geom/vectors',[
 	"require",
@@ -8525,76 +8532,77 @@ define('toxi/geom/mesh/subdiv/MidpointSubdivision',[
 
 	return MidpointSubdivison;
 });
-define('toxi/math/Interpolation2D',["require", "exports", "module","../internals"], function(require, exports, module) {
-var internals = require("../internals");
+define('toxi/math/Interpolation2D',[
+    "../internals"
+], function( internals ) {
 
-/**
- * @class Implementations of 2D interpolation functions (currently only bilinear).
- * @member toxi
- * @static
- */
-var Interpolation2D = {};
-/**
- * @param {Number} x
- *            x coord of point to filter (or Vec2D p)
- * @param {Number} y
- *            y coord of point to filter (or Vec2D p1)
- * @param {Number} x1
- *            x coord of top-left corner (or Vec2D p2)
- * @param {Number} y1
- *            y coord of top-left corner
- * @param {Number} x2
- *            x coord of bottom-right corner
- * @param {Number} y2
- *            y coord of bottom-right corner
- * @param {Number} tl
- *            top-left value
- * @param {Number} tr
- *            top-right value (do not use if first 3 are Vec2D)
- * @param {Number} bl
- *            bottom-left value (do not use if first 3 are Vec2D)
- * @param {Number} br
- *            bottom-right value (do not use if first 3 are Vec2D)
- * @return {Number} interpolated value
- */
-Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
-	var x,y,x1,y1,x2,y2,tl,tr,bl,br;
-	if( internals.has.XY( _x ) ) //if the first 3 params are passed in as Vec2Ds
-	{
-		x = _x.x;
-		y = _x.y;
+    /**
+    * @class Implementations of 2D interpolation functions (currently only bilinear).
+    * @member toxi
+    * @static
+    */
+    var Interpolation2D = {};
+    /**
+    * @param {Number} x
+    *            x coord of point to filter (or Vec2D p)
+    * @param {Number} y
+    *            y coord of point to filter (or Vec2D p1)
+    * @param {Number} x1
+    *            x coord of top-left corner (or Vec2D p2)
+    * @param {Number} y1
+    *            y coord of top-left corner
+    * @param {Number} x2
+    *            x coord of bottom-right corner
+    * @param {Number} y2
+    *            y coord of bottom-right corner
+    * @param {Number} tl
+    *            top-left value
+    * @param {Number} tr
+    *            top-right value (do not use if first 3 are Vec2D)
+    * @param {Number} bl
+    *            bottom-left value (do not use if first 3 are Vec2D)
+    * @param {Number} br
+    *            bottom-right value (do not use if first 3 are Vec2D)
+    * @return {Number} interpolated value
+    */
+    Interpolation2D.bilinear = function(_x, _y, _x1,_y1, _x2, _y2, _tl, _tr, _bl, _br) {
+        var x,y,x1,y1,x2,y2,tl,tr,bl,br;
+        if( internals.has.XY( _x ) ) //if the first 3 params are passed in as Vec2Ds
+        {
+            x = _x.x;
+            y = _x.y;
 
-		x1 = _y.x;
-		y1 = _y.y;
+            x1 = _y.x;
+            y1 = _y.y;
 
-		x2 = _x1.x;
-		y2 = _x1.y;
+            x2 = _x1.x;
+            y2 = _x1.y;
 
-		tl = _y1;
-		tr = _x2;
-		bl = _y2;
-		br = _tl;
-	} else {
-		x = _x;
-		y = _y;
-		x1 = _x1;
-		y1 = _y1;
-		x2 = _x2;
-		y2 = _y2;
-		tl = _tl;
-		tr = _tr;
-		bl = _bl;
-		br = _br;
-	}
-    var denom = 1.0 / ((x2 - x1) * (y2 - y1));
-    var dx1 = (x - x1) * denom;
-    var dx2 = (x2 - x) * denom;
-    var dy1 = y - y1;
-    var dy2 = y2 - y;
-    return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
-};
+            tl = _y1;
+            tr = _x2;
+            bl = _y2;
+            br = _tl;
+        } else {
+            x = _x;
+            y = _y;
+            x1 = _x1;
+            y1 = _y1;
+            x2 = _x2;
+            y2 = _y2;
+            tl = _tl;
+            tr = _tr;
+            bl = _bl;
+            br = _br;
+        }
+        var denom = 1.0 / ((x2 - x1) * (y2 - y1));
+        var dx1 = (x - x1) * denom;
+        var dx2 = (x2 - x) * denom;
+        var dy1 = y - y1;
+        var dy2 = y2 - y;
+        return (tl * dx2 * dy2 + tr * dx1 * dy2 + bl * dx2 * dy1 + br* dx1 * dy1);
+    };
 
-module.exports = Interpolation2D;
+    return Interpolation2D;
 });
 
 define('toxi/geom/IsectData3D',["require", "exports", "module", "./Vec3D"], function(require, exports, module) {
@@ -13623,334 +13631,374 @@ define('toxi/geom',[
 	exports.ZAxisCylinder = require('./geom/ZAxisCylinder');
 });
 
-define('toxi/math/BezierInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Bezier curve interpolation with configurable coefficients. The curve
- * parameters need to be normalized offsets relative to the start and end values
- * passed to the {@link #interpolate(float, float, float)} method, but can
- * exceed the normal 0 .. 1.0 interval. Use symmetrical offsets to create a
- * symmetrical curve, e.g. this will create a curve with 2 dips reaching the
- * minimum and maximum values at 25% and 75% of the interval...
- * @member toxi
- * 
- * @example
- * <p>
- * <code>BezierInterpolation b=new BezierInterpolation(3,-3);</code>
- * </p>
- * 
- * The curve will be a straight line with this configuration:
- * 
- * <p>
- * <code>BezierInterpolation b=new BezierInterpolation(1f/3,-1f/3);</code>
- * </p>
- */
-var	BezierInterpolation = function(h1,h2) {
-	this.c1 = h1;
-	this.c2 = h2;
-};
+define('toxi/math/BezierInterpolation',[], function() {
+    /**
+    * @class Bezier curve interpolation with configurable coefficients. The curve
+    * parameters need to be normalized offsets relative to the start and end values
+    * passed to the {@link #interpolate(float, float, float)} method, but can
+    * exceed the normal 0 .. 1.0 interval. Use symmetrical offsets to create a
+    * symmetrical curve, e.g. this will create a curve with 2 dips reaching the
+    * minimum and maximum values at 25% and 75% of the interval...
+    * @member toxi
+    *
+    * @example
+    * <p>
+    * <code>BezierInterpolation b=new BezierInterpolation(3,-3);</code>
+    * </p>
+    *
+    * The curve will be a straight line with this configuration:
+    *
+    * <p>
+    * <code>BezierInterpolation b=new BezierInterpolation(1f/3,-1f/3);</code>
+    * </p>
+    */
+    var BezierInterpolation = function(h1,h2) {
+        this.c1 = h1;
+        this.c2 = h2;
+    };
 
-BezierInterpolation.prototype = {
-	interpolate: function(a,b,t) {
-		var tSquared = t * t;
-	    var invT = 1.0 - t;
-	    var invTSquared = invT * invT;
-	    return (a * invTSquared * invT) + (3 * (this.c1 * (b - a) + a) * t * invTSquared) + (3 * (this.c2 * (b - a) + b) * tSquared * invT) + (b * tSquared * t);
-	},
+    BezierInterpolation.interpolate = function( a, b, t, c1, c2 ){
+        var tSquared = t * t;
+        var invT = 1.0 - t;
+        var invTSquared = invT * invT;
+        return (a * invTSquared * invT) + (3 * (c1 * (b - a) + a) * t * invTSquared) + (3 * (c2 * (b - a) + b) * tSquared * invT) + (b * tSquared * t);
+    };
 
-    setCoefficients:function(a, b) {
-        this.c1 = a;
-        this.c2 = b;
-    }
+    BezierInterpolation.prototype = {
+        interpolate: function(a,b,t) {
+            var tSquared = t * t;
+            var invT = 1.0 - t;
+            var invTSquared = invT * invT;
+            return (a * invTSquared * invT) + (3 * (this.c1 * (b - a) + a) * t * invTSquared) + (3 * (this.c2 * (b - a) + b) * tSquared * invT) + (b * tSquared * t);
+        },
 
-};
+        setCoefficients:function(a, b) {
+            this.c1 = a;
+            this.c2 = b;
+        }
 
-module.exports = BezierInterpolation;
+    };
+
+    return BezierInterpolation;
 
 });
 
-define('toxi/math/CircularInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Implementation of the circular interpolation function.
- * 
- * i = a-(b-a) * (sqrt(1 - (1 - f) * (1 - f) ))
- * @description The interpolation slope can be flipped to have its steepest ascent
- * towards the end value, rather than at the beginning in the default
- * configuration.
- * @member toxi
- * 
- * @param isFlipped
- *            true, if slope is inverted
- */
-var	CircularInterpolation = function(isFlipped) {
-   if(isFlipped === undefined){
-		this.isFlipped = false;
-	}
-};
 
-CircularInterpolation.prototype = {
-	interpolate: function( a, b, f) {
+define('toxi/math/CircularInterpolation',[], function() {
+    /**
+    * @class Implementation of the circular interpolation function.
+    *
+    * i = a-(b-a) * (sqrt(1 - (1 - f) * (1 - f) ))
+    * @description The interpolation slope can be flipped to have its steepest ascent
+    * towards the end value, rather than at the beginning in the default
+    * configuration.
+    * @member toxi
+    *
+    * @param isFlipped
+    *            true, if slope is inverted
+    */
+    var CircularInterpolation = function(isFlipped) {
+        if(isFlipped === undefined){
+            this.isFlipped = false;
+        }
+    };
+
+    CircularInterpolation.interpolate = function( a, b, f, isFlipped) {
+        if (!!isFlipped) {
+            return a - (b - a) * (Math.sqrt(1 - f * f) - 1);
+        } else {
+            f = 1 - f;
+            return a + (b - a) * ( Math.sqrt(1 - f * f));
+        }
+    };
+
+    CircularInterpolation.prototype.interpolate = function( a, b, f) {
         if (this.isFlipped) {
             return a - (b - a) * (Math.sqrt(1 - f * f) - 1);
         } else {
             f = 1 - f;
             return a + (b - a) * ( Math.sqrt(1 - f * f));
         }
-    },
+    };
 
-    setFlipped: function(isFlipped) {
+    CircularInterpolation.prototype.setFlipped = function(isFlipped) {
         this.isFlipped = isFlipped;
-    }
-};
+    };
 
-module.exports = CircularInterpolation;
+    return CircularInterpolation;
 });
 
-define('toxi/math/CosineInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Implementation of the cosine interpolation function:
- * i = b+(a-b)*(0.5+0.5*cos(f*PI))
- * @member toxi
- */
-var	CosineInterpolation = function(){};
 
-CosineInterpolation.prototype = {
-	interpolate: function(a, b, f) {
-		return b + (a - b) * (0.5 + 0.5 * Math.cos(f * Math.PI));
-	}
-};
+define('toxi/math/CosineInterpolation',[], function() {
+    /**
+    * @class Implementation of the cosine interpolation function:
+    * i = b+(a-b)*(0.5+0.5*cos(f*PI))
+    * @member toxi
+    */
+    var	CosineInterpolation = function(){};
 
-module.exports = CosineInterpolation;
+    CosineInterpolation.interpolate = function(a, b, f) {
+        return b + (a - b) * (0.5 + 0.5 * Math.cos(f * Math.PI));
+    };
+
+    CosineInterpolation.prototype.interpolate = CosineInterpolation.interpolate;
+
+    return CosineInterpolation;
 });
 
-define('toxi/math/DecimatedInterpolation',["require", "exports", "module", "./LinearInterpolation"], function(require, exports, module) {
-var LinearInterpolation = require('./LinearInterpolation');
-/**
- * @class Delivers a number of decimated/stepped values for a given interval. E.g. by
- * using 5 steps the interpolation factor is decimated to: 0, 20, 40, 60, 80 and
- * 100%. By default {@link LinearInterpolation} is used, however any other
- * {@link InterpolateStrategy} can be specified via the constructor.
- * @member toxi
- */
-var	DecimatedInterpolation = function(steps,strategy) {
- if(steps === undefined){
-	throw new Error("steps was not passed to constructor");
- }
- this.numSteps = steps;
- this.strategy = (strategy===undefined)? new LinearInterpolation() : strategy;
-};
 
-DecimatedInterpolation.prototype = {	
-	interpolate: function(a,b,f) {
-        var fd = Math.floor(f * this.numSteps) /  this.numSteps;
-        return this.strategy.interpolate(a, b, fd);
-	}
-};
-
-module.exports = DecimatedInterpolation;
-});
-
-define('toxi/math/ExponentialInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Exponential curve interpolation with adjustable exponent. Use exp in the
- * following ranges to achieve these effects:
- * <ul>
- * <li>0.0 &lt; x &lt; 1.0 : ease in (steep changes towards b)</li>
- * <li>1.0 : same as {@link LinearInterpolation}</li>
- * <li>&gt; 1.0 : ease-out (steep changes from a)</li>
- * </ul>
- * @member toxi
- */
-var	ExponentialInterpolation = function(exp) {
-   this.exponent = (exp === undefined)?2 : exp;
-};
-
-ExponentialInterpolation.prototype = {
-	interpolate: function(a, b, f) {
-		return a + (b - a) * Math.pow(f, this.exponent);
-    }
-};
-
-module.exports = ExponentialInterpolation;
-});
-
-define('toxi/math/SigmoidInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Initializes the s-curve with default sharpness = 2
- * @member toxi
- */
-var	SigmoidInterpolation = function(s) {
-	if(s === undefined){
-		s = 2.0;
-	}
-	this.setSharpness(s);
-};
-
-SigmoidInterpolation.prototype = {	
-	getSharpness: function() {
-		return this.sharpness;
-	},
-	
-	interpolate: function(a, b, f) {
-	    f = (f * 2 - 1) * this.sharpPremult;
-	    f = (1.0 / (1.0 + Math.exp(-f)));
-	    return a + (b - a) * f;
-	},
-	
-	setSharpness: function(s) {
-	    this.sharpness = s;
-	    this.sharpPremult = 5 * s;
-	}
-};
-
-module.exports = SigmoidInterpolation;
-});
-
-define('toxi/math/SinCosLUT',["require", "exports", "module", "./mathUtils"], function(require, exports, module) {
-
-var mathUtils = require('./mathUtils');
-
-/**
- * @class Lookup table for fast sine & cosine computations. Tables with varying
- * precisions can be created to which input angles will be rounded to. The
- * sin/cos methods can be used with both positive and negative input angles as
- * with the normal Math.sin()/Math.cos() versions.
- * @member toxi
- */
-var SinCosLUT = function(precision) {
-    if(!precision){
-        precision = SinCosLUT.DEFAULT_PRECISION;
-    }
-	this.precision = precision;
-	this.period = 360/this.precision;
-	this.quadrant = this.period >> 2;
-	this.deg2rad = (Math.PI / 180.0) * this.precision;
-	this.rad2deg = (180.0 / Math.PI) / this.precision;
-	this.sinLUT = [];
-	for(var i=0;i< this.period;i++){
-		this.sinLUT[i] = Math.sin(i*this.deg2rad);
-	}
-};
-
-
-SinCosLUT.prototype = {
-	
-	/**
-     * Calculate cosine for the passed in angle in radians.
-     * 
-     * @param theta
-     * @return cosine value for theta
-     */
-    cos: function(theta) {
-        while (theta < 0) {
-            theta += mathUtils.TWO_PI;
+define('toxi/math/DecimatedInterpolation',[
+    './LinearInterpolation'
+], function( LinearInterpolation ) {
+    /**
+    * @class Delivers a number of decimated/stepped values for a given interval. E.g. by
+    * using 5 steps the interpolation factor is decimated to: 0, 20, 40, 60, 80 and
+    * 100%. By default {@link LinearInterpolation} is used, however any other
+    * {@link InterpolateStrategy} can be specified via the constructor.
+    * @member toxi
+    */
+    var	DecimatedInterpolation = function(steps,strategy) {
+        if(steps === undefined){
+            throw new Error("steps was not passed to constructor");
         }
-        return this.sinLUT[((theta * this.rad2deg) + this.quadrant) % this.period];
-    },
+        this.numSteps = steps;
+        this.strategy = strategy || new LinearInterpolation();
+    };
 
-    getPeriod: function() {
-        return this.period;
-    },
+    DecimatedInterpolation.prototype = {
+        interpolate: function(a,b,f) {
+            var fd = Math.floor(f * this.numSteps) /  this.numSteps;
+            return this.strategy.interpolate(a, b, fd);
+        }
+    };
 
-    getPrecision: function() {
-        return this.precision;
-    },
+    return DecimatedInterpolation;
+});
 
-    getSinLUT: function() {
-        return this.sinLUT;
-    },
+define('toxi/math/ExponentialInterpolation',[], function() {
+    /**
+    * @class Exponential curve interpolation with adjustable exponent. Use exp in the
+    * following ranges to achieve these effects:
+    * <ul>
+    * <li>0.0 &lt; x &lt; 1.0 : ease in (steep changes towards b)</li>
+    * <li>1.0 : same as {@link LinearInterpolation}</li>
+    * <li>&gt; 1.0 : ease-out (steep changes from a)</li>
+    * </ul>
+    * @member toxi
+    */
+    var	ExponentialInterpolation = function(exp) {
+        this.exponent = (exp === undefined) ? 2 : exp;
+    };
+
+
+    ExponentialInterpolation.interpolate = function(a, b, f, exponent) {
+        return a + (b - a) * Math.pow(f, exponent);
+    };
+
+    ExponentialInterpolation.prototype.interpolate = function(a, b, f) {
+        return a + (b - a) * Math.pow(f, this.exponent);
+    };
+
+    return ExponentialInterpolation;
+});
+
+
+define('toxi/math/SigmoidInterpolation',[], function() {
+    /**
+    * @class Initializes the s-curve with default sharpness = 2
+    * @member toxi
+    */
+    var	SigmoidInterpolation = function(s) {
+        if(s === undefined){
+            s = 2.0;
+        }
+        this.setSharpness(s);
+    };
+
+    var interpolate = function( a, b, f, sharpness ){
+        f = (f * 2 - 1) * sharpness;
+        f = (1.0 / (1.0 + Math.exp(-f)));
+        return a + (b - a) * f;
+    };
+
+    SigmoidInterpolation.prototype = {
+        getSharpness: function() {
+            return this.sharpness;
+        },
+
+        interpolate: function(a, b, f) {
+            return interpolate( a, b, f, this.sharpPremult );
+        },
+
+        setSharpness: function(s) {
+            this.sharpness = s;
+            this.sharpPremult = 5 * s;
+        }
+    };
+
+    SigmoidInterpolation.interpolate = interpolate;
+
+    return SigmoidInterpolation;
+});
+
+
+define('toxi/math/SinCosLUT',[
+    './mathUtils'
+], function( mathUtils ) {
+
 
     /**
-     * Calculates sine for the passed angle in radians.
-     * 
-     * @param theta
-     * @return sine value for theta
-     */
-    sin: function(theta) {
-        while (theta < 0) {
-            theta += mathUtils.TWO_PI;
+    * @class Lookup table for fast sine & cosine computations. Tables with varying
+    * precisions can be created to which input angles will be rounded to. The
+    * sin/cos methods can be used with both positive and negative input angles as
+    * with the normal Math.sin()/Math.cos() versions.
+    * @member toxi
+    */
+    var SinCosLUT = function(precision) {
+        if(!precision){
+            precision = SinCosLUT.DEFAULT_PRECISION;
         }
-        return this.sinLUT[(theta * this.rad2deg) % this.period];
-    }
-};
+        this.precision = precision;
+        this.period = 360/this.precision;
+        this.quadrant = this.period >> 2;
+        this.deg2rad = (Math.PI / 180.0) * this.precision;
+        this.rad2deg = (180.0 / Math.PI) / this.precision;
+        this.sinLUT = [];
+        for(var i=0;i< this.period;i++){
+            this.sinLUT[i] = Math.sin(i*this.deg2rad);
+        }
+    };
 
 
-SinCosLUT.DEFAULT_PRECISION = 0.25;
-SinCosLUT.DEFAULT_INSTANCE = undefined;
-SinCosLUT.getDefaultInstance = function(){
-	if(SinCosLUT.DEFAULT_INSTANCE === undefined){
-		SinCosLUT.DEFAULT_INSTANCE = new SinCosLUT();
-	}
-	return SinCosLUT.DEFAULT_INSTANCE;
-};
+    SinCosLUT.prototype = {
 
-module.exports = SinCosLUT;
+        /**
+        * Calculate cosine for the passed in angle in radians.
+        *
+        * @param theta
+        * @return cosine value for theta
+        */
+        cos: function(theta) {
+            while (theta < 0) {
+                theta += mathUtils.TWO_PI;
+            }
+            return this.sinLUT[((theta * this.rad2deg) + this.quadrant) % this.period];
+        },
+
+        getPeriod: function() {
+            return this.period;
+        },
+
+        getPrecision: function() {
+            return this.precision;
+        },
+
+        getSinLUT: function() {
+            return this.sinLUT;
+        },
+
+        /**
+        * Calculates sine for the passed angle in radians.
+        *
+        * @param theta
+        * @return sine value for theta
+        */
+        sin: function(theta) {
+            while (theta < 0) {
+                theta += mathUtils.TWO_PI;
+            }
+            return this.sinLUT[(theta * this.rad2deg) % this.period];
+        }
+    };
+
+
+    SinCosLUT.DEFAULT_PRECISION = 0.25;
+    SinCosLUT.DEFAULT_INSTANCE = undefined;
+    SinCosLUT.getDefaultInstance = function(){
+        if(SinCosLUT.DEFAULT_INSTANCE === undefined){
+            SinCosLUT.DEFAULT_INSTANCE = new SinCosLUT();
+        }
+        return SinCosLUT.DEFAULT_INSTANCE;
+    };
+
+    return SinCosLUT;
 });
 
-define('toxi/math/ThresholdInterpolation',["require", "exports", "module"], function(require, exports, module) {
-/**
- * @class Defines a single step/threshold function which returns the min value for all
- * factors &lt; threshold and the max value for all others.
- * @member toxi
- */
-var	ThresholdInterpolation = function(threshold) {
-	this.threshold = threshold;
-};
 
-ThresholdInterpolation.prototype = {
-	interpolate: function(a, b, f) {
-		return f < this.threshold ? a : b;
-	}
-};
+define('toxi/math/ThresholdInterpolation',[], function() {
+    /**
+    * @class Defines a single step/threshold function which returns the min value for all
+    * factors &lt; threshold and the max value for all others.
+    * @member toxi
+    */
+    var	ThresholdInterpolation = function(threshold) {
+        this.threshold = threshold;
+    };
 
-module.exports = ThresholdInterpolation;
+    var interpolate = function(a, b, f, threshold) {
+        return f < threshold ? a : b;
+    };
+
+    ThresholdInterpolation.prototype = {
+        interpolate: function(a, b, f) {
+            return f < this.threshold ? a : b;
+        }
+    };
+
+    ThresholdInterpolation.interpolate = interpolate;
+
+    return ThresholdInterpolation;
 });
 
-define('toxi/math/ZoomLensInterpolation',["require", "exports", "module", "./mathUtils","./CircularInterpolation"], function(require, exports, module) {
 
-var mathUtils = require('./mathUtils'),
-	CircularInterpolation = require('./CircularInterpolation');
+define('toxi/math/ZoomLensInterpolation',[
+    './mathUtils',
+    './CircularInterpolation'
+], function( mathUtils, CircularInterpolation ) {
 
-/**
- * @class This class provides an adjustable zoom lens to either bundle or dilate values
- * around a focal point within a given interval. For a example use cases, please
- * have a look at the provided ScaleMapDataViz and ZoomLens examples.
- * @member toxi
- */
-var	ZoomLensInterpolation = function(lensPos, lensStrength) {
-	this.leftImpl = new CircularInterpolation();
-	this.rightImpl = new CircularInterpolation();
-	this.lensPos = lensPos || 0.5;
-	this.lensStrength = lensStrength || 1;
-	this.absStrength = Math.abs(this.lensStrength);
-	this.leftImpl.setFlipped(this.lensStrength > 0);
-	this.rightImpl.setFlipped(this.lensStrength < 0);
-};
 
-ZoomLensInterpolation.prototype = {
-	interpolate: function(min,max,t) {
-	    var val = min + (max - min) * t;
-	    if (t < this.lensPos) {
-	        val += (this.leftImpl.interpolate(min, min + (max - min) * this.lensPos, t/ this.lensPos) - val)* this.absStrength;
-	    } else {
-	        val += (this.rightImpl.interpolate(min + (max - min) * this.lensPos, max,(t - this.lensPos) / (1 - this.lensPos)) - val) * this.absStrength;
-	    }
-	    return val;
-	},
-	
-	setLensPos: function(pos, smooth) {
-	    this.lensPos += (mathUtils.clipNormalized(pos) - this.lensPos) * smooth;
-	},
-	
-	setLensStrength: function(str, smooth) {
-	    this.lensStrength += (mathUtils.clip(str, -1, 1) - this.lensStrength) * smooth;
-	    this.absStrength = mathUtils.abs(this.lensStrength);
-	    this.leftImpl.setFlipped(this.lensStrength > 0);
-	    this.rightImpl.setFlipped(this.lensStrength < 0);
-	}
-};
+    /**
+    * @class This class provides an adjustable zoom lens to either bundle or dilate values
+    * around a focal point within a given interval. For a example use cases, please
+    * have a look at the provided ScaleMapDataViz and ZoomLens examples.
+    * @member toxi
+    */
+    var	ZoomLensInterpolation = function(lensPos, lensStrength) {
+        this.leftImpl = new CircularInterpolation();
+        this.rightImpl = new CircularInterpolation();
+        this.lensPos = lensPos || 0.5;
+        this.lensStrength = lensStrength || 1;
+        this.absStrength = Math.abs(this.lensStrength);
+        this.leftImpl.setFlipped(this.lensStrength > 0);
+        this.rightImpl.setFlipped(this.lensStrength < 0);
+    };
 
-module.exports = ZoomLensInterpolation;
+    ZoomLensInterpolation.prototype = {
+        interpolate: function(min,max,t) {
+            var val = min + (max - min) * t;
+            if (t < this.lensPos) {
+                val += (this.leftImpl.interpolate(min, min + (max - min) * this.lensPos, t/ this.lensPos) - val)* this.absStrength;
+            } else {
+                val += (this.rightImpl.interpolate(min + (max - min) * this.lensPos, max,(t - this.lensPos) / (1 - this.lensPos)) - val) * this.absStrength;
+            }
+            return val;
+        },
+
+        setLensPos: function(pos, smooth) {
+            this.lensPos += (mathUtils.clipNormalized(pos) - this.lensPos) * smooth;
+        },
+
+        setLensStrength: function(str, smooth) {
+            this.lensStrength += (mathUtils.clip(str, -1, 1) - this.lensStrength) * smooth;
+            this.absStrength = mathUtils.abs(this.lensStrength);
+            this.leftImpl.setFlipped(this.lensStrength > 0);
+            this.rightImpl.setFlipped(this.lensStrength < 0);
+        }
+    };
+
+    return ZoomLensInterpolation;
 });
+
 
 define('toxi/math/noise/PerlinNoise',['require','../SinCosLUT','../../internals/has'],function(require ) {
 
@@ -17456,5 +17504,5 @@ define('toxi',["./toxi/main"], function(toxi) {
 });
 
 define.unordered = true;
-toxi = require("toxi");toxi.VERSION = "0.2.5";
+toxi = require("toxi");toxi.VERSION = "0.2.6";
 })();
