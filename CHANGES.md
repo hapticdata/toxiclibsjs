@@ -1,5 +1,8 @@
 #Toxiclibs.js CHANGES
 
+##v0.2.7
+* another version bump due to NPM failing publish
+
 ##v0.2.6
 * version bump due to NPM's `503 backend unhealthy`
 * cleaned up `toxi/math/*.js` modules
@@ -39,7 +42,7 @@
 *	`toxi.THREE.ToxiclibsSupport` now uses toxiclibs` normals
 *	renamed `toxi.utils` to `toxi.util` for consistency
 *	`toxi.geom.Polygon2D` renamed `#containsPoly()` to `#containsPolygon()`
-*	new methods for `toxi.geom.Polygon2D` post toxiclibs 0020 release, including  `#center()`, `#get()`, 
+*	new methods for `toxi.geom.Polygon2D` post toxiclibs 0020 release, including  `#center()`, `#get()`,
 `#getBoundingCircle()`, `#getClosestPointTo()`, `#getClosestVertexTo()`, `#getNumVertices (deprecated #getNumPoints() )`,
 `#getRandomPoint()`,`#increaseVertexCount()`, `#intersectsPolygon()`, `#removeDuplicates()`,`Polygon2D.fromBaseEdge()`,
 `Polygon2D.fromEdgeLength()`, `Polygon2D.getRadiusForEdgeLength()`
