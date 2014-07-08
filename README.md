@@ -1,9 +1,9 @@
 #[Toxiclibsjs](http://haptic-data.com/toxiclibsjs) 
 ##an open-source library for computational design tasks with JavaScript. 
 
-[![Spherical Harmonics in three.js](http://haptic-data.com/toxiclibsjs/img/spherical_harmonics.jpg)](http://haptic-data.com/toxiclibsjs/examples/SphericalHarmonics_threejs.html)
-[![polar_unravel](http://haptic-data.com/toxiclibsjs/img/polar_unravel.gif)](http://haptic-data.com/toxiclibsjs/examples/PolarUnravel_pjs.html)
-[![attraction2d](http://haptic-data.com/toxiclibsjs/img/physics2d_attraction2d.gif)](http://haptic-data.com/toxiclibsjs/examples/Attraction2D_pjs.html)
+[![Spherical Harmonics in three.js](http://s3.amazonaws.com/toxiclibsjs/images/sphericalHarmonicsThree.jpg)](http://haptic-data.com/toxiclibsjs/examples/SphericalHarmonics_threejs.html)
+[![polar_unravel](http://s3.amazonaws.com/toxiclibsjs/images/polarUnravel.gif)](http://haptic-data.com/toxiclibsjs/examples/PolarUnravel_pjs.html)
+[![attraction2d](http://s3.amazonaws.com/toxiclibsjs/images/attraction2d.gif)](http://haptic-data.com/toxiclibsjs/examples/Attraction2D_pjs.html)
 
 Toxiclibs.js is a port of [Karsten Schmidt's Toxiclibs](http://toxiclibs.org) for Java and [Processing](http://processing.org). Toxiclibs.js provides powerful datatypes for the _browser_ and _node_. It works well for manipulating any DOM element, including Canvas and SVG.
 
