@@ -12762,7 +12762,7 @@ Spline2D.prototype = {
 			var frac = ((currT - this.arcLenIndex[currIdx - 1]) / (this.arcLenIndex[currIdx] - this.arcLenIndex[currIdx - 1]));
 
 			var i = p.interpolateTo(q,frac);
-			this.uniform.push(i);
+			uniform.push(i);
 		}
 		if(doAddFinalVertex){
 			uniform.push(this.vertices[this.vertices.length-1]);
@@ -12772,16 +12772,24 @@ Spline2D.prototype = {
 
 
 	getEstimatedArcLength: function(){
-		if(this.arcLenIndex === undefined || (this.arcLenIndex !== undefined && this.arcLenIndex.length != this.vertices.length)){
-			this.arcLenIndex = [];
-		}
+		var len;
 		var arcLen = 0;
-		for(var i=1;i<this.arcLenIndex.length;i++){
+
+		if(this.arcLenIndex === undefined || (this.arcLenIndex !== undefined && this.arcLenIndex.length != this.vertices.length)){
+			this.arcLenIndex = [0];
+			len = this.vertices.length;
+		}
+		else {
+			len = this.arcLenIndex.length;
+		}
+
+		for(var i=1;i<len;i++){
 			var p = this.vertices[i-1];
 			var q = this.vertices[i];
 			arcLen += p.distanceTo(q);
 			this.arcLenIndex[i] = arcLen;
 		}
+
 		return arcLen;
 	},
 
@@ -12967,7 +12975,7 @@ define('toxi/geom/Spline3D',[
                 var frac = ((currT - this.arcLenIndex[currIdx - 1]) / (this.arcLenIndex[currIdx] - this.arcLenIndex[currIdx - 1]));
 
                 var i = p.interpolateTo(q,frac);
-                this.uniform.push(i);
+                uniform.push(i);
             }
             if(doAddFinalVertex){
                 uniform.push(this.vertices[this.vertices.length-1]);
@@ -12977,16 +12985,24 @@ define('toxi/geom/Spline3D',[
 
 
         getEstimatedArcLength: function(){
-            if(this.arcLenIndex === undefined || (this.arcLenIndex !== undefined && this.arcLenIndex.length != this.vertices.length)){
-                this.arcLenIndex = [];
-            }
+            var len;
             var arcLen = 0;
-            for(var i=1;i<this.arcLenIndex.length;i++){
+
+            if(this.arcLenIndex === undefined || (this.arcLenIndex !== undefined && this.arcLenIndex.length != this.vertices.length)){
+                this.arcLenIndex = [0];
+                len = this.vertices.length;
+            }
+            else {
+                len = this.arcLenIndex.length;
+            }
+
+            for(var i=1;i<len;i++){
                 var p = this.vertices[i-1];
                 var q = this.vertices[i];
                 arcLen += p.distanceTo(q);
                 this.arcLenIndex[i] = arcLen;
             }
+
             return arcLen;
         },
 
