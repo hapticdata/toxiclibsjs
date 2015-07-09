@@ -172,6 +172,10 @@ describe('TColor', function(){
                 assert.equal(red.toRGBACSS(), "rgba(255,0,0,0.75)");
             });
 
+            it('should return "rgba(100%, 0%, 0%, 0.75)"', function(){
+                assert.equal(red.toRGBACSS(true), "rgba(100%,0%,0%,0.75)");
+            });
+
         });
 
         describe("#toRGBCSS()", function(){
@@ -179,6 +183,10 @@ describe('TColor', function(){
 
             it('should equal "rgb(255,0,0)"', function(){
                 assert.equal(red.toRGBCSS(), "rgb(255,0,0)");
+            });
+
+            it('should return "rgba(100%, 0%, 0%, 0.75)"', function(){
+                assert.equal(red.toRGBCSS(true), "rgb(100%,0%,0%)");
             });
         });
 
