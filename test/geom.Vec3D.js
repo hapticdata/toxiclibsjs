@@ -1,5 +1,5 @@
 /*global describe, it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
 	assert = require('assert');
 
 var Vec3D = toxi.geom.Vec3D;

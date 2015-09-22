@@ -1,5 +1,4 @@
-/*global describe, it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
     _ = require('underscore'),
 	assert = require('assert');
 

@@ -1,5 +1,5 @@
 /*global describe, it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
 	assert = require('assert');
 
 
@@ -59,7 +59,7 @@ describe("toxi.geom.Vec2D", function(){
 		describe("#angleBetween( v )", function(){
 			it("should be valid angle", function(){
 				var pos1 = new Vec2D(20,20),
-				pos2 = pos1.scale(0.5);		
+				pos2 = pos1.scale(0.5);
 				var angle = pos2.angleBetween(pos1,true);
 				assert.ok(!isNaN(angle) );
 			});
@@ -311,8 +311,8 @@ describe("toxi.geom.Vec2D", function(){
 		describe("#tangentNormalOfEllipse( ellipseOrigin, ellipseRadius", function(){
 			it("should match java output", function(){
 				var eO = new Vec2D();
-				var eR = new Vec2D(100,100);	
-				var tan = v.tangentNormalOfEllipse(eO,eR);	
+				var eR = new Vec2D(100,100);
+				var tan = v.tangentNormalOfEllipse(eO,eR);
 				assert.ok( tan.x > 0.554 && tan.x < 0.555 );
 				assert.ok( tan.y > 0.832 && tan.y < 0.833 );
 			});

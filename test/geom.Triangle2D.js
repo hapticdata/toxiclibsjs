@@ -1,5 +1,5 @@
 /*global describe, it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
 	assert = require('assert');
 
 var Vec2D = toxi.geom.Vec2D,
@@ -15,7 +15,7 @@ describe('toxi.geom.Triangle2D', function(){
 			assert.ok( t instanceof Triangle2D );
 		});
 	}
-	
+
 	describe('statics', function(){
 		describe("createEquilateralFrom()", function(){
 			var t = Triangle2D.createEquilateralFrom( new Vec2D(), new Vec2D( 0.5, 1 ) );

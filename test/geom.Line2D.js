@@ -1,4 +1,4 @@
-var toxi = require('../index'),
+var toxi = require('./index'),
 	assert = require('assert');
 
 var Line2D = toxi.geom.Line2D,

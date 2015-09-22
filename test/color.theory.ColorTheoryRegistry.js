@@ -1,4 +1,4 @@
-var toxi = require('../index'),
+var toxi = require('./index'),
     assert = require('assert');
 
 var ColorTheoryRegistry = toxi.color.theory.ColorTheoryRegistry,
