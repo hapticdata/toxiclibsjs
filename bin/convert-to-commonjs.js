@@ -13,7 +13,13 @@ nodefy.batchConvert('lib/toxi/**/*.js', target, function(err, results){
 
     console.log(results.length + ' files converted');
 
-    fs.createReadStream('package.json').pipe(fs.createWriteStream(path.join(target,'package.json')));
+    var files = ['package.json', 'README.md', 'bin/toxiclibsjs'];
+
+    fs.mkdir(path.join(target, 'bin'), function(){
+        files.forEach(function(file){
+            fs.createReadStream(file).pipe(fs.createWriteStream(path.join(target,file)));
+        });
+    });
 });
 
 

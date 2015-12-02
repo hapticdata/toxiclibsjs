@@ -1,5 +1,13 @@
 #Toxiclibs.js CHANGES
 
+##v0.3.1
+* fix NPM publish issue where `README.md` and `bin/toxiclibsjs` were not included
+
+##v0.3.0
+* uses [nodefy](https://github.com/millermedeiros/nodefy) to convert all AMD modules into commonjs modules for publishing to [NPM](http://npmjs.com). 
+This means toxiclibjs.js now works with [Browserify](http://browserify.org/) and no longer has a dependency on [Require.js](http://requirejs.org) when consumed
+through NPM for [Node.js](http://nodejs.org). This also enables deep-requires for Node, such as `var Vec2D = require('toxiclibsjs/geom/Vec2D')`.
+
 ##v0.2.7
 * another version bump due to NPM failing publish
 
