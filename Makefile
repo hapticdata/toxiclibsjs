@@ -13,6 +13,11 @@ toxiclibs-color.min.js:
 toxiclibs-physics2d.min.js:
 	./bin/toxiclibsjs --include "toxi/physics2d" --out "./build/toxiclibs-physics2d.min.js" --minify
 
+publish:
+	rm -rf ./commonjs
+	node ./bin/convert-to-commonjs.js
+	npm publish ./commonjs
+
 test:
 	./node_modules/mocha/bin/mocha --reporter $(REPORTER) test/*.js $(MOCHA_OPTS)
 
