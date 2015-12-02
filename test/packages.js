@@ -1,4 +1,4 @@
-var t = require('../index'),
+var t = require('./index'),
 	assert = require('assert');
 
 //test that all modules are functions

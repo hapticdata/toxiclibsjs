@@ -1,5 +1,5 @@
 /*global describe, it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
 	assert = require('assert');
 //tests for toxi.geom.Spline2D
 //TODO: test Spline2D#getDecimatedVertices()

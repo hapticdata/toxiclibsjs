@@ -1,5 +1,5 @@
 /*global describe, it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
 	assert = require('assert');
 
 describe('TColor', function(){
@@ -164,6 +164,48 @@ describe('TColor', function(){
 				assert.equal( rgba[3],1.0 );
 			});
 		});
+
+        describe("#toRGBACSS()", function(){
+            var red = toxi.color.TColor.newHex('ff0000').setAlpha(0.75);
+
+            it('should equal "rgba(255,0,0,0.75)"', function(){
+                assert.equal(red.toRGBACSS(), "rgba(255,0,0,0.75)");
+            });
+
+            it('should return "rgba(100%, 0%, 0%, 0.75)"', function(){
+                assert.equal(red.toRGBACSS(true), "rgba(100%,0%,0%,0.75)");
+            });
+
+        });
+
+        describe("#toRGBCSS()", function(){
+            var red = toxi.color.TColor.newHex('ff0000').setAlpha(0.75);
+
+            it('should equal "rgb(255,0,0)"', function(){
+                assert.equal(red.toRGBCSS(), "rgb(255,0,0)");
+            });
+
+            it('should return "rgba(100%, 0%, 0%, 0.75)"', function(){
+                assert.equal(red.toRGBCSS(true), "rgb(100%,0%,0%)");
+            });
+        });
+
+
+        describe("#toHSLACSS()", function(){
+            var red = toxi.color.TColor.newHex('ff0000').setAlpha(0.75);
+
+            it('should equal "hsla(0,100%,100%,0.75)"', function(){
+                assert.equal(red.toHSLACSS(), "hsla(0,100%,100%,0.75)");
+            });
+        });
+
+        describe("#toHSLCSS()", function(){
+            var red = toxi.color.TColor.newHex('ff0000').setAlpha(0.75);
+
+            it('should equal "hsl(0,100%,100%)"', function(){
+                assert.equal(red.toHSLCSS(), "hsl(0,100%,100%)");
+            });
+        });
 
 		describe("build typed array with offset", function(){
 

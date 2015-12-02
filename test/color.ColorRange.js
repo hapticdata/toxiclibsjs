@@ -1,5 +1,5 @@
 /*global describe,it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
     assert = require('assert');
 
 //should result in extra constraints on all but hue

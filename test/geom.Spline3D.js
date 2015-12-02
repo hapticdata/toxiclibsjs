@@ -1,5 +1,5 @@
 /*global describe, it*/
-var toxi = require('../index'),
+var toxi = require('./index'),
     assert = require('assert');
 //TODO: test Spline3D#getDecimatedVertices()
 describe("Spline3D", function(){

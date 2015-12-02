@@ -1,4 +1,4 @@
-var toxi = require('../index'),
+var toxi = require('./index'),
     assert = require('assert');
 
 describe('BernsteinPolynomial', function(){

@@ -27,7 +27,7 @@
     "type": "git",
     "url": "http://github.com/hapticdata/toxiclibsjs.git"
   },
-  "main": "../index",
+  "main": "./index",
   "scripts": {
     "test": "make test"
   },
@@ -48,11 +48,12 @@
     "url": "https://github.com/hapticdata/toxiclibsjs/issues"
   },
   "dependencies": {
-    "requirejs": ">=2.0.0"
   },
   "devDependencies": {
-    "mocha": ">=v1.12.0",
+    "requirejs": ">=2.0.0",
     "almond": "~0.2.6",
+    "mocha": ">=v1.12.0",
+    "nodefy": "^0.2.2",
     "underscore": "~1.5.2"
   }
 }
