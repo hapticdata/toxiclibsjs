@@ -7,6 +7,6 @@
 site/*
 TODO.md
 node_modules
-cjs/
+commonjs/
 
 /.idea/
