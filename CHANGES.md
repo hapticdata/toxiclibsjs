@@ -2,6 +2,7 @@
 
 ##v0.3.1
 * fix NPM publish issue where `README.md` and `bin/toxiclibsjs` were not included
+* build system for global `toxi` object, now uses browserify, no longer using almond.js
 
 ##v0.3.0
 * uses [nodefy](https://github.com/millermedeiros/nodefy) to convert all AMD modules into commonjs modules for publishing to [NPM](http://npmjs.com). 

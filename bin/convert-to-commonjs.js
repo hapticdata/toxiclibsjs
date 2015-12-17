@@ -5,21 +5,34 @@ var nodefy = require('nodefy'),
 var target = 'commonjs';
 
 
+exports.clean = function(callback){
+    fs.rmdir(target, callback);
+};
 
-nodefy.batchConvert('lib/toxi/**/*.js', target, function(err, results){
-    if(err){
-        console.log(err);
-    }
+exports.convert = function(callback){
+    nodefy.batchConvert('lib/toxi/**/*.js', target, function(err, results){
+        if(err){
+            callback(err);
+            return;
+        }
 
-    console.log(results.length + ' files converted');
+        var files = [
+            'package.json',
+            'README.md'
+        ];
 
-    var files = ['package.json', 'README.md', 'bin/toxiclibsjs'];
+        var filesWritten = 0;
 
-    fs.mkdir(path.join(target, 'bin'), function(){
         files.forEach(function(file){
-            fs.createReadStream(file).pipe(fs.createWriteStream(path.join(target,file)));
+            var stream = fs.createReadStream(file).pipe(fs.createWriteStream(path.join(target,file)));
+            stream.on('finish', function(){
+                filesWritten++;
+                if(filesWritten === files.length){
+                    callback(null, results);
+                }
+            });
         });
     });
-});
+};
 
 

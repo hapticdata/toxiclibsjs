@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var builder = require('../build'),
+var bundler = require('./bundler'),
     pkg = require('../package.json');
 
 var argv = process.argv,
@@ -41,7 +41,7 @@ commands = [
         options: ['--include','-i'],
         help: 'space-delimited list of modules you wish to expose in the build',
         action: function(index){
-            includes = argv[index+1];
+            includes = argv[index+1].split(" ");
         }
     },
     {
@@ -55,8 +55,7 @@ commands = [
         options: ['--minify','-m'],
         help: 'compress build for use in production',
         action: function(index){
-            options.optimize = 'uglify2';
-            options.preserveLicenseComments = false;
+            options.minify = true;
         }
     },
     {
@@ -80,6 +79,10 @@ commands.forEach(function(cmd){
 });
 
 //perform the build operation
-builder.optimize(includes, options, function( output ){
-    console.log( output );
+bundler.bundle(includes, options, function(err, output ){
+    if(err){
+        console.log(err);
+        return;
+    }
+    output && console.log( output );
 });
