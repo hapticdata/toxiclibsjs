@@ -3061,7 +3061,7 @@ var internals = require('../internals');
     exports.colorTheoryRegistry = require('./theory/colorTheoryRegistry');
     //keep it uppercase also
     exports.ColorTheoryRegistry = exports.colorTheoryRegistry;
-    exports.ComplementartyStrategy = require('./theory/ComplementaryStrategy');
+    exports.ComplementaryStrategy = require('./theory/ComplementaryStrategy');
     exports.CompoundTheoryStrategy = require('./theory/CompoundTheoryStrategy');
     exports.LeftSplitComplementaryStrategy = require('./theory/LeftSplitComplementaryStrategy');
     exports.MonochromeTheoryStrategy = require('./theory/MonochromeTheoryStrategy');
