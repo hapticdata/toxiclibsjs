@@ -13065,12 +13065,12 @@ var each = require('./each');
 		var found = false;
 		var result;
 		var i = 0;
-		while (!result && i<array.length) {
-			if ( iterator.call( (context) ? context : array[i] ), array[i] ) {
+		var hasContext = typeof context !== 'undefined';
+	 	while (!found && i<array.length-1) {
+			if ( iterator.call( (hasContext ? context : array[i] ), array[i] ) ) {
 				found = true;
 				result = array[i];
 			}
-			++i;
 		}
 		return result;
 	};
@@ -16992,7 +16992,7 @@ arguments[4][162][0].apply(exports,arguments)
 
     /**
      * Initializes an Verlet engine instance with the passed in configuration.
-     * 
+     *
      * @param gravity
      *            optional/undefined/null 3D gravity vector
      * @param numIterations
@@ -17059,7 +17059,7 @@ arguments[4][162][0].apply(exports,arguments)
 
         /**
          * Adds a particle to the list
-         * 
+         *
          * @param p
          * @return itself
          */
@@ -17070,12 +17070,12 @@ arguments[4][162][0].apply(exports,arguments)
 
         /**
          * Adds a spring connector
-         * 
+         *
          * @param s
          * @return itself
          */
         addSpring: function (s) {
-            if(this.getSpring(s.a,s.b) === undefined){
+            if(typeof this.getSpring(s.a,s.b) === 'undefined'){
                 this.springs.push(s);
             }
             return this;
@@ -17132,7 +17132,7 @@ arguments[4][162][0].apply(exports,arguments)
 
         /**
          * Attempts to find the spring element between the 2 particles supplied
-         * 
+         *
          * @param a
          *            particle 1
          * @param b
@@ -17141,9 +17141,9 @@ arguments[4][162][0].apply(exports,arguments)
          */
         getSpring: function () {
             return internals.find(this.springs, function (s) {
-               if ((s.a == a && s.b == b) || (s.a == b && s.b == a)) {
+               if ((s.a == this.a && s.b == this.b) || (s.a == this.b && s.b == this.a)) {
                     return s;
-                }  
+                }
             }, this);
         },
 
@@ -17171,7 +17171,7 @@ arguments[4][162][0].apply(exports,arguments)
 
         /**
          * Removes a particle from the simulation.
-         * 
+         *
          * @param p
          *            particle to remove
          * @return true, if removed successfully
@@ -17182,7 +17182,7 @@ arguments[4][162][0].apply(exports,arguments)
 
         /**
          * Removes a spring connector from the simulation instance.
-         * 
+         *
          * @param s
          *            spring to remove
          * @return true, if the spring has been removed
@@ -17194,7 +17194,7 @@ arguments[4][162][0].apply(exports,arguments)
         /**
          * Removes a spring connector and its both end point particles from the
          * simulation
-         * 
+         *
          * @param s
          *            spring to remove
          * @return true, only if spring AND particles have been removed successfully
@@ -17231,7 +17231,7 @@ arguments[4][162][0].apply(exports,arguments)
 
         /**
          * Sets bounding box
-         * 
+         *
          * @param world
          * @return itself
          */
@@ -17243,7 +17243,7 @@ arguments[4][162][0].apply(exports,arguments)
         /**
          * Progresses the physics simulation by 1 time step and updates all forces
          * and particle positions accordingly
-         * 
+         *
          * @return itself
          */
         update: function () {
@@ -17284,6 +17284,7 @@ arguments[4][162][0].apply(exports,arguments)
 
 
     module.exports = VerletPhysics3D;
+
 
 },{"../geom/AABB":42,"../geom/Vec3D":71,"../internals":98,"./behaviors/GravityBehavior3D":173}],169:[function(require,module,exports){
 
