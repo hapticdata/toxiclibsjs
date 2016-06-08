@@ -17554,7 +17554,6 @@ module.exports = {
 	CylinderConstraint: require('./constraints/CylinderConstraint'),
 	MaxConstraint: require('./constraints/MaxConstraint'),
 	MinConstraint: require('./constraints/MinConstraint'),
-	// ParticleConstraint3D: require('./constraints/ParticleConstraint3D'),
 	PlaneConstraint: require('./constraints/PlaneConstraint'),
 	SoftBoxConstraint: require('./constraints/SoftBoxConstraint'),
 	SphereConstraint: require('./constraints/SphereConstraint')
@@ -17596,7 +17595,8 @@ module.exports = {
 },{}],176:[function(require,module,exports){
 
 
-    var Vec3D = require('../../geom/Vec3D'),
+    var AABB = require('../../geom/AABB'),
+        Vec3D = require('../../geom/Vec3D'),
         Ray3D = require('../../geom/Ray3D');
 
     var BoxConstraint = function (boxOrMinVec, maxVec) {
@@ -17608,8 +17608,6 @@ module.exports = {
         this._intersectRay = new Ray3D(box, new Vec3D());
         this.__restitution = 1;
     };
-
-    console.log( 'ROSS TO DO, check BoxConstraint. Was a copy paste of AxisConstraint' );
 
     BoxConstraint.prototype = {
 
@@ -17653,7 +17651,7 @@ module.exports = {
     module.exports = BoxConstraint;
 
 
-},{"../../geom/Ray3D":60,"../../geom/Vec3D":71}],177:[function(require,module,exports){
+},{"../../geom/AABB":42,"../../geom/Ray3D":60,"../../geom/Vec3D":71}],177:[function(require,module,exports){
 arguments[4][162][0].apply(exports,arguments)
 },{"dup":162}],178:[function(require,module,exports){
 
