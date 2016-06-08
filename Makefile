@@ -12,6 +12,8 @@ toxiclibs-color.min.js:
 	./bin/toxiclibsjs --include "toxi/color" --out "./build/toxiclibs-color.min.js" --minify
 toxiclibs-physics2d.min.js:
 	./bin/toxiclibsjs --include "toxi/physics2d" --out "./build/toxiclibs-physics2d.min.js" --minify
+toxiclibs-physics3d.min.js:
+	./bin/toxiclibsjs --include "toxi/physics3d" --out "./build/toxiclibs-physics3d.min.js" --minify
 
 publish:
 	rm -rf ./commonjs

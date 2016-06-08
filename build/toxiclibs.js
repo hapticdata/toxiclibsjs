@@ -153,7 +153,7 @@ var is = require('../internals/is');
     module.exports = ToxiclibsSupport;
 
 
-},{"../internals/is":106}],3:[function(require,module,exports){
+},{"../internals/is":107}],3:[function(require,module,exports){
 
 	exports.accessCriteria = require('./color/accessCriteria');
     //keep it uppercase also
@@ -364,7 +364,7 @@ ColorGradient.prototype = {
 	module.exports = ColorGradient;
 
 
-},{"../internals":98,"../math/LinearInterpolation":119,"../math/mathUtils":125,"./ColorList":8}],8:[function(require,module,exports){
+},{"../internals":98,"../math/LinearInterpolation":120,"../math/mathUtils":126,"./ColorList":8}],8:[function(require,module,exports){
 
 
 var is = require('../internals/is'),
@@ -846,7 +846,7 @@ ColorList.createUsingStrategy = function(){
 module.exports = ColorList;
 
 
-},{"../internals/Iterator":99,"../internals/each":102,"../internals/is":106,"../math/mathUtils":125,"./HSVDistanceProxy":12,"./ProximityComparator":17,"./RGBDistanceProxy":19,"./TColor":20,"./accessCriteria":22}],9:[function(require,module,exports){
+},{"../internals/Iterator":99,"../internals/each":102,"../internals/is":107,"../math/mathUtils":126,"./HSVDistanceProxy":12,"./ProximityComparator":17,"./RGBDistanceProxy":19,"./TColor":20,"./accessCriteria":22}],9:[function(require,module,exports){
 var TColor = require('./TColor');
 var ColorList = require('./ColorList');
 var FloatRange = require('../util/datatypes/FloatRange');
@@ -1187,7 +1187,7 @@ var MathUtils = require('../math/mathUtils');
     module.exports = ColorRange;
 
 
-},{"../internals/each":102,"../internals/is":106,"../math/mathUtils":125,"../util/datatypes/FloatRange":165,"./ColorList":8,"./TColor":20}],10:[function(require,module,exports){
+},{"../internals/each":102,"../internals/is":107,"../math/mathUtils":126,"../util/datatypes/FloatRange":188,"./ColorList":8,"./TColor":20}],10:[function(require,module,exports){
 var each = require('../internals/each');
 var MathUtils = require('../math/mathUtils');
 var ColorRange = require('./ColorRange');
@@ -1301,7 +1301,7 @@ var ColorList = require('./ColorList');
     module.exports = ColorTheme;
 
 
-},{"../internals/each":102,"../math/mathUtils":125,"./ColorList":8,"./ColorRange":9,"./namedColor":26}],11:[function(require,module,exports){
+},{"../internals/each":102,"../math/mathUtils":126,"./ColorList":8,"./ColorRange":9,"./namedColor":26}],11:[function(require,module,exports){
 
 	module.exports = require('./accessors').HSVAccessor;
 
@@ -2779,7 +2779,7 @@ module.exports = TColor;
 
 
 
-},{"../geom/vectors":96,"../internals/is":106,"../internals/numberComparator":109,"../math/mathUtils":125,"./Hue":15}],21:[function(require,module,exports){
+},{"../geom/vectors":96,"../internals/is":107,"../internals/numberComparator":110,"../math/mathUtils":126,"./Hue":15}],21:[function(require,module,exports){
 var is = require('../internals/is');
 var ScaleMap = require('../math/ScaleMap');
 var ColorList = require('./ColorList');
@@ -2885,7 +2885,7 @@ var ColorGradient = require('./ColorGradient');
 
 
 
-},{"../internals/is":106,"../math/ScaleMap":120,"./ColorGradient":7,"./ColorList":8}],22:[function(require,module,exports){
+},{"../internals/is":107,"../math/ScaleMap":121,"./ColorGradient":7,"./ColorList":8}],22:[function(require,module,exports){
 
 
 
@@ -3124,7 +3124,7 @@ var ColorList = require('../ColorList');
     });
 
 
-},{"../../geom/vectors":96,"../../internals":98,"../../math/mathUtils":125,"../ColorList":8,"./strategies":39}],29:[function(require,module,exports){
+},{"../../geom/vectors":96,"../../internals":98,"../../math/mathUtils":126,"../ColorList":8,"./strategies":39}],29:[function(require,module,exports){
 var strategies = require('./strategies');
 var ColorList = require('../ColorList');
 
@@ -3490,7 +3490,7 @@ var is = require('../../internals/is');
 
 
 
-},{"../../internals/has":105,"../../internals/is":106}],40:[function(require,module,exports){
+},{"../../internals/has":106,"../../internals/is":107}],40:[function(require,module,exports){
 module.exports = require("./index");
 },{"./index":97}],41:[function(require,module,exports){
 
@@ -3986,7 +3986,7 @@ module.exports = AABB;
 
 
 
-},{"../internals":98,"../math/mathUtils":125,"./Vec2D":70,"./Vec3D":71,"./mesh/meshCommon":92}],43:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./Vec2D":70,"./Vec3D":71,"./mesh/meshCommon":92}],43:[function(require,module,exports){
 
 
 var Cone = require('./Cone');
@@ -4693,7 +4693,7 @@ exports.Circle = Circle;
 
 
 
-},{"../internals/extend":103,"../internals/has":105,"../internals/is":106,"../math/mathUtils":125,"./Polygon2D":57,"./Vec2D":70}],50:[function(require,module,exports){
+},{"../internals/extend":103,"../internals/has":106,"../internals/is":107,"../math/mathUtils":126,"./Polygon2D":57,"./Vec2D":70}],50:[function(require,module,exports){
 
 
 var Vec2D = require('./Vec2D');
@@ -5051,7 +5051,7 @@ Line2D.LineIntersection.Type = {
 module.exports = Line2D;
 
 
-},{"../internals":98,"../math/mathUtils":125,"./Ray2D":59}],53:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./Ray2D":59}],53:[function(require,module,exports){
 
 
 var mathUtils = require('../math/mathUtils'),
@@ -5282,7 +5282,7 @@ module.exports = Line3D;
 
 
 
-},{"../math/mathUtils":125,"./Ray3D":60}],54:[function(require,module,exports){
+},{"../math/mathUtils":126,"./Ray3D":60}],54:[function(require,module,exports){
 
 
 	var Vec3D = require('./vectors').Vec3D,
@@ -5412,7 +5412,7 @@ module.exports = Line3D;
 	module.exports = LineStrip3D;
 
 
-},{"../internals/Iterator":99,"../internals/has":105,"./Line3D":53,"./vectors":96}],55:[function(require,module,exports){
+},{"../internals/Iterator":99,"../internals/has":106,"./Line3D":53,"./vectors":96}],55:[function(require,module,exports){
 
 
 var mathUtils = require('../math/mathUtils'),
@@ -6019,7 +6019,7 @@ module.exports = Matrix4x4;
 
 
 
-},{"../internals":98,"../math/mathUtils":125,"./Vec3D":71}],56:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./Vec3D":71}],56:[function(require,module,exports){
 
 
     var extend = require('../internals').extend,
@@ -6163,7 +6163,7 @@ module.exports = Matrix4x4;
 
 
 
-},{"../internals":98,"../math/mathUtils":125,"./Ray3D":60,"./mesh/TriangleMesh":87,"./vectors":96}],57:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./Ray3D":60,"./mesh/TriangleMesh":87,"./vectors":96}],57:[function(require,module,exports){
 var MathUtils = require('../math/mathUtils');
 var Vec2D = require('./Vec2D');
 var Line2D = require('./Line2D');
@@ -6842,7 +6842,7 @@ var is = require('../internals/is');
     module.exports = Polygon2D;
 
 
-},{"../internals/has":105,"../internals/is":106,"../math/mathUtils":125,"./Circle":45,"./Line2D":52,"./Rect":62,"./Vec2D":70,"./mesh/TriangleMesh":87}],58:[function(require,module,exports){
+},{"../internals/has":106,"../internals/is":107,"../math/mathUtils":126,"./Circle":45,"./Line2D":52,"./Rect":62,"./Vec2D":70,"./mesh/TriangleMesh":87}],58:[function(require,module,exports){
 
 
 var mathUtils = require('../math/mathUtils'),
@@ -7129,7 +7129,7 @@ Quaternion.createFromMatrix = function(m){
  module.exports = Quaternion;
 
 
-},{"../math/mathUtils":125,"./Matrix4x4":55}],59:[function(require,module,exports){
+},{"../math/mathUtils":126,"./Matrix4x4":55}],59:[function(require,module,exports){
 
 
 var extend = require('../internals').extend,
@@ -7342,7 +7342,7 @@ Ray3DIntersector.prototype = {
 module.exports = Ray3DIntersector;
 
 
-},{"../math/mathUtils":125,"./IsectData3D":51}],62:[function(require,module,exports){
+},{"../math/mathUtils":126,"./IsectData3D":51}],62:[function(require,module,exports){
 
 
     var	internals = require('../internals'),
@@ -7611,7 +7611,7 @@ module.exports = Ray3DIntersector;
     module.exports = Rect;
 
 
-},{"../internals":98,"../math/mathUtils":125,"./Line2D":52,"./Polygon2D":57,"./Vec2D":70}],63:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./Line2D":52,"./Polygon2D":57,"./Vec2D":70}],63:[function(require,module,exports){
 
 
 	//2 modules defined
@@ -7819,7 +7819,7 @@ module.exports = Ray3DIntersector;
 
 
 
-},{"../internals":98,"../math/mathUtils":125,"./Vec3D":71,"./mesh/meshCommon":92}],64:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./Vec3D":71,"./mesh/meshCommon":92}],64:[function(require,module,exports){
 var Vec2D = require('./Vec2D');
 var is = require('../internals/is');
 var BernsteinPolynomial = require('./BernsteinPolynomial');
@@ -8020,7 +8020,7 @@ Spline2D.DEFAULT_RES = 16;
 module.exports = Spline2D;
 
 
-},{"../internals/is":106,"./BernsteinPolynomial":44,"./Vec2D":70}],65:[function(require,module,exports){
+},{"../internals/is":107,"./BernsteinPolynomial":44,"./Vec2D":70}],65:[function(require,module,exports){
 var Vec3D = require('./Vec3D');
 var is = require('../internals/is');
 var BernsteinPolynomial = require('./BernsteinPolynomial');
@@ -8232,7 +8232,7 @@ var BernsteinPolynomial = require('./BernsteinPolynomial');
     module.exports = Spline3D;
 
 
-},{"../internals/is":106,"./BernsteinPolynomial":44,"./Vec3D":71}],66:[function(require,module,exports){
+},{"../internals/is":107,"./BernsteinPolynomial":44,"./Vec3D":71}],66:[function(require,module,exports){
 
 	/**
 	* A version of the Sutherland-Hodgeman algorithm to clip 2D polygons optimized
@@ -8565,7 +8565,7 @@ Triangle2D.prototype = {
 module.exports = Triangle2D;
 
 
-},{"../math/mathUtils":125,"./Circle":45,"./Line2D":52,"./Polygon2D":57,"./Rect":62,"./Vec2D":70}],68:[function(require,module,exports){
+},{"../math/mathUtils":126,"./Circle":45,"./Line2D":52,"./Polygon2D":57,"./Rect":62,"./Vec2D":70}],68:[function(require,module,exports){
 
 
 var mathUtils = require('../math/mathUtils'),
@@ -8801,7 +8801,7 @@ Triangle3D.prototype = {
 module.exports = Triangle3D;
 
 
-},{"../math/mathUtils":125,"./AABB":42,"./Line3D":53,"./Vec3D":71}],69:[function(require,module,exports){
+},{"../math/mathUtils":126,"./AABB":42,"./Line3D":53,"./Vec3D":71}],69:[function(require,module,exports){
 var mathUtils = require('../math/mathUtils');
 var Triangle3D = require('./Triangle3D');
 var Vec3D = require('./Vec3D');
@@ -8860,7 +8860,7 @@ var IsectData3D = require('./IsectData3D');
 	module.exports = TriangleIntersector;
 
 
-},{"../math/mathUtils":125,"./IsectData3D":51,"./Triangle3D":68,"./Vec3D":71}],70:[function(require,module,exports){
+},{"../math/mathUtils":126,"./IsectData3D":51,"./Triangle3D":68,"./Vec3D":71}],70:[function(require,module,exports){
 
     //Vec2D is located in toxi/geom/vectors to circumvent circular dependencies
     module.exports = require('./vectors').Vec2D;
@@ -8910,7 +8910,7 @@ XAxisCylinder.prototype.getMajorAxis = function(){
 module.exports = XAxisCylinder;
 
 
-},{"../internals":98,"../math/mathUtils":125,"./AxisAlignedCylinder":43,"./Vec3D":71}],73:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./AxisAlignedCylinder":43,"./Vec3D":71}],73:[function(require,module,exports){
 
 
 var extend = require('../internals').extend,
@@ -8945,7 +8945,7 @@ module.exports = YAxisCylinder;
 
 
 
-},{"../internals":98,"../math/mathUtils":125,"./AxisAlignedCylinder":43,"./Vec3D":71}],74:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./AxisAlignedCylinder":43,"./Vec3D":71}],74:[function(require,module,exports){
 
 
 var extend = require('../internals').extend,
@@ -8978,7 +8978,7 @@ ZAxisCylinder.prototype.getMajorAxis = function(){
 module.exports = ZAxisCylinder;
 
 
-},{"../internals":98,"../math/mathUtils":125,"./AxisAlignedCylinder":43,"./Vec3D":71}],75:[function(require,module,exports){
+},{"../internals":98,"../math/mathUtils":126,"./AxisAlignedCylinder":43,"./Vec3D":71}],75:[function(require,module,exports){
 
 	exports.TriangleMesh = require('./mesh/TriangleMesh');
 	exports.BezierPatch = require('./mesh/BezierPatch');
@@ -9113,7 +9113,7 @@ BezierPatch.computePointAt = function(u,v,points){
 module.exports = BezierPatch;
 
 
-},{"../../internals/is":106,"../Vec3D":71,"./TriangleMesh":87}],77:[function(require,module,exports){
+},{"../../internals/is":107,"../Vec3D":71,"./TriangleMesh":87}],77:[function(require,module,exports){
 
 
 var extend = require('../../internals').extend,
@@ -9472,7 +9472,7 @@ SphericalHarmonics.prototype = {
 module.exports = SphericalHarmonics;
 
 
-},{"../../math/mathUtils":125}],84:[function(require,module,exports){
+},{"../../math/mathUtils":126}],84:[function(require,module,exports){
 
 
 var mathUtils = require('../../math/mathUtils');
@@ -9523,7 +9523,7 @@ SuperEllipsoid.prototype = {
 module.exports = SuperEllipsoid;
 
 
-},{"../../math/mathUtils":125,"./TriangleMesh":87}],85:[function(require,module,exports){
+},{"../../math/mathUtils":126,"./TriangleMesh":87}],85:[function(require,module,exports){
 
 	module.exports = require('./meshCommon').SurfaceMeshBuilder;
 
@@ -11266,7 +11266,7 @@ var Line3D = require('../Line3D');
 
 
 
-},{"../../internals":98,"../../math/Interpolation2D":118,"../../math/mathUtils":125,"../AABB":42,"../IsectData3D":51,"../Line3D":53,"../Matrix4x4":55,"../Quaternion":58,"../Ray3D":60,"../Sphere":63,"../Triangle3D":68,"../TriangleIntersector":69,"../Vec2D":70,"../Vec3D":71,"../vectors":96,"./Face":79,"./Vertex":88,"./WingedEdge":91,"./subdiv/MidpointSubdivision":94}],93:[function(require,module,exports){
+},{"../../internals":98,"../../math/Interpolation2D":119,"../../math/mathUtils":126,"../AABB":42,"../IsectData3D":51,"../Line3D":53,"../Matrix4x4":55,"../Quaternion":58,"../Ray3D":60,"../Sphere":63,"../Triangle3D":68,"../TriangleIntersector":69,"../Vec2D":70,"../Vec3D":71,"../vectors":96,"./Face":79,"./Vertex":88,"./WingedEdge":91,"./subdiv/MidpointSubdivision":94}],93:[function(require,module,exports){
 
 	var EdgeLengthComparator = function(){};
 	EdgeLengthComparator.prototype.compare = function( edge1, edge2 ){
@@ -12827,19 +12827,20 @@ var EdgeLengthComparator = require('./EdgeLengthComparator');
 	exports.Vec3D = Vec3D;
 
 
-},{"../internals/has":105,"../internals/is":106,"../math/mathUtils":125}],97:[function(require,module,exports){
+},{"../internals/has":106,"../internals/is":107,"../math/mathUtils":126}],97:[function(require,module,exports){
 
 		exports.color = require('./color');
 		exports.geom = require('./geom');
 		exports.internals = require('./internals');
 		exports.math = require('./math');
 		exports.physics2d = require('./physics2d');
+		exports.physics3d = require('./physics3d');
 		exports.processing = require('./processing');
 		exports.THREE = require('./THREE');
 		exports.util = require('./util');
 
 
-},{"./THREE":1,"./color":3,"./geom":41,"./internals":98,"./math":112,"./physics2d":140,"./processing":160,"./util":162}],98:[function(require,module,exports){
+},{"./THREE":1,"./color":3,"./geom":41,"./internals":98,"./math":113,"./physics2d":141,"./physics3d":161,"./processing":183,"./util":185}],98:[function(require,module,exports){
 
 /**
  * @namespace contains helper functions used internally
@@ -12858,6 +12859,7 @@ exports.bind = require('./internals/bind');
 exports.keys = require('./internals/keys');
 exports.values = require('./internals/values');
 exports.filter = require('./internals/filter');
+exports.find = require('./internals/find');
 //receives an object of properties to set on source object
 exports.mixin = require('./internals/mixin');
 //imitates java-style Iterator
@@ -12870,7 +12872,7 @@ exports.removeItemFrom = require('./internals/removeItemFrom');
 
 
 
-},{"./internals/Iterator":99,"./internals/LinkedMap":100,"./internals/bind":101,"./internals/each":102,"./internals/extend":103,"./internals/filter":104,"./internals/has":105,"./internals/is":106,"./internals/keys":107,"./internals/mixin":108,"./internals/numberComparator":109,"./internals/removeItemFrom":110,"./internals/values":111}],99:[function(require,module,exports){
+},{"./internals/Iterator":99,"./internals/LinkedMap":100,"./internals/bind":101,"./internals/each":102,"./internals/extend":103,"./internals/filter":104,"./internals/find":105,"./internals/has":106,"./internals/is":107,"./internals/keys":108,"./internals/mixin":109,"./internals/numberComparator":110,"./internals/removeItemFrom":111,"./internals/values":112}],99:[function(require,module,exports){
 var is = require('./is');
 	//imitate the basic functionality of a Java Iterator
     var ArrayIterator = function(collection){
@@ -12913,7 +12915,7 @@ var is = require('./is');
     module.exports = Iterator;
 
 
-},{"./is":106}],100:[function(require,module,exports){
+},{"./is":107}],100:[function(require,module,exports){
 var each = require('./each');
     // {Function} keyGeneratorFunction - key to use to return the identifier
     var LinkedMap = function( keyGeneratorFunction ){
@@ -13059,6 +13061,23 @@ var each = require('./each');
 
 },{}],105:[function(require,module,exports){
 
+	module.exports = function(array, iterator, context) {
+		var found = false;
+		var result;
+		var i = 0;
+		while (!result && i<array.length) {
+			if ( iterator.call( (context) ? context : array[i] ), array[i] ) {
+				found = true;
+				result = array[i];
+			}
+			++i;
+		}
+		return result;
+	};
+
+
+},{}],106:[function(require,module,exports){
+
 
     var all = function(subject,properties){
         if(subject === undefined || typeof subject != 'object'){
@@ -13090,7 +13109,7 @@ var each = require('./each');
     };
 
 
-},{}],106:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 var has = require('./has');
 
     var apply = function(properties){
@@ -13138,7 +13157,7 @@ var has = require('./has');
 	exports.VerletParticle2D = apply(['x','y','weight']);
 
 
-},{"./has":105}],107:[function(require,module,exports){
+},{"./has":106}],108:[function(require,module,exports){
 
     module.exports = Object.keys || function(obj) {
         if (obj !== Object(obj)) throw new TypeError('Invalid object');
@@ -13148,7 +13167,7 @@ var has = require('./has');
     };
 
 
-},{}],108:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 var each = require('./each');
     //basic mixin function, copy over object properties to provided object
     module.exports = function(destination,source){
@@ -13159,7 +13178,7 @@ var each = require('./each');
     };
 
 
-},{"./each":102}],109:[function(require,module,exports){
+},{"./each":102}],110:[function(require,module,exports){
 
     module.exports = function(f1,f2){
         if(f1 == f2) return 0;
@@ -13168,7 +13187,7 @@ var each = require('./each');
     };
 
 
-},{}],110:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 
     module.exports = function(item,array){
         var index = array.indexOf(item);
@@ -13179,7 +13198,7 @@ var each = require('./each');
     };
 
 
-},{}],111:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 var has = require('./has');
     module.exports = function(obj) {
         var values = [];
@@ -13188,7 +13207,7 @@ var has = require('./has');
     };
 
 
-},{"./has":105}],112:[function(require,module,exports){
+},{"./has":106}],113:[function(require,module,exports){
 
 module.exports = {
 	BezierInterpolation: require('./math/BezierInterpolation'),
@@ -13212,7 +13231,7 @@ module.exports.noise = require('./math/noise');
 module.exports.waves = require('./math/waves');
 
 
-},{"./math/BezierInterpolation":113,"./math/CircularInterpolation":114,"./math/CosineInterpolation":115,"./math/DecimatedInterpolation":116,"./math/ExponentialInterpolation":117,"./math/Interpolation2D":118,"./math/LinearInterpolation":119,"./math/ScaleMap":120,"./math/SigmoidInterpolation":121,"./math/SinCosLUT":122,"./math/ThresholdInterpolation":123,"./math/ZoomLensInterpolation":124,"./math/mathUtils":125,"./math/noise":126,"./math/waves":129}],113:[function(require,module,exports){
+},{"./math/BezierInterpolation":114,"./math/CircularInterpolation":115,"./math/CosineInterpolation":116,"./math/DecimatedInterpolation":117,"./math/ExponentialInterpolation":118,"./math/Interpolation2D":119,"./math/LinearInterpolation":120,"./math/ScaleMap":121,"./math/SigmoidInterpolation":122,"./math/SinCosLUT":123,"./math/ThresholdInterpolation":124,"./math/ZoomLensInterpolation":125,"./math/mathUtils":126,"./math/noise":127,"./math/waves":130}],114:[function(require,module,exports){
 
     /**
     * @class Bezier curve interpolation with configurable coefficients. The curve
@@ -13266,7 +13285,7 @@ module.exports.waves = require('./math/waves');
 
 
 
-},{}],114:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 
     /**
     * @class Implementation of the circular interpolation function.
@@ -13312,7 +13331,7 @@ module.exports.waves = require('./math/waves');
 
 
 
-},{}],115:[function(require,module,exports){
+},{}],116:[function(require,module,exports){
 
     /**
     * @class Implementation of the cosine interpolation function:
@@ -13331,7 +13350,7 @@ module.exports.waves = require('./math/waves');
 
 
 
-},{}],116:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 var LinearInterpolation = require('./LinearInterpolation');
     /**
     * @class Delivers a number of decimated/stepped values for a given interval. E.g. by
@@ -13358,7 +13377,7 @@ var LinearInterpolation = require('./LinearInterpolation');
     module.exports = DecimatedInterpolation;
 
 
-},{"./LinearInterpolation":119}],117:[function(require,module,exports){
+},{"./LinearInterpolation":120}],118:[function(require,module,exports){
 
     /**
     * @class Exponential curve interpolation with adjustable exponent. Use exp in the
@@ -13387,7 +13406,7 @@ var LinearInterpolation = require('./LinearInterpolation');
 
 
 
-},{}],118:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 var internals = require('../internals');
 
     /**
@@ -13459,7 +13478,7 @@ var internals = require('../internals');
     module.exports = Interpolation2D;
 
 
-},{"../internals":98}],119:[function(require,module,exports){
+},{"../internals":98}],120:[function(require,module,exports){
 
     /**
     * @class Implementation of the linear interpolation function
@@ -13480,7 +13499,7 @@ var internals = require('../internals');
 
 
 
-},{}],120:[function(require,module,exports){
+},{}],121:[function(require,module,exports){
 
 
 var mathUtils = require('./mathUtils'),
@@ -13630,7 +13649,7 @@ ScaleMap.prototype = {
 module.exports = ScaleMap;
 
 
-},{"./LinearInterpolation":119,"./mathUtils":125}],121:[function(require,module,exports){
+},{"./LinearInterpolation":120,"./mathUtils":126}],122:[function(require,module,exports){
 
     /**
     * @class Initializes the s-curve with default sharpness = 2
@@ -13670,7 +13689,7 @@ module.exports = ScaleMap;
 
 
 
-},{}],122:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 var mathUtils = require('./mathUtils');
 
 
@@ -13752,7 +13771,7 @@ var mathUtils = require('./mathUtils');
 
 
 
-},{"./mathUtils":125}],123:[function(require,module,exports){
+},{"./mathUtils":126}],124:[function(require,module,exports){
 
     /**
     * @class Defines a single step/threshold function which returns the min value for all
@@ -13779,7 +13798,7 @@ var mathUtils = require('./mathUtils');
 
 
 
-},{}],124:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 var mathUtils = require('./mathUtils');
 var CircularInterpolation = require('./CircularInterpolation');
 
@@ -13827,7 +13846,7 @@ var CircularInterpolation = require('./CircularInterpolation');
 
 
 
-},{"./CircularInterpolation":114,"./mathUtils":125}],125:[function(require,module,exports){
+},{"./CircularInterpolation":115,"./mathUtils":126}],126:[function(require,module,exports){
 
     /**
     * @class
@@ -14039,7 +14058,7 @@ var CircularInterpolation = require('./CircularInterpolation');
 
 
 
-},{}],126:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 
 /** module toxi/math/noise 
 	@api public
@@ -14050,7 +14069,7 @@ module.exports = {
 };
 
 
-},{"./noise/PerlinNoise":127,"./noise/simplexNoise":128}],127:[function(require,module,exports){
+},{"./noise/PerlinNoise":128,"./noise/simplexNoise":129}],128:[function(require,module,exports){
 
 
 var SinCosLUT = require('../SinCosLUT'),
@@ -14420,7 +14439,7 @@ mixkey(math.random(), pool);
 	module.exports = PerlinNoise;
 
 
-},{"../../internals/has":105,"../SinCosLUT":122}],128:[function(require,module,exports){
+},{"../../internals/has":106,"../SinCosLUT":123}],129:[function(require,module,exports){
 
 
 var each = require('../../internals/each');
@@ -15015,7 +15034,7 @@ module.exports = SimplexNoise;
 
 
 
-},{"../../internals/each":102,"../../internals/has":105}],129:[function(require,module,exports){
+},{"../../internals/each":102,"../../internals/has":106}],130:[function(require,module,exports){
 
 /** @module toxi/math/waves */
 module.exports = {
@@ -15032,7 +15051,7 @@ module.exports = {
 };
 
 
-},{"./waves/AMFMSineWave":130,"./waves/AbstractWave":131,"./waves/ConstantWave":132,"./waves/FMHarmonicSquareWave":133,"./waves/FMSawtoothWave":134,"./waves/FMSineWave":135,"./waves/FMSquareWave":136,"./waves/FMTriangleWave":137,"./waves/SineWave":138,"./waves/WaveState":139}],130:[function(require,module,exports){
+},{"./waves/AMFMSineWave":131,"./waves/AbstractWave":132,"./waves/ConstantWave":133,"./waves/FMHarmonicSquareWave":134,"./waves/FMSawtoothWave":135,"./waves/FMSineWave":136,"./waves/FMSquareWave":137,"./waves/FMTriangleWave":138,"./waves/SineWave":139,"./waves/WaveState":140}],131:[function(require,module,exports){
 
 
 var extend = require('../../internals').extend,
@@ -15102,7 +15121,7 @@ module.exports = AMFMSineWave;
 
 
 
-},{"../../internals":98,"./AbstractWave":131}],131:[function(require,module,exports){
+},{"../../internals":98,"./AbstractWave":132}],132:[function(require,module,exports){
 
 
 var WaveState = require('./WaveState');
@@ -15225,7 +15244,7 @@ module.exports = AbstractWave;
 
 
 
-},{"./WaveState":139}],132:[function(require,module,exports){
+},{"./WaveState":140}],133:[function(require,module,exports){
 
 var extend = require('../../internals').extend,
 	AbstractWave = require('./AbstractWave');
@@ -15251,7 +15270,7 @@ ConstantWave.prototype.update = function() {
 module.exports = ConstantWave;
 
 
-},{"../../internals":98,"./AbstractWave":131}],133:[function(require,module,exports){
+},{"../../internals":98,"./AbstractWave":132}],134:[function(require,module,exports){
 
 
 var extend = require('../../internals').extend,
@@ -15330,7 +15349,7 @@ FMHarmonicSquareWave.prototype.update = function() {
 module.exports = FMHarmonicSquareWave;
 
 
-},{"../../internals":98,"./AbstractWave":131}],134:[function(require,module,exports){
+},{"../../internals":98,"./AbstractWave":132}],135:[function(require,module,exports){
 
 var extend = require('../../internals').extend,
 	AbstractWave = require('./AbstractWave');
@@ -15384,7 +15403,7 @@ FMSawtoothWave.prototype.update = function(){
 module.exports = FMSawtoothWave;
 
 
-},{"../../internals":98,"./AbstractWave":131}],135:[function(require,module,exports){
+},{"../../internals":98,"./AbstractWave":132}],136:[function(require,module,exports){
 
 
 var extend = require('../../internals').extend,
@@ -15434,7 +15453,7 @@ FMSineWave.prototype.update = function(){
 module.exports = FMSineWave;
 
 
-},{"../../internals":98,"./AbstractWave":131}],136:[function(require,module,exports){
+},{"../../internals":98,"./AbstractWave":132}],137:[function(require,module,exports){
 
 
 var extend = require('../../internals').extend,
@@ -15490,7 +15509,7 @@ FMSquareWave.prototype.update = function(){
 module.exports = FMSquareWave;
 
 
-},{"../../internals":98,"./AbstractWave":131,"./ConstantWave":132}],137:[function(require,module,exports){
+},{"../../internals":98,"./AbstractWave":132,"./ConstantWave":133}],138:[function(require,module,exports){
 
 
 var extend = require('../../internals').extend,
@@ -15545,7 +15564,7 @@ FMTriangleWave.prototype.update = function(){
 module.exports = FMTriangleWave;
 
 
-},{"../../internals":98,"../mathUtils":125,"./AbstractWave":131,"./ConstantWave":132}],138:[function(require,module,exports){
+},{"../../internals":98,"../mathUtils":126,"./AbstractWave":132,"./ConstantWave":133}],139:[function(require,module,exports){
 
 
 var extend = require('../../internals').extend,
@@ -15580,7 +15599,7 @@ SineWave.prototype.update = function() {
 module.exports = SineWave;
 
 
-},{"../../internals":98,"./AbstractWave":131}],139:[function(require,module,exports){
+},{"../../internals":98,"./AbstractWave":132}],140:[function(require,module,exports){
 
 /**
  * @module toxi/math/waves/WaveState
@@ -15595,7 +15614,7 @@ var	WaveState = function(phase,frequency,amp,offset){
 module.exports = WaveState;
 
 
-},{}],140:[function(require,module,exports){
+},{}],141:[function(require,module,exports){
 
 module.exports = {
 	ParticlePath2D: require('./physics2d/ParticlePath2D'),
@@ -15612,7 +15631,7 @@ module.exports.behaviors = require('./physics2d/behaviors');
 module.exports.constraints = require('./physics2d/constraints');
 
 
-},{"./physics2d/ParticlePath2D":141,"./physics2d/ParticleString2D":142,"./physics2d/PullBackString2D":143,"./physics2d/VerletConstrainedSpring2D":144,"./physics2d/VerletMinDistanceSpring2D":145,"./physics2d/VerletParticle2D":146,"./physics2d/VerletPhysics2D":147,"./physics2d/VerletSpring2D":148,"./physics2d/behaviors":149,"./physics2d/constraints":153}],141:[function(require,module,exports){
+},{"./physics2d/ParticlePath2D":142,"./physics2d/ParticleString2D":143,"./physics2d/PullBackString2D":144,"./physics2d/VerletConstrainedSpring2D":145,"./physics2d/VerletMinDistanceSpring2D":146,"./physics2d/VerletParticle2D":147,"./physics2d/VerletPhysics2D":148,"./physics2d/VerletSpring2D":149,"./physics2d/behaviors":150,"./physics2d/constraints":154}],142:[function(require,module,exports){
 
 
     var internals = require('../internals'),
@@ -15644,7 +15663,7 @@ module.exports.constraints = require('./physics2d/constraints');
     module.exports = ParticlePath2D;
 
 
-},{"../geom/Spline2D":64,"../internals":98,"./VerletParticle2D":146}],142:[function(require,module,exports){
+},{"../geom/Spline2D":64,"../internals":98,"./VerletParticle2D":147}],143:[function(require,module,exports){
 
 
 var VerletParticle2D = require('./VerletParticle2D'),
@@ -15780,7 +15799,7 @@ ParticleString2D.prototype = {
 module.exports = ParticleString2D;
 
 
-},{"./VerletParticle2D":146,"./VerletSpring2D":148}],143:[function(require,module,exports){
+},{"./VerletParticle2D":147,"./VerletSpring2D":149}],144:[function(require,module,exports){
 
 
 var internals = require('../internals'),
@@ -15809,7 +15828,7 @@ var internals = require('../internals'),
  module.exports = PullBackString2D;
 
 
-},{"../internals":98,"./VerletSpring2D":148}],144:[function(require,module,exports){
+},{"../internals":98,"./VerletSpring2D":149}],145:[function(require,module,exports){
 
 
 var internals = require('../internals'),
@@ -15844,7 +15863,7 @@ VerletConstrainedSpring2D.update = function(applyConstraints){
 module.exports = VerletConstrainedSpring2D;
 
 
-},{"../internals":98,"./VerletSpring2D":148}],145:[function(require,module,exports){
+},{"../internals":98,"./VerletSpring2D":149}],146:[function(require,module,exports){
 
 
 var internals = require('../internals'),
@@ -15866,7 +15885,7 @@ VerletMinDistanceSpring2D.prototype.update = function(applyConstraints){
 module.exports = VerletMinDistanceSpring2D;
 
 
-},{"../internals":98,"./VerletSpring2D":148}],146:[function(require,module,exports){
+},{"../internals":98,"./VerletSpring2D":149}],147:[function(require,module,exports){
 
 
 var internals = require('../internals'),
@@ -16039,7 +16058,7 @@ VerletParticle2D.prototype.update = function(){
 module.exports = VerletParticle2D;
 
 
-},{"../geom/Vec2D":70,"../internals":98}],147:[function(require,module,exports){
+},{"../geom/Vec2D":70,"../internals":98}],148:[function(require,module,exports){
 
 
     var internals = require('../internals'),
@@ -16264,7 +16283,7 @@ module.exports = VerletParticle2D;
     module.exports = VerletPhysics2D;
 
 
-},{"../geom/Rect":62,"../geom/Vec2D":70,"../internals":98,"./behaviors/GravityBehavior":152}],148:[function(require,module,exports){
+},{"../geom/Rect":62,"../geom/Vec2D":70,"../internals":98,"./behaviors/GravityBehavior":153}],149:[function(require,module,exports){
 
 var	VerletSpring2D = function(a,b,len,str){
 	this.a = a;
@@ -16332,7 +16351,7 @@ VerletSpring2D.prototype = {
 module.exports = VerletSpring2D;
 
 
-},{}],149:[function(require,module,exports){
+},{}],150:[function(require,module,exports){
 var AttractionBehavior = require('./behaviors/AttractionBehavior');
 var ConstantForceBehavior = require('./behaviors/ConstantForceBehavior');
 var GravityBehavior = require('./behaviors/GravityBehavior');
@@ -16341,7 +16360,7 @@ var GravityBehavior = require('./behaviors/GravityBehavior');
     exports.GravityBehavior = GravityBehavior;
 
 
-},{"./behaviors/AttractionBehavior":150,"./behaviors/ConstantForceBehavior":151,"./behaviors/GravityBehavior":152}],150:[function(require,module,exports){
+},{"./behaviors/AttractionBehavior":151,"./behaviors/ConstantForceBehavior":152,"./behaviors/GravityBehavior":153}],151:[function(require,module,exports){
 
     var AttractionBehavior = function(attractor,radius,strength,jitter){
         if(arguments.length < 3){
@@ -16407,7 +16426,7 @@ var GravityBehavior = require('./behaviors/GravityBehavior');
 
 
 
-},{}],151:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 
 
     var Vec2D = require('../../geom/Vec2D');
@@ -16445,7 +16464,7 @@ var GravityBehavior = require('./behaviors/GravityBehavior');
     module.exports = ConstantForceBehavior;
 
 
-},{"../../geom/Vec2D":70}],152:[function(require,module,exports){
+},{"../../geom/Vec2D":70}],153:[function(require,module,exports){
 
 
     var internals = require('../../internals'),
@@ -16465,7 +16484,7 @@ var GravityBehavior = require('./behaviors/GravityBehavior');
     module.exports = GravityBehavior;
 
 
-},{"../../internals":98,"./ConstantForceBehavior":151}],153:[function(require,module,exports){
+},{"../../internals":98,"./ConstantForceBehavior":152}],154:[function(require,module,exports){
 var AngularConstraint = require('./constraints/AngularConstraint');
 var AxisConstraint = require('./constraints/AxisConstraint');
 var CircularConstraint = require('./constraints/CircularConstraint');
@@ -16481,7 +16500,7 @@ var RectConstraint = require('./constraints/RectConstraint');
 	exports.RectConstraint = RectConstraint;
 
 
-},{"./constraints/AngularConstraint":154,"./constraints/AxisConstraint":155,"./constraints/CircularConstraint":156,"./constraints/MaxConstraint":157,"./constraints/MinConstraint":158,"./constraints/RectConstraint":159}],154:[function(require,module,exports){
+},{"./constraints/AngularConstraint":155,"./constraints/AxisConstraint":156,"./constraints/CircularConstraint":157,"./constraints/MaxConstraint":158,"./constraints/MinConstraint":159,"./constraints/RectConstraint":160}],155:[function(require,module,exports){
 
 
     var Vec2D = require('../../geom/Vec2D');
@@ -16512,7 +16531,7 @@ var RectConstraint = require('./constraints/RectConstraint');
     module.exports = AngularConstraint;
 
 
-},{"../../geom/Vec2D":70}],155:[function(require,module,exports){
+},{"../../geom/Vec2D":70}],156:[function(require,module,exports){
 
 /**
  * Constrains a particle's movement by locking a given axis to a fixed value.
@@ -16529,7 +16548,7 @@ AxisConstraint.prototype.applyConstraint = function(p){
 module.exports = AxisConstraint;
 
 
-},{}],156:[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 
 	var Circle = require('../../geom/Circle');
 	
@@ -16550,7 +16569,7 @@ module.exports = AxisConstraint;
 	module.exports = CircularConstraint;
 
 
-},{"../../geom/Circle":45}],157:[function(require,module,exports){
+},{"../../geom/Circle":45}],158:[function(require,module,exports){
 
 var	MaxConstraint = function(axis,threshold){
 	this.axis = axis;
@@ -16566,7 +16585,7 @@ MaxConstraint.prototype.applyConstraint = function(p){
 module.exports = MaxConstraint;
 
 
-},{}],158:[function(require,module,exports){
+},{}],159:[function(require,module,exports){
 
 var	MinConstraint = function(axis,threshold){
 	this.axis = axis;
@@ -16582,7 +16601,7 @@ MinConstraint.prototype.applyConstraint = function(p){
 module.exports = MinConstraint;
 
 
-},{}],159:[function(require,module,exports){
+},{}],160:[function(require,module,exports){
 
 
     var Vec2D = require('../../geom/Vec2D'),
@@ -16628,7 +16647,1061 @@ module.exports = MinConstraint;
     module.exports = RectConstraint;
 
 
-},{"../../geom/Ray2D":59,"../../geom/Rect":62,"../../geom/Vec2D":70,"../../internals/has":105}],160:[function(require,module,exports){
+},{"../../geom/Ray2D":59,"../../geom/Rect":62,"../../geom/Vec2D":70,"../../internals/has":106}],161:[function(require,module,exports){
+
+module.exports = {
+	ParticlePath3D: require('./physics3d/ParticlePath3D'),
+	ParticleString3D: require('./physics3d/ParticleString3D'),
+	PullBackSpring3D: require('./physics3d/PullBackSpring3D'),
+	VerletConstrainedSpring3D: require('./physics3d/VerletConstrainedSpring3D'),
+	VerletMinDistanceSpring3D: require('./physics3d/VerletMinDistanceSpring3D'),
+	VerletParticle3D: require('./physics3d/VerletParticle3D'),
+	VerletPhysics3D: require('./physics3d/VerletPhysics3D'),
+	VerletSpring3D: require('./physics3d/VerletSpring3D')
+};
+
+module.exports.behaviors = require('./physics3d/behaviors');
+module.exports.constraints = require('./physics3d/constraints');
+
+
+},{"./physics3d/ParticlePath3D":162,"./physics3d/ParticleString3D":163,"./physics3d/PullBackSpring3D":164,"./physics3d/VerletConstrainedSpring3D":165,"./physics3d/VerletMinDistanceSpring3D":166,"./physics3d/VerletParticle3D":167,"./physics3d/VerletPhysics3D":168,"./physics3d/VerletSpring3D":169,"./physics3d/behaviors":170,"./physics3d/constraints":174}],162:[function(require,module,exports){
+
+},{}],163:[function(require,module,exports){
+arguments[4][162][0].apply(exports,arguments)
+},{"dup":162}],164:[function(require,module,exports){
+
+
+    var internals = require('../internals'),
+        Vec3D = require('../geom/Vec3D'),
+        VerletSpring3D = require('./VerletSpring3D');
+
+    /**
+     * Creates a pullback spring (default restlength=0.5) between 2 particles and
+     * locks the first one given at the current position. The spring is only
+     * enforced if the current length of the spring exceeds the rest length. This
+     * behaviour is the opposite to the {@link VerletMinDistanceSpring3D}.
+     */
+    
+    // This should be VerletPullBackSpring3D... but it is PullBackSpring3D in the Java implementation
+    var PullBackSpring3D = function (a, b, len, str, limit) {
+        VerletSpring3D.call(this, a, b, len, str);
+        this.a.lock();
+        this.setRestLength(0);
+    };
+
+    internals.extend(PullBackSpring3D, VerletSpring3D);
+
+    PullBackSpring3D.prototype.update = function (applyConstraints) {
+        if (this.b.distanceToSquared(this.b.a) > 0.5) {
+            VerletSpring3D.prototype.call.update(this, applyConstraints);
+        }
+    };
+
+    module.exports = PullBackSpring3D;
+
+
+},{"../geom/Vec3D":71,"../internals":98,"./VerletSpring3D":169}],165:[function(require,module,exports){
+
+
+    var internals = require('../internals'),
+        Vec3D = require('../geom/Vec3D'),
+        VerletSpring3D = require('./VerletSpring3D');
+
+    /**
+	 * Implements a spring whose maximum relaxation distance at every time step can
+	 * be limited to achieve better (if physically incorrect) stability of the whole
+	 * spring system.
+	 *
+	 * Limit limits the velocity of the string.
+	 */
+	var VerletConstrainedSpring3D = function (a, b, len, str, limit) {
+		VerletSpring3D.call(this, a, b, len, str);
+	    /**
+	     * Maximum relaxation distance for either end of the spring in world units
+	     */
+		this.limit = (typeof limit !== "undefined") ? limit : Number.MAX_VALUE;
+	};
+
+	internals.extend(VerletConstrainedSpring3D, VerletSpring3D);
+
+	VerletConstrainedSpring3D.prototype.update = function (applyConstraints) {
+        var delta = this.b.sub(this.a);
+        // add minute offset to avoid div-by-zero errors
+        var dist = delta.magnitude() + VerletSpring3D.EPS;
+
+        var normDistStrength = (dist - this._restLength) / (dist * (this.a.getInvWeight() + this.b.getInvWeight())) * this._strength;
+
+        if (!this.a.isLocked() && !this._isALocked) {
+            this.a.addSelf( delta.scale( normDistStrength * this.a.getInvWeight() ).limit(this.limit) );
+            if (applyConstraints) {
+                this.a.applyConstraints();
+            }
+        }
+        if (!this.b.isLocked() && !this._isBLocked) {
+            this.b.addSelf( delta.scale( normDistStrength * this.b.getInvWeight() ).limit(this.limit) );
+            if (applyConstraints) {
+                this.b.applyConstraints();
+            }
+        }
+    };
+
+	module.exports = VerletConstrainedSpring3D;
+
+
+},{"../geom/Vec3D":71,"../internals":98,"./VerletSpring3D":169}],166:[function(require,module,exports){
+
+
+    var internals = require('../internals'),
+        Vec3D = require('../geom/Vec3D'),
+        VerletSpring3D = require('./VerletSpring3D');
+
+    /**
+     * Implements a string which will only enforce its rest length if the current
+     * distance is less than its rest length. This is handy if you just want to
+     * ensure objects are at least a certain distance from each other, but don't
+     * care if it's bigger than the enforced minimum.
+     */
+	var VerletMinDistanceSpring3D = function (a, b, len, str, limit) {
+		VerletSpring3D.call(this, a, b, len, str);
+	};
+
+	internals.extend(VerletMinDistanceSpring3D, VerletSpring3D);
+
+	VerletMinDistanceSpring3D.prototype.update = function (applyConstraints) {
+        if (this.b.distanceToSquared(this.a) < this._restLength) {
+            VerletSpring3D.prototype.call.update(this, applyConstraints);
+        }
+    };
+
+	module.exports = VerletMinDistanceSpring3D;
+
+
+},{"../geom/Vec3D":71,"../internals":98,"./VerletSpring3D":169}],167:[function(require,module,exports){
+
+
+    var internals = require('../internals'),
+        AABB = require('../geom/AABB'),
+        Vec3D = require('../geom/Vec3D');
+    var id = 0;
+
+    /**
+     * An individual 3D particle for use by the VerletPhysics and VerletSpring
+     * classes. A particle has weight, can be locked in space and its position
+     * constrained inside an (optional) axis-aligned bounding box.
+     *
+     * params {
+     *     vector : Vec3D
+     *     x: Number 
+     *     y: Number
+     *     z: Number
+     *     weight: Number
+     * }
+     */
+    var VerletParticle3D = function (params) {
+        if (!params) { params = {}; }
+        this._isLocked = false;
+        this.bounds = null;
+        this.constraints = [];
+        this.behaviors = [];
+        this._force = new Vec3D();
+        this._weight = 0;
+        this._invWeight = 0;
+        this.setWeight( (typeof params.weight !== "undefined") ? params.weight : 1 );
+        this.x = (typeof params.vector !== "undefined") ? params.vector.x : params.x || 0;
+        this.y = (typeof params.vector !== "undefined") ? params.vector.y : params.y || 0;
+        this.z = (typeof params.vector !== "undefined") ? params.vector.z : params.z || 0;
+        this._prev = new Vec3D(this);
+        this._temp  = new Vec3D();
+    };
+
+    internals.extend(VerletParticle3D,Vec3D);
+
+    VerletParticle3D.prototype.addBehavior = function (behavior, timeStep) {
+        timeStep = (typeof timeStep !== "undefined") ? timeStep : 1;
+        behavior.configure(timeStep);
+        behaviors.push(behavior);
+        return this;
+    },
+
+    /**
+     * Adds the given constraint implementation to the list of constraints
+     * applied to this particle at each time step.
+     * 
+     * @param c
+     *            constraint instance
+     * @return itself
+     */
+    VerletParticle3D.prototype.addConstraint = function (c) {
+        constraints.push(c);
+        return this;
+    };
+
+    VerletParticle3D.prototype.addForce = function (f) {
+        this._force.addSelf(f);
+        return this;
+    };
+
+    VerletParticle3D.prototype.addVelocity = function (v) {
+        this._prev.subSelf(v);
+        return this;
+    };
+
+    VerletParticle3D.prototype.applyBehaviors = function () {
+        internals.each(this.behaviors, function (b) {
+            b.apply(this);
+        }, this);
+    };
+
+    VerletParticle3D.prototype.applyConstraints = function () {
+        internals.each(this.constraints, function (pc) {
+            pc.apply(this);
+        }, this);
+    };
+
+    VerletParticle3D.prototype._applyForce = function () {
+        this._temp.set(this);
+        this.addSelf(this.sub(this._prev).addSelf(this._force.scale(this._weight)));
+        this._prev.set(this._temp);
+        this._force.clear();
+    };
+
+    /**
+     * Removes any currently applied constraints from this particle.
+     * 
+     * @return itself
+     */
+    VerletParticle3D.prototype.clearConstraints = function () {
+       this.constraints = [];
+       return this;
+    };
+
+    VerletParticle3D.prototype.clearForce = function () {
+        this._force.clear();
+        return this;
+    };
+
+    VerletParticle3D.prototype.clearVelocity = function () {
+        this._prev.set(this);
+        return this;
+    };
+
+    /**
+     * @return the inverse weight (1/weight)
+     */
+    VerletParticle3D.prototype.getInvWeight = function () {
+        return this._invWeight;
+    };
+
+    /**
+     * Returns the particle's position at the most recent time step.
+     * 
+     * @return previous position
+     */
+    VerletParticle3D.prototype.getPreviousPosition = function () {
+        return this._prev;
+    };
+
+    VerletParticle3D.prototype.getVelocity = function () {
+        return this.sub(this._prev);
+    };
+
+    /**
+     * @return the weight
+     */
+    VerletParticle3D.prototype.getWeight = function () {
+         return this._weight;
+    };
+
+    /**
+     * @return true, if particle is locked
+     */
+    VerletParticle3D.prototype.isLocked = function () {
+        return this._isLocked;
+    };
+
+    /**
+     * Locks/immobilizes particle in space
+     * 
+     * @return itself
+     */
+    VerletParticle3D.prototype.lock = function () {
+        this._isLocked = true;
+        return this;
+    };
+
+    VerletParticle3D.prototype.removeBehavior = function (b) {
+        return internals.removeItemFromReturningSuccessful(b, this.behaviors);
+    };
+
+    /**
+     * Attempts to remove the given constraint instance from the list of active
+     * constraints.
+     * 
+     * @param c
+     *            constraint to remove
+     * @return true, if successfully removed
+     */
+    VerletParticle3D.prototype.removeConstraint = function (c) {
+        return internals.removeItemFromReturningSuccessful(c, this.constraints);
+    };
+
+    VerletParticle3D.prototype.scaleVelocity = function (scaleNumber) {
+        this._prev.interpolateToSelf(this, 1 - scaleNumber);
+        return this;
+    };
+
+    VerletParticle3D.prototype.setPreviousPosition = function (p) {
+        this._prev.set(p);
+        return this;
+    };
+
+    VerletParticle3D.prototype.setWeight = function (w) {
+        this._weight = w;
+        this._invWeight = 1 / w;
+    };
+
+    /**
+     * Unlocks particle again
+     * 
+     * @return itself
+     */
+    VerletParticle3D.prototype.unlock = function () {
+        this.clearVelocity();
+        this._isLocked = false;
+        return this;
+    };
+
+    VerletParticle3D.prototype.update = function () {
+        if (!this._isLocked) {
+            this.applyBehaviors();
+            this._applyForce();
+            this.applyConstraints();
+        }
+    };
+
+    module.exports = VerletParticle3D;
+
+},{"../geom/AABB":42,"../geom/Vec3D":71,"../internals":98}],168:[function(require,module,exports){
+
+
+    var internals = require('../internals'),
+        GravityBehavior3D = require('./behaviors/GravityBehavior3D'),
+        AABB = require('../geom/AABB'),
+        Vec3D = require('../geom/Vec3D');
+    var id = 0;
+
+    /**
+     * Initializes an Verlet engine instance with the passed in configuration.
+     * 
+     * @param gravity
+     *            optional/undefined/null 3D gravity vector
+     * @param numIterations
+     *            optional iterations per time step for verlet solver
+     * @param drag
+     *            optional drag value 0...1
+     * @param timeStep
+     *            optional time step for calculating forces
+     */
+    var VerletPhysics3D = function (gravity, numIterations, drag,
+            timeStep) {
+
+        /**
+         * List of particles (Vec3D subclassed)
+         */
+        this.particles = [];
+        /**
+         * List of spring/sticks connectors
+         */
+        this.springs = [];
+        /**
+         * Default time step = 1.0
+         */
+        this._timeStep =  (typeof timeStep !== 'undefined') ? timeStep : 1;
+        /**
+         * Default iterations for verlet solver = 50
+         */
+        this._numIterations = (typeof numIterations !== 'undefined') ? numIterations : 50;
+        /**
+         * Optional 3D bounding box to constrain particles too
+         */
+        this.behaviors = [];
+        this.constraints = [];
+        this._worldBounds = null;
+        this._drag = null;
+        this.setDrag( (typeof drag !== 'undefined') ? drag : 1 );
+        if (gravity !== null && typeof gravity !== 'undefined') {
+            this.addBehavior(new GravityBehavior3D(gravity));
+        }
+    };
+
+    VerletPhysics3D.addConstraintToAll = function (c, list) {
+        for(var i=0;i<list.length;i++){
+            list[i].addConstraint(c);
+        }
+    };
+
+    VerletPhysics3D.removeConstraintFromAll = function(c, list){
+        for(var i=0;i<list.length;i++){
+            list[i].removeConstraint(c);
+        }
+    };
+
+    VerletPhysics3D.prototype = {
+
+        addBehavior: function (behavior) {
+            behavior.configure(this._timeStep);
+            this.behaviors.push(behavior);
+        },
+
+        addConstraint: function (constraint) {
+            this.constraints.add(constraint);
+        },
+
+        /**
+         * Adds a particle to the list
+         * 
+         * @param p
+         * @return itself
+         */
+        addParticle: function (p) {
+            this.particles.push(p);
+            return this;
+        },
+
+        /**
+         * Adds a spring connector
+         * 
+         * @param s
+         * @return itself
+         */
+        addSpring: function (s) {
+            if(this.getSpring(s.a,s.b) === undefined){
+                this.springs.push(s);
+            }
+            return this;
+        },
+
+        /**
+         * Applies all global constraints and constrains all particle positions to
+         * the world bounding box set
+         */
+        applyConstaints: function () {
+            internals.each(this.particles, function (p) {
+                internals.each(this.constraints, function (c) {
+                    c.apply(p);
+                }, this);
+                if (typeof p.bounds !== 'undefined' && p.bounds !== null) {
+                    p.constrain(p.bounds);
+                }
+                if (this._worldBounds !== 'undefined' && this._worldBounds !== null) {
+                    p.constrain(this._worldBounds);
+                }
+            }, this);
+        },
+
+        clear: function () {
+            this.behaviors = [];
+            this.constraints = [];
+            this.particles = [];
+            this.springs = [];
+            return this;
+        },
+
+        // ? VerletPhysics2D has protected `constrainToBounds`? no mention to method in Java
+
+        getCurrentBounds: function () {
+            var min = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
+            var max = new Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
+            internals.each(this.particles,function () {
+                min.minSelf(p);
+                max.maxSelf(p);
+            },this);
+            return AABB.fromMinMax(min, max);
+        },
+
+        getDrag: function () {
+            return 1 - this._drag;
+        },
+
+        /**
+         * @return the numIterations
+         */
+        getNumIterations: function () {
+            return this._numIterations;
+        },
+
+        /**
+         * Attempts to find the spring element between the 2 particles supplied
+         * 
+         * @param a
+         *            particle 1
+         * @param b
+         *            particle 2
+         * @return spring instance, or undefined if not found
+         */
+        getSpring: function () {
+            return internals.find(this.springs, function (s) {
+               if ((s.a == a && s.b == b) || (s.a == b && s.b == a)) {
+                    return s;
+                }  
+            }, this);
+        },
+
+        /**
+         * @return the timeStep
+         */
+        getTimeStep: function () {
+             return this._timeStep;
+        },
+
+        /**
+         * @return the worldBounds
+         */
+        getWorldBounds: function () {
+            return this._worldBounds;
+        },
+
+        removeBehavior: function (b) {
+            return internals.removeItemFromReturningSuccessful(b, this.behaviors);
+        },
+
+        removeConstraint: function (c) {
+            return internals.removeItemFromReturningSuccessful(c, this.constraints);
+        },
+
+        /**
+         * Removes a particle from the simulation.
+         * 
+         * @param p
+         *            particle to remove
+         * @return true, if removed successfully
+         */
+        removeParticle: function (p) {
+            return internals.removeItemFromReturningSuccessful(p, this.particles);
+        },
+
+        /**
+         * Removes a spring connector from the simulation instance.
+         * 
+         * @param s
+         *            spring to remove
+         * @return true, if the spring has been removed
+         */
+        removeSpring: function (s) {
+            return internals.removeItemFromReturningSuccessful(s, this.springs);
+        },
+
+        /**
+         * Removes a spring connector and its both end point particles from the
+         * simulation
+         * 
+         * @param s
+         *            spring to remove
+         * @return true, only if spring AND particles have been removed successfully
+         */
+        removeSpringElements: function (s) {
+            if (this.removeSpring(s)) {
+                return (this.removeParticle(s.a) && this.removeParticle(s.b));
+            }
+            return false;
+        },
+
+        setDrag: function (drag) {
+            this._drag = 1 - drag;
+        },
+
+        /**
+         * @param numIterations
+         *            the numIterations to set
+         */
+        setNumIterations: function (numIterations) {
+             this._numIterations = numIterations;
+        },
+
+        /**
+         * @param timeStep
+         *            the timeStep to set
+         */
+        setTimeStep: function (timeStep) {
+            this._timeStep = timeStep;
+            internals.each(this.behaviors, function (b) {
+                b.configure(timeStep);
+            }, this);
+        },
+
+        /**
+         * Sets bounding box
+         * 
+         * @param world
+         * @return itself
+         */
+        setWorldBounds: function (world) {
+            this._worldBounds = world;
+            return this;
+        },
+
+        /**
+         * Progresses the physics simulation by 1 time step and updates all forces
+         * and particle positions accordingly
+         * 
+         * @return itself
+         */
+        update: function () {
+            this._updateParticles();
+            this._updateSprings();
+            this.applyConstaints();
+            return this;
+        },
+
+        /**
+         * Updates all particle positions
+         */
+        _updateParticles: function () { //protected
+            internals.each(this.behaviors, function (b) {
+                internals.each(this.particles, function (p) {
+                    b.apply(p);
+                }, this);
+            }, this);
+            internals.each(this.particles, function (p) {
+                p.scaleVelocity(this._drag);
+                p.update();
+            }, this);
+        },
+
+        /**
+         * Updates all spring connections based on new particle positions
+         */
+        _updateSprings: function () { //protected
+            if (this.springs.length > 0) {
+                for (var i = this._numIterations; i > 0; i--) {
+                    internals.each(this.springs, function (s) {
+                        s.update(i == 1);
+                    }, this);
+                }
+            }
+        }
+    };
+
+
+    module.exports = VerletPhysics3D;
+
+},{"../geom/AABB":42,"../geom/Vec3D":71,"../internals":98,"./behaviors/GravityBehavior3D":173}],169:[function(require,module,exports){
+
+
+    var internals = require('../internals'),
+        Vec3D = require('../geom/Vec3D');
+
+    /**
+     * @param a
+     *            1st particle
+     * @param b
+     *            2nd particle
+     * @param len
+     *            desired rest length
+     * @param str
+     *            spring strength
+     */
+    var VerletSpring3D = function (a, b, len, str) {
+        /**
+         * Spring end points / particles
+         */
+        this.a = a;
+        this.b = b;
+        /**
+         * Spring rest length to which it always wants to return too
+         */
+        this._restLength = len;
+        /**
+         * Spring strength, possible value range depends on engine configuration
+         * (time step, drag)
+         */
+        this._restLengthSquared = len * len;
+        this._strength = str;
+        /**
+         * Flag, if either particle is locked in space (only within the scope of
+         * this spring)
+         */
+        this._isALocked = false;
+        this._isBLocked = false;
+    };
+
+    VerletSpring3D.EPS = 1e-6;
+
+    VerletSpring3D.prototype = {
+
+        getRestLength: function () {
+            return this._restLength;
+        },
+
+        getStrength: function () {
+            return this._strength;
+        },
+
+        /**
+         * (Un)Locks the 1st end point of the spring. <b>NOTE: this acts purely
+         * within the scope of this spring instance and does NOT call
+         * {@link VerletParticle3D#lock()}</b>
+         * 
+         * @param s
+         * @return itself
+         */
+        lockA: function (s) {
+            this._isALocked = s;
+            return this;
+        },
+
+        /**
+         * (Un)Locks the 2nd end point of the spring
+         * 
+         * @param s
+         * @return itself
+         */
+        lockB: function (s) {
+            this._isBLocked = s;
+            return this;
+        },
+
+        setRestLength: function (len) {
+            this._restLength = len;
+            this._restLengthSquared = len * len;
+            return this;
+        },
+
+        setStrength: function (strength) {
+            this._strength = strength;
+            return this;
+        },
+
+        update: function (applyConstraints) {
+            var delta = this.b.sub(this.a);
+            // add minute offset to avoid div-by-zero errors
+            var dist = delta.magnitude() + VerletSpring3D.EPS;
+
+            var normDistStrength = (dist - this._restLength) / (dist * (this.a.getInvWeight() + this.b.getInvWeight())) * this._strength;
+
+            if (!this.a.isLocked() && !this._isALocked) {
+                this.a.addSelf(delta.scale(normDistStrength * this.a.getInvWeight()));
+                if (applyConstraints) {
+                    this.a.applyConstraints();
+                }
+            }
+            if (!this.b.isLocked() && !this._isBLocked) {
+                this.b.addSelf(delta.scale(normDistStrength * this.b.getInvWeight()));
+                if (applyConstraints) {
+                    this.b.applyConstraints();
+                }
+            }
+        }
+
+    };
+
+    module.exports = VerletSpring3D;
+
+
+},{"../geom/Vec3D":71,"../internals":98}],170:[function(require,module,exports){
+
+/** @module toxi/physics3d/behaviors */
+exports.AttractionBehavior = require('./behaviors/AttractionBehavior3D');
+exports.ConstantForceBehavior = require('./behaviors/ConstantForceBehavior3D');
+exports.GravityBehavior = require('./behaviors/GravityBehavior3D');
+
+
+},{"./behaviors/AttractionBehavior3D":171,"./behaviors/ConstantForceBehavior3D":172,"./behaviors/GravityBehavior3D":173}],171:[function(require,module,exports){
+
+
+    var internals = require('../../internals'),
+        VerletParticle3D = require('../VerletParticle3D'),
+        Vec3D = require('../../geom/Vec3D');
+
+    // arguments
+    //     attractor <Vec3D>
+    //     radius <Number>
+    //     strength <Number>
+    //     jittler <Number> optional
+    var AttractionBehavior3D = function (attractor, radius, strength, jitter) {
+        this._attractor = attractor;
+        this._attrStrength = 0;
+        this._radius = strength;
+        this._radiusSquared = 0;
+        this._strength = strength;
+        this._jitter = jitter || 0;
+        this._timeStep = 0;
+    };
+
+
+    AttractionBehavior3D.prototype = {
+
+        apply: function (p) {
+            var delta = attractor.sub(p);
+            var dist = delta.magSquared();
+            if (dist < this._radiusSquared) {
+                var f = delta.normalizeTo((1 - dist / this._radiusSquared))
+                    .jitter(this._jitter).scaleSelf(this._attrStrength);
+                p.addForce(f);
+            }
+        },
+
+        configure: function (timeStep) {
+            this._timeStep = timeStep;
+            this.setStrength(this._strength);
+        },
+
+        getAttractor: function () {
+            return this._attractor;
+        },
+
+        getJitter: function () {
+            return this._jitter;
+        },
+
+        getRadius: function () {
+            return this._radius;
+        },
+
+        getStrength: function () {
+            return this._strength;
+        },
+
+        setAttractor: function (attractor) {
+            this._attractor = attractor;
+        },
+
+        setJitter: function (jitter) {
+            this._jitter = jitter;
+        },
+
+        setRadius: function (r) {
+            this._radius = r;
+            this._radiusSquared = r * r;
+        },
+
+        setStrength: function (strength) {
+            this._strength = strength;
+            this._attrStrength = strength * this._timeStep;
+        }
+
+    };
+
+    module.exports = AttractionBehavior3D;
+
+},{"../../geom/Vec3D":71,"../../internals":98,"../VerletParticle3D":167}],172:[function(require,module,exports){
+
+
+    var internals = require('../../internals'),
+        VerletParticle3D = require('../VerletParticle3D'),
+        Vec3D = require('../../geom/Vec3D');
+
+    var ConstantForceBehavior3D = function (force) {
+        this._force = force;
+        this._scaledForce = new Vec3D();
+        this._timeStep = 0;
+    };
+
+    ConstantForceBehavior3D.prototype = {
+
+        apply: function (p) {
+            p.addForce(this._scaledForce);
+        },
+
+        configure: function (timeStep) {
+            this._timeStep = timeStep;
+            this.setForce(this._force);
+        },
+
+        getForce: function () {
+            return this._force;
+        },
+
+        setForce: function (force) {
+            this._force = force;
+            this._scaledForce = force.scale(this._timeStep);
+        }
+
+    };
+
+    module.exports = ConstantForceBehavior3D;
+
+},{"../../geom/Vec3D":71,"../../internals":98,"../VerletParticle3D":167}],173:[function(require,module,exports){
+
+
+    var internals = require('../../internals'),
+        VerletParticle3D = require('../VerletParticle3D'),
+        ConstantForceBehavior3D = require('./ConstantForceBehavior3D'),
+        Vec3D = require('../../geom/Vec3D');
+
+    var GravityBehavior3D = function (gravity, timeStep) {
+        ConstantForceBehavior3D.call(this, gravity);
+        if (typeof timeStep !== "undefined") {
+            this.configure(timeStep);
+        }
+    };
+
+    internals.extend(GravityBehavior3D, ConstantForceBehavior3D);
+
+    GravityBehavior3D.prototype.setForce = function (force) {
+        this._force = force;
+        this._scaledForce = force.scale(this._timeStep * this._timeStep);
+    };
+
+    module.exports = GravityBehavior3D;
+
+},{"../../geom/Vec3D":71,"../../internals":98,"../VerletParticle3D":167,"./ConstantForceBehavior3D":172}],174:[function(require,module,exports){
+
+/** @module toxi/physics2d/constraints */
+module.exports = {
+	AxisConstraint: require('./constraints/AxisConstraint'),
+	BoxConstraint: require('./constraints/BoxConstraint'),
+	CylinderConstraint: require('./constraints/CylinderConstraint'),
+	MaxConstraint: require('./constraints/MaxConstraint'),
+	MinConstraint: require('./constraints/MinConstraint'),
+	// ParticleConstraint3D: require('./constraints/ParticleConstraint3D'),
+	PlaneConstraint: require('./constraints/PlaneConstraint'),
+	SoftBoxConstraint: require('./constraints/SoftBoxConstraint'),
+	SphereConstraint: require('./constraints/SphereConstraint')
+};
+
+
+},{"./constraints/AxisConstraint":175,"./constraints/BoxConstraint":176,"./constraints/CylinderConstraint":177,"./constraints/MaxConstraint":178,"./constraints/MinConstraint":179,"./constraints/PlaneConstraint":180,"./constraints/SoftBoxConstraint":181,"./constraints/SphereConstraint":182}],175:[function(require,module,exports){
+
+
+
+    /**
+     * Constrains a particle's movement by locking a given axis to a fixed value.
+     *
+     * @param axis
+     *            axis to lock
+     * @param constraint
+     *            constrain the axis to this value
+     */
+    var AxisConstraint = function (axis, constraint) {
+        this.axis = axis;
+        this.constraint = constraint;
+    };
+
+    AxisConstraint.prototype = {
+        /*
+         * (non-Javadoc)
+         *
+         * @see toxi.physics.IParticleConstraint#apply(toxi.physics.VerletParticle)
+         */
+        apply: function (p) {
+            p.setComponent(this.axis, this.constraint);
+        }
+
+    };
+
+    module.exports = AxisConstraint;
+
+
+},{}],176:[function(require,module,exports){
+
+
+    var Vec3D = require('../../geom/Vec3D'),
+        Ray3D = require('../../geom/Ray3D');
+
+    var BoxConstraint = function (boxOrMinVec, maxVec) {
+        if (typeof maxVec === "undefined") {
+            this._box = box.copy();
+        } else {
+            this._box = AABB.fromMinMax(min, max);
+        }
+        this._intersectRay = new Ray3D(box, new Vec3D());
+        this.__restitution = 1;
+    };
+
+    console.log( 'ROSS TO DO, check BoxConstraint. Was a copy paste of AxisConstraint' );
+
+    BoxConstraint.prototype = {
+
+        apply: function (p) {
+            if (p.isInAABB(this._box)) {
+                var dir = p.getVelocity();
+                var prev = p.getPreviousPosition();
+                if (prev.isInAABB(this._box)) {
+                    dir.invert();
+                }
+                this._intersectRay.set(prev);
+                this._intersectRay.setDirection(dir);
+                var isec = this._box.intersectsRay(this._intersectRay, 0, Number.MAX_VALUE);
+                if (isec !== null && typeof isec !== "undefined") {
+                    isec.addSelf(this._box.getNormalForPoint(isec).scaleSelf(0.01));
+                    p.setPreviousPosition(isec);
+                    p.set(isec.sub(dir.scaleSelf(this.__restitution)));
+                }
+            }
+        },
+
+        getBox: function () {
+            return this._box.copy();
+        },
+
+        getRestitution: function () {
+            return this.__restitution;
+        },
+
+        setBox: function (box) {
+            this._box = box.copy();
+            this._intersectRay.set(this._box);
+        },
+
+        setRestitution: function (restitution) {
+            this.__restitution = restitution;
+        }
+
+    };
+
+    module.exports = BoxConstraint;
+
+
+},{"../../geom/Ray3D":60,"../../geom/Vec3D":71}],177:[function(require,module,exports){
+arguments[4][162][0].apply(exports,arguments)
+},{"dup":162}],178:[function(require,module,exports){
+
+
+    var MaxConstraint = function (axis, threshold) {
+        this.axis = axis;
+        this.threshold = threshold;
+    };
+
+    MaxConstraint.prototype = {
+
+        apply: function (p) {
+            if (p.getComponent(this.axis) > this.threshold) {
+                p.setComponent(this.axis, this.threshold);
+            }
+        }
+
+    };
+
+    module.exports = MaxConstraint;
+
+},{}],179:[function(require,module,exports){
+
+
+    var MinConstraint = function (axis, threshold) {
+        this.axis = axis;
+        this.threshold = threshold;
+    };
+
+    MinConstraint.prototype = {
+
+        apply: function (p) {
+            if (p.getComponent(this.axis) < this.threshold) {
+                p.setComponent(this.axis, this.threshold);
+            }
+        }
+
+    };
+
+    module.exports = MinConstraint;
+
+},{}],180:[function(require,module,exports){
+arguments[4][162][0].apply(exports,arguments)
+},{"dup":162}],181:[function(require,module,exports){
+arguments[4][162][0].apply(exports,arguments)
+},{"dup":162}],182:[function(require,module,exports){
+arguments[4][162][0].apply(exports,arguments)
+},{"dup":162}],183:[function(require,module,exports){
 
 /** @module toxi/processing */
 
@@ -16637,7 +17710,7 @@ module.exports = {
 };
 
 
-},{"./processing/ToxiclibsSupport":161}],161:[function(require,module,exports){
+},{"./processing/ToxiclibsSupport":184}],184:[function(require,module,exports){
 
 
 var Matrix4x4 = require('../geom/Matrix4x4'),
@@ -17124,12 +18197,12 @@ ToxiclibsSupport.prototype = {
 module.exports = ToxiclibsSupport;
 
 
-},{"../geom/Matrix4x4":55,"../geom/Vec3D":71,"../geom/mesh/TriangleMesh":87}],162:[function(require,module,exports){
+},{"../geom/Matrix4x4":55,"../geom/Vec3D":71,"../geom/mesh/TriangleMesh":87}],185:[function(require,module,exports){
 
     exports.datatypes = require('./util/datatypes');
 
 
-},{"./util/datatypes":163}],163:[function(require,module,exports){
+},{"./util/datatypes":186}],186:[function(require,module,exports){
 
 module.exports = {
 	ArraySet: require('./datatypes/ArraySet'),
@@ -17138,7 +18211,7 @@ module.exports = {
 };
 
 
-},{"./datatypes/ArraySet":164,"./datatypes/FloatRange":165,"./datatypes/UndirectedGraph":166}],164:[function(require,module,exports){
+},{"./datatypes/ArraySet":187,"./datatypes/FloatRange":188,"./datatypes/UndirectedGraph":189}],187:[function(require,module,exports){
 
 
 var internals = require('../../internals');
@@ -17262,7 +18335,7 @@ var ArraySet = function(collection){
 module.exports = ArraySet;
 
 
-},{"../../internals":98}],165:[function(require,module,exports){
+},{"../../internals":98}],188:[function(require,module,exports){
 
 
 var mathUtils = require('../../math/mathUtils');
@@ -17355,7 +18428,7 @@ FloatRange.prototype = {
 module.exports = FloatRange;
 
 
-},{"../../math/mathUtils":125}],166:[function(require,module,exports){
+},{"../../math/mathUtils":126}],189:[function(require,module,exports){
 
 
 var ArraySet = require('./ArraySet');
@@ -17451,5 +18524,5 @@ UndirectedGraph.prototype = {
 module.exports = UndirectedGraph;
 
 
-},{"./ArraySet":164}]},{},[40])(40)
+},{"./ArraySet":187}]},{},[40])(40)
 });
