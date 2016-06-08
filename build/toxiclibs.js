@@ -13071,6 +13071,7 @@ var each = require('./each');
 				found = true;
 				result = array[i];
 			}
+			++i;
 		}
 		return result;
 	};
