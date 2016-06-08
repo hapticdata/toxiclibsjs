@@ -17652,8 +17652,42 @@ module.exports = {
 
 
 },{"../../geom/AABB":42,"../../geom/Ray3D":60,"../../geom/Vec3D":71}],177:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162}],178:[function(require,module,exports){
+
+
+    var Vec3D = require('../../geom/Vec3D'),
+        AxisAlignedCylinder = require('../../geom/AxisAlignedCylinder');
+
+    var CylinderConstraint = function (cylinder) {
+        this._centroid = new Vec3D();
+        this.setCylinder( cylinder );
+    };
+
+    CylinderConstraint.prototype = {
+
+        apply: function (p) {
+            if (this._cylinder.containsPoint(p)) {
+                this._centroid.setComponent(this._axis, p.getComponent(this._axis));
+                p.set(this._centroid.add(p.sub(this._centroid)
+                    .normalizeTo(this._cylinder.getRadius())));
+            }
+        },
+
+        getCylinder: function() {
+            return this._cylinder;
+        },
+
+        setCylinder: function (cylinder) {
+            this._cylinder = cylinder;
+            this._centroid.set(cylinder.getPosition());
+            this._axis = cylinder.getMajorAxis();
+        }
+
+    };
+
+    module.exports = CylinderConstraint;
+
+
+},{"../../geom/AxisAlignedCylinder":43,"../../geom/Vec3D":71}],178:[function(require,module,exports){
 
 
     var MaxConstraint = function (axis, threshold) {
