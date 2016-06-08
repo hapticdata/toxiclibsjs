@@ -10,10 +10,14 @@ toxiclibs-core.min.js:
 	./bin/toxiclibsjs --include "toxi/geom toxi/math toxi/util" --minify --out "./build/toxiclibs-core.min.js"
 toxiclibs-color.min.js:
 	./bin/toxiclibsjs --include "toxi/color" --out "./build/toxiclibs-color.min.js" --minify
+toxiclibs-physics2d.js:
+	./bin/toxiclibsjs --include "toxi/physics2d" --out "./build/toxiclibs-physics2d.js"
 toxiclibs-physics2d.min.js:
 	./bin/toxiclibsjs --include "toxi/physics2d" --out "./build/toxiclibs-physics2d.min.js" --minify
+toxiclibs-physics3d.js:
+	./bin/toxiclibsjs --include "toxi/internals toxi/geom/Vec3D toxi/geom/Ray3D toxi/geom/AxisAlignedCylinder toxi/geom/AABB toxi/physics3d" --out "./build/toxiclibs-physics3d.js"
 toxiclibs-physics3d.min.js:
-	./bin/toxiclibsjs --include "toxi/physics3d" --out "./build/toxiclibs-physics3d.min.js" --minify
+	./bin/toxiclibsjs --include "toxi/internals toxi/geom/Vec3D toxi/geom/Ray3D toxi/geom/AxisAlignedCylinder toxi/geom/AABB toxi/physics3d" --out "./build/toxiclibs-physics3d.min.js" --minify
 
 publish:
 	rm -rf ./commonjs
