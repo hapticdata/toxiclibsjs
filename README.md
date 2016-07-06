@@ -25,7 +25,7 @@ Toxiclibs.js can be used in the following ways:
 
 *	As a single javascript file loaded into a webpage, with the contents of the entire library within a global *toxi* object.
 *	As [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) modules that can be loaded independently or in packages, via [RequireJS](http://requirejs.org)
-*	In [Node.js](http://nodejs.org) applications, as AMD modules that require the 'requirejs' library for Node.js.
+*	In [Node.js](http://nodejs.org) or [Browserify](http://browserify.org/) applications, through NPM as commonjs modules.
 
 ##Use the build
 copy the file `build/toxiclibs.js`:

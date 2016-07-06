@@ -1,26 +1,31 @@
-#Toxiclibs.js CHANGES
+# Toxiclibs.js CHANGES
 
-##v0.3.1
+## v0.3.2
+* fix implementation of `toxi.geom.mesh.WETriangleMesh` that resulted in duplicate edges and broken meshes.
+* optimize `toxi.internals.LinkedMap`
+* fix typo in `toxi.color` reference to `ComplementaryStrategy`
+
+## v0.3.1
 * fix NPM publish issue where `README.md` and `bin/toxiclibsjs` were not included
 * build system for global `toxi` object, now uses browserify, no longer using almond.js
 
-##v0.3.0
+## v0.3.0
 * uses [nodefy](https://github.com/millermedeiros/nodefy) to convert all AMD modules into commonjs modules for publishing to [NPM](http://npmjs.com). 
 This means toxiclibjs.js now works with [Browserify](http://browserify.org/) and no longer has a dependency on [Require.js](http://requirejs.org) when consumed
 through NPM for [Node.js](http://nodejs.org). This also enables deep-requires for Node, such as `var Vec2D = require('toxiclibsjs/geom/Vec2D')`.
 
-##v0.2.7
+## v0.2.7
 * another version bump due to NPM failing publish
 
-##v0.2.6
+## v0.2.6
 * version bump due to NPM's `503 backend unhealthy`
 * cleaned up `toxi/math/*.js` modules
 
-##v0.2.5
+## v0.2.5
 * resolve [issue #28](https://github.com/hapticdata/toxiclibsjs/issues/28), toxi.geom.mesh.BezierPatch fails w/o Vec3D[][]
 * bugfix Vec2D#to3D** functions shouldn't have nested requires
 
-##v0.2.4
+## v0.2.4
 *   improved `toxi.THREE.ToxiclibsSupport.createMeshGeometry( triMesh, [geom] ):THREE.Geometry` to avoid duplicated vertices
 *   bugfix resolve [issue #27](https://github.com/hapticdata/toxiclibsjs/issues/27) where `toxi.physics2d.constraints.RectConstraint`, `toxi.physics2d.constraints.AngularConstraint` and `toxi.physics2d.ParticlePath2D` had missing require's
 *   added `toxi.geom.Polygon2D#getBounds():Rect`
@@ -29,13 +34,13 @@ through NPM for [Node.js](http://nodejs.org). This also enables deep-requires fo
 *   fixed possible _"module toxi/geom/Circle has not been loaded yet…"_ error from Require.js when loading only `toxi.geom.Polygon2D` with Require.js.
 *   added `bower.json`
 
-##v0.2.3
+## v0.2.3
 *   bugfix resolved [issue #26](https://github.com/hapticdata/toxiclibsjs/issues/26) where `toxi.geom.Spline3D` and `toxi.geom.Spline2D` had incorrect number of computed vertices.
 
-##v0.2.2
+## v0.2.2
 *   bugfix case-sensitivity on loading modules `toxi/color/accessCriteria`, `toxi/color/namedColor`, `toxi/color/theory/colorTheoryRegistry`
 
-##v0.2.1
+## v0.2.1
 *   bugfix `toxi.geom.Ray2D#toLine2DWithPointAtDistance` having `undefined` Line2D
 *   added `toxi.geom.Line3D#toRay3D`
 *   bugfix `toxi.math.waves.*` defaulting to an offset of 1 _(instead of 0)_ when not specified
@@ -43,7 +48,7 @@ through NPM for [Node.js](http://nodejs.org). This also enables deep-requires fo
 *   removed `toxi.internals.Float32Array` and `toxi.internals.Int32Array` polyfills
 *   added `toxi.internals.has#typedArrays` for Typed-Arrays support testing
 
-##v0.2.0
+## v0.2.0
 *	**completed _100%_ of _colorutils_** - `toxi.color` and `toxi.color.theory` packages with thorough test coverage
 *	completed `toxi.geom.Spline3D` and corresponding unit tests
 *	completed `toxi.geom.LineStrip3D` and corresponding unit tests
@@ -64,7 +69,7 @@ through NPM for [Node.js](http://nodejs.org). This also enables deep-requires fo
 *	removed `utils/` contents used for old builds
 *	developed build process for creating custom-builds that only includes requested module
 
-##v0.1.3
+## v0.1.3
 *	wrote new unit tests for TColor, and ported all qunit unit tests to mocha
 *	added docs/sugar.md to explain the added features of toxiclibs.js
 *	added toxi.color.TColor#toInt for numbers in integer form, such as in three.js
@@ -79,7 +84,7 @@ through NPM for [Node.js](http://nodejs.org). This also enables deep-requires fo
 *	bugfixes for passing points into toxi.geom.Spline2D
 *	support for options object in toxi.geom.Spline2D constructor
 
-##v0.1.2
+## v0.1.2
 *	Resolved [Issue 18](https://github.com/hapticdata/toxiclibsjs/issues/18) TriangleMesh.getBoundingBox and TriangleMesh.getBoundingSphere are now async methods to prevent circular dependency
 *	Added `toxi/geom/mesh/Terrain`
 *	Added UV's to `toxi/geom/mesh/SurfaceMeshBuilder`
@@ -88,7 +93,7 @@ through NPM for [Node.js](http://nodejs.org). This also enables deep-requires fo
 	*	OBJ string can be retrieved with `OBJWriter#getOutput()`
 *	Added `TriangleMesh#saveAsOBJ()`
 
-##v0.1.1
+## v0.1.1
 *	`ParticleString2D#clear()` bugfix
 *	removed all uses of 'instanceof' test, replaced with property testing
 *	`toxi/THREE/ToxiclibsSupport` updated for latest revision of Three.js and now usable as an AMD module
@@ -96,7 +101,7 @@ through NPM for [Node.js](http://nodejs.org). This also enables deep-requires fo
 *	Line2D#scale bugfix
 *	Triangle2D#getCircumCircle bugfix
 
-##v0.1.0
+## v0.1.0
 *	 released as [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) modules,for use with [RequireJS](http://requirejs.org) or [Node.js](http://nodejs.org)
 *	 packaging changed to conform to Java lib packages
 *	 published to [NPM](http://npmjs.org/)
