@@ -14,7 +14,7 @@ The plethora of examples demonstrate its use for geometry and color manipulation
 -	Mesh generation and subdivision
 -	Interpolation / Mapping
 -	Wave Generators
--	2D physics simulation
+-	2D/3D physics simulation
 -	Color theory sorting and conversion
 
 
@@ -63,6 +63,7 @@ The following objects are returned when loading the entire library
 * *internals* - functionality used within the library
 * **math** - the math utils package
 * **physics2d** - the Verlet Physics 2D package
+* **physics3d** - the Verlet Physics 3D package
 * **processing** - the processing package, eases use with [Processing.js](http://processingjs.org)
 * **THREE** - features to ease use with [Three.js](http://github.com/mrdoob/three.js)
 * **utils** - the utils package
