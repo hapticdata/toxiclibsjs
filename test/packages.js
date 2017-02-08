@@ -42,10 +42,14 @@ pkg('geom.mesh',t.geom.mesh, ['subdiv']);
 pkg('math', t.math, ['mathUtils', 'MathUtils','Interpolation2D','waves','noise']);
 pkg('math.waves', t.math.waves);
 pkg('math.noise', t.math.noise, ['simplexNoise']);
-//t.physics2D
+//toxi.physics2D
 pkg('physics2d', t.physics2d, ['behaviors','constraints']);
 pkg('physics2d.behaviors', t.physics2d.behaviors );
 pkg('physics2d.constraint', t.physics2d.constraints );
+
+//toxi.physics3D
+pkg('physics3d', t.physics3d, ['behaviors', 'constraints']);
+
 pkg('processing', t.processing);
 pkg('THREE', t.THREE);
 pkg('util', t.util, ['datatypes']);
