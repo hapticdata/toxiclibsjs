@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.3.1
+* toxiclibsjs - v0.3.2
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -9816,20 +9816,20 @@ var Line3D = require('../Line3D');
 
 	var TriangleMesh, WETriangleMesh, Terrain, SurfaceMeshBuilder;
 
+    var precision = 1000000;
+    var format = function( n ){
+        return Math.floor(n*precision) / precision;
+    };
 	//private: way of generating object keys for point map in meshes
 	function vertexKeyGenerator( v ){
-		var precision = 1000000;
-		var format = function( n ){
-			return Math.floor(n*precision) / precision;
-		};
 		//this will hold the ids consistently between vertex and vec3ds
 		return "[ x: "+format(v.x)+ ", y: "+format(v.y)+ ", z: "+format(v.z)+"]";
 	}
 	//private: used for tracking edges in the internals.LinkedMap
 	function edgeKeyGenerator( edge ){
-		var Line3D = require('../Line3D');
-		return Line3D.prototype.toString.call( edge );//"{ a: "+vertexKeyGenerator(edge.a)+", b: "+vertexKeyGenerator(edge.b)+" }";
+        return edge.a.id + '->'+ edge.b.id;
 	}
+
 
 	//#TriangleMesh
 	(function(){
@@ -9934,7 +9934,7 @@ var Line3D = require('../Line3D');
 
 			__checkVertex: function(v){
 				var vertex = this.vertexMap.get(v);
-				if(vertex == null){
+				if(!vertex){
 					vertex = this._createVertex(v,this.uniqueVertexID++);
 					this.vertexMap.put( vertex, vertex );
 				}
@@ -10139,11 +10139,17 @@ var Line3D = require('../Line3D');
 			 * Builds an array of vertex indices of all faces. Each vertex ID
 			 * corresponds to its position in the vertices Array. The
 			 * resulting array will be 3 times the face count.
+			 * please see {@link #getUniqueVerticesAsArray([array])}
+             * and {@link #getUniqueVertexNormalsAsArray([array])}
 			 *
+			 * @see #getUniqueVerticesAsArray([array])
+             * @see #getUniqueVertexNormalsAsArray([array])
+			 *
+             * @param {Array|Unit16Array} [faceList] optionally provide an array or typed-array
 			 * @return array of vertex indices
 			 */
-			getFacesAsArray: function() {
-				var faceList = [];
+			getFacesAsArray: function(faceList) {
+				faceList = faceList || [];
 				var i = 0;
 				var l = this.faces.length;
 				for (var j=0;j<l;j++) {
@@ -10272,18 +10278,63 @@ var Line3D = require('../Line3D');
 				return this.copy().translate(trans);
 			},
 
-			getUniqueVerticesAsArray: function() {
-				var verts = [];
+            /**
+             * flatten each vertex once into an array, useful for OpenGL attributes
+             * @param {Array|Float32Array} [array] optionally pass in an array or typed-array to reuse
+             * @return {Array|Float32Array}
+             */
+			getUniqueVerticesAsArray: function(array) {
+				array = array || [];
 				var i = 0;
 				var l = this.vertices.length;
-				for (var j=0;i<l;j++) {
+				for (var j=0;j<l;j++) {
 					var v = this.vertices[j];
-					verts[i++] = v.x;
-					verts[i++] = v.y;
-					verts[i++] = v.z;
+					array[i++] = v.x;
+					array[i++] = v.y;
+					array[i++] = v.z;
 				}
-				return verts;
+				return array;
 			},
+
+            /**
+             * flatten each vertex normal once into an array, useful for OpenGL attributes
+             * @param {Array|Float32Array} [array] optionally pass in an array or typed-array to reuse
+             * @return {Array|Float32Array}
+             */
+            getUniqueVertexNormalsAsArray: function(array){
+                array = array || [];
+                var n = 0;
+                for(i=0; i<this.vertices.length; i++){
+                    var v = this.vertices[i];
+                    array[n++] = v.normal.x;
+                    array[n++] = v.normal.y;
+                    array[n++] = v.normal.z;
+                }
+
+                return array;
+            },
+
+            /**
+             * get the UVs of all faces in flattened array that is, usefl for OpenGL attributes
+             * any missing UV coordinates are returned as 0
+             * @param {Array|Float32Array} [array] optionally pass in an array or typed-array to reuse
+             * @return {Array|Float32Array}
+             */
+            getUVsAsArray: function(array){
+                array = array || [];
+                var i = 0;
+                for(f=0; f<this.faces.length; f++){
+                    var face = this.faces[f];
+                    array[i++] = face.uvA ? face.uvA.x : 0;
+                    array[i++] = face.uvA ? face.uvA.y : 0;
+                    array[i++] = face.uvB ? face.uvB.x : 0;
+                    array[i++] = face.uvB ? face.uvB.y : 0;
+                    array[i++] = face.uvC ? face.uvC.x : 0;
+                    array[i++] = face.uvC ? face.uvC.y : 0;
+                }
+
+                return array;
+            },
 
 			getVertexAtPoint: function(v) {
 				var index;
@@ -10681,12 +10732,16 @@ var Line3D = require('../Line3D');
 			var newVertexMap = new internals.LinkedMap( vertexKeyGenerator );
 			var newEdgeMap = new internals.LinkedMap( edgeKeyGenerator );
 
-			this.vertexMap.each(function( vertex ){
-				newVertexMap.put( vertex, vertex );
-			});
-			this.edgeMap.each(function( edge ){
-				newEdgeMap.put( edge, edge );
-			});
+            var i = 0,
+                arr = this.vertexMap.getArray();
+            for(i=0; i<arr.length; i++){
+				newVertexMap.put( arr[i], arr[i] );
+			}
+
+            arr = this.edgeMap.getArray();
+            for(i=0; i<arr.length; i++){
+				newEdgeMap.put( arr[i], arr[i] );
+			}
 
 			this.vertexMap = newVertexMap;
 			this.vertices = newVertexMap.getArray();
@@ -10695,7 +10750,6 @@ var Line3D = require('../Line3D');
 		};
 
 		proto.removeEdge = function( edge ){
-			var self = this;
 			edge.remove();
 			var v = edge.a;
 			if( v.edges.length === 0 ){
@@ -10705,27 +10759,34 @@ var Line3D = require('../Line3D');
 			if( v.edges.length === 0 ){
 				this.vertexMap.remove( v );
 			}
-			internals.each(edge.faces, function( face ){
-				self.removeFace( face );
-			});
+            for(var i=0; i<edge.faces.length; i++){
+                this.removeFace(edge.faces[i]);
+            }
 			var removed = this.edgeMap.remove( this.__edgeCheck.set( edge.a, edge.b ) );
+            if(!removed){
+                this.edgeMap.remove( this.__edgeCheck.set(edge.b, edge.a) );
+            }
 			if( removed !== edge ){
-				throw Error("Can't remove edge");
+				throw new Error("Can't remove edge");
 			}
 		};
 
 		proto.removeFace = function( face ){
-			var self = this;
 			var i = this.faces.indexOf( face );
 			if( i > -1 ){
 				this.faces.splice( i, 1 );
 			}
-			internals.each( face.edges, function( edge ){
-				edge.faces.splice( edge.faces.indexOf(face), 1 );
-				if( edge.faces.length === 0 ){
-					self.removeEdge( edge );
-				}
-			});
+
+            i = 0;
+            var edge;
+
+            for(i=0; i<face.edges.length; i++){
+                edge = face.edges[i];
+                edge.faces.splice(edge.faces.indexOf(face), 1);
+                if(edge.faces.length === 0){
+                    this.removeEdge(edge);
+                }
+            }
 		};
 
 		//FIXME (FIXME in original java source)
@@ -10766,6 +10827,11 @@ var Line3D = require('../Line3D');
 			var edge, mid;
 			if( arguments.length === 3 ){
 				edge = this.edgeMap.get( this.__edgeCheck.set(a, b) );
+
+                if(!edge){
+                    this.edgeMap.get( this.__edgeCheck.set(b,a) );
+                }
+
 			} else if( arguments.length == 2 ){
 				edge = a;
 				subDiv = b;
@@ -10878,6 +10944,11 @@ var Line3D = require('../Line3D');
 			//because Line3D toString would be different than WingedEdge toString()
 			this.__edgeCheck.set( va, vb );
 			var e = this.edgeMap.get( this.__edgeCheck );
+            if(!e){
+                //edge could be as b->a or a->b
+                this.__edgeCheck.set(vb, va);
+                e = this.edgeMap.get(this.__edgeCheck);
+            }
 			if( e !== undefined ){
 				e.addFace( face );
 			} else {
@@ -12921,30 +12992,23 @@ var each = require('./each');
     var LinkedMap = function( keyGeneratorFunction ){
         this.__list = [];
         this.__map = {};
-        this.__inverseMap = {};
         if( typeof keyGeneratorFunction === 'function' ){
             this.generateKey = keyGeneratorFunction;
         }
     };
+
+
 
     LinkedMap.prototype = {
         each: function( fn ){
             each(this.__map, fn);
         },
         get: function( id_or_val ){
-            var self = this;
-            var checkBoth = function(){
-                if( self.__inverseMap[id_or_val] !== undefined ){
-                    return id_or_val;
-                }
-                return self.__map[id_or_val];
-            };
-
-            var result = checkBoth();
+            var result = this.__map[id_or_val];
 
             if( result === undefined ){
                 id_or_val = this.generateKey( id_or_val );
-                result = checkBoth();
+                result = this.__map[id_or_val];
             }
             return result;
         },
@@ -12955,23 +13019,26 @@ var each = require('./each');
         has: function( id_or_val ){
             var self = this;
             var _has = function( id ){
-                return ( self.__map[ id ] !== undefined || self.__inverseMap[ id ] !== undefined );
+                return ( self.__map[ id ] !== undefined );
             };
             if( _has( id_or_val ) ){
                 return true;
             }
-            return _has( this.generateKey( id_or_val ) );
+
+            if(this.__map[id]){
+                return true;
+            }
+
+            return this.__map[this.generateKey( id_or_val )];
         },
         put: function( id, val ){
             id = this.generateKey( id );
             this.__map[id] = val;
-            this.__inverseMap[val] = id;
             this.__list.push( val );
         },
         remove: function( val ){
             val = this.get( val );
-            var id = this.__inverseMap[val];
-            delete this.__inverseMap[val];
+            var id = this.generateKey(val);
             delete this.__map[id];
             return this.__list.splice( this.__list.indexOf(val), 1)[0];
         },
@@ -12979,7 +13046,7 @@ var each = require('./each');
             return this.__list.length;
         },
         values: function(){
-            return this.getArray().slice(0);
+            return this.__list.slice(0);
         }
     };
 

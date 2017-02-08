@@ -19,10 +19,13 @@ toxiclibs-physics3d.js:
 toxiclibs-physics3d.min.js:
 	./bin/toxiclibsjs --include "toxi/internals toxi/geom/Vec3D toxi/geom/Ray3D toxi/geom/AxisAlignedCylinder toxi/geom/AABB toxi/physics3d" --out "./build/toxiclibs-physics3d.min.js" --minify
 
-publish:
+clean-common:
 	rm -rf ./commonjs
-	node ./bin/convert-to-commonjs.js
+
+npm-publish:
 	npm publish ./commonjs
+
+publish: clean-common all npm-publish
 
 test:
 	./node_modules/mocha/bin/mocha --reporter $(REPORTER) test/*.js $(MOCHA_OPTS)
