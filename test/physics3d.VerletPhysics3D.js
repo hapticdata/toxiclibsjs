@@ -7,6 +7,7 @@ var toxi = require('./index'),
 var VerletPhysics3D = toxi.physics3d.VerletPhysics3D,
 	VerletParticle3D = toxi.physics3d.VerletParticle3D,
 	GravityBehavior = toxi.physics3d.behaviors.GravityBehavior,
+	SphereConstraint = toxi.physics3d.constraints.SphereConstraint,
 	Vec3D = toxi.geom.Vec3D;
 
 
@@ -81,15 +82,33 @@ describe.only("toxi.physics3d.VerletPhysics3D", function(){
 
 	describe("#update()", function(){
 
-		it("should complete an update loop", function(){
+		it("should complete an update loop, and apply GravityBehavior", function(){
+			var physics = new VerletPhysics3D(new Vec3D(0, -0.1, 0));
+			for(var i=0; i<10; i++){
+				physics.addParticle(new VerletParticle3D(new Vec3D(Math.random(), 0, Math.random())));
+			}
+
+			physics.update();
+
+			var allLower = true;
+			physics.particles.forEach(function(p){
+				if(p.y >= 0){
+					allLower = false;
+				}
+			});
+			assert.ok(allLower);
+		});
+
+		it("should complete an update loop, and apply a constraint", function(){
 			var physics = new VerletPhysics3D(new Vec3D(0, 0.1, 0));
 			for(var i=0; i<10; i++){
 				physics.addParticle(new VerletParticle3D(Vec3D.randomVector()));
 			}
 
+			var constraint = new SphereConstraint(new Vec3D(), 1, 0.1);
+			physics.addConstraint(constraint);
 			physics.update();
-
 			assert.ok(true);
-		})
+        });
 	});
 });
