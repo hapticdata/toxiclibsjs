@@ -8024,6 +8024,7 @@ module.exports = Spline2D;
 var Vec3D = require('./Vec3D');
 var is = require('../internals/is');
 var BernsteinPolynomial = require('./BernsteinPolynomial');
+var LineStrip3D = require('./LineStrip3D');
 
     /**
      * @class
@@ -8209,6 +8210,72 @@ var BernsteinPolynomial = require('./BernsteinPolynomial');
             return this;
         },
 
+        /**
+         * <p>
+         * Computes all curve vertices based on the resolution/number of
+         * subdivisions requested. The higher, the more vertices are computed:
+         * </p>
+         * <p>
+         * <strong>(number of control points - 1) * resolution + 1</strong>
+         * </p>
+         * <p>
+         * Since version 0014 the automatic placement of the curve handles can also
+         * be manipulated via the {@linkplain #setTightness(float)} method.
+         * </p>
+         *
+         * @param res
+         *            the number of vertices to be computed per segment between
+         *            original control points (incl. control point always at the
+         *            start of each segment)
+         * @return LineStrip3D, list of Vec3D vertices along the curve
+         */
+        toLineStrip3D: function(res){
+
+            this.updateCoefficients();
+            if(!res || res < 1 ){
+                res = 1;
+            }
+
+            res++;
+
+            if(!this.bernstein || this.bernstein.resolution !== res){
+                this.bernstein = new BernsteinPolynomial(res);
+            }
+
+            var strip = new LineStrip3D();
+            this.findCPoints();
+
+            var deltaP = new Vec3D();
+            var deltaQ = new Vec3D();
+            res--;
+
+            var p, q, k, x, y, z;
+
+            for(var i=0, numP = this.getNumPoints(); i< numP -1; i++){
+                p = this.points[i];
+                q = this.points[i+1];
+
+                deltaP.set(this.delta[i]).addSelf(p);
+                deltaQ.set(q).subSelf(this.delta[i+1]);
+
+                for(k=0; k < res; k++){
+
+                    x = p.x * this.bernstein.b0[k] + deltaP.x * this.bernstein.b1[k]
+                        + deltaQ.x * this.bernstein.b2[k] + q.x * this.bernstein.b3[k];
+
+                    y = p.y * this.bernstein.b0[k] + deltaP.y * this.bernstein.b1[k]
+                        + deltaQ.y * this.bernstein.b2[k] + q.y * this.bernstein.b3[k];
+
+                    z = p.z * this.bernstein.b0[k] + deltaP.z * this.bernstein.b1[k]
+                        + deltaQ.z * this.bernstein.b2[k] + q.z * this.bernstein.b3[k];
+
+                    strip.add(new Vec3D(x, y, z));
+                }
+            }
+            strip.add(this.points[this.points.length-1].copy());
+            return strip;
+        },
+
         updateCoefficients: function(){
             this.numP = this.pointList.length;
             if(this.points === undefined || (this.points !== undefined && this.points.length != this.numP)) {
@@ -8232,7 +8299,7 @@ var BernsteinPolynomial = require('./BernsteinPolynomial');
     module.exports = Spline3D;
 
 
-},{"../internals/is":106,"./BernsteinPolynomial":44,"./Vec3D":71}],66:[function(require,module,exports){
+},{"../internals/is":106,"./BernsteinPolynomial":44,"./LineStrip3D":54,"./Vec3D":71}],66:[function(require,module,exports){
 
 	/**
 	* A version of the Sutherland-Hodgeman algorithm to clip 2D polygons optimized
@@ -16715,9 +16782,203 @@ module.exports.constraints = require('./physics3d/constraints');
 
 },{"./physics3d/ParticlePath3D":161,"./physics3d/ParticleString3D":162,"./physics3d/PullBackSpring3D":163,"./physics3d/VerletConstrainedSpring3D":164,"./physics3d/VerletMinDistanceSpring3D":165,"./physics3d/VerletParticle3D":166,"./physics3d/VerletPhysics3D":167,"./physics3d/VerletSpring3D":168,"./physics3d/behaviors":169,"./physics3d/constraints":173}],161:[function(require,module,exports){
 
-},{}],162:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],163:[function(require,module,exports){
+
+    var Vec3D = require('../geom/Vec3D'),
+        extend = require('../internals/extend'),
+        Spline3D = require('../geom/Spline3D'),
+        VerletParticle3D = require('./VerletParticle3D');
+
+
+
+    var ParticlePath3D = function(points){
+        Spline3D.call(this, points);
+    };
+
+
+    extend(ParticlePath3D, Spline3D);
+
+    /**
+     * Creates particles along the spline at the fixed interval given. The
+     * precision of this interval will largely depend on the number of
+     * subdivision vertices created, but can be adjusted via the related
+     * parameter.
+     *
+     * @param physics
+     *            physics instance
+     * @param subDiv
+     *            number spline segment subdivisions
+     * @param step
+     *            desired rest length between particles
+     * @param mass
+     *            desired particle mass
+     * @return list of particles
+     */
+    ParticlePath3D.prototype.createParticles = function(physics, subDiv, step, mass){
+        this.particles = [];
+
+        var strip = this.toLineStrip3D(subDiv).getDecimatedVertices(step, true);
+
+        var v, p;
+        for(var i=0; i<strip.vertices.length; i++){
+            v = strip.vertices[i];
+            p = this._createSingleParticle(v, mass);
+            this.particles.push(p);
+            physics.addParticle(p);
+        }
+
+        return this.particles;
+    };
+
+
+    /**
+     * Extension point for creating a custom/sub-classed VerletParticle
+     * instance.
+     *
+     * @param pos
+     * @param mass
+     * @return particle
+     */
+    ParticlePath3D.prototype._createSingleParticle = function(pos, mass){
+        return new VerletParticle3D(pos, mass);
+    };
+
+
+
+    module.exports = ParticlePath3D;
+
+
+
+},{"../geom/Spline3D":65,"../geom/Vec3D":71,"../internals/extend":103,"./VerletParticle3D":166}],162:[function(require,module,exports){
+
+
+    var Vec3D = require('../geom/Vec3D'),
+        VerletSpring3D = require('./VerletSpring3D');
+
+
+    function constructor1(physics, plist, strength){
+        this.physics = physics;
+        this.particles = plist.slice(0);
+        this.links = [];
+
+        var prev, p, s;
+        for(var i=0; i<this.particles.length; i++){
+            p = this.particles[i];
+            physics.addParticle(p);
+            if(prev){
+                s = this._createSpring(prev, p, prev.distanceTo(p), strength);
+                this.links.push(s);
+                physics.addSpring(s);
+            }
+            prev = p
+        }
+    }
+
+    function constructor2(physics, pos, step, num, mass, strength){
+        this.physics = physics;
+        this.particles = [];
+        this.links = [];
+
+        var len = step.magnitude();
+        pos = pos.copy();
+
+        var prev, p, s;
+
+        for(var i=0; i < num; i++){
+            p = new VerletParticle3D(pos.copy(), mass);
+            this.particles.push(p);
+            physics.addParticle(p);
+
+            if(prev){
+                s = this._createSpring(prev, p, len, strength);
+                this.links.push(s);
+                physics.addSpring(s);
+            }
+
+            prev = p;
+            pos.addSelf(step);
+        }
+    }
+
+
+    var ParticleString3D = function(physics, plist, strength){
+        var cnstr;
+        if(arguments.length === 3){
+            //(VerletPhysics3D physics, List<VerletParticle3D> plist, float strength)
+            cnstr = constructor1;
+        } else if(arguments.length === 6 ){
+            //(VerletPhysics3D physics, Vec3D pos, Vec3D step, int num, float mass, float strength)
+            cnstr = constructor2;
+        } else {
+            throw new Error('Invalid arguments');
+        }
+
+        cnstr.apply(this, arguments);
+    };
+
+
+    /**
+     * Removes the entire string from the physics simulation, incl. all of its
+     * particles & springs.
+     */
+    ParticleString3D.prototype.clear = function(){
+        for(var i=0; i<this.links.length; i++){
+            this.physics.removeSpringElements(this.links[i]);
+        }
+        this.particles = [];
+        this.links = [];
+    };
+
+
+    /**
+     * Creates a spring instance connecting 2 successive particles of the
+     * string. Overwrite this method to create a string custom spring types
+     * (subclassed from {@link VerletSpring3D}).
+     *
+     * @param a
+     *            1st particle
+     * @param b
+     *            2nd particle
+     * @param len
+     *            rest length
+     * @param strength
+     * @return spring
+     */
+    ParticleString3D.prototype._createSpring = function(a, b, len, strength){
+        return new VerletSpring3D(a, b, len, strength);
+    };
+
+    /**
+     * Returns the first particle of the string.
+     *
+     * @return first particle
+     */
+    ParticleString3D.prototype.getHead = function(){
+        return this.particles[0];
+    };
+
+    /**
+     * Returns number of particles of the string.
+     *
+     * @return particle count
+     */
+    ParticleString3D.prototype.getNumParticles = function(){
+        return this.particles.length;
+    };
+
+    /**
+     * Returns last particle of the string.
+     *
+     * @return last particle
+     */
+    ParticleString3D.prototype.getTail = function(){
+        return this.particles[this.particles.length-1];
+    };
+
+
+    module.exports = ParticleString3D;
+
+
+},{"../geom/Vec3D":71,"./VerletSpring3D":168}],163:[function(require,module,exports){
 
 
     var internals = require('../internals'),
@@ -17110,7 +17371,7 @@ arguments[4][161][0].apply(exports,arguments)
         },
 
         addConstraint: function (constraint) {
-            this.constraints.add(constraint);
+            this.constraints.push(constraint);
         },
 
         /**
@@ -17141,18 +17402,24 @@ arguments[4][161][0].apply(exports,arguments)
          * Applies all global constraints and constrains all particle positions to
          * the world bounding box set
          */
-        applyConstraints: function () {
-            internals.each(this.particles, function (p) {
-                internals.each(this.constraints, function (c) {
-                    c.apply(p);
-                }, this);
-                if (typeof p.bounds !== 'undefined' && p.bounds !== null) {
+        _applyConstraints: function () {
+            for(var i=0; i<this.particles.length; i++){
+                var p = this.particles[i];
+
+                for(var j=0; j<this.constraints.length; j++){
+                    var c = this.constraints[j];
+
+                    c.applyConstraint(p);
+                }
+
+                if (p.bounds) {
                     p.constrain(p.bounds);
                 }
-                if (this._worldBounds !== 'undefined' && this._worldBounds !== null) {
+
+                if (this._worldBounds){
                     p.constrain(this._worldBounds);
                 }
-            }, this);
+            }
         },
 
         clear: function () {
@@ -17168,10 +17435,13 @@ arguments[4][161][0].apply(exports,arguments)
         getCurrentBounds: function () {
             var min = new Vec3D(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE);
             var max = new Vec3D(Number.MIN_VALUE,Number.MIN_VALUE,Number.MIN_VALUE);
-            internals.each(this.particles,function () {
+
+            for(var i=0; i<this.particles.length; i++){
+                var p = this.particles[i];
                 min.minSelf(p);
                 max.maxSelf(p);
-            },this);
+            }
+
             return AABB.fromMinMax(min, max);
         },
 
@@ -17308,7 +17578,7 @@ arguments[4][161][0].apply(exports,arguments)
         update: function () {
             this._updateParticles();
             this._updateSprings();
-            this.applyConstaints();
+            this._applyConstraints();
             return this;
         },
 
@@ -17316,15 +17586,21 @@ arguments[4][161][0].apply(exports,arguments)
          * Updates all particle positions
          */
         _updateParticles: function () { //protected
-            internals.each(this.behaviors, function (b) {
-                internals.each(this.particles, function (p) {
-                    b.apply(p);
-                }, this);
-            }, this);
-            internals.each(this.particles, function (p) {
+            var i, j, b, p;
+
+            for(i=0; i<this.behaviors.length; i++){
+                b = this.behaviors[i];
+                for(j=0; j<this.particles.length; j++){
+                    p = this.particles[j];
+                    b.applyBehavior(p);
+                }
+            }
+
+            for(j=0; j<this.particles.length; j++){
+                p = this.particles[j];
                 p.scaleVelocity(this._drag);
                 p.update();
-            }, this);
+            }
         },
 
         /**
@@ -17333,9 +17609,10 @@ arguments[4][161][0].apply(exports,arguments)
         _updateSprings: function () { //protected
             if (this.springs.length > 0) {
                 for (var i = this.numIterations; i > 0; i--) {
-                    internals.each(this.springs, function (s) {
+                    for(var j=0; j<this.springs.length; j++){
+                        var s = this.springs[j];
                         s.update(i == 1);
-                    }, this);
+                    }
                 }
             }
         }
@@ -17491,7 +17768,7 @@ exports.GravityBehavior = require('./behaviors/GravityBehavior3D');
 
     AttractionBehavior3D.prototype = {
 
-        apply: function (p) {
+        applyBehavior: function (p) {
             var delta = attractor.sub(p);
             var dist = delta.magSquared();
             if (dist < this._radiusSquared) {
@@ -17544,6 +17821,7 @@ exports.GravityBehavior = require('./behaviors/GravityBehavior3D');
 
     module.exports = AttractionBehavior3D;
 
+
 },{"../../geom/Vec3D":71,"../../internals":98,"../VerletParticle3D":166}],171:[function(require,module,exports){
 
 
@@ -17559,12 +17837,11 @@ exports.GravityBehavior = require('./behaviors/GravityBehavior3D');
 
     ConstantForceBehavior3D.prototype = {
 
-        apply: function (p) {
+        applyBehavior: function (p) {
             p.addForce(this._scaledForce);
         },
 
         configure: function (timeStep) {
-            console.log(this)
             this._timeStep = timeStep;
             this.setForce(this._force);
         },
@@ -17592,7 +17869,6 @@ exports.GravityBehavior = require('./behaviors/GravityBehavior3D');
         Vec3D = require('../../geom/Vec3D');
 
     var GravityBehavior3D = function (gravity, timeStep) {
-        console.log('gravity: ', gravity)
         ConstantForceBehavior3D.call(this, gravity);
         if (typeof timeStep !== "undefined") {
             this.configure(timeStep);
@@ -17647,7 +17923,7 @@ module.exports = {
          *
          * @see toxi.physics.IParticleConstraint#apply(toxi.physics.VerletParticle)
          */
-        apply: function (p) {
+        applyConstraint: function (p) {
             p.setComponent(this.axis, this.constraint);
         }
 
@@ -17675,7 +17951,7 @@ module.exports = {
 
     BoxConstraint.prototype = {
 
-        apply: function (p) {
+        applyConstraint: function (p) {
             if (p.isInAABB(this._box)) {
                 var dir = p.getVelocity();
                 var prev = p.getPreviousPosition();
@@ -17728,7 +18004,7 @@ module.exports = {
 
     CylinderConstraint.prototype = {
 
-        apply: function (p) {
+        applyConstraint: function (p) {
             if (this._cylinder.containsPoint(p)) {
                 this._centroid.setComponent(this._axis, p.getComponent(this._axis));
                 p.set(this._centroid.add(p.sub(this._centroid)
@@ -17761,7 +18037,7 @@ module.exports = {
 
     MaxConstraint.prototype = {
 
-        apply: function (p) {
+        applyConstraint: function (p) {
             if (p.getComponent(this.axis) > this.threshold) {
                 p.setComponent(this.axis, this.threshold);
             }
@@ -17770,6 +18046,7 @@ module.exports = {
     };
 
     module.exports = MaxConstraint;
+
 
 },{}],178:[function(require,module,exports){
 
@@ -17781,7 +18058,7 @@ module.exports = {
 
     MinConstraint.prototype = {
 
-        apply: function (p) {
+        applyConstraint: function (p) {
             if (p.getComponent(this.axis) < this.threshold) {
                 p.setComponent(this.axis, this.threshold);
             }
@@ -17791,13 +18068,126 @@ module.exports = {
 
     module.exports = MinConstraint;
 
+
 },{}],179:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],180:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],181:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],182:[function(require,module,exports){
+
+
+    /**
+     * @param axis
+     *            1st axis to lock
+     * @param axis2
+     *            2d axis to lock
+     * @param constraint
+     *            point on the desired constraint plane
+     */
+    var PlaneConstraint = function(axis1, axis2, constraint){
+        this.axis1 = axis1;
+        this.axis2 = axis2;
+        this.constraint = constraint;
+    };
+
+
+    PlaneConstraint.prototype.applyConstraint = function(p){
+        p.setComponent(this.axis1, this.constraint.getComponent(this.axis1));
+        p.setComponent(this.axis2, this.constraint.getComponent(this.axis2));
+    };
+
+
+    module.exports = PlaneConstraint;
+
+
+},{}],180:[function(require,module,exports){
+
+
+
+    /**
+     * Constrain to an AABB box
+     * @param {AABB} box
+     * @param {Number} smooth
+     * @constructor
+     */
+    var SoftBoxConstraint = function(box, smooth){
+        this.box = box;
+        this.smooth = smooth;
+        this.axes = [];
+    };
+
+
+    /**
+     * add an Axis to constrain
+     * @param {Vec3D.Axis} a
+     * @returns {SoftBoxConstraint}
+     */
+    SoftBoxConstraint.prototype.addAxis = function(a){
+        this.axes.push(a);
+        return this;
+    };
+
+    SoftBoxConstraint.prototype.applyConstraint = function(p){
+        var a, val;
+        if(p.isInAABB(this.box)){
+            for(var i=0; i<this.axes.length; i++){
+                a = this.axes[i];
+                val = p.getComponent(a);
+                p.setComponent(a, val + (this.box.getComponent(a) - val) * this.smooth);
+            }
+        }
+    };
+
+    module.exports = SoftBoxConstraint;
+
+
+
+},{}],181:[function(require,module,exports){
+
+
+    var Sphere = require('../../geom/Sphere');
+
+    /**
+     * This class implements a spherical constraint for 3D
+     * {@linkplain VerletParticle3D}s. The constraint can be configured in two ways: A
+     * bounding sphere not allowing particles to escape or alternatively does not
+     * allow particles to enter the space occupied by the sphere.
+     */
+
+
+    /**
+     * Creates a new instance using the sphere definition and constraint mode
+     * given.
+     *
+     * @param {Sphere} sphere
+     *            sphere instance
+     * @param {boolean} isBoundary
+     *            constraint mode. Use {@linkplain #INSIDE} or
+     *            {@linkplain #OUTSIDE} to specify constraint behaviour.
+     * @constructor
+     */
+    var SphereConstraint = function(sphere, isBoundary){
+        if(arguments.length === 3){
+            //received new SphereConstraint(Vec3D origin, float radius, boolean isBoundary)
+            sphere = new Sphere(arguments[0], arguments[1]);
+            isBoundary = arguments[2];
+        }
+
+        this.sphere = sphere;
+        this.isBoundingSphere = isBoundary;
+    };
+
+
+    SphereConstraint.prototype.applyConstraint = function(p){
+        var isInside = this.sphere.containsPoint(p);
+        if((this.isBoundingSphere && !isInside) || (!this.isBoundingSphere && isInside)){
+            p.set(
+                this.sphere.add(p.subSelf(this.sphere).normalizeTo(this.sphere.radius))
+            );
+        }
+    };
+
+    module.exports = SphereConstraint;
+
+
+
+},{"../../geom/Sphere":63}],182:[function(require,module,exports){
 
 /** @module toxi/processing */
 
