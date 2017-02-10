@@ -45,10 +45,12 @@ pkg('math.noise', t.math.noise, ['simplexNoise']);
 //toxi.physics2D
 pkg('physics2d', t.physics2d, ['behaviors','constraints']);
 pkg('physics2d.behaviors', t.physics2d.behaviors );
-pkg('physics2d.constraint', t.physics2d.constraints );
+pkg('physics2d.constraints', t.physics2d.constraints );
 
 //toxi.physics3D
 pkg('physics3d', t.physics3d, ['behaviors', 'constraints']);
+pkg('physics3d.behaviors', t.physics3d.behaviors);
+pkg('physics3d.constraints', t.physics3d.constraints);
 
 pkg('processing', t.processing);
 pkg('THREE', t.THREE);

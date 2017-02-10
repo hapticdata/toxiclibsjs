@@ -5,11 +5,12 @@ var toxi = require('./index'),
 
 
 var VerletPhysics3D = toxi.physics3d.VerletPhysics3D,
+	VerletParticle3D = toxi.physics3d.VerletParticle3D,
 	GravityBehavior = toxi.physics3d.behaviors.GravityBehavior,
 	Vec3D = toxi.geom.Vec3D;
 
 
-describe("toxi.physics3d.VerletPhysics3D", function(){
+describe.only("toxi.physics3d.VerletPhysics3D", function(){
 	describe("constructors", function(){
 		function testDefaults( p ){
 			it('should have default numIterations', function(){
@@ -70,10 +71,25 @@ describe("toxi.physics3d.VerletPhysics3D", function(){
 			});
 			it("should have set properties and default others", function(){
 				assert.equal( p.behaviors.length, 0 );
-        assert.ok( Math.abs(p.getDrag() - 0.05) < 0.00001 ); //floating-point precision issue
+				assert.ok( Math.abs(p.getDrag() - 0.05) < 0.00001 ); //floating-point precision issue
 				assert.equal( p.getTimeStep(), 2 );
 				assert.equal( p.getNumIterations(), 50 );
 			});
 		});
+	});
+
+
+	describe("#update()", function(){
+
+		it("should complete an update loop", function(){
+			var physics = new VerletPhysics3D(new Vec3D(0, 0.1, 0));
+			for(var i=0; i<10; i++){
+				physics.addParticle(new VerletParticle3D(Vec3D.randomVector()));
+			}
+
+			physics.update();
+
+			assert.ok(true);
+		})
 	});
 });
