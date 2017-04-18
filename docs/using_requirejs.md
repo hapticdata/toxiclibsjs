@@ -1,4 +1,4 @@
-#Using Toxiclibs.js w/ RequireJS
+# Using Toxiclibs.js w/ RequireJS
 
 With [RequireJS](http://requirejs.org) you can avoid placing any toxiclibsjs objects in the global scope. It allows you to optimize script loading, and you will only load the code that you are using instead of the entire library. To use toxiclibsjs with RequireJS use the files provided in the [lib/](https://github.com/hapticdata/toxiclibsjs/tree/master/lib) directory. Below is an example of how you would use toxiclibsjs within RequireJS:
 

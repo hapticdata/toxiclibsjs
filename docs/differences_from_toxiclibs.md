@@ -1,6 +1,6 @@
-#Differences from the original [Toxiclibs](http://toxiclibs.org)
+# Differences from the original [Toxiclibs](http://toxiclibs.org)
 
-##Arrays / Collections
+## Arrays / Collections
 
 The Java version frequently uses [Collections](http://docs.oracle.com/javase/tutorial/collections/), [Iterators](http://docs.oracle.com/javase/1.4.2/docs/api/java/util/Iterator.html), and [java-specific for-loops](http://stackoverflow.com/questions/8681593/does-javascript-have-an-enhanced-for-loop-syntax-similar-to-javas)[[2]](http://blogs.oracle.com/sundararajan/entry/java_javascript_and_jython). In toxiclibs.js you will see a standard JavaScript usage of arrays. Below is an example of accessing the faces from a TriangleMesh:
 

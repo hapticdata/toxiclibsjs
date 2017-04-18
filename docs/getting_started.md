@@ -1,4 +1,4 @@
-#Getting Started with Toxiclibs.js
+# Getting Started with Toxiclibs.js
 
 Toxiclibs.js can be used in the following ways:
 
