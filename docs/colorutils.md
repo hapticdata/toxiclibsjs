@@ -1,4 +1,4 @@
-#toxi.color - _colorutils_
+# toxi.color - _colorutils_
 Ported to JavaScript by [Kyle Phillips](http://haptic-data.com) original library by [Karsten Schmidt](http://postspectacular.com). Parts of _colorutils_ were inspired and bits ported from Tom De Smedt & Frederik De Bleser for the "colors" library of [Nodebox.net](http://nodebox.net).
 
 * [TColor](#tcolor) - floating point color datatype in 3 simultaneous spaces: RGB, HSV, CMYK
@@ -13,7 +13,7 @@ Ported to JavaScript by [Kyle Phillips](http://haptic-data.com) original library
 
 read [original javadocs](http://toxiclibs.org/docs/colorutils/) for complete documentation
 
-##TColor
+## TColor
 TColor [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/TColor.js) is the cornerstone of _colorutils_. It represents any 32-bit color in 3 simultaneous spaces with number values between 0 - 1. It provides many convenient methods for conversion to other colors and output into other formats.
 
 
@@ -36,7 +36,7 @@ TColor [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi
 	var c4 = toxi.color.TColor.newCSS( document.body.style.color );
 	
 
-##NamedColor
+## NamedColor
 NamedColor [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/NamedColor.js) is a convenient way to get a TColor based on the name of any [x11 color](http://en.wikipedia.org/wiki/X11_color_names#Color_name_charts).
 
 	//get a TColor by name
@@ -46,7 +46,7 @@ NamedColor [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/
 	//=>[ 'INDIANRED', 'LIGHTCORAL',… ]
 	
 	
-##ColorList
+## ColorList
 ColorList [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/ColorList.js) is a collection of colors. You can simply `#add( tcolor )`, apply adjustments such as `#adjustBrightness( step )` or `#adjustSaturation( step )` to all of them at once, sort them by a [criteria or distance](#access-criteria-and-distance-proxies) and much more.
 
 	var list = new toxi.color.ColorList("my-palette");
@@ -68,7 +68,7 @@ ColorList [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/t
 	var rand = list.getRandom();
 	
 
-##ColorTheme
+## ColorTheme
 ColorTheme [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/ColorTheme.js) is a weighted collection of ColorRange's used to define custom palettes with a certain balance between individual colors/shades. New theme parts can be added via textual descriptors referring to one of the preset ColorRange's and/or NamedColor's, e.g. `"warm springgreen"`. For each theme part a weight has to be specified. The magnitude of the weight value is irrelevant and is only important in relation to the weights of other theme parts.
 
 [view the ColorRange descriptors here](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/ColorRange.js#L316-L326)
@@ -89,7 +89,7 @@ ColorTheme [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/
 	
 
 
-##Strategies - toxi.color.theory.*
+## Strategies - toxi.color.theory.*
 The `toxi.color.theory.*` [package](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/theory/) has several strategies for generating harmonious color palettes from a single color. Instances of these strategies, such as _AnalagousStrategy, ComplementaryStrategy, TriadTheoryStrategy, etc._ all define a function `createListFromColor( sourceTColor )` that returns a `ColorList` of harmonious colors.
 
 	//make a ColorList based off the TriadTheoryStrategy
@@ -106,7 +106,7 @@ The `toxi.color.theory.*` [package](https://github.com/hapticdata/toxiclibsjs/bl
 	// => [ 'complement', 'complementary','splitComplementary','leftSplitComplementary','rightSplitComplementary','analagous','monochrome','triad','tetrad','compound' ]
 
 	
-##ColorRange
+## ColorRange
 
 	var list = new toxi.color.createUsingStrategy("rightSplitComplementary", toxi.color.NamedColor.LIME);
 	range = new toxi.color.ColorRange(list).addBrightnessRange(0,1);
@@ -115,7 +115,7 @@ The `toxi.color.theory.*` [package](https://github.com/hapticdata/toxiclibsjs/bl
 	var customVarianceList = range.getColors( undefined, 100, 0.5);
 	
 
-##Access Criteria and Distance Proxies
+## Access Criteria and Distance Proxies
 AccessCriteria [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/AccessCriteria.js) includes a single instance of each of the different ways to compare colors: _AlphaAccessor, CMYKAccessor, HSVAccessor, LuminanceAccessor, RGBAccessor_
 
 The distance proxies, _CMYKDistanceProxy, HSVDistanceProxy, RGBDistanceProxy_ allow you to sort colors based on their distance to each-other.
@@ -129,7 +129,7 @@ The distance proxies, _CMYKDistanceProxy, HSVDistanceProxy, RGBDistanceProxy_ al
 	list.sortByDistance( new toxi.color.HSVDistanceProxy() );
 
 
-##ColorGradient
+## ColorGradient
 ColorGradient [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/ColorGradient.js) models a multi-color gradient and allows you to receive a `ColorList` of the gradient at any resolution and with custom [interpolators](#).
 
 	var grad = new toxi.color.ColorGradient(),
@@ -146,7 +146,7 @@ ColorGradient [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/l
 	list = grad.calcGradient(10, 20);
 
 
-##ToneMap
+## ToneMap
 
 ToneMap [(source)](https://github.com/hapticdata/toxiclibsjs/blob/master/lib/toxi/color/ToneMap.js) allows you to map a numerical input range to a gradient of colors. In the following example the colors of a flame are mapped to a sine wave:
 

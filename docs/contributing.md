@@ -1,8 +1,8 @@
-#Contributing to Toxiclibsjs
+# Contributing to Toxiclibsjs
 
 Contributions to toxiclibsjs are appreciated, users who would like to contribute are encouraged to [fork the github repository](http://github.com/hapticdata/toxiclibsjs) and send a [pull request](https://github.com/hapticdata/toxiclibsjs/pulls) when they have tested their contribution and are ready for it to be merged into the library. Small fixes may be committed and pulled, or you may [leave an issue](https://github.com/hapticdata/toxiclibsjs/issues) and I will fix it myself.
 
-#Contribution rules
+# Contribution rules
 
 * All code must be written to the [Asynchronous Module Definition](https://github.com/amdjs/amdjs-api/wiki/AMD) specification.
 * The top priority of all code is to follow the functionality and public API of [the original toxiclibs](http://toxiclibs.org). The aim is for there to be no exceptions, if for some reason there is, it must be clearly commented and mentioned in the pull request.

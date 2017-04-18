@@ -1,5 +1,5 @@
-#[Toxiclibsjs](http://haptic-data.com/toxiclibsjs) 
-##an open-source library for computational design tasks with JavaScript. 
+# [Toxiclibsjs](http://haptic-data.com/toxiclibsjs) 
+## an open-source library for computational design tasks with JavaScript. 
 
 [![Spherical Harmonics in three.js](http://s3.amazonaws.com/toxiclibsjs/images/sphericalHarmonicsThree.jpg)](http://haptic-data.com/toxiclibsjs/examples/SphericalHarmonics_threejs.html)
 [![polar_unravel](http://s3.amazonaws.com/toxiclibsjs/images/polarUnravel.gif)](http://haptic-data.com/toxiclibsjs/examples/PolarUnravel_pjs.html)
@@ -9,7 +9,7 @@ Toxiclibs.js is a port of [Karsten Schmidt's Toxiclibs](http://toxiclibs.org) fo
 
 The plethora of examples demonstrate its use for geometry and color manipulation as well as physics, automata and more. The examples pair with such fine libraries as: [Processing.js](http://processingjs.org), [Three.js](http://github.com/mrdoob/three.js), [D3.js](http://github.com/mbostock/d3) or [Raphael.js](http://raphaeljs.com).
 
-##What it is…
+## What it is…
 -	2D/3D geometry
 -	Mesh generation and subdivision
 -	Interpolation / Mapping
@@ -19,7 +19,7 @@ The plethora of examples demonstrate its use for geometry and color manipulation
 
 
 
-#Getting Started with Toxiclibs.js
+# Getting Started with Toxiclibs.js
 
 Toxiclibs.js can be used in the following ways:
 
@@ -27,7 +27,7 @@ Toxiclibs.js can be used in the following ways:
 *	As [AMD](https://github.com/amdjs/amdjs-api/wiki/AMD) modules that can be loaded independently or in packages, via [RequireJS](http://requirejs.org)
 *	In [Node.js](http://nodejs.org) or [Browserify](http://browserify.org/) applications, through NPM as commonjs modules.
 
-##Use the build
+## Use the build
 copy the file `build/toxiclibs.js`:
 
 	<script type="text/javascript" src="js/toxiclibs.js"></script>
@@ -35,14 +35,14 @@ copy the file `build/toxiclibs.js`:
 		var myVector = new toxi.geom.Vec2D(window.innerWidth,window.innerHeight).scaleSelf(0.5);
 		var myColor = toxi.color.TColor.newRGB(128/255,64/255,32/255);
 	</script>
-##Use with [RequireJS](http://requirejs.org) or other AMD loader
+## Use with [RequireJS](http://requirejs.org) or other AMD loader
 copy the contents of `lib/`:
 
 	require(['toxi/geom/Vec2D', toxi/color/TColor], function(Vec2D, TColor){
 		var myVector = new Vec2D(window.innerWidth,window.innerHeight).scaleSelf(0.5);
 		var myColor = TColor.newRGB(128/255,64/255,32/255);
 	});
-##Use with [Node.js](http://nodejs.org):
+## Use with [Node.js](http://nodejs.org):
 
 	npm install toxiclibsjs
 then:
@@ -54,7 +54,7 @@ then:
 For comprehensive documentation, read the original libraries [javadocs](http://toxiclibs.org/javadocs/). As the library is still growing, you can compare that documentation to this list of implemented classes.
 
 
-##Toxiclibs.js follows the original package structure
+## Toxiclibs.js follows the original package structure
 The following objects are returned when loading the entire library
 
 
@@ -67,16 +67,16 @@ The following objects are returned when loading the entire library
 * **THREE** - features to ease use with [Three.js](http://github.com/mrdoob/three.js)
 * **utils** - the utils package
 
-##Creating Builds
+## Creating Builds
 Run `make` to generate new versions of the existing builds. There are additional targets defined in the [Makefile](https://github.com/hapticdata/toxiclibsjs/blob/release/Makefile)
-###Custom builds
+### Custom builds
 If you are working with the `build/` files you may wish to create a custom build that only includes the modules you are using in order to save file size. If you are [using the files as AMD modules](#use-with-requirejs-or-other-amd-loader) there is no need for this.
 
 To generate a custom build, space-delimit the modules you want:
 
 	./bin/toxiclibsjs --include "toxi/geom/Vec2D toxi/physics2d" --minify --out "./build/toxiclibsjs-custom.min.js"
 
-##Run the tests
+## Run the tests
 Run `make test` to run the suite of tests.
 
 ## Contributing
