@@ -16,5 +16,24 @@ describe('toxi.geom.Line2D', function(){
 			assert.ok( ray instanceof Ray2D );
 		});
 	});
+
+
+	describe('#intersectLine', function(){
+		it('should return Line2D.LineIntersection.Type.COINCIDENT_NO_INTERSECT', function(){
+			var line1 = new toxi.geom.Line2D(
+				new toxi.geom.Vec2D({x: 280, y: 319}),
+				new toxi.geom.Vec2D({x: 280, y: 332})
+			);
+
+			var line2 = new toxi.geom.Line2D(
+				new toxi.geom.Vec2D({x: 280, y: 75}),
+				new toxi.geom.Vec2D({x: 280, y: 325})
+			);
+
+			var intersection = line1.intersectLine(line2);
+
+			assert.equal(intersection.type, Line2D.LineIntersection.Type.COINCIDENT_NO_INTERSECT);
+		});
+	});
 });
 
