@@ -1,5 +1,5 @@
 /*!
-* toxiclibsjs - v0.3.2
+* toxiclibsjs - v0.3.3
 * http://haptic-data.com/toxiclibsjs
 * Created by [Kyle Phillips](http://haptic-data.com),
 * based on original work by [Karsten Schmidt](http://toxiclibs.org).
@@ -4453,6 +4453,11 @@ Ellipse = function(a,b,c,d) {
 extend(Ellipse,Vec2D);
 
 Ellipse.prototype.containsPoint = function(p) {
+    // Immediately reject points outside the containing rectangle
+    if (mathUtils.abs(p.x - this.x) > this.radius.x ||
+        mathUtils.abs(p.y - this.y) > this.radius.y) {
+        return false;
+    }
     var foci = this.getFoci();
     return p.distanceTo(foci[0]) + p.distanceTo(foci[1]) < 2 * mathUtils.max(this.radius.x, this.radius.y);
 };
@@ -4486,15 +4491,16 @@ Ellipse.prototype.getCircumference = function() {
  * @return the focus
  */
 Ellipse.prototype.getFoci = function() {
-    var foci = [];
     if (this.radius.x > this.radius.y) {
-        foci[0] = this.sub(this.focus, 0);
-        foci[1] = this.add(this.focus, 0);
-    } else {
-        foci[0] = this.sub(0, this.focus);
-        foci[1] = this.add(0, this.focus);
+        return [
+            this.sub(this.focus, 0),
+            this.add(this.focus, 0)
+        ];
     }
-    return foci;
+    return [
+        this.sub(0, this.focus),
+        this.add(0, this.focus)
+    ];
 };
 
 /**
@@ -4518,7 +4524,13 @@ Ellipse.prototype.setRadii = function(rx,ry) {
 		rx = rx.x;
 	}
     this.radius.set(rx, ry);
-    this.focus = this.radius.magnitude();
+
+    if (this.radius.x > this.radius.y) {
+        this.focus = Math.sqrt(this.radius.x * this.radius.x - this.radius.y * this.radius.y);
+    } else {
+        this.focus = Math.sqrt(this.radius.y * this.radius.y - this.radius.x * this.radius.x);
+    }
+
     return this;
 };
 
@@ -5042,9 +5054,10 @@ Line2D.LineIntersection.prototype = {
 
 Line2D.LineIntersection.Type = {
     COINCIDENT: 0,
+	COINCIDENT_NO_INTERSECT: 4,
     PARALLEL: 1,
     NON_INTERSECTING: 2,
-    INTERSECTING: 3
+	INTERSECTING: 3,
 };
 
 
@@ -7880,16 +7893,23 @@ Spline2D.prototype = {
 			this.bernstein = new BernsteinPolynomial(res);
 		}
 		var bst = this.bernstein;
-		this.vertices = [];
 		this.findCPoints();
 		var deltaP = new Vec2D();
 		var deltaQ = new Vec2D();
         res--;
+        var verticeCount = (this.numP - 1) * res + 1;
+        if ( typeof(this.vertices) == 'undefined' || this.vertices.length != verticeCount ) {
+        	this.vertices = Array.apply( null, Array( verticeCount ) ).map( function () { return new Vec2D(); } );
+        }
+		var vertexIdx = 0;
 		for (var i = 0; i < this.numP - 1; i++) {
 			var p = this.points[i];
 			var q = this.points[i + 1];
-			deltaP.set(this.delta[i]).addSelf(p);
-			deltaQ.set(q).subSelf(this.delta[i + 1]);
+			deltaP.x = this.delta[i].x + p.x;
+			deltaP.y = this.delta[i].y + p.y;
+			deltaQ.x = q.x - this.delta[i + 1].x;
+			deltaQ.y = q.y - this.delta[i + 1].y;
+
 			for (var k = 0; k < res; k++) {
 				var x = p.x * bst.b0[k] + deltaP.x * bst.b1[k] +
 				deltaQ.x * bst.b2[k] +
@@ -7897,10 +7917,13 @@ Spline2D.prototype = {
 				var y = p.y * bst.b0[k] + deltaP.y * bst.b1[k] +
 				deltaQ.y * bst.b2[k] +
 				q.y * bst.b3[k];
-				this.vertices.push(new Vec2D(x, y));
+				this.vertices[ vertexIdx ].x = x;
+				this.vertices[ vertexIdx ].y = y;
+				vertexIdx++;
 			}
 		}
-        this.vertices.push(this.points[this.points.length-1].copy());
+		this.vertices[ vertexIdx ].x = this.vertices[ vertexIdx - 1 ].x;
+		this.vertices[ vertexIdx ].y = this.vertices[ vertexIdx - 1 ].y;
 		return this.vertices;
 	},
 
@@ -7910,16 +7933,17 @@ Spline2D.prototype = {
 		p0 = this.pointList[0];
 		p2 = this.pointList[2];
 		d0 = this.delta[0];
-		this.coeffA[1].set((p2.x - p0.x - d0.x) * this.tightness, (p2.y - p0.y - d0.y) * this.tightness);
+		this.coeffA[1].x = (p2.x - p0.x - d0.x) * this.tightness;
+		this.coeffA[1].y = (p2.y - p0.y - d0.y) * this.tightness;
+
 		for (i = 2; i < this.numP - 1; i++) {
 			this.bi[i] = -1 / (this.invTightness + this.bi[i - 1]);
-			this.coeffA[i].set(-(this.points[i + 1].x - this.points[i - 1].x - this.coeffA[i - 1].x) *
-			this.bi[i], -(this.points[i + 1].y - this.points[i - 1].y - this.coeffA[i - 1].y) *
-			this.bi[i]);
+			this.coeffA[i].x = -(this.points[i + 1].x - this.points[i - 1].x - this.coeffA[i - 1].x) *this.bi[i];
+			this.coeffA[i].y = -(this.points[i + 1].y - this.points[i - 1].y - this.coeffA[i - 1].y) *this.bi[i];
 		}
 		for (i = this.numP - 2; i > 0; i--) {
-			this.delta[i].set(this.coeffA[i].x + this.delta[i + 1].x * this.bi[i], this.coeffA[i].y +
-			this.delta[i + 1].y * this.bi[i]);
+			this.delta[i].x = this.coeffA[i].x + this.delta[i + 1].x * this.bi[i];
+			this.delta[i].y = this.coeffA[i].y + this.delta[i + 1].y * this.bi[i];
 		}
 	},
 

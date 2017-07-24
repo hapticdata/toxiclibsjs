@@ -1,5 +1,12 @@
 # Toxiclibs.js CHANGES
 
+## v0.3.3
+* fix broken Markdown headers - [pr #41](https://github.com/hapticdata/toxiclibsjs/pull/41)
+* reduce re-allocation and function calls in Spline2D - [pr #42](https://github.com/hapticdata/toxiclibsjs/pull/42)
+* fix Ellipse#containsPoint - [pr #44](https://github.com/hapticdata/toxiclibsjs/pull/44)
+* fix `toxi.geom.Line2D.LineIntersection.Type.COINCIDENT_NO_INTERSECT` does not exist - [issue #39](https://github.com/hapticdata/toxiclibsjs/issues/39)
+
+
 ## v0.3.2
 * fix implementation of `toxi.geom.mesh.WETriangleMesh` that resulted in duplicate edges and broken meshes.
 * optimize `toxi.internals.LinkedMap`
@@ -10,7 +17,7 @@
 * build system for global `toxi` object, now uses browserify, no longer using almond.js
 
 ## v0.3.0
-* uses [nodefy](https://github.com/millermedeiros/nodefy) to convert all AMD modules into commonjs modules for publishing to [NPM](http://npmjs.com). 
+* uses [nodefy](https://github.com/millermedeiros/nodefy) to convert all AMD modules into commonjs modules for publishing to [NPM](http://npmjs.com).
 This means toxiclibjs.js now works with [Browserify](http://browserify.org/) and no longer has a dependency on [Require.js](http://requirejs.org) when consumed
 through NPM for [Node.js](http://nodejs.org). This also enables deep-requires for Node, such as `var Vec2D = require('toxiclibsjs/geom/Vec2D')`.
 
